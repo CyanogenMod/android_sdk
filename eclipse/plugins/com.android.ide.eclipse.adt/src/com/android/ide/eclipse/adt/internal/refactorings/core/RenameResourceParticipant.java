@@ -30,6 +30,7 @@ import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TOOLS_URI;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -58,8 +59,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameFieldProcessor;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
@@ -522,24 +521,6 @@ public class RenameResourceParticipant extends RenameParticipant {
         return false;
     }
 
-    private int getAttributeValueRangeStart(Attr attr, IDocument document) {
-        IndexedRegion region = (IndexedRegion) attr;
-        int potentialStart = attr.getName().length() + 2; // + 2: add ="
-        String text;
-        try {
-            text = document.get(region.getStartOffset(), region.getLength());
-        } catch (BadLocationException e) {
-            return -1;
-        }
-        String value = attr.getValue();
-        int index = text.indexOf(value, potentialStart);
-        if (index != -1) {
-            return region.getStartOffset() + index;
-        } else {
-            return -1;
-        }
-    }
-
     private void addReplacements(
             @NonNull List<TextEdit> edits,
             @NonNull Element element,
@@ -558,7 +539,7 @@ public class RenameResourceParticipant extends RenameParticipant {
                                 || mType.getName().equals(element.getAttribute(ATTR_TYPE))))) {
                 Attr nameNode = element.getAttributeNode(ATTR_NAME);
                 if (nameNode != null && nameNode.getValue().equals(mOldName)) {
-                    int start = getAttributeValueRangeStart(nameNode, document);
+                    int start = RefactoringUtil.getAttributeValueRangeStart(nameNode, document);
                     if (start != -1) {
                         int end = start + mOldName.length();
                         edits.add(new ReplaceEdit(start, end - start, mNewName));
@@ -575,6 +556,15 @@ public class RenameResourceParticipant extends RenameParticipant {
             // If not updating references, only update XML matches that define the id
             if (!mUpdateReferences && (!ATTR_ID.equals(attr.getLocalName()) ||
                     !ANDROID_URI.equals(attr.getNamespaceURI()))) {
+
+                if (TOOLS_URI.equals(attr.getNamespaceURI()) && value.equals(mXmlMatch1)) {
+                    int start = RefactoringUtil.getAttributeValueRangeStart(attr, document);
+                    if (start != -1) {
+                        int end = start + mXmlMatch1.length();
+                        edits.add(new ReplaceEdit(start, end - start, mXmlNewValue1));
+                    }
+                }
+
                 continue;
             }
 
@@ -606,7 +596,7 @@ public class RenameResourceParticipant extends RenameParticipant {
                     int end = region.getEndOffset();
                     edits.add(new ReplaceEdit(start, end - start, ""));
                 } else {
-                    int start = getAttributeValueRangeStart(attr, document);
+                    int start = RefactoringUtil.getAttributeValueRangeStart(attr, document);
                     if (start != -1) {
                         int end = start + match.length();
                         edits.add(new ReplaceEdit(start, end - start, matchedValue));

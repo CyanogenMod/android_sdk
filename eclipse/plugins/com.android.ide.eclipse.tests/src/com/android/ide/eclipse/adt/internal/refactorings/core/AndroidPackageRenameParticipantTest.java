@@ -49,10 +49,19 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  +\n" +
                 "\n" +
                 "\n" +
+                "* activity_main.xml - /testRefactor1/res/layout/activity_main.xml\n" +
+                "  @@ -33 +33\n" +
+                "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
+                "  +     <fragment android:name=\"my.pkg.name.MyFragment\"/>\n" +
+                "\n" +
+                "\n" +
                 "* AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
-                "  +             android:name=\"my.pkg.name.MainActivity\"");
+                "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
+                "  @@ -25 +25\n" +
+                "  -             android:name=\".MainActivity2\"\n" +
+                "  +             android:name=\"my.pkg.name.MainActivity2\"");
     }
 
     public void testRefactor1_noreferences() throws Exception {
@@ -91,6 +100,12 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  +     <my.pkg.name.CustomView1\n" +
                 "\n" +
                 "\n" +
+                "* activity_main.xml - /testRefactor2/res/layout/activity_main.xml\n" +
+                "  @@ -33 +33\n" +
+                "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
+                "  +     <fragment android:name=\"my.pkg.name.MyFragment\"/>\n" +
+                "\n" +
+                "\n" +
                 "* customviews.xml - /testRefactor2/res/layout-land/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
@@ -100,7 +115,10 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "* AndroidManifest.xml - /testRefactor2/AndroidManifest.xml\n" +
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
-                "  +             android:name=\"my.pkg.name.MainActivity\"");
+                "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
+                "  @@ -25 +25\n" +
+                "  -             android:name=\".MainActivity2\"\n" +
+                "  +             android:name=\"my.pkg.name.MainActivity2\"");
     }
 
     public void testRefactor2_renamesub() throws Exception {
@@ -127,6 +145,12 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  +     <my.pkg.name.CustomView1\n" +
                 "\n" +
                 "\n" +
+                "* activity_main.xml - /testRefactor2_renamesub/res/layout/activity_main.xml\n" +
+                "  @@ -33 +33\n" +
+                "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
+                "  +     <fragment android:name=\"my.pkg.name.MyFragment\"/>\n" +
+                "\n" +
+                "\n" +
                 "* customviews.xml - /testRefactor2_renamesub/res/layout-land/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
@@ -137,6 +161,9 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
                 "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
+                "  @@ -25 +25\n" +
+                "  -             android:name=\".MainActivity2\"\n" +
+                "  +             android:name=\"my.pkg.name.MainActivity2\"\n" +
                 "\n" +
                 "\n" +
                 "* customviews.xml - /testRefactor2_renamesub/res/layout/customviews.xml\n" +

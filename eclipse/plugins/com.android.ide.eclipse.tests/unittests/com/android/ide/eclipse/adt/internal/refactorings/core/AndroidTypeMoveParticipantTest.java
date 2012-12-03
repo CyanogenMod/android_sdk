@@ -50,18 +50,35 @@ public class AndroidTypeMoveParticipantTest extends RefactoringTestBase {
                 "\n" +
                 "* Move resource 'testRefactor1/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
                 "\n" +
-                "* Android Type Move\n" +
-                "\n" +
-                "  * customviews.xml - /testRefactor1/res/layout/customviews.xml\n" +
-                "    @@ -9 +9\n" +
-                "    -     <com.example.refactoringtest.CustomView1\n" +
-                "    +     <com.example.refactoringtest.subpackage.CustomView1\n" +
+                "* customviews.xml - /testRefactor1/res/layout/customviews.xml\n" +
+                "  @@ -9 +9\n" +
+                "  -     <com.example.refactoringtest.CustomView1\n" +
+                "  +     <com.example.refactoringtest.subpackage.CustomView1\n" +
                 "\n" +
                 "\n" +
-                "  * customviews.xml - /testRefactor1/res/layout-land/customviews.xml\n" +
-                "    @@ -9 +9\n" +
-                "    -     <com.example.refactoringtest.CustomView1\n" +
-                "    +     <com.example.refactoringtest.subpackage.CustomView1");
+                "* customviews.xml - /testRefactor1/res/layout-land/customviews.xml\n" +
+                "  @@ -9 +9\n" +
+                "  -     <com.example.refactoringtest.CustomView1\n" +
+                "  +     <com.example.refactoringtest.subpackage.CustomView1");
+    }
+
+    public void testRefactorFragment() throws Exception {
+        moveType(
+                TEST_PROJECT2,
+                "com.example.refactoringtest.MyFragment",
+                "src/com/example/refactoringtest/subpackage",
+                true /*updateReferences*/,
+
+                "CHANGES:\n" +
+                "-------\n" +
+                "* Move resource 'testRefactorFragment/src/com/example/refactoringtest/MyFragment.java' to 'subpackage'\n" +
+                "\n" +
+                "* Move resource 'testRefactorFragment/src/com/example/refactoringtest/MyFragment.java' to 'subpackage'\n" +
+                "\n" +
+                "* activity_main.xml - /testRefactorFragment/res/layout/activity_main.xml\n" +
+                "  @@ -33 +33\n" +
+                "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
+                "  +     <fragment android:name=\"com.example.refactoringtest.subpackage.MyFragment\"/>");
     }
 
     public void testRefactor1_norefs() throws Exception {

@@ -311,6 +311,25 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "  +         public static final int output=0x7f070000;");
     }
 
+    public void testRefactor10() throws Exception {
+        // Check updating tools: attributes
+        renameResource(
+                TEST_PROJECT,
+                "@layout/preview",
+                true /*updateReferences*/,
+                "newlayout",
+
+                "CHANGES:\n" +
+                "-------\n" +
+                "* activity_main.xml - /testRefactor10/res/layout-land/activity_main.xml\n" +
+                "  @@ -10 +10\n" +
+                "  -         tools:listitem=\"@layout/preview\" >\n" +
+                "  +         tools:listitem=\"@layout/newlayout\" >\n" +
+                "  @@ -17 +17\n" +
+                "  -         tools:layout=\"@layout/preview\" />\n" +
+                "  +         tools:layout=\"@layout/newlayout\" />");
+    }
+
     // ---- Test infrastructure ----
 
     protected void renameResource(

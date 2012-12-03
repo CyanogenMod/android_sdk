@@ -16,20 +16,26 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.core;
 
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_CONTEXT;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PACKAGE;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.EXT_XML;
+import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.SdkConstants.VIEW_TAG;
+
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChange;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChangeDescription;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutFileChanges;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidPackageRenameChange;
-import com.android.xml.AndroidManifest;
+import com.android.resources.ResourceFolderType;
+import com.android.utils.SdkUtils;
 
-import org.eclipse.core.filebuffers.FileBuffers;
-import org.eclipse.core.filebuffers.ITextFileBuffer;
-import org.eclipse.core.filebuffers.ITextFileBufferManager;
-import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -37,34 +43,39 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.corext.refactoring.changes.RenamePackageChange;
-import org.eclipse.jface.text.IDocument;
+import org.eclipse.jdt.internal.corext.refactoring.rename.RenameCompilationUnitProcessor;
+import org.eclipse.jdt.internal.corext.refactoring.rename.RenameTypeProcessor;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.NullChange;
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
+import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
+import org.eclipse.ltk.core.refactoring.participants.RefactoringProcessor;
+import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.text.edits.TextEdit;
 import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
-import org.eclipse.wst.xml.core.internal.provisional.document.IDOMDocument;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A participant to participate in refactorings that rename a package in an Android project.
@@ -78,13 +89,81 @@ import java.util.Set;
  * </p>
  */
 @SuppressWarnings("restriction")
-public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
+public class AndroidPackageRenameParticipant extends RenameParticipant {
 
+    private IProject mProject;
+    private IFile mManifestFile;
     private IPackageFragment mPackageFragment;
+    private String mOldPackage;
+    private String mNewPackage;
+    private String mAppPackage;
+    private boolean mRefactoringAppPackage;
 
-    private boolean mIsPackage;
+    @Override
+    public String getName() {
+        return "Android Package Rename";
+    }
 
-    private Set<AndroidLayoutFileChanges> mFileChanges = new HashSet<AndroidLayoutFileChanges>();
+    @Override
+    public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context)
+            throws OperationCanceledException {
+        return new RefactoringStatus();
+    }
+
+    @Override
+    protected boolean initialize(final Object element) {
+        mRefactoringAppPackage = false;
+        try {
+            // Only propose this refactoring if the "Update References" checkbox is set.
+            if (!getArguments().getUpdateReferences()) {
+                return false;
+            }
+
+            if (element instanceof IPackageFragment) {
+                mPackageFragment = (IPackageFragment) element;
+                if (!mPackageFragment.containsJavaResources()) {
+                    return false;
+                }
+                IJavaProject javaProject = (IJavaProject) mPackageFragment
+                        .getAncestor(IJavaElement.JAVA_PROJECT);
+                mProject = javaProject.getProject();
+                IResource manifestResource = mProject.findMember(AdtConstants.WS_SEP
+                        + SdkConstants.FN_ANDROID_MANIFEST_XML);
+
+                if (manifestResource == null || !manifestResource.exists()
+                        || !(manifestResource instanceof IFile)) {
+                    RefactoringUtil.logInfo("Invalid or missing the "
+                            + SdkConstants.FN_ANDROID_MANIFEST_XML + " in the "
+                            + mProject.getName() + " project.");
+                    return false;
+                }
+                mManifestFile = (IFile) manifestResource;
+                String packageName = mPackageFragment.getElementName();
+                ManifestData manifestData;
+                manifestData = AndroidManifestHelper.parseForData(mManifestFile);
+                if (manifestData == null) {
+                    return false;
+                }
+                mAppPackage = manifestData.getPackage();
+                mOldPackage = packageName;
+                mNewPackage = getArguments().getNewName();
+                if (mOldPackage == null || mNewPackage == null) {
+                    return false;
+                }
+
+                if (RefactoringUtil.isRefactorAppPackage()
+                        && mAppPackage != null
+                        && mAppPackage.equals(packageName)) {
+                    mRefactoringAppPackage = true;
+                }
+
+                return true;
+            }
+        } catch (JavaModelException ignore) {
+        }
+        return false;
+    }
+
 
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException,
@@ -92,50 +171,61 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
         if (pm.isCanceled()) {
             return null;
         }
-        if (!getArguments().getUpdateReferences())
+        if (!getArguments().getUpdateReferences()) {
             return null;
+        }
+
+        RefactoringProcessor p = getProcessor();
+        if (p instanceof RenameCompilationUnitProcessor) {
+            RenameTypeProcessor rtp =
+                    ((RenameCompilationUnitProcessor) p).getRenameTypeProcessor();
+            if (rtp != null) {
+                String pattern = rtp.getFilePatterns();
+                boolean updQualf = rtp.getUpdateQualifiedNames();
+                if (updQualf && pattern != null && pattern.contains("xml")) { //$NON-NLS-1$
+                    // Do not propose this refactoring if the
+                    // "Update fully qualified names in non-Java files" option is
+                    // checked and the file patterns mention XML. [c.f. SDK bug 21589]
+                    return null;
+                }
+            }
+        }
+
         IPath pkgPath = mPackageFragment.getPath();
-        IJavaProject javaProject = (IJavaProject) mPackageFragment
-                .getAncestor(IJavaElement.JAVA_PROJECT);
-        IProject project = javaProject.getProject();
-        IPath genPath = project.getFullPath().append(SdkConstants.FD_GEN_SOURCES);
+        IPath genPath = mProject.getFullPath().append(SdkConstants.FD_GEN_SOURCES);
         if (genPath.isPrefixOf(pkgPath)) {
             RefactoringUtil.logInfo(getName() + ": Cannot rename generated package.");
             return null;
         }
         CompositeChange result = new CompositeChange(getName());
         result.markAsSynthetic();
-        if (mAndroidManifest.exists()) {
-            if (mAndroidElements.size() > 0 || mIsPackage) {
-                getManifestDocument();
-                Change change = new AndroidPackageRenameChange(mAndroidManifest, mManager,
-                        mDocument, mAndroidElements, mOldName, mNewName, mIsPackage);
-                if (change != null) {
-                    result.add(change);
-                }
+
+        addManifestFileChanges(result);
+
+        // Update layout files; we don't just need to react to custom view
+        // changes, we need to update fragment references and even tool:context activity
+        // references
+        addLayoutFileChanges(result);
+
+        if (mRefactoringAppPackage) {
+            Change genChange = getGenPackageChange(pm);
+            if (genChange != null) {
+                result.add(genChange);
             }
-            if (mIsPackage) {
-                Change genChange = getGenPackageChange(pm);
-                if (genChange != null) {
-                    result.add(genChange);
+
+            return new NullChange("Update Imports") {
+                @Override
+                public Change perform(IProgressMonitor monitor) throws CoreException {
+                    FixImportsJob job = new FixImportsJob("Fix Rename Package",
+                            mManifestFile, mNewPackage);
+                    job.schedule(500);
+
+                    // Not undoable: just return null instead of an undo-change.
+                    return null;
                 }
-            }
-            // add layoutChange
-            for (AndroidLayoutFileChanges fileChange : mFileChanges) {
-                IFile file = fileChange.getFile();
-                ITextFileBufferManager lManager = FileBuffers.getTextFileBufferManager();
-                lManager.connect(file.getFullPath(), LocationKind.NORMALIZE,
-                        new NullProgressMonitor());
-                ITextFileBuffer buffer = lManager.getTextFileBuffer(file.getFullPath(),
-                        LocationKind.NORMALIZE);
-                IDocument lDocument = buffer.getDocument();
-                Change layoutChange = new AndroidLayoutChange(file, lDocument, lManager,
-                        fileChange.getChanges());
-                if (layoutChange != null) {
-                    result.add(layoutChange);
-                }
-            }
+            };
         }
+
         return (result.getChildren().length == 0) ? null : result;
     }
 
@@ -145,15 +235,15 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
      * @param pm the progress monitor
      *
      * @return Android gen package text change
-     * @throws CoreException
-     * @throws OperationCanceledException
+     * @throws CoreException if an error happens
+     * @throws OperationCanceledException if the operation is canceled
      */
     public Change getGenPackageChange(IProgressMonitor pm) throws CoreException,
             OperationCanceledException {
-        if (mIsPackage) {
+        if (mRefactoringAppPackage) {
             IPackageFragment genJavaPackageFragment = getGenPackageFragment();
             if (genJavaPackageFragment != null && genJavaPackageFragment.exists()) {
-                return new RenamePackageChange(genJavaPackageFragment, mNewName, true);
+                return new RenamePackageChange(genJavaPackageFragment, mNewPackage, true);
             }
         }
         return null;
@@ -161,7 +251,6 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
 
     /**
      * Return the gen package fragment
-     *
      */
     private IPackageFragment getGenPackageFragment() throws JavaModelException {
         IJavaProject javaProject = (IJavaProject) mPackageFragment
@@ -170,7 +259,7 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
             IProject project = javaProject.getProject();
             IFolder genFolder = project.getFolder(SdkConstants.FD_GEN_SOURCES);
             if (genFolder.exists()) {
-                String javaPackagePath = mAppPackage.replace(".", "/");
+                String javaPackagePath = mAppPackage.replace('.', '/');
                 IPath genJavaPackagePath = genFolder.getFullPath().append(javaPackagePath);
                 IPackageFragment genPackageFragment = javaProject
                         .findPackageFragment(genJavaPackagePath);
@@ -180,335 +269,218 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
         return null;
     }
 
-    @Override
-    public String getName() {
-        return "Android Package Rename";
-    }
-
-    @Override
-    protected boolean initialize(final Object element) {
-        mIsPackage = false;
-        try {
-            if (element instanceof IPackageFragment) {
-                mPackageFragment = (IPackageFragment) element;
-                if (!mPackageFragment.containsJavaResources())
-                    return false;
-                IJavaProject javaProject = (IJavaProject) mPackageFragment
-                        .getAncestor(IJavaElement.JAVA_PROJECT);
-                IProject project = javaProject.getProject();
-                IResource manifestResource = project.findMember(AdtConstants.WS_SEP
-                        + SdkConstants.FN_ANDROID_MANIFEST_XML);
-
-                if (manifestResource == null || !manifestResource.exists()
-                        || !(manifestResource instanceof IFile)) {
-                    RefactoringUtil.logInfo("Invalid or missing the "
-                            + SdkConstants.FN_ANDROID_MANIFEST_XML + " in the " + project.getName()
-                            + " project.");
-                    return false;
-                }
-                mAndroidManifest = (IFile) manifestResource;
-                String packageName = mPackageFragment.getElementName();
-                ManifestData manifestData;
-                manifestData = AndroidManifestHelper.parseForData(mAndroidManifest);
-                if (manifestData == null) {
-                    return false;
-                }
-                mAppPackage = manifestData.getPackage();
-                mOldName = packageName;
-                mNewName = getArguments().getNewName();
-                if (mOldName == null || mNewName == null) {
-                    return false;
-                }
-
-                if (RefactoringUtil.isRefactorAppPackage()
-                        && mAppPackage != null
-                        && mAppPackage.equals(packageName)) {
-                    mIsPackage = true;
-                }
-                mAndroidElements = addAndroidElements();
-
-                try {
-                    final IType type = javaProject.findType(SdkConstants.CLASS_VIEW);
-                    final HashSet<IType> elements = new HashSet<IType>();
-                    if (type != null) {
-                        ITypeHierarchy hierarchy = type.newTypeHierarchy(
-                                new NullProgressMonitor());
-                        IType[] allSubtypes = hierarchy.getAllSubtypes(type);
-                        for (IType subType : allSubtypes) {
-                            IResource resource = subType.getResource();
-                            // TODO: Handle library project downstream dependencies!
-                            if (resource != null && project.equals(resource.getProject())) {
-                                if (subType.getPackageFragment().equals(mPackageFragment)) {
-                                    elements.add(subType);
-                                }
-                            }
-                        }
-                    }
-
-                    List<String> views = new ArrayList<String>();
-                    for (IType elem : elements) {
-                        views.add(elem.getFullyQualifiedName());
-                    }
-                    if (views.size() > 0) {
-                        String[] classNames = views.toArray(new String[0]);
-                        addLayoutChanges(project, classNames);
-                    }
-                } catch (CoreException e) {
-                    RefactoringUtil.log(e);
-                }
-
-                return mIsPackage || mAndroidElements.size() > 0 || mFileChanges.size() > 0;
-            }
-        } catch (JavaModelException ignore) {
-        }
-        return false;
-    }
-
-    /**
-     * Adds layout changes for project
-     *
-     * @param project the Android project
-     * @param classNames the layout classes
-     */
-    private void addLayoutChanges(IProject project, String[] classNames) {
-        try {
-            IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
-            IResource[] layoutMembers = resFolder.members();
-            for (int j = 0; j < layoutMembers.length; j++) {
-                IResource resource = layoutMembers[j];
-                if (resource instanceof IFolder
-                        && resource.exists()
-                        && resource.getName().startsWith(SdkConstants.FD_RES_LAYOUT)) {
-                    IFolder layoutFolder = (IFolder) resource;
-                    IResource[] members = layoutFolder.members();
-                    for (int i = 0; i < members.length; i++) {
-                           IResource member = members[i];
-                           if ((member instanceof IFile)
-                                   && member.exists()
-                                   && member.getName().endsWith(".xml")) { //$NON-NLS-1$
-                               IFile file = (IFile) member;
-                               Set<AndroidLayoutChangeDescription> changes =
-                                   parse(file, classNames);
-                               if (changes.size() > 0) {
-                                   AndroidLayoutFileChanges fileChange =
-                                       new AndroidLayoutFileChanges(file);
-                                   fileChange.getChanges().addAll(changes);
-                                   mFileChanges.add(fileChange);
-                               }
-                           }
-                    }
-                }
-            }
-        } catch (CoreException e) {
-            RefactoringUtil.log(e);
-        }
-    }
-
-    /**
-     * Searches the layout file for classes
-     *
-     * @param file the Android layout file
-     * @param classNames the layout classes
-     */
-    private Set<AndroidLayoutChangeDescription> parse(IFile file, String[] classNames) {
-        Set<AndroidLayoutChangeDescription> changes =
-            new HashSet<AndroidLayoutChangeDescription>();
-        ITextFileBufferManager lManager = null;
-        try {
-            lManager = FileBuffers.getTextFileBufferManager();
-            lManager.connect(file.getFullPath(),
-                    LocationKind.NORMALIZE, new NullProgressMonitor());
-            ITextFileBuffer buffer = lManager.getTextFileBuffer(file.getFullPath(),
-                    LocationKind.NORMALIZE);
-            IDocument lDocument = buffer.getDocument();
-            IStructuredModel model = null;
-            try {
-                model = StructuredModelManager.getModelManager().
-                    getExistingModelForRead(lDocument);
-                if (model == null) {
-                    if (lDocument instanceof IStructuredDocument) {
-                        IStructuredDocument structuredDocument = (IStructuredDocument) lDocument;
-                        model = StructuredModelManager.getModelManager().getModelForRead(
-                                structuredDocument);
-                    }
-                }
-                if (model != null) {
-                    IDOMModel xmlModel = (IDOMModel) model;
-                    IDOMDocument xmlDoc = xmlModel.getDocument();
-                    NodeList nodes = xmlDoc.getElementsByTagName(SdkConstants.VIEW);
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                        Node node = nodes.item(i);
-                        NamedNodeMap attributes = node.getAttributes();
-                        if (attributes != null) {
-                            Node attributeNode = attributes
-                                    .getNamedItem(SdkConstants.ATTR_CLASS);
-                            if (attributeNode instanceof Attr) {
-                                Attr attribute = (Attr) attributeNode;
-                                String value = attribute.getValue();
-                                if (value != null) {
-                                    for (int j = 0; j < classNames.length; j++) {
-                                        String className = classNames[j];
-                                        if (value.equals(className)) {
-                                            String newClassName = getNewClassName(className);
-                                            AndroidLayoutChangeDescription layoutChange =
-                                                new AndroidLayoutChangeDescription(
-                                                    className, newClassName,
-                                                    AndroidLayoutChangeDescription.VIEW_TYPE);
-                                            changes.add(layoutChange);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    for (int j = 0; j < classNames.length; j++) {
-                        String className = classNames[j];
-                        nodes = xmlDoc.getElementsByTagName(className);
-                        for (int i = 0; i < nodes.getLength(); i++) {
-                            String newClassName = getNewClassName(className);
-                            AndroidLayoutChangeDescription layoutChange =
-                                new AndroidLayoutChangeDescription(
-                                    className, newClassName,
-                                    AndroidLayoutChangeDescription.STANDALONE_TYPE);
-                            changes.add(layoutChange);
-                        }
-                    }
-                }
-            } finally {
-                if (model != null) {
-                    model.releaseFromRead();
-                }
-            }
-
-        } catch (CoreException ignore) {
-        } finally {
-            if (lManager != null) {
-                try {
-                    lManager.disconnect(file.getFullPath(), LocationKind.NORMALIZE,
-                            new NullProgressMonitor());
-                } catch (CoreException ignore) {
-                }
-            }
-        }
-        return changes;
-    }
-
     /**
      * Returns the new class name
      *
-     * @param className the class name
+     * @param fqcn the fully qualified class name in the renamed package
      * @return the new class name
      */
-    private String getNewClassName(String className) {
-        int lastDot = className.lastIndexOf("."); //$NON-NLS-1$
+    private String getNewClassName(String fqcn) {
+        assert isInRenamedPackage(fqcn) : fqcn;
+        int lastDot = fqcn.lastIndexOf('.');
         if (lastDot < 0) {
-            return mNewName;
+            return mNewPackage;
         }
-        String name = className.substring(lastDot, className.length());
-        String newClassName = mNewName + name;
+        String name = fqcn.substring(lastDot, fqcn.length());
+        String newClassName = mNewPackage + name;
         return newClassName;
     }
 
-    /**
-     * Returns the elements (activity, receiver, service ...)
-     * which have to be renamed
-     *
-     * @return the android elements
-     */
-    private Map<String, String> addAndroidElements() {
-        Map<String, String> androidElements = new HashMap<String, String>();
+    private void addManifestFileChanges(CompositeChange result) {
+        addXmlFileChanges(mManifestFile, result, true);
+    }
 
-        IDocument document;
+    private void addLayoutFileChanges(CompositeChange result) {
         try {
-            document = getManifestDocument();
+            // Update references in XML resource files
+            IFolder resFolder = mProject.getFolder(SdkConstants.FD_RESOURCES);
+
+            IResource[] folders = resFolder.members();
+            for (IResource folder : folders) {
+                String folderName = folder.getName();
+                ResourceFolderType folderType = ResourceFolderType.getFolderType(folderName);
+                if (folderType != ResourceFolderType.LAYOUT) {
+                    continue;
+                }
+                if (!(folder instanceof IFolder)) {
+                    continue;
+                }
+                IResource[] files = ((IFolder) folder).members();
+                for (int i = 0; i < files.length; i++) {
+                    IResource member = files[i];
+                    if ((member instanceof IFile) && member.exists()) {
+                        IFile file = (IFile) member;
+                        String fileName = member.getName();
+
+                        if (SdkUtils.endsWith(fileName, DOT_XML)) {
+                            addXmlFileChanges(file, result, false);
+                        }
+                    }
+                }
+            }
         } catch (CoreException e) {
             RefactoringUtil.log(e);
-            if (mManager != null) {
-                try {
-                    mManager.disconnect(mAndroidManifest.getFullPath(), LocationKind.NORMALIZE,
-                            new NullProgressMonitor());
-                } catch (CoreException e1) {
-                    RefactoringUtil.log(e1);
-                }
-            }
-            document = null;
-            return androidElements;
         }
+    }
 
+    private boolean addXmlFileChanges(IFile file, CompositeChange changes, boolean isManifest) {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
         IStructuredModel model = null;
         try {
-            model = StructuredModelManager.getModelManager().getExistingModelForRead(document);
+            model = modelManager.getExistingModelForRead(file);
             if (model == null) {
-                if (document instanceof IStructuredDocument) {
-                    IStructuredDocument structuredDocument = (IStructuredDocument) document;
-                    model = StructuredModelManager.getModelManager().getModelForRead(
-                            structuredDocument);
-                }
+                model = modelManager.getModelForRead(file);
             }
             if (model != null) {
-                IDOMModel xmlModel = (IDOMModel) model;
-                IDOMDocument xmlDoc = xmlModel.getDocument();
-                add(xmlDoc, androidElements, AndroidManifest.NODE_ACTIVITY,
-                        AndroidManifest.ATTRIBUTE_NAME);
-                add(xmlDoc, androidElements, AndroidManifest.NODE_APPLICATION,
-                        AndroidManifest.ATTRIBUTE_NAME);
-                add(xmlDoc, androidElements, AndroidManifest.NODE_PROVIDER,
-                        AndroidManifest.ATTRIBUTE_NAME);
-                add(xmlDoc, androidElements, AndroidManifest.NODE_RECEIVER,
-                        AndroidManifest.ATTRIBUTE_NAME);
-                add(xmlDoc, androidElements, AndroidManifest.NODE_SERVICE,
-                        AndroidManifest.ATTRIBUTE_NAME);
+                IStructuredDocument document = model.getStructuredDocument();
+                if (model instanceof IDOMModel) {
+                    IDOMModel domModel = (IDOMModel) model;
+                    Element root = domModel.getDocument().getDocumentElement();
+                    if (root != null) {
+                        List<TextEdit> edits = new ArrayList<TextEdit>();
+                        if (isManifest) {
+                            addManifestReplacements(edits, root, document);
+                        } else {
+                            addLayoutReplacements(edits, root, document);
+                        }
+                        if (!edits.isEmpty()) {
+                            MultiTextEdit rootEdit = new MultiTextEdit();
+                            rootEdit.addChildren(edits.toArray(new TextEdit[edits.size()]));
+                            TextFileChange change = new TextFileChange(file.getName(), file);
+                            change.setTextType(EXT_XML);
+                            change.setEdit(rootEdit);
+                            changes.add(change);
+                        }
+                    }
+                } else {
+                    return false;
+                }
             }
+
+            return true;
+        } catch (IOException e) {
+            AdtPlugin.log(e, null);
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
         } finally {
             if (model != null) {
                 model.releaseFromRead();
             }
         }
 
-        return androidElements;
+        return false;
     }
 
-    /**
-     * Adds the element  (activity, receiver, service ...) to the map
-     *
-     * @param xmlDoc the document
-     * @param androidElements the map
-     * @param element the element
-     */
-    private void add(IDOMDocument xmlDoc, Map<String, String> androidElements, String element,
-            String argument) {
-        NodeList nodes = xmlDoc.getElementsByTagName(element);
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-            NamedNodeMap attributes = node.getAttributes();
-            if (attributes != null) {
-                Attr attribute = RefactoringUtil.findAndroidAttributes(attributes, argument);
-                if (attribute != null) {
-                    String value = attribute.getValue();
-                    if (value != null) {
-                        String fullName = AndroidManifest.combinePackageAndClassName(mAppPackage,
-                                value);
-                        if (RefactoringUtil.isRefactorAppPackage()) {
-                            if (fullName != null && fullName.startsWith(mAppPackage)) {
-                                boolean startWithDot = (value.charAt(0) == '.');
-                                boolean hasDot = (value.indexOf('.') != -1);
-                                if (!startWithDot && hasDot) {
-                                    androidElements.put(element, value);
-                                }
-                            }
-                        } else {
-                            if (fullName != null) {
-                                String currentPackage = mPackageFragment.getElementName();
-                                if (fullName.lastIndexOf('.') == currentPackage.length()
-                                        && fullName.startsWith(currentPackage)) {
-                                    androidElements.put(element, value);
-                                }
-                            }
+    private boolean isInRenamedPackage(String fqcn) {
+        return fqcn.startsWith(mOldPackage)
+                && fqcn.length() > mOldPackage.length()
+                && fqcn.indexOf('.', mOldPackage.length() + 1) == -1;
+    }
+
+    private void addLayoutReplacements(
+            @NonNull List<TextEdit> edits,
+            @NonNull Element element,
+            @NonNull IStructuredDocument document) {
+        String tag = element.getTagName();
+        if (isInRenamedPackage(tag)) {
+            int start = RefactoringUtil.getTagNameRangeStart(element, document);
+            if (start != -1) {
+                int end = start + tag.length();
+                edits.add(new ReplaceEdit(start, end - start, getNewClassName(tag)));
+            }
+        } else {
+            Attr classNode = null;
+            if (tag.equals(VIEW_TAG)) {
+                classNode = element.getAttributeNode(ATTR_CLASS);
+            } else if (tag.equals(VIEW_FRAGMENT)) {
+                classNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+            } else if (element.hasAttributeNS(TOOLS_URI, ATTR_CONTEXT)) {
+                classNode = element.getAttributeNodeNS(TOOLS_URI, ATTR_CONTEXT);
+                if (classNode != null && classNode.getValue().startsWith(".")) { //$NON-NLS-1$
+                    classNode = null;
+                }
+            }
+            if (classNode != null) {
+                String fqcn = classNode.getValue();
+                if (isInRenamedPackage(fqcn)) {
+                    int start = RefactoringUtil.getAttributeValueRangeStart(classNode, document);
+                    if (start != -1) {
+                        int end = start + fqcn.length();
+                        edits.add(new ReplaceEdit(start, end - start, getNewClassName(fqcn)));
+                    }
+                }
+            }
+        }
+
+        NodeList children = element.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                addLayoutReplacements(edits, (Element) child, document);
+            }
+        }
+    }
+
+    private void addManifestReplacements(
+            @NonNull List<TextEdit> edits,
+            @NonNull Element element,
+            @NonNull IStructuredDocument document) {
+        if (mRefactoringAppPackage &&
+                element == element.getOwnerDocument().getDocumentElement()) {
+            // Update the app package declaration
+            Attr pkg = element.getAttributeNode(ATTR_PACKAGE);
+            if (pkg != null && pkg.getValue().equals(mOldPackage)) {
+                int start = RefactoringUtil.getAttributeValueRangeStart(pkg, document);
+                if (start != -1) {
+                    int end = start + mOldPackage.length();
+                    edits.add(new ReplaceEdit(start, end - start, mNewPackage));
+                }
+            }
+        }
+
+        NamedNodeMap attributes = element.getAttributes();
+        for (int i = 0, n = attributes.getLength(); i < n; i++) {
+            Attr attr = (Attr) attributes.item(i);
+            if (!RefactoringUtil.isManifestClassAttribute(attr)) {
+                continue;
+            }
+
+            String value = attr.getValue();
+            if (isInRenamedPackage(value)) {
+                int start = RefactoringUtil.getAttributeValueRangeStart(attr, document);
+                if (start != -1) {
+                    int end = start + value.length();
+                    edits.add(new ReplaceEdit(start, end - start, getNewClassName(value)));
+                }
+            } else if (value.startsWith(".")) {
+                // If we're renaming the app package
+                String fqcn = mAppPackage + value;
+                if (isInRenamedPackage(fqcn)) {
+                    int start = RefactoringUtil.getAttributeValueRangeStart(attr, document);
+                    if (start != -1) {
+                        int end = start + value.length();
+                        String newClassName = getNewClassName(fqcn);
+                        if (mRefactoringAppPackage) {
+                            newClassName = newClassName.substring(mNewPackage.length());
+                        } else if (newClassName.startsWith(mOldPackage)
+                                && newClassName.charAt(mOldPackage.length()) == '.') {
+                            newClassName = newClassName.substring(mOldPackage.length());
+                        }
+
+                        if (!newClassName.equals(value)) {
+                            edits.add(new ReplaceEdit(start, end - start, newClassName));
                         }
                     }
                 }
             }
         }
-    }
 
+        NodeList children = element.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                addManifestReplacements(edits, (Element) child, document);
+            }
+        }
+    }
 }

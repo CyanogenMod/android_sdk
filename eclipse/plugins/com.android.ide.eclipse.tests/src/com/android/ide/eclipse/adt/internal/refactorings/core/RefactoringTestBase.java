@@ -19,10 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidDocumentChange;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidLayoutChange;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidPackageRenameChange;
-import com.android.ide.eclipse.adt.internal.refactorings.changes.AndroidTypeRenameChange;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -133,10 +129,7 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
                 sb.append('\n');
             }
 
-            if (change instanceof TextFileChange
-                    || change instanceof AndroidPackageRenameChange
-                    || change instanceof AndroidTypeRenameChange
-                    || change instanceof AndroidLayoutChange) {
+            if (change instanceof TextFileChange) {
                 assertNotNull(file);
                 if (file != null) {
                     TextChange tc = (TextChange) change;
@@ -221,18 +214,6 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
         if (change instanceof TextFileChange) {
             TextFileChange tfc = (TextFileChange) change;
             return tfc.getFile();
-        } else if (change instanceof AndroidPackageRenameChange) {
-            AndroidPackageRenameChange aprc = (AndroidPackageRenameChange) change;
-            return aprc.getManifest();
-        } else if (change instanceof AndroidTypeRenameChange) {
-            AndroidTypeRenameChange aprc = (AndroidTypeRenameChange) change;
-            return aprc.getManifest();
-        } else if (change instanceof AndroidLayoutChange) {
-            AndroidLayoutChange alc = (AndroidLayoutChange) change;
-            return alc.getFile();
-        } else if (change instanceof AndroidDocumentChange) {
-            AndroidDocumentChange atmc = (AndroidDocumentChange) change;
-            return atmc.getManifest();
         }
 
         return null;
@@ -293,6 +274,10 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
             "                <category android:name=\"android.intent.category.LAUNCHER\" />\n" +
             "            </intent-filter>\n" +
             "        </activity>\n" +
+            "        <activity\n" +
+            "            android:name=\".MainActivity2\"\n" +
+            "            android:label=\"@string/app_name2\" >\n" +
+            "        </activity>\n" +
             "    </application>\n" +
             "\n" +
             "</manifest>";
@@ -320,6 +305,31 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
             "        getMenuInflater().inflate(R.menu.activity_main, menu);\n" +
             "        return true;\n" +
             "    }\n" +
+            "\n" +
+            "}\n";
+
+    protected static final String SAMPLE_MAIN_ACTIVITY2 =
+            "package com.example.refactoringtest;\n" +
+            "\n" +
+            "import android.os.Bundle;\n" +
+            "import android.app.Activity;\n" +
+            "import android.view.Menu;\n" +
+            "import android.view.View;\n" +
+            "\n" +
+            "public class MainActivity2 extends Activity {\n" +
+            "\n" +
+            "    @Override\n" +
+            "    protected void onCreate(Bundle savedInstanceState) {\n" +
+            "        super.onCreate(savedInstanceState);\n" +
+            "    }\n" +
+            "\n" +
+            "}\n";
+
+    protected static final String MY_FRAGMENT =
+            "package com.example.refactoringtest;\n" +
+            "import android.support.v4.app.ListFragment;\n" +
+            "\n" +
+            "public class MyFragment extends ListFragment {\n" +
             "\n" +
             "}\n";
 
@@ -356,6 +366,8 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
             "        android:layout_alignParentTop=\"true\"\n" +
             "        android:text=\"Button\" />\n" +
             "\n" +
+            "    <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>" +
+            "\n" +
             "</RelativeLayout>";
 
     protected static final String SAMPLE_LAYOUT_2 =
@@ -364,6 +376,18 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
             "    android:layout_width=\"match_parent\"\n" +
             "    android:layout_height=\"match_parent\"\n" +
             "    tools:context=\".MainActivity\" >\n" +
+            "\n" +
+            "    <ListView\n" +
+            "        android:layout_width=\"match_parent\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        tools:listitem=\"@layout/preview\" >\n" +
+            "    </ListView>\n" +
+            "\n" +
+            "    <fragment\n" +
+            "        android:name=\"android.support.v4.app.ListFragment\"\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        tools:layout=\"@layout/preview\" />\n" +
             "\n" +
             "\n" +
             "</RelativeLayout>";
@@ -482,6 +506,9 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
         "src/com/example/refactoringtest/MainActivity.java",
         SAMPLE_MAIN_ACTIVITY,
 
+        "src/com/example/refactoringtest/MainActivity2.java",
+        SAMPLE_MAIN_ACTIVITY2,
+
         "gen/com/example/refactoringtest/R.java",
         SAMPLE_R,
 
@@ -571,6 +598,9 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
 
         "src/com/example/refactoringtest/subpackage/CustomView2.java",
         CUSTOM_VIEW_2,
+
+        "src/com/example/refactoringtest/MyFragment.java",
+        MY_FRAGMENT,
 
         "gen/com/example/refactoringtest/R.java",
         SAMPLE_R,

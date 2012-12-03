@@ -16,17 +16,25 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.core;
 
-import com.android.SdkConstants;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_BACKUP_AGENT;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_MANAGE_SPACE_ACTIVITY;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_PARENT_ACTIVITY_NAME;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_TARGET_ACTIVITY;
+
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.w3c.dom.Attr;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -74,43 +82,6 @@ public class RefactoringUtil {
     }
 
     /**
-     * Finds attribute by name in android namespace
-     *
-     * @param attributes the attributes collection
-     * @param localName the local part of the qualified name
-     *
-     * @return the first attribute with this name in android namespace
-     */
-    public static Attr findAndroidAttributes(final NamedNodeMap attributes,
-            final String localName) {
-        Attr attribute = null;
-        for (int j = 0; j < attributes.getLength(); j++) {
-            Node attNode = attributes.item(j);
-            if (attNode instanceof Attr) {
-                Attr attr = (Attr) attNode;
-                String name = attr.getLocalName();
-                String namespace = attr.getNamespaceURI();
-                if (SdkConstants.NS_RESOURCES.equals(namespace)
-                        && name != null
-                        && name.equals(localName)) {
-                    attribute = attr;
-                    break;
-                }
-            }
-        }
-        return attribute;
-    }
-
-    /**
-     * Logs the error message
-     *
-     * @param message the message
-     */
-    public static void logError(String message) {
-        AdtPlugin.log(IStatus.ERROR, AdtPlugin.PLUGIN_ID, message);
-    }
-
-    /**
      * Logs the info message
      *
      * @param message the message
@@ -142,5 +113,87 @@ public class RefactoringUtil {
      */
     public static void setRefactorAppPackage(boolean refactorAppPackage) {
         RefactoringUtil.sRefactorAppPackage = refactorAppPackage;
+    }
+
+    /**
+     * Returns the range of the attribute value in the given document
+     *
+     * @param attr the attribute to look up
+     * @param document the document containing the attribute
+     * @return the range of the value text, not including quotes, in the document
+     */
+    public static int getAttributeValueRangeStart(
+            @NonNull Attr attr,
+            @NonNull IDocument document) {
+        IndexedRegion region = (IndexedRegion) attr;
+        int potentialStart = attr.getName().length() + 2; // + 2: add ="
+        String text;
+        try {
+            text = document.get(region.getStartOffset(),
+                    region.getEndOffset() - region.getStartOffset());
+        } catch (BadLocationException e) {
+            return -1;
+        }
+        String value = attr.getValue();
+        int index = text.indexOf(value, potentialStart);
+        if (index != -1) {
+            return region.getStartOffset() + index;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the start of the tag name of the given element
+     *
+     * @param element the element to look up
+     * @param document the document containing the attribute
+     * @return the index of the start tag in the document
+     */
+    public static int getTagNameRangeStart(
+            @NonNull Element element,
+            @NonNull IDocument document) {
+        IndexedRegion region = (IndexedRegion) element;
+        int potentialStart = 1; // add '<'
+        String text;
+        try {
+            text = document.get(region.getStartOffset(),
+                    region.getEndOffset() - region.getStartOffset());
+        } catch (BadLocationException e) {
+            return -1;
+        }
+        int index = text.indexOf(element.getTagName(), potentialStart);
+        if (index != -1) {
+            return region.getStartOffset() + index;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Returns whether the given manifest attribute should be considered to describe
+     * a class name. These will be eligible for refactoring when classes are renamed
+     * or moved.
+     * <p>
+     * TODO: Move to {@link RefactoringUtil}
+     *
+     * @param attribute the manifest attribute
+     * @return true if this attribute can describe a class
+     */
+    public static boolean isManifestClassAttribute(@NonNull Attr attribute) {
+        String name = attribute.getLocalName();
+        if (name == null) {
+            return false;
+        }
+
+        if (name.equals(ATTR_NAME)
+                || name.equals(ATTRIBUTE_TARGET_ACTIVITY)
+                || name.equals(ATTRIBUTE_MANAGE_SPACE_ACTIVITY)
+                || name.equals(ATTRIBUTE_BACKUP_AGENT)
+                || name.equals(ATTRIBUTE_PARENT_ACTIVITY_NAME)) {
+            return ANDROID_URI.equals(attribute.getNamespaceURI());
+        }
+
+        return false;
     }
 }
