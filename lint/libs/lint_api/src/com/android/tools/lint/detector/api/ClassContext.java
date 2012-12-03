@@ -26,6 +26,7 @@ import static com.android.tools.lint.detector.api.Location.SearchDirection.FORWA
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.detector.api.Location.SearchDirection;
 import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.google.common.annotations.Beta;
 
@@ -521,18 +522,21 @@ public class ClassContext extends Context {
         // to find a method, look up the corresponding line number then search
         // around it for a suitable tag, such as the class name.
         String pattern;
+        SearchDirection searchMode;
         if (methodNode.name.equals(CONSTRUCTOR_NAME)) {
+            searchMode = EOL_BACKWARD;
             if (isAnonymousClass(classNode.name)) {
                 pattern = classNode.superName.substring(classNode.superName.lastIndexOf('/') + 1);
             } else {
                 pattern = classNode.name.substring(classNode.name.lastIndexOf('$') + 1);
             }
         } else {
+            searchMode = BACKWARD;
             pattern = methodNode.name;
         }
 
         return getLocationForLine(findLineNumber(methodNode), pattern, null,
-                SearchHints.create(EOL_BACKWARD).matchJavaSymbol());
+                SearchHints.create(searchMode).matchJavaSymbol());
     }
 
     /**

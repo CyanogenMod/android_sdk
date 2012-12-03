@@ -664,4 +664,40 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     "apicheck/ApiCallTest10.class.data=>bin/classes/test/pkg/ApiCallTest10.class"
                 ));
     }
+
+    public void testOverrideUnknownTarget() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "apicheck/ApiCallTest11.java.txt=>src/test/pkg/ApiCallTest11.java",
+                    "apicheck/ApiCallTest11.class.data=>bin/classes/test/pkg/ApiCallTest11.class"
+                ));
+    }
+
+    public void testOverride() throws Exception {
+        assertEquals(
+            "src/test/pkg/ApiCallTest11.java:13: Error: This method is not overriding anything with the current build target, but will in API level 11 (current target is 3): test.pkg.ApiCallTest11#getActionBar [Override]\n" +
+            "    public ActionBar getActionBar() {\n" +
+            "                     ~~~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest11.java:17: Error: This method is not overriding anything with the current build target, but will in API level 17 (current target is 3): test.pkg.ApiCallTest11#isDestroyed [Override]\n" +
+            "    public boolean isDestroyed() {\n" +
+            "                   ~~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest11.java:39: Error: This method is not overriding anything with the current build target, but will in API level 11 (current target is 3): test.pkg.ApiCallTest11.MyLinear#setDividerDrawable [Override]\n" +
+            "        public void setDividerDrawable(Drawable dividerDrawable) {\n" +
+            "                    ~~~~~~~~~~~~~~~~~~\n" +
+            "3 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "project.properties1=>project.properties",
+                    "apicheck/ApiCallTest11.java.txt=>src/test/pkg/ApiCallTest11.java",
+                    "apicheck/ApiCallTest11.class.data=>bin/classes/test/pkg/ApiCallTest11.class",
+                    "apicheck/ApiCallTest11$MyLinear.class.data=>bin/classes/test/pkg/ApiCallTest11$MyLinear.class",
+                    "apicheck/ApiCallTest11$MyActivity.class.data=>bin/classes/test/pkg/ApiCallTest11$MyActivity.class"
+                ));
+    }
 }
