@@ -263,8 +263,9 @@ public class BuiltinIssueRegistry extends IssueRegistry {
 
     /** Add the issues found in the given jar file into the given list of issues */
     private static void addIssuesFromJar(File jarFile, List<Issue> issues) {
+        JarFile jarfile = null;
         try {
-            JarFile jarfile = new JarFile(jarFile);
+            jarfile = new JarFile(jarFile);
             Manifest manifest = jarfile.getManifest();
             Attributes attrs = manifest.getMainAttributes();
             Object object = attrs.get(new Attributes.Name(MF_LINT_REGISTRY));
@@ -291,6 +292,14 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
         } catch (IOException e) {
             log(e);
+        } finally {
+            if (jarfile != null) {
+                try {
+                    jarfile.close();
+                } catch (IOException e) {
+                    // Nothing to be done
+                }
+            }
         }
     }
 
