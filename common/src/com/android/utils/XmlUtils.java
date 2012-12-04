@@ -42,7 +42,9 @@ public class XmlUtils {
     /**
      * Returns the namespace prefix matching the requested namespace URI.
      * If no such declaration is found, returns the default "android" prefix for
-     * the Android URI, and "app" for other URI's.
+     * the Android URI, and "app" for other URI's. By default the app namespace
+     * will be created. If this is not desirable, call
+     * {@link #lookupNamespacePrefix(Node, String, boolean)} instead.
      *
      * @param node The current node. Must not be null.
      * @param nsUri The namespace URI of which the prefix is to be found,
@@ -53,24 +55,47 @@ public class XmlUtils {
     @NonNull
     public static String lookupNamespacePrefix(@NonNull Node node, @NonNull String nsUri) {
         String defaultPrefix = ANDROID_URI.equals(nsUri) ? ANDROID_NS_NAME : APP_PREFIX;
-        return lookupNamespacePrefix(node, nsUri, defaultPrefix);
+        return lookupNamespacePrefix(node, nsUri, defaultPrefix, true /*create*/);
     }
 
     /**
-     * Returns the namespace prefix matching the requested namespace URI.
-     * If no such declaration is found, returns the default "android" prefix.
+     * Returns the namespace prefix matching the requested namespace URI. If no
+     * such declaration is found, returns the default "android" prefix for the
+     * Android URI, and "app" for other URI's.
      *
      * @param node The current node. Must not be null.
-     * @param nsUri The namespace URI of which the prefix is to be found,
-     *              e.g. {@link SdkConstants#ANDROID_URI}
-     * @param defaultPrefix The default prefix (root) to use if the namespace
-     *              is not found. If null, do not create a new namespace
-     *              if this URI is not defined for the document.
-     * @return The first prefix declared or the provided prefix (possibly with
-     *              a number appended to avoid conflicts with existing prefixes.
+     * @param nsUri The namespace URI of which the prefix is to be found, e.g.
+     *            {@link SdkConstants#ANDROID_URI}
+     * @param create whether the namespace declaration should be created, if
+     *            necessary
+     * @return The first prefix declared or the default "android" prefix (or
+     *         "app" for non-Android URIs)
+     */
+    @NonNull
+    public static String lookupNamespacePrefix(@NonNull Node node, @NonNull String nsUri,
+            boolean create) {
+        String defaultPrefix = ANDROID_URI.equals(nsUri) ? ANDROID_NS_NAME : APP_PREFIX;
+        return lookupNamespacePrefix(node, nsUri, defaultPrefix, create);
+    }
+
+    /**
+     * Returns the namespace prefix matching the requested namespace URI. If no
+     * such declaration is found, returns the default "android" prefix.
+     *
+     * @param node The current node. Must not be null.
+     * @param nsUri The namespace URI of which the prefix is to be found, e.g.
+     *            {@link SdkConstants#ANDROID_URI}
+     * @param defaultPrefix The default prefix (root) to use if the namespace is
+     *            not found. If null, do not create a new namespace if this URI
+     *            is not defined for the document.
+     * @param create whether the namespace declaration should be created, if
+     *            necessary
+     * @return The first prefix declared or the provided prefix (possibly with a
+     *            number appended to avoid conflicts with existing prefixes.
      */
     public static String lookupNamespacePrefix(
-            @Nullable Node node, @Nullable String nsUri, @Nullable String defaultPrefix) {
+            @Nullable Node node, @Nullable String nsUri, @Nullable String defaultPrefix,
+            boolean create) {
         // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
         // The following code emulates this simple call:
         //   String prefix = node.lookupPrefix(NS_RESOURCES);
@@ -140,7 +165,7 @@ public class XmlUtils {
             while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
                 node = node.getNextSibling();
             }
-            if (node != null) {
+            if (node != null && create) {
                 // This doesn't work:
                 //Attr attr = doc.createAttributeNS(XMLNS_URI, prefix);
                 //attr.setPrefix(XMLNS);

@@ -572,6 +572,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         for (Object choice : choices) {
             String keyword = null;
             String nsPrefix = null;
+            String nsUri = null;
             Image icon = null;
             String tooltip = null;
             if (choice instanceof ElementDescriptor) {
@@ -589,11 +590,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
                 // Get the namespace URI for the attribute. Note that some attributes
                 // do not have a namespace and thus return null here.
-                String nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
+                nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
                 if (nsUri != null) {
                     nsPrefix = nsUriMap.get(nsUri);
                     if (nsPrefix == null) {
-                        nsPrefix = XmlUtils.lookupNamespacePrefix(currentNode, nsUri);
+                        nsPrefix = XmlUtils.lookupNamespacePrefix(currentNode, nsUri, false);
                         nsUriMap.put(nsUri, nsPrefix);
                     }
                 }
@@ -687,7 +688,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     icon,                               // Image image
                     displayString,                      // displayString
                     null,                               // IContextInformation contextInformation
-                    tooltip                             // String additionalProposalInfo
+                    tooltip,                            // String additionalProposalInfo
+                    nsPrefix,
+                    nsUri
                 ));
             }
         }
