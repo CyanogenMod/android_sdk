@@ -100,8 +100,10 @@ if [ ! -d "$swtpath" ]; then
     exit 1
 fi
 
-echo "The standalone version of DDMS is deprecated."
-echo "Please use Android Device Monitor (tools/monitor) instead."
+if [ -x $progdir/monitor ]; then
+    echo "The standalone version of DDMS is deprecated."
+    echo "Please use Android Device Monitor (tools/monitor) instead."
+fi
 exec "$javaCmd" \
     -Xmx256M $os_opts $java_debug \
     -Dcom.android.ddms.bindir="$progdir" \
