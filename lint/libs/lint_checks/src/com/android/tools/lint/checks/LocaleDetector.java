@@ -99,7 +99,7 @@ public class LocaleDetector extends Detector implements ClassScanner {
             Scope.CLASS_FILE_SCOPE).setMoreInfo(
              "http://developer.android.com/reference/java/text/SimpleDateFormat.html"); //$NON-NLS-1$
 
-    private static final String DATE_FORMAT_OWNER = "java/text/SimpleDateFormat"; //$NON-NLS-1$
+    static final String DATE_FORMAT_OWNER = "java/text/SimpleDateFormat"; //$NON-NLS-1$
     private static final String STRING_OWNER = "java/lang/String";                //$NON-NLS-1$
 
     /** Constructs a new {@link LocaleDetector} */

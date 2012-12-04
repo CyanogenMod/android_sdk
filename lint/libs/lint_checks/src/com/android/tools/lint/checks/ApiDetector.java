@@ -514,10 +514,15 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                         // For virtual dispatch, walk up the inheritance chain checking
                         // each inherited method
                         if (owner.startsWith("android/")           //$NON-NLS-1$
-                                || owner.startsWith("java/")       //$NON-NLS-1$
                                 || owner.startsWith("javax/")) {   //$NON-NLS-1$
                             // The API map has already inlined all inherited methods
                             // so no need to keep checking up the chain
+                            owner = null;
+                        } else if (owner.startsWith("java/")) {    //$NON-NLS-1$
+                            if (owner.equals(LocaleDetector.DATE_FORMAT_OWNER)) {
+                                checkSimpleDateFormat(context, method, node, minSdk);
+                            }
+                            // Already inlined; see comment above
                             owner = null;
                         } else if (node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
                             owner = context.getDriver().getSuperClass(owner);
@@ -563,6 +568,42 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                             report(context, message, node, method,
                                     className.substring(className.lastIndexOf('/') + 1), null,
                                     SearchHints.create(FORWARD).matchJavaSymbol());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void checkSimpleDateFormat(ClassContext context, MethodNode method,
+            MethodInsnNode node, int minSdk) {
+        if (minSdk >= 9) {
+            // Already OK
+            return;
+        }
+        if (node.name.equals(CONSTRUCTOR_NAME) && !node.desc.equals("()V")) { //$NON-NLS-1$
+            // Check first argument
+            AbstractInsnNode prev = LintUtils.getPrevInstruction(node);
+            if (prev != null && !node.desc.equals("(Ljava/lang/String;)V")) { //$NON-NLS-1$
+                prev = LintUtils.getPrevInstruction(prev);
+            }
+            if (prev != null && prev.getOpcode() == Opcodes.LDC) {
+                LdcInsnNode ldc = (LdcInsnNode) prev;
+                Object cst = ldc.cst;
+                if (cst instanceof String) {
+                    String pattern = (String) cst;
+                    boolean isEscaped = false;
+                    for (int i = 0; i < pattern.length(); i++) {
+                        char c = pattern.charAt(i);
+                        if (c == '\'') {
+                            isEscaped = !isEscaped;
+                        } else  if (!isEscaped && (c == 'L' || c == 'c')) {
+                            String message = String.format(
+                                    "The pattern character '%1$c' requires API level 9 (current " +
+                                    "min is %2$d) : \"%3$s\"", c, minSdk, pattern);
+                            report(context, message, node, method, pattern, null,
+                                    SearchHints.create(FORWARD));
+                            return;
                         }
                     }
                 }
