@@ -15,5 +15,6 @@ LOCAL_JAVA_LIBRARIES := \
 	org.eclipse.equinox.common_3.6.0.v20100503 \
 	org.eclipse.core.commands_3.6.0.I20100512-1500
 LOCAL_MODULE := traceview
+LOCAL_MODULE_TAGS := debug
 
 include $(BUILD_HOST_JAVA_LIBRARY)

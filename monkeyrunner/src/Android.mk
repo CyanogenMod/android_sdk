@@ -32,6 +32,7 @@ LOCAL_JAVA_LIBRARIES := \
 LOCAL_JAVA_RESOURCE_DIRS := resources
 
 LOCAL_MODULE := monkeyrunner
+LOCAL_MODULE_TAGS := debug
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
