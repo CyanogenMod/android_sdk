@@ -463,26 +463,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testSkipAndroidSupportInAospHalf() throws Exception {
-        String expected;
-        if (System.getenv("ANDROID_BUILD_TOP") != null) {
-            expected = "No warnings.";
-        } else {
-            expected = "bin/classes/android/support/foo/Foo.class: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMError [NewApi]\n" +
-                    "1 errors, 0 warnings\n";
-        }
-
-        assertEquals(
-            expected,
-
-            lintProject(
-                "apicheck/classpath=>.classpath",
-                "apicheck/minsdk1.xml=>AndroidManifest.xml",
-                "apicheck/ApiCallTest2.java.txt=>src/src/android/support/foo/Foo.java",
-                "apicheck/ApiCallTest2.class.data=>bin/classes/android/support/foo/Foo.class"
-                ));
-    }
-
     public void testSuper() throws Exception {
         // See http://code.google.com/p/android/issues/detail?id=36384
         assertEquals(
@@ -698,6 +678,42 @@ public class ApiDetectorTest extends AbstractCheckTest {
                     "apicheck/ApiCallTest11.class.data=>bin/classes/test/pkg/ApiCallTest11.class",
                     "apicheck/ApiCallTest11$MyLinear.class.data=>bin/classes/test/pkg/ApiCallTest11$MyLinear.class",
                     "apicheck/ApiCallTest11$MyActivity.class.data=>bin/classes/test/pkg/ApiCallTest11$MyActivity.class"
+                ));
+    }
+
+    public void testDateFormat() throws Exception {
+        // See http://code.google.com/p/android/issues/detail?id=40876
+        assertEquals(
+            "src/test/pkg/ApiCallTest12.java:18: Error: Call requires API level 9 (current min is 4): java.text.DateFormatSymbols#getInstance [NewApi]\n" +
+            "  new SimpleDateFormat(\"yyyy-MM-dd\", DateFormatSymbols.getInstance());\n" +
+            "                                                       ~~~~~~~~~~~\n" +
+            "src/test/pkg/ApiCallTest12.java:23: Error: The pattern character 'L' requires API level 9 (current min is 4) : \"yyyy-MM-dd LL\" [NewApi]\n" +
+            "  new SimpleDateFormat(\"yyyy-MM-dd LL\", Locale.US);\n" +
+            "                        ^\n" +
+            "src/test/pkg/ApiCallTest12.java:25: Error: The pattern character 'c' requires API level 9 (current min is 4) : \"cc yyyy-MM-dd\" [NewApi]\n" +
+            "  SimpleDateFormat format = new SimpleDateFormat(\"cc yyyy-MM-dd\");\n" +
+            "                                                  ^\n" +
+            "3 errors, 0 warnings\n",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk4.xml=>AndroidManifest.xml",
+                    "project.properties1=>project.properties",
+                    "apicheck/ApiCallTest12.java.txt=>src/test/pkg/ApiCallTest12.java",
+                    "apicheck/ApiCallTest12.class.data=>bin/classes/test/pkg/ApiCallTest12.class"
+                ));
+    }
+
+    public void testDateFormatOk() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                    "apicheck/classpath=>.classpath",
+                    "apicheck/minsdk10.xml=>AndroidManifest.xml",
+                    "project.properties1=>project.properties",
+                    "apicheck/ApiCallTest12.java.txt=>src/test/pkg/ApiCallTest12.java",
+                    "apicheck/ApiCallTest12.class.data=>bin/classes/test/pkg/ApiCallTest12.class"
                 ));
     }
 }
