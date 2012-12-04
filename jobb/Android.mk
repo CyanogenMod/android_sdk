@@ -24,6 +24,7 @@ LOCAL_JAVA_LIBRARIES := \
     fat32lib
 
 LOCAL_MODULE := jobb 
+LOCAL_MODULE_TAGS := debug
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 include $(LOCAL_PATH)/etc/Android.mk
