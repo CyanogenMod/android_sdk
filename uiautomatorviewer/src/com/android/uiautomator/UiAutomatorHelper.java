@@ -20,6 +20,8 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.SyncService;
+import com.android.uiautomator.tree.BasicTreeNode;
+import com.android.uiautomator.tree.RootWindowNode;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -41,6 +43,7 @@ public class UiAutomatorHelper {
     private static final String UIAUTOMATOR = "/system/bin/uiautomator";    //$NON-NLS-1$
     private static final String UIAUTOMATOR_DUMP_COMMAND = "dump";          //$NON-NLS-1$
     private static final String UIDUMP_DEVICE_PATH = "/data/local/tmp/uidump.xml";  //$NON-NLS-1$
+    private static final int XML_CAPTURE_TIMEOUT_SEC = 40;
 
     private static boolean supportsUiAutomator(IDevice device) {
         String apiLevelString = device.getProperty(IDevice.PROP_BUILD_API_LEVEL);
@@ -78,9 +81,11 @@ public class UiAutomatorHelper {
         CountDownLatch commandCompleteLatch = new CountDownLatch(1);
 
         try {
-            device.executeShellCommand(command,
-                    new CollectingOutputReceiver(commandCompleteLatch));
-            commandCompleteLatch.await(40, TimeUnit.SECONDS);
+            device.executeShellCommand(
+                    command,
+                    new CollectingOutputReceiver(commandCompleteLatch),
+                    XML_CAPTURE_TIMEOUT_SEC * 1000);
+            commandCompleteLatch.await(XML_CAPTURE_TIMEOUT_SEC, TimeUnit.SECONDS);
 
             monitor.subTask("Pull UI XML snapshot from device...");
             device.getSyncService().pullFile(UIDUMP_DEVICE_PATH,
@@ -149,6 +154,13 @@ public class UiAutomatorHelper {
             throw new UiAutomatorException(msg, e);
         }
 
+        // rotate the screen shot per device rotation
+        BasicTreeNode root = model.getXmlRootNode();
+        if (root instanceof RootWindowNode) {
+            for (int i = 0; i < ((RootWindowNode)root).getRotation(); i++) {
+                rawImage = rawImage.getRotated();
+            }
+        }
         PaletteData palette = new PaletteData(
                 rawImage.getRedMask(),
                 rawImage.getGreenMask(),
