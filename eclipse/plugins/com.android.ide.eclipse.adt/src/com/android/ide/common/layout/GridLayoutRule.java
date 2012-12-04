@@ -28,6 +28,7 @@ import static com.android.SdkConstants.GRAVITY_VALUE_FILL;
 import static com.android.SdkConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
 import static com.android.SdkConstants.GRAVITY_VALUE_FILL_VERTICAL;
 import static com.android.SdkConstants.GRAVITY_VALUE_LEFT;
+import static com.android.SdkConstants.GRID_LAYOUT;
 import static com.android.SdkConstants.VALUE_HORIZONTAL;
 import static com.android.SdkConstants.VALUE_TRUE;
 
@@ -53,6 +54,7 @@ import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.grid.GridDropHandler;
 import com.android.ide.common.layout.grid.GridLayoutPainter;
 import com.android.ide.common.layout.grid.GridModel;
+import com.android.ide.common.layout.grid.GridModel.ViewData;
 import com.android.utils.Pair;
 
 import java.net.URL;
@@ -143,7 +145,7 @@ public class GridLayoutRule extends BaseLayoutRule {
      * Whether the grid is edited in "grid mode" where the operations are row/column based
      * rather than free-form
      */
-    public static boolean sGridMode = false;
+    public static boolean sGridMode = true;
 
     /** Constructs a new {@link GridLayoutRule} */
     public GridLayoutRule() {
@@ -228,6 +230,9 @@ public class GridLayoutRule extends BaseLayoutRule {
 
         // Add and Remove Column actions only apply in Grid Mode
         if (sGridMode) {
+            actions.add(RuleAction.createToggle(ACTION_SHOW_STRUCTURE, "Show Structure",
+                    sShowStructure, actionCallback, ICON_SHOW_STRUCT, 147, false));
+
             // Add Row and Add Column
             actions.add(RuleAction.createSeparator(150));
             actions.add(RuleAction.createAction(ACTION_ADD_COL, "Add Column", actionCallback,
@@ -366,7 +371,8 @@ public class GridLayoutRule extends BaseLayoutRule {
     public String getNamespace(INode layout) {
         String namespace = ANDROID_URI;
 
-        if (!layout.getFqcn().equals(FQCN_GRID_LAYOUT)) {
+        String fqcn = layout.getFqcn();
+        if (!fqcn.equals(GRID_LAYOUT) && !fqcn.equals(FQCN_GRID_LAYOUT)) {
             namespace = mRulesEngine.getAppNameSpace();
         }
 
@@ -407,10 +413,12 @@ public class GridLayoutRule extends BaseLayoutRule {
             boolean moved) {
         super.onRemovingChildren(deleted, parent, moved);
 
-        // Attempt to clean up spacer objects for any newly-empty rows or columns
-        // as the result of this deletion
-        GridModel grid = GridModel.get(mRulesEngine, parent, null);
-        grid.onDeleted(deleted);
+        if (!sGridMode) {
+            // Attempt to clean up spacer objects for any newly-empty rows or columns
+            // as the result of this deletion
+            GridModel grid = GridModel.get(mRulesEngine, parent, null);
+            grid.onDeleted(deleted);
+        }
     }
 
     @Override
@@ -454,6 +462,35 @@ public class GridLayoutRule extends BaseLayoutRule {
             Rect oldBounds, Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
 
         if (resizingWidget(state)) {
+            if (state.fillWidth || state.fillHeight || state.wrapWidth || state.wrapHeight) {
+                GridModel grid = getGrid(state);
+                ViewData view = grid.getView(node);
+                if (view != null) {
+                    String gravityString = grid.getGridAttribute(view.node, ATTR_LAYOUT_GRAVITY);
+                    int gravity = GravityHelper.getGravity(gravityString, 0);
+                    if (view.column > 0 && verticalEdge != null && state.fillWidth) {
+                        state.fillWidth = false;
+                        state.wrapWidth = true;
+                        gravity &= ~GravityHelper.GRAVITY_HORIZ_MASK;
+                        gravity |= GravityHelper.GRAVITY_FILL_HORIZ;
+                    } else if (verticalEdge != null && state.wrapWidth) {
+                        gravity &= ~GravityHelper.GRAVITY_HORIZ_MASK;
+                        gravity |= GravityHelper.GRAVITY_LEFT;
+                    }
+                    if (view.row > 0 && horizontalEdge != null && state.fillHeight) {
+                        state.fillHeight = false;
+                        state.wrapHeight = true;
+                        gravity &= ~GravityHelper.GRAVITY_VERT_MASK;
+                        gravity |= GravityHelper.GRAVITY_FILL_VERT;
+                    } else if (horizontalEdge != null && state.wrapHeight) {
+                        gravity &= ~GravityHelper.GRAVITY_VERT_MASK;
+                        gravity |= GravityHelper.GRAVITY_TOP;
+                    }
+                    gravityString = GravityHelper.getGravity(gravity);
+                    grid.setGridAttribute(view.node, ATTR_LAYOUT_GRAVITY, gravityString);
+                    // Fall through and set layout_width and/or layout_height to wrap_content
+                }
+            }
             super.setNewSizeBounds(state, node, layout, oldBounds, newBounds, horizontalEdge,
                     verticalEdge);
         } else {
@@ -463,6 +500,22 @@ public class GridLayoutRule extends BaseLayoutRule {
             GridModel grid = getGrid(state);
             grid.setColumnSpanAttribute(node, columnSpan);
             grid.setRowSpanAttribute(node, rowSpan);
+
+            ViewData view = grid.getView(node);
+            if (view != null) {
+                String gravityString = grid.getGridAttribute(view.node, ATTR_LAYOUT_GRAVITY);
+                int gravity = GravityHelper.getGravity(gravityString, 0);
+                if (verticalEdge != null && columnSpan > 1) {
+                    gravity &= ~GravityHelper.GRAVITY_HORIZ_MASK;
+                    gravity |= GravityHelper.GRAVITY_FILL_HORIZ;
+                }
+                if (horizontalEdge != null && rowSpan > 1) {
+                    gravity &= ~GravityHelper.GRAVITY_VERT_MASK;
+                    gravity |= GravityHelper.GRAVITY_FILL_VERT;
+                }
+                gravityString = GravityHelper.getGravity(gravity);
+                grid.setGridAttribute(view.node, ATTR_LAYOUT_GRAVITY, gravityString);
+            }
         }
     }
 

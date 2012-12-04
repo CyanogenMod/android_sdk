@@ -15,17 +15,17 @@
  */
 package com.android.ide.common.layout.grid;
 
-import static com.android.ide.common.layout.GravityHelper.getGravity;
-import static com.android.ide.common.layout.GridLayoutRule.GRID_SIZE;
-import static com.android.ide.common.layout.GridLayoutRule.MARGIN_SIZE;
-import static com.android.ide.common.layout.GridLayoutRule.MAX_CELL_DIFFERENCE;
-import static com.android.ide.common.layout.GridLayoutRule.SHORT_GAP_DP;
 import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
 import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN_SPAN;
 import static com.android.SdkConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.SdkConstants.ATTR_LAYOUT_ROW;
 import static com.android.SdkConstants.ATTR_LAYOUT_ROW_SPAN;
+import static com.android.ide.common.layout.GravityHelper.getGravity;
+import static com.android.ide.common.layout.GridLayoutRule.GRID_SIZE;
+import static com.android.ide.common.layout.GridLayoutRule.MARGIN_SIZE;
+import static com.android.ide.common.layout.GridLayoutRule.MAX_CELL_DIFFERENCE;
+import static com.android.ide.common.layout.GridLayoutRule.SHORT_GAP_DP;
 import static com.android.ide.common.layout.grid.GridModel.UNDEFINED;
 import static java.lang.Math.abs;
 
@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The {@link GridDropHandler} handles drag and drop operations into and within a
@@ -83,8 +84,10 @@ public class GridDropHandler {
         int x1 = p.x;
         int y1 = p.y;
 
+        Rect dragBounds = feedback.dragBounds;
+        int w = dragBounds != null ? dragBounds.w : 0;
+        int h = dragBounds != null ? dragBounds.h : 0;
         if (!GridLayoutRule.sGridMode) {
-            Rect dragBounds = feedback.dragBounds;
             if (dragBounds != null) {
                 // Sometimes the items are centered under the mouse so
                 // offset by the top left corner distance
@@ -92,8 +95,6 @@ public class GridDropHandler {
                 y1 += dragBounds.y;
             }
 
-            int w = dragBounds != null ? dragBounds.w : 0;
-            int h = dragBounds != null ? dragBounds.h : 0;
             int x2 = x1 + w;
             int y2 = y1 + h;
 
@@ -185,19 +186,72 @@ public class GridDropHandler {
             int SLOP = 2;
             int radius = mRule.getNewCellSize();
             if (rightDistance < radius + SLOP) {
-                column++;
+                column = Math.min(column + 1, mGrid.actualColumnCount);
                 leftDistance = rightDistance;
             }
             if (bottomDistance < radius + SLOP) {
-                row++;
+                row = Math.min(row + 1, mGrid.actualRowCount);
                 topDistance = bottomDistance;
             }
 
-            boolean matchLeft = leftDistance < radius + SLOP;
-            boolean matchTop = topDistance < radius + SLOP;
+            boolean createColumn = leftDistance < radius + SLOP;
+            boolean createRow = topDistance < radius + SLOP;
+            if (x1 >= bounds.x2()) {
+                createColumn = true;
+            }
+            if (y1 >= bounds.y2()) {
+                createRow = true;
+            }
 
-            mColumnMatch = new GridMatch(SegmentType.LEFT, 0, x1, column, matchLeft, 0);
-            mRowMatch = new GridMatch(SegmentType.TOP, 0, y1, row, matchTop, 0);
+            int cellWidth = leftDistance + rightDistance;
+            int cellHeight = topDistance + bottomDistance;
+            SegmentType horizontalType = SegmentType.LEFT;
+            SegmentType verticalType = SegmentType.TOP;
+            int minDistance = 10; // Don't center or right/bottom align in tiny cells
+            if (!createColumn && leftDistance > minDistance
+                    && dragBounds != null && dragBounds.w < cellWidth - 10) {
+                if (rightDistance < leftDistance) {
+                    horizontalType = SegmentType.RIGHT;
+                }
+
+                int centerDistance = Math.abs(cellWidth / 2 - leftDistance);
+                if (centerDistance < leftDistance / 2 && centerDistance < rightDistance / 2) {
+                    horizontalType = SegmentType.CENTER_HORIZONTAL;
+                }
+            }
+            if (!createRow && topDistance > minDistance
+                    && dragBounds != null && dragBounds.h < cellHeight - 10) {
+                if (bottomDistance < topDistance) {
+                    verticalType = SegmentType.BOTTOM;
+                }
+                int centerDistance = Math.abs(cellHeight / 2 - topDistance);
+                if (centerDistance < topDistance / 2 && centerDistance < bottomDistance / 2) {
+                    verticalType = SegmentType.CENTER_VERTICAL;
+                }
+            }
+
+            mColumnMatch = new GridMatch(horizontalType, 0, x1, column, createColumn, 0);
+            mRowMatch = new GridMatch(verticalType, 0, y1, row, createRow, 0);
+
+            StringBuilder description = new StringBuilder(50);
+            String rowString = Integer.toString(mColumnMatch.cellIndex + 1);
+            String columnString = Integer.toString(mRowMatch.cellIndex + 1);
+            if (mRowMatch.createCell && mRowMatch.cellIndex < mGrid.actualRowCount) {
+                description.append(String.format("Shift row %1$d down", mRowMatch.cellIndex + 1));
+                description.append('\n');
+            }
+            if (mColumnMatch.createCell && mColumnMatch.cellIndex < mGrid.actualColumnCount) {
+                description.append(String.format("Shift column %1$d right",
+                        mColumnMatch.cellIndex + 1));
+                description.append('\n');
+            }
+            description.append(String.format("Insert into cell (%1$s,%2$s)",
+                    rowString, columnString));
+            description.append('\n');
+            description.append(String.format("Align %1$s, %2$s",
+                    horizontalType.name().toLowerCase(Locale.US),
+                    verticalType.name().toLowerCase(Locale.US)));
+            feedback.tooltip = description.toString();
         }
     }
 
@@ -713,16 +767,46 @@ public class GridDropHandler {
         String fqcn = element.getFqcn();
         INode newChild = targetNode.appendChild(fqcn);
 
+        int column = mColumnMatch.cellIndex;
         if (mColumnMatch.createCell) {
-            mGrid.addColumn(mColumnMatch.cellIndex,
+            mGrid.addColumn(column,
                     newChild, UNDEFINED, false, UNDEFINED, UNDEFINED);
         }
+        int row = mRowMatch.cellIndex;
         if (mRowMatch.createCell) {
-            mGrid.addRow(mRowMatch.cellIndex, newChild, UNDEFINED, false, UNDEFINED, UNDEFINED);
+            mGrid.addRow(row, newChild, UNDEFINED, false, UNDEFINED, UNDEFINED);
         }
 
-        mGrid.setGridAttribute(newChild, ATTR_LAYOUT_COLUMN, mColumnMatch.cellIndex);
-        mGrid.setGridAttribute(newChild, ATTR_LAYOUT_ROW, mRowMatch.cellIndex);
+        mGrid.setGridAttribute(newChild, ATTR_LAYOUT_COLUMN, column);
+        mGrid.setGridAttribute(newChild, ATTR_LAYOUT_ROW, row);
+
+        int gravity = 0;
+        if (mColumnMatch.type == SegmentType.RIGHT) {
+            gravity |= GravityHelper.GRAVITY_RIGHT;
+        } else if (mColumnMatch.type == SegmentType.CENTER_HORIZONTAL) {
+            gravity |= GravityHelper.GRAVITY_CENTER_HORIZ;
+        }
+        if (mRowMatch.type == SegmentType.BASELINE) {
+            // There *is* no baseline gravity constant, instead, leave the
+            // vertical gravity unspecified and GridLayout will treat it as
+            // baseline alignment
+            //gravity |= GravityHelper.GRAVITY_BASELINE;
+        } else if (mRowMatch.type == SegmentType.BOTTOM) {
+            gravity |= GravityHelper.GRAVITY_BOTTOM;
+        } else if (mRowMatch.type == SegmentType.CENTER_VERTICAL) {
+            gravity |= GravityHelper.GRAVITY_CENTER_VERT;
+        }
+        if (!GravityHelper.isConstrainedHorizontally(gravity)) {
+            gravity |= GravityHelper.GRAVITY_LEFT;
+        }
+        if (!GravityHelper.isConstrainedVertically(gravity)) {
+            gravity |= GravityHelper.GRAVITY_TOP;
+        }
+        mGrid.setGridAttribute(newChild, ATTR_LAYOUT_GRAVITY, getGravity(gravity));
+
+        if (mGrid.declaredColumnCount == UNDEFINED || mGrid.declaredColumnCount < column + 1) {
+            mGrid.setGridAttribute(mGrid.layout, ATTR_COLUMN_COUNT, column + 1);
+        }
 
         return newChild;
     }
