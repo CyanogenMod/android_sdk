@@ -230,7 +230,8 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "\n" +
                 "* Rename 'testRefactor7/res/layout-land/activity_main.xml' to 'newlayout.xml'\n" +
                 "\n" +
-                "* Rename 'testRefactor7/res/layout/activity_main.xml' to 'newlayout.xml'");
+                "* Rename 'testRefactor7/res/layout/activity_main.xml' to 'newlayout.xml'",
+                null);
     }
 
     public void testRefactor8() throws Exception {
@@ -270,7 +271,8 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "* R.java - /testRefactor8/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
-                "  +         public static final int newlauncher=0x7f030000;");
+                "  +         public static final int newlauncher=0x7f030000;",
+                null);
     }
 
     public void testInvalidName() throws Exception {
@@ -280,6 +282,7 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 true /*updateReferences*/,
                 "Newlauncher",
 
+                "",
                 "<ERROR\n" +
                 "\t\n" +
                 "ERROR: File-based resource names must start with a lowercase letter.\n" +
@@ -338,8 +341,18 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
             boolean updateReferences,
             @NonNull String newName,
             @NonNull String expected) throws Exception {
+        renameResource(testData, resource, updateReferences, newName, expected, null);
+    }
+
+    protected void renameResource(
+            @NonNull Object[] testData,
+            @NonNull Object resource,
+            boolean updateReferences,
+            @NonNull String newName,
+            @NonNull String expected,
+            @NonNull String expectedWarnings) throws Exception {
         IProject project = createProject(testData);
-        renameResource(project, resource, updateReferences, newName, expected);
+        renameResource(project, resource, updateReferences, newName, expected, expectedWarnings);
     }
 
     protected void renameResource(
@@ -347,7 +360,8 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
             @NonNull Object resource,
             boolean updateReferences,
             @NonNull String newName,
-            @NonNull String expected) throws Exception {
+            @NonNull String expected,
+            @NonNull String expectedWarnings) throws Exception {
         RenameProcessor processor = null;
         if (resource instanceof String) {
             String url = (String) resource;
@@ -382,6 +396,6 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
         assertNotNull(processor);
 
         RenameRefactoring refactoring = new RenameRefactoring(processor);
-        checkRefactoring(refactoring, expected);
+        checkRefactoring(refactoring, expected, expectedWarnings);
     }
 }

@@ -51,12 +51,19 @@ import java.util.List;
 
 @SuppressWarnings({"javadoc","restriction"})
 public abstract class RefactoringTestBase extends AdtProjectTest {
-    protected void checkRefactoring(Refactoring refactoring, String expected)
-            throws Exception {
+    protected void checkRefactoring(Refactoring refactoring, String expected) throws Exception {
+        checkRefactoring(refactoring, expected, null);
+    }
+
+    protected void checkRefactoring(Refactoring refactoring, String expected,
+            @Nullable String expectedWarnings) throws Exception {
         RefactoringStatus status = refactoring.checkAllConditions(new NullProgressMonitor());
         assertNotNull(status);
+        if (expectedWarnings == null) {
+            expectedWarnings = "<OK\n>";
+        }
+        assertEquals(status.toString().trim(), expectedWarnings.trim());
         if (!status.isOK()) {
-            assertEquals(status.toString(), expected);
             return;
         }
         assertTrue(status.toString(), status.isOK());
@@ -634,5 +641,10 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
 
         "res/values/styles.xml",   // file 3
         SAMPLE_STYLES,
+
+        // Just a gen file, should not be refactored
+        "bin/AndroidManifest.xml",
+        SAMPLE_MANIFEST,
+
     };
 }
