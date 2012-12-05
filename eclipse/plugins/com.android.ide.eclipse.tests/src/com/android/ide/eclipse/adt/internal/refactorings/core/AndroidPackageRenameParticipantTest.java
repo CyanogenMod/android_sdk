@@ -61,7 +61,8 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
                 "  @@ -25 +25\n" +
                 "  -             android:name=\".MainActivity2\"\n" +
-                "  +             android:name=\"my.pkg.name.MainActivity2\"");
+                "  +             android:name=\"my.pkg.name.MainActivity2\"",
+                true);
     }
 
     public void testRefactor1_noreferences() throws Exception {
@@ -73,7 +74,8 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' to 'my.pkg.name'");
+                "* Rename package 'com.example.refactoringtest' to 'my.pkg.name'",
+                false);
     }
 
     public void testRefactor2() throws Exception {
@@ -118,7 +120,8 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
                 "  @@ -25 +25\n" +
                 "  -             android:name=\".MainActivity2\"\n" +
-                "  +             android:name=\"my.pkg.name.MainActivity2\"");
+                "  +             android:name=\"my.pkg.name.MainActivity2\"",
+                true);
     }
 
     public void testRefactor2_renamesub() throws Exception {
@@ -175,7 +178,8 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "* customviews.xml - /testRefactor2_renamesub/res/layout-land/customviews.xml\n" +
                 "  @@ -15 +15\n" +
                 "  -     <com.example.refactoringtest.subpackage.CustomView2\n" +
-                "  +     <my.pkg.name.subpackage.CustomView2");
+                "  +     <my.pkg.name.subpackage.CustomView2",
+                true);
     }
 
     public void testRefactor2_renamesub_norefs() throws Exception {
@@ -188,7 +192,8 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' and subpackages to 'my.pkg.name'");
+                "* Rename package 'com.example.refactoringtest' and subpackages to 'my.pkg.name'",
+                false);
     }
 
 
@@ -199,9 +204,13 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
             boolean renameSubpackages,
             boolean updateReferences,
             @NonNull String newName,
-            @NonNull String expected) throws Exception {
+            @NonNull String expected,
+            boolean expectedAppPackageRenameWarning) throws Exception {
         IProject project = createProject(testData);
-        renamePackage(project, renameSubpackages, updateReferences, newName, expected);
+        String expectedWarnings = expectedAppPackageRenameWarning ?
+                EXPECTED_WARNINGS_TEMPLATE.replace("PROJECTNAME", project.getName()) : null;
+        renamePackage(project, renameSubpackages, updateReferences, newName, expected,
+                expectedWarnings);
     }
 
     protected void renamePackage(
@@ -209,7 +218,8 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
             boolean renameSubpackages,
             boolean updateReferences,
             @NonNull String newName,
-            @NonNull String expected) throws Exception {
+            @NonNull String expected,
+            @NonNull String expectedWarnings) throws Exception {
         ManifestInfo info = ManifestInfo.get(project);
         String currentPackage = info.getPackage();
         assertNotNull(currentPackage);
@@ -222,7 +232,7 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
         assertNotNull(processor);
 
         RenameRefactoring refactoring = new RenameRefactoring(processor);
-        checkRefactoring(refactoring, expected);
+        checkRefactoring(refactoring, expected, expectedWarnings);
     }
 
     private static IPackageFragment getPackageFragment(IProject project, String pkg)
@@ -240,4 +250,44 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
         }
         return pkgFragment;
     }
+
+    private static String EXPECTED_WARNINGS_TEMPLATE =
+            "<INFO\n" +
+            "\t\n" +
+            "INFO: You are refactoring the same package as your application's package (specified in the manifest).\n" +
+            "\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            "\t\n" +
+            "INFO: Note that this refactoring does NOT also update your application package.\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            "\t\n" +
+            "INFO: The application package defines your application's identity.\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            "\t\n" +
+            "INFO: If you change it, then it is considered to be a different application.\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            "\t\n" +
+            "INFO: (Users of the previous version cannot update to the new version.)\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            "\t\n" +
+            "INFO: The application package, and the package containing the code, can differ.\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            "\t\n" +
+            "INFO: To really change application package, choose \"Android Tools\" > \"Rename  Application Package.\" from the project context menu.\n" +
+            "Context: L/PROJECTNAME/AndroidManifest.xml\n" +
+            "code: none\n" +
+            "Data: null\n" +
+            ">";
 }

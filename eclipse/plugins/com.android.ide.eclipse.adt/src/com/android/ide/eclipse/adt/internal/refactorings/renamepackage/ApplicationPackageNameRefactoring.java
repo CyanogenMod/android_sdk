@@ -436,10 +436,13 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                 } else if (SdkConstants.EXT_XML.equals(file.getFileExtension())) {
 
                     if (SdkConstants.FN_ANDROID_MANIFEST_XML.equals(file.getName())) {
-
-                        TextFileChange manifest_change = editAndroidManifest(file);
-                        mChanges.add(manifest_change);
-
+                        // Ensure that this is the root manifest, not some other copy
+                        // (such as the one in bin/)
+                        IPath path = file.getFullPath();
+                        if (path.segmentCount() == 2) {
+                            TextFileChange manifest_change = editAndroidManifest(file);
+                            mChanges.add(manifest_change);
+                        }
                     } else {
 
                         // Currently we only support Android resource XML files,

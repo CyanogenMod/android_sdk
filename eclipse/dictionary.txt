@@ -233,6 +233,7 @@ recompilation
 rect
 redo
 refactor
+refactored
 refactoring
 refactorings
 regex

@@ -32,6 +32,7 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.resources.ResourceFolderType;
 import com.android.utils.SdkUtils;
@@ -51,10 +52,14 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.corext.refactoring.changes.RenamePackageChange;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameCompilationUnitProcessor;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameTypeProcessor;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.FileStatusContext;
 import org.eclipse.ltk.core.refactoring.NullChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.RefactoringStatusContext;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RefactoringProcessor;
@@ -65,9 +70,11 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -107,6 +114,44 @@ public class AndroidPackageRenameParticipant extends RenameParticipant {
     @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context)
             throws OperationCanceledException {
+        if (mAppPackage.equals(mOldPackage) && !mRefactoringAppPackage) {
+            IRegion region = null;
+            Document document = DomUtilities.getDocument(mManifestFile);
+            if (document != null && document.getDocumentElement() != null) {
+                Attr attribute = document.getDocumentElement().getAttributeNode(ATTR_PACKAGE);
+                if (attribute instanceof IndexedRegion) {
+                    IndexedRegion ir = (IndexedRegion) attribute;
+                    int start = ir.getStartOffset();
+                    region = new Region(start, ir.getEndOffset() - start);
+                }
+            }
+            if (region == null) {
+                region = new Region(0, 0);
+            }
+            // There's no line wrapping in the error dialog, so split up the message into
+            // individually digestible pieces of information
+            RefactoringStatusContext ctx = new FileStatusContext(mManifestFile, region);
+            RefactoringStatus status = RefactoringStatus.createInfoStatus(
+                    "You are refactoring the same package as your application's " +
+                    "package (specified in the manifest).\n", ctx);
+            status.addInfo(
+                    "Note that this refactoring does NOT also update your " +
+                    "application package.", ctx);
+            status.addInfo("The application package defines your application's identity.", ctx);
+            status.addInfo(
+                    "If you change it, then it is considered to be a different application.", ctx);
+            status.addInfo("(Users of the previous version cannot update to the new version.)",
+                    ctx);
+            status.addInfo(
+                    "The application package, and the package containing the code, can differ.",
+                    ctx);
+            status.addInfo(
+                    "To really change application package, " +
+                    "choose \"Android Tools\" > \"Rename  Application Package.\" " +
+                    "from the project context menu.", ctx);
+            return status;
+        }
+
         return new RefactoringStatus();
     }
 
