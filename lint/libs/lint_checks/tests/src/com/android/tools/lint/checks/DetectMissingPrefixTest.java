@@ -67,4 +67,18 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
 
             lintFiles("missingprefix.xml=>AndroidManifest.xml"));
     }
+
+    public void testLayoutAttributes() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/namespace3.xml"));
+    }
+
+    public void testLayoutAttributes2() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/namespace4.xml"));
+    }
 }

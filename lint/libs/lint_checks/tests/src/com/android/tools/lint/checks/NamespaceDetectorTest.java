@@ -27,11 +27,10 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
 
     public void testCustom() throws Exception {
         assertEquals(
-            "res/layout/customview.xml:16: Error: When using a custom namespace attribute in a library project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead. [LibraryCustomView]\n" +
-            "        foo:misc=\"Custom attribute\"\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "1 errors, 0 warnings\n" +
-            "",
+            "res/layout/customview.xml:5: Error: When using a custom namespace attribute in a library project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead. [LibraryCustomView]\n" +
+            "    xmlns:foo=\"http://schemas.android.com/apk/res/foo\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n",
 
             lintProject(
                     "multiproject/library-manifest.xml=>AndroidManifest.xml",
@@ -142,5 +141,43 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
                 "No warnings.",
 
                 lintProject("res/layout/layout1.xml"));
+    }
+
+    public void testLayoutAttributesOk() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/namespace3.xml"));
+    }
+
+    public void testLayoutAttributesOk2() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/namespace4.xml"));
+    }
+
+    public void testLayoutAttributes() throws Exception {
+        assertEquals(
+            "res/layout/namespace3.xml:2: Error: When using a custom namespace attribute in a library project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead. [LibraryCustomView]\n" +
+            "    xmlns:app=\"http://schemas.android.com/apk/res/com.example.apicalltest\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n",
+
+            lintFiles("res/layout/namespace3.xml",
+                      "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                      "multiproject/library.properties=>project.properties"));
+    }
+
+    public void testLayoutAttributes2() throws Exception {
+        assertEquals(
+            "res/layout/namespace4.xml:3: Error: When using a custom namespace attribute in a library project, use the namespace \"http://schemas.android.com/apk/res-auto\" instead. [LibraryCustomView]\n" +
+            "    xmlns:app=\"http://schemas.android.com/apk/res/com.example.apicalltest\"\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n",
+
+            lintFiles("res/layout/namespace4.xml",
+                    "multiproject/library-manifest.xml=>AndroidManifest.xml",
+                    "multiproject/library.properties=>project.properties"));
     }
 }
