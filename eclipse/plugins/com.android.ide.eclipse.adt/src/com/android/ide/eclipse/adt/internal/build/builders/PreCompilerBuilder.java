@@ -56,6 +56,8 @@ import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -78,6 +80,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -1156,18 +1159,71 @@ public class PreCompilerBuilder extends BaseBuilder {
                 File rFile = new File(outputFolder, SdkConstants.FN_RESOURCE_TEXT);
                 // if the project has no resources, the file could not exist.
                 if (rFile.isFile()) {
-                    SymbolLoader symbolValues = new SymbolLoader(rFile);
-                    symbolValues.load();
+                    // Load the full symbols from the full R.txt file.
+                    SymbolLoader fullSymbols = new SymbolLoader(rFile);
+                    fullSymbols.load();
 
-                    for (Pair<File, String> libData : libRFiles) {
-                        File libRFile = libData.getFirst();
-                        if (libRFile.isFile()) {
-                            SymbolLoader symbols = new SymbolLoader(libRFile);
-                            symbols.load();
+                    // simpler case of a single library
+                    if (libRFiles.size() == 1) {
+                        Pair<File, String> lib = libRFiles.get(0);
+                        createRClass(fullSymbols, lib.getFirst(), lib.getSecond(), osOutputPath);
 
-                            SymbolWriter writer = new SymbolWriter(osOutputPath,
-                                    libData.getSecond(), symbols, symbolValues);
-                            writer.write();
+                    } else {
+                        Map<String, File> libPackages = Maps.newHashMapWithExpectedSize(
+                                libRFiles.size());
+                        Set<String> duplicatePackages = Sets.newHashSet();
+
+                        // preprocessing to figure out if there are dups in the package names of
+                        // the libraries
+                        for (Pair<File, String> lib : libRFiles) {
+                            String libPackage = lib.getSecond();
+                            File existingPkg = libPackages.get(libPackage);
+                            if (existingPkg != null) {
+                                // record the dup package and keep going, in case there are all
+                                // the same
+                                duplicatePackages.add(libPackage);
+                                continue;
+                            }
+
+                            libPackages.put(libPackage, lib.getFirst());
+                        }
+
+                        // check if we have duplicate but all files are the same.
+                        if (duplicatePackages.size() > 0) {
+                            // possible conflict!
+                            // detect case of all libraries == same package.
+                            if (duplicatePackages.size() == 1 && libPackages.size() == 1 &&
+                                    duplicatePackages.iterator().next().equals(libPackages.keySet().iterator().next())) {
+                                // this is ok, all libraries have the same package.
+                                // Make a copy of the full R class.
+                                SymbolWriter writer = new SymbolWriter(osOutputPath,
+                                        duplicatePackages.iterator().next(),
+                                        fullSymbols, fullSymbols);
+                                writer.write();
+                            } else {
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("The following packages have been found to be used by two or more libraries:");
+                                for (String pkg : duplicatePackages) {
+                                    sb.append("\n\t").append(pkg);
+                                }
+                                sb.append("\nNo libraries must share the same package, unless all libraries share the same packages.");
+
+                                String msg = sb.toString();
+                                markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+
+                                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
+                                        msg);
+
+                                throw new AbortBuildException();
+                            }
+                        } else {
+                            // no dups, all libraries have different packages.
+                            // Conflicts with the main package have been removed already.
+                            // Just process all the libraries.
+                            for (Pair<File, String> lib : libRFiles) {
+                                createRClass(fullSymbols, lib.getFirst(), lib.getSecond(),
+                                        osOutputPath);
+                            }
                         }
                     }
                 }
@@ -1226,6 +1282,19 @@ public class PreCompilerBuilder extends BaseBuilder {
             ResourceManager.clearAaptRequest(project);
         }
     }
+
+    private void createRClass(SymbolLoader fullSymbols, File libRTxtFile, String libPackage,
+            String osOutputPath) throws IOException {
+        if (libRTxtFile.isFile()) {
+            SymbolLoader libSymbols = new SymbolLoader(libRTxtFile);
+            libSymbols.load();
+
+            SymbolWriter writer = new SymbolWriter(osOutputPath, libPackage, libSymbols,
+                    fullSymbols);
+            writer.write();
+        }
+    }
+
 
     /**
      * Creates a relative {@link IPath} from a java package.

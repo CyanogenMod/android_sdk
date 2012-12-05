@@ -19,18 +19,29 @@ package com.android.ant;
 import com.android.SdkConstants;
 import com.android.sdklib.internal.build.SymbolLoader;
 import com.android.sdklib.internal.build.SymbolWriter;
+import com.android.xml.AndroidXPathFactory;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.Path;
+import org.xml.sax.InputSource;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
 
 /**
  * Task to execute aapt.
@@ -88,8 +99,9 @@ public final class AaptExecTask extends SingleDependencyTask {
     private boolean mUseCrunchCache = false;
     private int mVersionCode = 0;
     private String mVersionName;
-    private String mManifest;
+    private String mManifestFile;
     private String mManifestPackage;
+    private String mOriginalManifestPackage;
     private ArrayList<Path> mResources;
     private String mAssets;
     private String mAndroidJar;
@@ -223,7 +235,7 @@ public final class AaptExecTask extends SingleDependencyTask {
      * @param manifest the value.
      */
     public void setManifest(Path manifest) {
-        mManifest = TaskHelper.checkSinglePath("manifest", manifest);
+        mManifestFile = TaskHelper.checkSinglePath("manifest", manifest);
     }
 
     /**
@@ -238,6 +250,18 @@ public final class AaptExecTask extends SingleDependencyTask {
         if (packageName != null && packageName.length() != 0) {
             mManifestPackage = packageName;
         }
+    }
+
+    /**
+     * Sets the original package name found in the manifest. This is the package name where
+     * the R class is created.
+     *
+     * This is merely a shortcut in case the package is known when calling the aapt task. If not
+     * provided (and needed) this task will recompute it.
+     * @param packageName the package name declared in the manifest.
+     */
+    public void setOriginalManifestPackage(String packageName) {
+        mOriginalManifestPackage = packageName;
     }
 
     /**
@@ -446,8 +470,8 @@ public final class AaptExecTask extends SingleDependencyTask {
                     sPathFactory);
 
             // let's not forget the manifest as an input path (with no extension restrictions).
-            if (mManifest != null) {
-                inputPaths.add(new InputPath(new File(mManifest)));
+            if (mManifestFile != null) {
+                inputPaths.add(new InputPath(new File(mManifestFile)));
             }
 
             // Check to see if our dependencies have changed. If not, then skip
@@ -465,8 +489,8 @@ public final class AaptExecTask extends SingleDependencyTask {
                     sPathFactory);
 
             // let's not forget the manifest as an input path.
-            if (mManifest != null) {
-                inputPaths.add(new InputPath(new File(mManifest)));
+            if (mManifestFile != null) {
+                inputPaths.add(new InputPath(new File(mManifestFile)));
             }
 
             // If we're here to generate a .ap_ file we need to use assets as an input path as well.
@@ -586,9 +610,9 @@ public final class AaptExecTask extends SingleDependencyTask {
         }
 
         // manifest location
-        if (mManifest != null && mManifest.length() > 0) {
+        if (mManifestFile != null && mManifestFile.length() > 0) {
             task.createArg().setValue("-M");
-            task.createArg().setValue(mManifest);
+            task.createArg().setValue(mManifestFile);
         }
 
         // Rename manifest package
@@ -681,8 +705,9 @@ public final class AaptExecTask extends SingleDependencyTask {
             if (!mNonConstantId && libPkgProp != null && !libPkgProp.isEmpty()) {
                 File rFile = new File(mBinFolder, SdkConstants.FN_RESOURCE_TEXT);
                 if (rFile.isFile()) {
-                    SymbolLoader symbolValues = new SymbolLoader(rFile);
-                    symbolValues.load();
+                    // Load the full symbols from the full R.txt file.
+                    SymbolLoader fullSymbols = new SymbolLoader(rFile);
+                    fullSymbols.load();
 
                     // we have two props which contains list of items. Both items represent
                     // 2 data of a single property.
@@ -700,22 +725,105 @@ public final class AaptExecTask extends SingleDependencyTask {
                                 mLibraryPackagesRefid, mLibraryRFileRefid));
                     }
 
-                    for (int i = 0 ; i < packages.length ; i++) {
-                        File libRFile = new File(rFiles[i]);
-                        if (libRFile.isFile()) {
-                            SymbolLoader symbols = new SymbolLoader(libRFile);
-                            symbols.load();
+                    if (mOriginalManifestPackage == null) {
+                        mOriginalManifestPackage = getPackageName(mManifestFile);
+                    }
 
-                            SymbolWriter writer = new SymbolWriter(mRFolder, packages[i],
-                                    symbols, symbolValues);
-                            writer.write();
+                    // simpler case of a single library
+                    if (packages.length == 1) {
+                        createRClass(fullSymbols, rFiles[0], packages[0]);
+                    } else {
+
+                        Map<String, String> libPackages = Maps.newHashMapWithExpectedSize(
+                                packages.length);
+                        Set<String> duplicatePackages = Sets.newHashSet();
+
+                        // preprocessing to figure out if there are dups in the package names of
+                        // the libraries
+                        for (int i = 0 ; i < packages.length ; i++) {
+                            String libPackage = packages[i];
+                            if (mOriginalManifestPackage.equals(libPackage)) {
+                                // skip libraries that have the same package name as the application.
+                                continue;
+                            }
+
+                            String existingPkg = libPackages.get(libPackage);
+                            if (existingPkg != null) {
+                                // record the dup package and keep going, in case there are all the same
+                                duplicatePackages.add(libPackage);
+                                continue;
+                            }
+
+                            libPackages.put(libPackage, rFiles[i]);
+                        }
+
+                        // check if we have duplicate but all files are the same.
+                        if (duplicatePackages.size() > 0) {
+                            // possible conflict!
+                            // detect case of all libraries == same package.
+                            if (duplicatePackages.size() == 1 && libPackages.size() == 1 &&
+                                    duplicatePackages.iterator().next().equals(libPackages.keySet().iterator().next())) {
+                                // this is ok, all libraries have the same package.
+                                // Make a copy of the full R class.
+                                SymbolWriter writer = new SymbolWriter(mRFolder,
+                                        duplicatePackages.iterator().next(),
+                                        fullSymbols, fullSymbols);
+                                writer.write();
+                            } else {
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("The following packages have been found to be used by two or more libraries:");
+                                for (String pkg : duplicatePackages) {
+                                    sb.append("\n\t").append(pkg);
+                                }
+                                sb.append("\nNo libraries must share the same package, unless all libraries share the same packages.");
+                                throw new BuildException(sb.toString());
+                            }
+                        } else {
+                            // no dups, all libraries have different packages.
+                            // Conflicts with the main package have been removed already.
+                            // Just process all the libraries from the list where we removed
+                            // libs that had the same package as the app.
+                            for (Entry<String, String> lib : libPackages.entrySet()) {
+                                createRClass(fullSymbols, lib.getValue(), lib.getKey());
+                            }
                         }
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
+            // HACK alert.
+            // in order for this step to happen again when this part fails, we delete
+            // the dependency file.
+            File f = new File(mRFolder, "R.java.d");
+            f.delete();
+
+            throw (e instanceof BuildException) ? (BuildException)e : new BuildException(e);
+        }
+    }
+
+    private void createRClass(SymbolLoader fullSymbols, String libRTxtFile, String libPackage)
+            throws IOException {
+        File libSymbolFile = new File(libRTxtFile);
+        if (libSymbolFile.isFile()) {
+            SymbolLoader libSymbols = new SymbolLoader(libSymbolFile);
+            libSymbols.load();
+
+            SymbolWriter writer = new SymbolWriter(mRFolder, libPackage, libSymbols, fullSymbols);
+            writer.write();
+        }
+    }
+
+    private String getPackageName(String manifest) {
+        XPath xpath = AndroidXPathFactory.newXPath();
+
+        try {
+            String s = xpath.evaluate("/manifest/@package",
+                    new InputSource(new FileInputStream(manifest)));
+            return s;
+        } catch (XPathExpressionException e) {
+            throw new BuildException(e);
+        } catch (FileNotFoundException e) {
             throw new BuildException(e);
         }
-
     }
 }

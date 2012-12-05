@@ -674,6 +674,7 @@
                     command="package"
                     verbose="${verbose}"
                     manifest="${out.manifest.abs.file}"
+                    originalManifestPackage="${project.app.package}"
                     androidjar="${project.target.android.jar}"
                     rfolder="${gen.absolute.dir}"
                     nonConstantId="${android.library}"
