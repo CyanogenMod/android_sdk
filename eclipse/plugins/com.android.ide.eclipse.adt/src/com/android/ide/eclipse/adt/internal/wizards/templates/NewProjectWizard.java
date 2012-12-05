@@ -61,6 +61,7 @@ public class NewProjectWizard extends TemplateWizard {
     private static final String ACTIVITY_TITLE = "activityTitle";  //$NON-NLS-1$
     private static final String IS_LAUNCHER = "isLauncher";        //$NON-NLS-1$
     static final String IS_NEW_PROJECT = "isNewProject";           //$NON-NLS-1$
+    static final String IS_LIBRARY_PROJECT = "isLibraryProject";   //$NON-NLS-1$
     static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
@@ -385,6 +386,7 @@ public class NewProjectWizard extends TemplateWizard {
         addProjectInfo(parameters);
 
         parameters.put(IS_NEW_PROJECT, true);
+        parameters.put(IS_LIBRARY_PROJECT, mValues.isLibrary);
         // Ensure that activities created as part of a new project are marked as
         // launcher activities
         parameters.put(IS_LAUNCHER, true);
