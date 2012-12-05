@@ -372,6 +372,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
                         false /*jumbo mode doesn't matter here*/,
+                        false /*dex merger doesn't matter here*/,
                         true /*debugMode*/,
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);
@@ -477,10 +478,16 @@ public class PostCompilerBuilder extends BaseBuilder {
             if (mPackageResources || mConvertToDex || mBuildFinalPackage) {
                 String forceJumboStr = projectState.getProperty(
                         AdtConstants.DEX_OPTIONS_FORCEJUMBO);
-                Boolean b = Boolean.valueOf(forceJumboStr);
+                Boolean jumbo = Boolean.valueOf(forceJumboStr);
+
+                String dexMergerStr = projectState.getProperty(
+                        AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
+                Boolean dexMerger = Boolean.valueOf(dexMergerStr);
+
                 BuildHelper helper = new BuildHelper(project,
                         mOutStream, mErrStream,
-                        b.booleanValue(),
+                        jumbo.booleanValue(),
+                        dexMerger.booleanValue(),
                         true /*debugMode*/,
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);

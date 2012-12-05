@@ -127,11 +127,15 @@ public final class ExportHelper {
 
             // get the jumbo mode option
             String forceJumboStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_FORCEJUMBO);
-            Boolean b = Boolean.valueOf(forceJumboStr);
+            Boolean jumbo = Boolean.valueOf(forceJumboStr);
+
+            String dexMergerStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
+            Boolean dexMerger = Boolean.valueOf(dexMergerStr);
 
             BuildHelper helper = new BuildHelper(project,
                     fakeStream, fakeStream,
-                    b.booleanValue(),
+                    jumbo.booleanValue(),
+                    dexMerger.booleanValue(),
                     debugMode, false /*verbose*/,
                     null /*resourceMarker*/);
 

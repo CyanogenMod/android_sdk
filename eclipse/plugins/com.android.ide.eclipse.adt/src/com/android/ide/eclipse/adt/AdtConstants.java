@@ -18,9 +18,9 @@ package com.android.ide.eclipse.adt;
 
 import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_DEP;
+import static com.android.SdkConstants.DOT_FS;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_RS;
-import static com.android.SdkConstants.DOT_FS;
 
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
@@ -223,4 +223,5 @@ public class AdtConstants {
     public static final String DOC_HIDE = "@hide"; //$NON-NLS-1$
 
     public static final String DEX_OPTIONS_FORCEJUMBO = "dex.force.jumbo"; //$NON-NLS-1$
+    public static final String DEX_OPTIONS_DISABLE_MERGER = "dex.disable.merger"; //$NON-NLS-1$
 }

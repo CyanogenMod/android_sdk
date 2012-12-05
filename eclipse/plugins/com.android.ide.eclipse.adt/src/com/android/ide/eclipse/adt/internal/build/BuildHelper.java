@@ -109,6 +109,7 @@ public class BuildHelper {
     private final AndroidPrintStream mOutStream;
     private final AndroidPrintStream mErrStream;
     private final boolean mForceJumbo;
+    private final boolean mDisableDexMerger;
     private final boolean mVerbose;
     private final boolean mDebugMode;
 
@@ -140,7 +141,7 @@ public class BuildHelper {
     public BuildHelper(@NonNull IProject project,
             @NonNull AndroidPrintStream outStream,
             @NonNull AndroidPrintStream errStream,
-            boolean forceJumbo, boolean debugMode,
+            boolean forceJumbo, boolean disableDexMerger, boolean debugMode,
             boolean verbose, ResourceMarker resMarker) throws CoreException {
         mProject = project;
         mOutStream = outStream;
@@ -148,6 +149,7 @@ public class BuildHelper {
         mDebugMode = debugMode;
         mVerbose = verbose;
         mForceJumbo = forceJumbo;
+        mDisableDexMerger = disableDexMerger;
 
         gatherPaths(resMarker);
     }
@@ -712,12 +714,11 @@ public class BuildHelper {
 
             // replace the libs by their dexed versions (dexing them if needed.)
             List<String> finalInputPaths = new ArrayList<String>(inputPaths.size());
-            if (inputPaths.size() == 1) {
+            if (mDisableDexMerger || inputPaths.size() == 1) {
                 // only one input, no need to put a pre-dexed version, even if this path is
                 // just a jar file (case for proguard'ed builds)
                 finalInputPaths.addAll(inputPaths);
             } else {
-
 
                 for (String input : inputPaths) {
                     File inputFile = new File(input);
