@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -74,26 +74,17 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
     private int mMode = 0;
 
     private static final int MODE_CPU = 0;
-    private static final int MODE_ALARM = 1;
-    private static final int MODE_WAKELOCK = 2;
-    private static final int MODE_MEMINFO = 3;
-    private static final int MODE_SYNC = 4;
+    private static final int MODE_MEMINFO = 1;
 
     // argument to dumpsys; section in the bugreport holding the data
     private static final String DUMP_COMMAND[] = {
         "dumpsys cpuinfo",
-        "dumpsys alarm",
-        "dumpsys batteryinfo",
         "cat /proc/meminfo ; procrank",
-        "dumpsys content"
     };
 
     private static final String CAPTIONS[] = {
         "CPU load",
-        "Alarms",
-        "Wakelocks",
         "Memory usage",
-        "Sync"
     };
 
     /**
@@ -101,9 +92,7 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
      *
      * @param file The bugreport file to process.
      */
-    public void generateDataset(File file) {
-        mDataset.clear();
-        mLabel.setText("");
+    private void generateDataset(File file) {
         if (file == null) {
             return;
         }
@@ -111,15 +100,10 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
             BufferedReader br = getBugreportReader(file);
             if (mMode == MODE_CPU) {
                 readCpuDataset(br);
-            } else if (mMode == MODE_ALARM) {
-                readAlarmDataset(br);
-            } else if (mMode == MODE_WAKELOCK) {
-                readWakelockDataset(br);
             } else if (mMode == MODE_MEMINFO) {
                 readMeminfoDataset(br);
-            } else if (mMode == MODE_SYNC) {
-                readSyncDataset(br);
             }
+            br.close();
         } catch (IOException e) {
             Log.e("DDMS", e);
         }
@@ -160,23 +144,30 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
      * Fetching is asynchronous.  See also addOutput, flush, and isCancelled.
      */
     private void loadFromDevice() {
-        try {
-            initShellOutputBuffer();
-            if (mMode == MODE_MEMINFO) {
-                // Hack to add bugreport-style section header for meminfo
-                mTempStream.write("------ MEMORY INFO ------\n".getBytes());
+        clearDataSet();
+
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    initShellOutputBuffer();
+                    if (mMode == MODE_MEMINFO) {
+                        // Hack to add bugreport-style section header for meminfo
+                        mTempStream.write("------ MEMORY INFO ------\n".getBytes());
+                    }
+                    getCurrentDevice().executeShellCommand(DUMP_COMMAND[mMode], SysinfoPanel.this);
+                } catch (IOException e) {
+                    Log.e("DDMS", e);
+                } catch (TimeoutException e) {
+                    Log.e("DDMS", e);
+                } catch (AdbCommandRejectedException e) {
+                    Log.e("DDMS", e);
+                } catch (ShellCommandUnresponsiveException e) {
+                    Log.e("DDMS", e);
+                }
             }
-            getCurrentDevice().executeShellCommand(
-                    DUMP_COMMAND[mMode], this);
-        } catch (IOException e) {
-            Log.e("DDMS", e);
-        } catch (TimeoutException e) {
-            Log.e("DDMS", e);
-        } catch (AdbCommandRejectedException e) {
-            Log.e("DDMS", e);
-        } catch (ShellCommandUnresponsiveException e) {
-            Log.e("DDMS", e);
-        }
+        }, "Sysinfo Output Collector");
+        t.start();
     }
 
     /**
@@ -257,22 +248,6 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                     generateDataset(mDataFile);
                 } else if (getCurrentDevice() != null) {
                     loadFromDevice();
-                }
-            }
-        });
-
-        final Button loadButton = new Button(buttons, SWT.PUSH);
-        loadButton.setText("Load from File");
-        loadButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                FileDialog fileDialog = new FileDialog(loadButton.getShell(),
-                        SWT.OPEN);
-                fileDialog.setText("Load bugreport");
-                String filename = fileDialog.open();
-                if (filename != null) {
-                    mDataFile = new File(filename);
-                    generateDataset(mDataFile);
                 }
             }
         });
@@ -689,29 +664,28 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
         }
     }
 
-    private void readWakelockDataset(BufferedReader br) throws IOException {
-        updateDataSet(BugReportParser.readWakelockDataset(br));    }
-
-    private void readAlarmDataset(BufferedReader br) throws IOException {
-        updateDataSet(BugReportParser.readAlarmDataset(br));
-    }
-
     private void readCpuDataset(BufferedReader br) throws IOException {
-        updateDataSet(BugReportParser.readCpuDataset(br));
+        updateDataSet(BugReportParser.readCpuDataset(br), "");
     }
 
     private void readMeminfoDataset(BufferedReader br) throws IOException {
-        mLabel.setText("PSS in kB");
-        updateDataSet(BugReportParser.readMeminfoDataset(br));
+        updateDataSet(BugReportParser.readMeminfoDataset(br), "PSS in kB");
     }
 
-    void readSyncDataset(BufferedReader br) throws IOException {
-        updateDataSet(BugReportParser.readSyncDataset(br));
+    private void clearDataSet() {
+        mLabel.setText("");
+        mDataset.clear();
     }
 
-    private void updateDataSet(List<BugReportParser.DataValue> data) {
-        for (BugReportParser.DataValue d : data) {
-            mDataset.setValue(d.name, d.value);
-        }
+    private void updateDataSet(final List<BugReportParser.DataValue> data, final String label) {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                mLabel.setText(label);
+                for (BugReportParser.DataValue d : data) {
+                    mDataset.setValue(d.name, d.value);
+                }
+            }
+        });
     }
 }
