@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.URI_PREFIX;
@@ -187,7 +186,11 @@ public class NamespaceDetector extends LayoutDetector {
         if (haveCustomNamespace) {
             mCheckCustomAttrs = context.isEnabled(CUSTOMVIEW) && context.getProject().isLibrary();
             mCheckUnused = context.isEnabled(UNUSED);
-            checkElement(context, document.getDocumentElement());
+
+            if (mCheckCustomAttrs) {
+                checkCustomNamespace(context, root);
+            }
+            checkElement(context, root);
 
             if (mCheckUnused && mUnusedNamespaces.size() > 0) {
                 for (Map.Entry<String, Attr> entry : mUnusedNamespaces.entrySet()) {
@@ -200,27 +203,24 @@ public class NamespaceDetector extends LayoutDetector {
         }
     }
 
-    private void checkElement(XmlContext context, Node node) {
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            if (mCheckCustomAttrs) {
-                String tag = node.getNodeName();
-                if (tag.indexOf('.') != -1
-                        // Don't consider android.support.* and android.app.FragmentBreadCrumbs etc
-                        && !tag.startsWith(ANDROID_PKG_PREFIX)) {
-                    NamedNodeMap attributes = ((Element) node).getAttributes();
-                    for (int i = 0, n = attributes.getLength(); i < n; i++) {
-                        Attr attribute = (Attr) attributes.item(i);
-                        String uri = attribute.getNamespaceURI();
-                        if (uri != null && uri.length() > 0 && uri.startsWith(URI_PREFIX)
-                                && !uri.equals(ANDROID_URI)) {
-                            context.report(CUSTOMVIEW, attribute, context.getLocation(attribute),
-                                "When using a custom namespace attribute in a library project, " +
-                                "use the namespace \"" + AUTO_URI + "\" instead.", null);
-                        }
-                    }
+    private void checkCustomNamespace(XmlContext context, Element element) {
+        NamedNodeMap attributes = element.getAttributes();
+        for (int i = 0, n = attributes.getLength(); i < n; i++) {
+            Attr attribute = (Attr) attributes.item(i);
+            if (attribute.getName().startsWith(XMLNS_PREFIX)) {
+                String uri = attribute.getValue();
+                if (uri != null && uri.length() > 0 && uri.startsWith(URI_PREFIX)
+                        && !uri.equals(ANDROID_URI)) {
+                    context.report(CUSTOMVIEW, attribute, context.getLocation(attribute),
+                        "When using a custom namespace attribute in a library project, " +
+                        "use the namespace \"" + AUTO_URI + "\" instead.", null);
                 }
             }
+        }
+    }
 
+    private void checkElement(XmlContext context, Node node) {
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
             if (mCheckUnused) {
                 NamedNodeMap attributes = ((Element) node).getAttributes();
                 for (int i = 0, n = attributes.getLength(); i < n; i++) {

@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_CORE_APP;
 import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
@@ -141,6 +142,7 @@ public class DetectMissingPrefix extends LayoutDetector {
                 && !TOOLS_URI.equals(uri)
                 && context.getResourceFolderType() == ResourceFolderType.LAYOUT
                 && !isCustomView(attribute.getOwnerElement())
+                && !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 // TODO: Consider not enforcing that the parent is a custom view
                 // too, though in that case we should filter out views that are
                 // layout params for the custom view parent:
