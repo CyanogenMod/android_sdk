@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.refactorings.core;
 
 import com.android.annotations.NonNull;
-import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.resources.ResourceType;
 import com.android.utils.Pair;
@@ -366,7 +366,7 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
         if (resource instanceof String) {
             String url = (String) resource;
             assert url.startsWith("@") : resource;
-            Pair<ResourceType, String> pair = Hyperlinks.parseResource(url);
+            Pair<ResourceType, String> pair = ResourceRepository.parseResource(url);
             assertNotNull(url, pair);
             ResourceType type = pair.getFirst();
             String currentName = pair.getSecond();

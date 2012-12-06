@@ -34,6 +34,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceDeltaKind;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -180,39 +181,6 @@ public class ResourceHelper {
     }
 
     /**
-     * Return the resource type of the given url, and the resource name
-     *
-     * @param url the resource url to be parsed
-     * @return a pair of the resource type and the resource name
-     */
-    public static Pair<ResourceType,String> parseResource(String url) {
-        if (!url.startsWith(PREFIX_RESOURCE_REF)) {
-            return null;
-        }
-        int typeEnd = url.indexOf('/', 1);
-        if (typeEnd == -1) {
-            return null;
-        }
-        int nameBegin = typeEnd + 1;
-
-        // Skip @ and @+
-        int typeBegin = url.startsWith("@+") ? 2 : 1; //$NON-NLS-1$
-
-        int colon = url.lastIndexOf(':', typeEnd);
-        if (colon != -1) {
-            typeBegin = colon + 1;
-        }
-        String typeName = url.substring(typeBegin, typeEnd);
-        ResourceType type = ResourceType.getEnum(typeName);
-        if (type == null) {
-            return null;
-        }
-        String name = url.substring(nameBegin);
-
-        return Pair.of(type, name);
-    }
-
-    /**
      * Is this a resource that can be defined in any file within the "values" folder?
      * <p>
      * Some resource types can be defined <b>both</b> as a separate XML file as well
@@ -281,7 +249,7 @@ public class ResourceHelper {
             return false;
         }
 
-        Pair<ResourceType,String> parsed = parseResource(resource);
+        Pair<ResourceType,String> parsed = ResourceRepository.parseResource(resource);
         if (parsed != null) {
             ResourceType type = parsed.getFirst();
             String name = parsed.getSecond();

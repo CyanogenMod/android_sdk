@@ -26,7 +26,6 @@ import static com.android.SdkConstants.ATTR_CONTEXT;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
-import static com.android.SdkConstants.ATTR_REF_PREFIX;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_DOCS;
@@ -36,13 +35,13 @@ import static com.android.SdkConstants.FN_RESOURCE_CLASS;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.ide.common.resources.ResourceRepository.parseResource;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
@@ -1151,41 +1150,6 @@ public class Hyperlinks {
         IProject project = Hyperlinks.getProject();
         FolderConfiguration configuration = getConfiguration();
         return getResourceLinks(range, url, project, configuration);
-    }
-
-    /**
-     * Parse a resource reference or a theme reference and return the individual
-     * parts
-     *
-     * @param url the url to parse
-     * @return a pair which represents the resource type and name
-     */
-    public static Pair<ResourceType,String> parseResource(String url) {
-        if (url.startsWith(PREFIX_THEME_REF)) {
-            String remainder = url.substring(PREFIX_THEME_REF.length());
-            if (url.startsWith(ATTR_REF_PREFIX)) {
-                url = PREFIX_RESOURCE_REF + url.substring(1);
-                return ResourceHelper.parseResource(url);
-            }
-            int colon = url.indexOf(':');
-            if (colon != -1) {
-                // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
-                if (remainder.indexOf('/', colon) == -1) {
-                    remainder = remainder.substring(0, colon) + RESOURCE_CLZ_ATTR + '/'
-                            + remainder.substring(colon);
-                }
-                url = PREFIX_RESOURCE_REF + remainder;
-                return ResourceHelper.parseResource(url);
-            } else {
-                int slash = url.indexOf('/');
-                if (slash == -1) {
-                    url = PREFIX_RESOURCE_REF + RESOURCE_CLZ_ATTR + '/' + remainder;
-                    return ResourceHelper.parseResource(url);
-                }
-            }
-        }
-
-        return ResourceHelper.parseResource(url);
     }
 
     /**

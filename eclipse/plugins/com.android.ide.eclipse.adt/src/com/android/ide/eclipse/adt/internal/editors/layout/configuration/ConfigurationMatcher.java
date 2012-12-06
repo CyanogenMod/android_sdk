@@ -38,7 +38,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
-import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
@@ -145,7 +145,7 @@ public class ConfigurationMatcher {
      */
     public boolean isCurrentFileBestMatchFor(FolderConfiguration config) {
         ResourceFile match = mResources.getMatchingFile(mEditedFile.getName(),
-                ResourceFolderType.LAYOUT, config);
+                ResourceType.LAYOUT, config);
 
         if (match != null) {
             return match.getFile().equals(mEditedFile);
@@ -687,7 +687,7 @@ public class ConfigurationMatcher {
         }
         String name = editedFile.getName();
         FolderConfiguration config = chooser.getConfiguration().getFullConfig();
-        ResourceFile match = resources.getMatchingFile(name, ResourceFolderType.LAYOUT, config);
+        ResourceFile match = resources.getMatchingFile(name, ResourceType.LAYOUT, config);
 
         if (match != null) {
             // In Eclipse, the match's file is always an instance of IFileWrapper

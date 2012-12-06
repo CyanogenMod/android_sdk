@@ -62,7 +62,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.sdklib.AndroidVersion;
@@ -2072,7 +2071,7 @@ public class ConfigurationChooser extends Composite
      */
     public boolean isBestMatchFor(IFile file, FolderConfiguration config) {
         ResourceFile match = mResources.getMatchingFile(mEditedFile.getName(),
-                ResourceFolderType.LAYOUT, config);
+                ResourceType.LAYOUT, config);
         if (match != null) {
             return match.getFile().equals(mEditedFile);
         }
