@@ -87,6 +87,13 @@
             name="%view.name.Network_Stats"
             restorable="true">
       </view>
+      <view
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.SysInfoView"
+            id="com.android.ide.eclipse.ddms.views.SysInfoView"
+            name="%view.name.SysInfo"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
