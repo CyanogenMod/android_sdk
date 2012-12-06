@@ -70,7 +70,7 @@ public final class AnimationContentAssist extends AndroidContentAssist {
     }
 
     @Override
-    protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
+    protected boolean computeAttributeValues(List<ICompletionProposal> proposals, int offset,
             String parentTagName, String attributeName, Node node, String wordPrefix,
             boolean skipEndTag, int replaceLength) {
 
@@ -95,8 +95,8 @@ public final class AnimationContentAssist extends AndroidContentAssist {
             }
 
 
-            super.computeAttributeValues(proposals, offset, parentTagName, attributeName, node,
-                    wordPrefix, skipEndTag, replaceLength);
+            return super.computeAttributeValues(proposals, offset, parentTagName, attributeName,
+                    node, wordPrefix, skipEndTag, replaceLength);
         } else if (parentTagName.equals(OBJECT_ANIMATOR)
                 && attributeName.endsWith(PROPERTY_NAME)) {
 
@@ -156,12 +156,13 @@ public final class AnimationContentAssist extends AndroidContentAssist {
                     addMatchingProposals(proposals, pairs.toArray(), offset, node, wordPrefix,
                             (char) 0 /* needTag */, true /* isAttribute */, false /* isNew */,
                             skipEndTag /* skipEndTag */, replaceLength);
-                    return;
                 }
             }
+
+            return false;
         } else {
-            super.computeAttributeValues(proposals, offset, parentTagName, attributeName, node,
-                    wordPrefix, skipEndTag, replaceLength);
+            return super.computeAttributeValues(proposals, offset, parentTagName, attributeName,
+                    node, wordPrefix, skipEndTag, replaceLength);
         }
     }
 }

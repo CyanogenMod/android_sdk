@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors;
 
 import com.android.ide.common.api.IAttributeInfo;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -23,6 +24,10 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -141,6 +146,24 @@ class CompletionProposal implements ICompletionProposal {
                         }
                     }
 
+                }
+            } else if (mChoice instanceof IType) {
+                IType type = (IType) mChoice;
+                try {
+                    ISourceRange javadocRange = type.getJavadocRange();
+                    if (javadocRange != null && javadocRange.getLength() > 0) {
+                        ISourceRange sourceRange = type.getSourceRange();
+                        if (sourceRange != null) {
+                            String source = type.getSource();
+                            int start = javadocRange.getOffset() - sourceRange.getOffset();
+                            int length = javadocRange.getLength();
+                            String doc = source.substring(start, start + length);
+                            return doc;
+                        }
+                    }
+                    return type.getAttachedJavadoc(new NullProgressMonitor());
+                } catch (JavaModelException e) {
+                    AdtPlugin.log(e, null);
                 }
             }
         }

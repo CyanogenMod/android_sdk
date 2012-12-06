@@ -29,7 +29,7 @@ android:minWidth : Makes the TextView be at least this many pixels wide.  [dimen
 android:gravity : Specifies how to align the text by the view's x- and/or y-axis  when the text is smaller than the view.  [flag]
 android:scrollHorizontally : Whether the text is allowed to be wider than the view (and therefore  can be scrolled horizontally).  [boolean]
 android:password : Whether the characters of the field are displayed as password  dots instead of themselves. * Deprecated: Use inputType instead.  [boolean]
-android:singleLine : Constrains the text to a single horizontally scrolling line instead  of letting it wrap onto multiple lines, and advances focus instead  of inserting a newline when you press the enter key. * Deprecated: This attribute is deprecated. Use "maxLines" instead  to change the layout of a static text, and use the "textMultiLine"  flag in the inputType attribute instead for editable text views  (if both singleLine and inputType are supplied, the inputType  flags will override the value of singleLine).  [boolean]
+android:singleLine : Constrains the text to a single horizontally scrolling line instead  of letting it wrap onto multiple lines, and advances focus instead  of inserting a newline when you press the enter key. * Deprecated: This attribute is deprecated. Use "maxLines" instead  to change the layo...
 android:enabled : Specifies whether the widget is enabled.  [boolean]
 android:selectAllOnFocus : If the text is selectable, select it all when the view takes  focus.  [boolean]
 android:includeFontPadding : Leave enough room for ascenders and descenders instead of using  the font ascent and descent strictly.  [boolean]

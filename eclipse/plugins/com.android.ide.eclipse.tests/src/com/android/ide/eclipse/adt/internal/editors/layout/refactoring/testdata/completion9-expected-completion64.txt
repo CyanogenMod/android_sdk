@@ -65,3 +65,4 @@ Code completion in completion9.xml for ^<Button:
 <include /> : Lets you statically include XML layouts inside other XML layouts.
 <merge ></merge> : A root tag useful for XML layouts inflated using a ViewStub.
 <requestFocus /> : Requests focus for the parent element or one of its descendants
+<view /> : A view tag whose class attribute names the class to be instantiated

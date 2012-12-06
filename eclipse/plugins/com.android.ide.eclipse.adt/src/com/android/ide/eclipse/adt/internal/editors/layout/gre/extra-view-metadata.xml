@@ -397,6 +397,10 @@
             topAttrs="layout,inflatedId,visibility"
             render="skip" />
         <view
+            class="view"
+            topAttrs="class"
+            render="skip" />
+        <view
             class="android.gesture.GestureOverlayView"
             topAttrs="gestureStrokeType,uncertainGestureColor,eventsInterceptionEnabled,gestureColor,orientation"
             render="skip" />

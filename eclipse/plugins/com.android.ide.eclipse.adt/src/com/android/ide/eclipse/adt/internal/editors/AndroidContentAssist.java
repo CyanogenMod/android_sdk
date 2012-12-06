@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.UNIT_DP;
 import static com.android.SdkConstants.UNIT_IN;
 import static com.android.SdkConstants.UNIT_MM;
@@ -46,6 +47,9 @@ import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.ui.ISharedImages;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -226,8 +230,10 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         // or their values).
 
         if (info.isInValue) {
-            computeAttributeValues(proposals, offset, parent, info.name, currentNode,
-                    wordPrefix, info.skipEndTag, info.replaceLength);
+            if (computeAttributeValues(proposals, offset, parent, info.name, currentNode,
+                    wordPrefix, info.skipEndTag, info.replaceLength)) {
+                return;
+            }
         }
 
         // Look up attribute proposals based on descriptors
@@ -463,14 +469,24 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             choices = UiResourceAttributeNode.computeResourceStringMatches(
                     mEditor, attributeDescriptor, value);
             attrInfo.skipEndTag = false;
+        } else if (value.startsWith(PREFIX_THEME_REF)
+                && !attributeInfo.getFormats().contains(Format.REFERENCE)) {
+            choices = UiResourceAttributeNode.computeResourceStringMatches(
+                    mEditor, attributeDescriptor, value);
+            attrInfo.skipEndTag = false;
         }
 
         return choices;
     }
 
-    protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
+    /**
+     * Compute attribute values. Return true if the complete set of values was
+     * added, so addition descriptor information should not be added.
+     */
+    protected boolean computeAttributeValues(List<ICompletionProposal> proposals, int offset,
             String parentTagName, String attributeName, Node node, String wordPrefix,
             boolean skipEndTag, int replaceLength) {
+        return false;
     }
 
     protected void computeTextValues(List<ICompletionProposal> proposals, int offset,
@@ -504,8 +520,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *
      * @return An ElementDescriptor[] or null.
      */
-    private Object[] getElementChoicesForTextNode(Node parentNode) {
-        Object[] choices = null;
+    protected ElementDescriptor[] getElementChoicesForTextNode(Node parentNode) {
+        ElementDescriptor[] choices = null;
         String parent;
         if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
             // We're editing a text node which parent is an element node. Limit
@@ -598,6 +614,10 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (isAttribute) {
                     icon = IconFactory.getInstance().getIcon(ATTRIBUTE_ICON_FILENAME);
                 }
+            } else if (choice instanceof IType) {
+                IType type = (IType) choice;
+                keyword = type.getFullyQualifiedName();
+                icon = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CUNIT);
             } else {
                 continue; // discard unknown choice
             }
