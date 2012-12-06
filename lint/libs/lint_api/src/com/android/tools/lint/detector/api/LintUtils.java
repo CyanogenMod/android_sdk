@@ -508,7 +508,7 @@ public class LintUtils {
         boolean seenEvenZero = false;
         for (int lineEnd = offset; lineEnd < data.length; lineEnd++) {
             if (data[lineEnd] == 0) {
-                if ((lineEnd - offset) % 1 == 0) {
+                if ((lineEnd - offset) % 2 == 0) {
                     seenEvenZero = true;
                 } else {
                     seenOddZero = true;
@@ -519,7 +519,7 @@ public class LintUtils {
         }
 
         if (charset == null) {
-            charset = seenOddZero ? UTF_16 : seenEvenZero ? UTF_16LE : UTF_8;
+            charset = seenOddZero ? UTF_16LE : seenEvenZero ? UTF_16 : UTF_8;
         }
 
         String text = null;

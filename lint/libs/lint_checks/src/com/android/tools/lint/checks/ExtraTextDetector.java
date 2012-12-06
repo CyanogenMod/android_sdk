@@ -63,7 +63,7 @@ public class ExtraTextDetector extends ResourceXmlDetector {
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.LAYOUT
                 || folderType == ResourceFolderType.MENU
-                || folderType == ResourceFolderType.ANIMATOR
+                || folderType == ResourceFolderType.ANIM
                 || folderType == ResourceFolderType.ANIMATOR
                 || folderType == ResourceFolderType.DRAWABLE
                 || folderType == ResourceFolderType.COLOR;

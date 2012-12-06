@@ -814,13 +814,6 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
                                 Object value = annotation.values.get(i + 1);
                                 if (value instanceof Integer) {
                                     return ((Integer) value).intValue();
-                                } else if (value instanceof List) {
-                                    List list = (List) value;
-                                    for (Object v : list) {
-                                        if (v instanceof Integer) {
-                                            return ((Integer) value).intValue();
-                                        }
-                                    }
                                 }
                             }
                         }

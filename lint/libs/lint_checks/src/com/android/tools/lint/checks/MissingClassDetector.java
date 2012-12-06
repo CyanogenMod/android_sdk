@@ -192,8 +192,8 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                     }
                 }
                 if (!haveUpperCase) {
-                    String message = String.format("Use '$' instead of '.' for inner classes " +
-                            "(or use only lowercase letters in package names)", className);
+                    String message = "Use '$' instead of '.' for inner classes " +
+                            "(or use only lowercase letters in package names)";
                     Location location = context.getLocation(classNameNode);
                     context.report(INNERCLASS, element, location, message, null);
                 }

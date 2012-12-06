@@ -870,7 +870,6 @@ public class NewTemplatePage extends WizardPage
                         p.type == Parameter.Type.SEPARATOR) {
                     continue;
                 }
-                p.suggest.indexOf(id);
                 if (!p.suggest.contains(id)) {
                     continue;
                 }

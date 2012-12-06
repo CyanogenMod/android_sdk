@@ -143,10 +143,10 @@ public class LocaleDetector extends Detector implements ClassScanner {
                     || desc.equals("()V")                                           //$NON-NLS-1$
                     || desc.equals("(Ljava/lang/String;)V")) {                      //$NON-NLS-1$
                 Location location = context.getLocation(call);
-                String message = String.format(
+                String message =
                     "To get local formatting use getDateInstance(), getDateTimeInstance(), " +
                     "or getTimeInstance(), or use new SimpleDateFormat(String template, " +
-                    "Locale locale) with for example Locale.US for ASCII dates.", name);
+                    "Locale locale) with for example Locale.US for ASCII dates.";
                 context.report(DATE_FORMAT, method, call, location, message, null);
             }
             return;
