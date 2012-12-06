@@ -1491,9 +1491,8 @@
         <echo>Android Ant Build. Available targets:</echo>
         <echo>   help:      Displays this help.</echo>
         <echo>   clean:     Removes output files created by other targets.</echo>
-        <echo>              The 'all' target can be used to clean dependencies</echo>
-        <echo>              (tested projects and libraries)at the same time</echo>
-        <echo>              using: 'ant all clean'</echo>
+        <echo>              This calls the same target on all dependent projects.</echo>
+        <echo>              Use 'ant nodeps clean' to only clean the local project</echo>
         <echo>   debug:     Builds the application and signs it with a debug key.</echo>
         <echo>              The 'nodeps' target can be used to only build the</echo>
         <echo>              current project and ignore the libraries using:</echo>
