@@ -122,24 +122,28 @@ public class MonitorApplication implements IApplication {
             return sdkLocation;
         }
 
+        // The monitor app should be located in "<sdk>/tools/lib/monitor-platform/"
+        // So see if the folder one level up from the install location is a valid SDK.
+        Location install = Platform.getInstallLocation();
+        if (install != null && install.getURL() != null) {
+            File libFolder = new File(install.getURL().getFile()).getParentFile();
+            if (libFolder != null) {
+                String toolsFolder = libFolder.getParent();
+                if (toolsFolder != null) {
+                    sdkLocation = new File(toolsFolder).getParent();
+                    if (isValidSdkLocation(sdkLocation)) {
+                        MonitorPlugin.getDdmsPreferenceStore().setLastSdkPath(sdkLocation);
+                        return sdkLocation;
+                    }
+                }
+
+            }
+        }
+
         // check for the last used SDK
         sdkLocation = MonitorPlugin.getDdmsPreferenceStore().getLastSdkPath();
         if (isValidSdkLocation(sdkLocation)) {
             return sdkLocation;
-        }
-
-        // The monitor app should be located in "<sdk>/tools/monitor/"
-        // So see if the folder one level up from the install location is a valid SDK.
-        Location install = Platform.getInstallLocation();
-        if (install != null && install.getURL() != null) {
-            String toolsFolder = new File(install.getURL().getFile()).getParent();
-            if (toolsFolder != null) {
-                sdkLocation = new File(toolsFolder).getParent();
-                if (isValidSdkLocation(sdkLocation)) {
-                    MonitorPlugin.getDdmsPreferenceStore().setLastSdkPath(sdkLocation);
-                    return sdkLocation;
-                }
-            }
         }
 
         // if nothing else works, prompt the user
