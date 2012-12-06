@@ -18,6 +18,7 @@ package com.android.ddmuilib;
 
 import com.android.ddmuilib.SysinfoPanel.BugReportParser;
 import com.android.ddmuilib.SysinfoPanel.BugReportParser.DataValue;
+import com.android.ddmuilib.SysinfoPanel.BugReportParser.GfxProfileData;
 
 import junit.framework.TestCase;
 
@@ -133,5 +134,55 @@ public class BugReportParserTest extends TestCase {
         List<DataValue> data = BugReportParser.readMeminfoDataset(br);
 
         assertEquals(6, data.size());
+    }
+
+    public void testParseGfxInfo() throws IOException {
+        String gfxinfo =
+            "Applications Graphics Acceleration Info:\n" +
+            "Uptime: 78455570 Realtime: 78455565\n" +
+            "\n" +
+            "** Graphics info for pid 20517 [com.android.launcher] **\n" +
+            "\n" +
+            "Recent DisplayList operations\n" +
+            "  DrawDisplayList\n" +
+            "    <snip>\n" +
+            "          RestoreToCount\n" +
+            "\n" +
+            "Caches:\n" +
+            "Current memory usage / total memory usage (bytes):\n" +
+            "  TextureCache          4663920 / 25165824\n" +
+            "  <snip>\n" +
+            "  FontRenderer 0         262144 /   262144\n" +
+            "Other:\n" +
+            "  FboCache                    2 /       16\n" +
+            "  PatchCache                  9 /      512\n" +
+            "Total memory usage:\n" +
+            "  13274756 bytes, 12.66 MB\n" +
+            "\n" +
+            "Profile data in ms:\n" +
+            "\n" +
+            "	com.android.launcher/com.android.launcher2.Launcher/android.view.ViewRootImpl@4265d918\n" +
+            "	Draw	Process	Execute\n" +
+            "	0.85	1.10	0.61\n" +
+            "	54.45	0.85	0.52\n" +
+            "	1.04	2.17	0.73\n" +
+            "	0.15	0.46	1.01\n" +
+            "\n" +
+            "View hierarchy:\n" +
+            "\n" +
+            "  com.android.launcher/com.android.launcher2.Launcher/android.view.ViewRootImpl@4265d918\n" +
+            "  276 views, 27.16 kB of display lists, 228 frames rendered\n" +
+            "\n" +
+            "\n" +
+            "Total ViewRootImpl: 1\n" +
+            "Total Views:        276\n" +
+            "Total DisplayList:  27.16 kB\n";
+
+        BufferedReader br = new BufferedReader(new StringReader(gfxinfo));
+        List<GfxProfileData> gfxProfile = BugReportParser.parseGfxInfo(br);
+
+        assertEquals(4, gfxProfile.size());
+        assertEquals(0.85, gfxProfile.get(0).draw);
+        assertEquals(1.01, gfxProfile.get(3).execute);
     }
 }

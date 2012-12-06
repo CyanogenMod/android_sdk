@@ -55,6 +55,7 @@ colspan
 combo
 combobox
 combos
+compositor
 config
 configs
 configurability
