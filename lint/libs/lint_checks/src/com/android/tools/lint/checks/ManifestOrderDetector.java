@@ -451,9 +451,9 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             if (!element.hasAttributeNS(ANDROID_URI, SdkConstants.ATTR_ALLOW_BACKUP)
                     && context.isEnabled(ALLOW_BACKUP)) {
                 context.report(ALLOW_BACKUP, element, context.getLocation(element),
-                        String.format("Should explicitly set android:allowBackup to true or " +
+                            "Should explicitly set android:allowBackup to true or " +
                             "false (it's true by default, and that can have some security " +
-                            "implications for the application's data)", tag), null);
+                            "implications for the application's data)", null);
             }
         } else if (mSeenApplication) {
             if (context.isEnabled(ORDER)) {

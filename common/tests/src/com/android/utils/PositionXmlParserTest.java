@@ -16,7 +16,6 @@
 
 package com.android.utils;
 
-import com.android.utils.PositionXmlParser;
 import com.android.utils.PositionXmlParser.Position;
 
 import org.w3c.dom.Attr;

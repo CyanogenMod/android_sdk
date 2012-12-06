@@ -134,7 +134,7 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
             } else {
                 mNewFqcn = getArguments().getNewName();
             }
-            if (mOldFqcn == null || mOldFqcn == null) {
+            if (mOldFqcn == null || mNewFqcn == null) {
                 return false;
             }
             if (!RefactoringUtil.isRefactorAppPackage() && mNewFqcn.indexOf('.') == -1) {
