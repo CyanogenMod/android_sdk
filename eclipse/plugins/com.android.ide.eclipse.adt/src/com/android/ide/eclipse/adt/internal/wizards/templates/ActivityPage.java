@@ -17,11 +17,13 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_ACTIVITIES;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.CATEGORY_OTHER;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.IS_LAUNCHER;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_PADDING;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.PREVIEW_WIDTH;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import org.eclipse.core.runtime.IStatus;
@@ -61,6 +63,7 @@ class ActivityPage extends WizardPage implements SelectionListener {
     private Label mDescription;
     private boolean mOnlyActivities;
     private boolean mAskCreate;
+    private boolean mLauncherActivitiesOnly;
 
     /**
      * Create the wizard.
@@ -82,6 +85,11 @@ class ActivityPage extends WizardPage implements SelectionListener {
         } else {
             setDescription("Select which template to use");
         }
+    }
+
+    /** Sets whether the activity page should only offer launcher activities */
+    void setLauncherActivitiesOnly(boolean launcherActivitiesOnly) {
+        mLauncherActivitiesOnly = launcherActivitiesOnly;
     }
 
     @Override
@@ -108,18 +116,31 @@ class ActivityPage extends WizardPage implements SelectionListener {
 
 
         TemplateManager manager = mValues.template.getManager();
-        mTemplates = manager.getTemplates(CATEGORY_ACTIVITIES);
+        java.util.List<File> templates = manager.getTemplates(CATEGORY_ACTIVITIES);
+
         if (!mOnlyActivities) {
-            mTemplates.addAll(manager.getTemplates(CATEGORY_OTHER));
+            templates.addAll(manager.getTemplates(CATEGORY_OTHER));
         }
-        java.util.List<String> names = new ArrayList<String>(mTemplates.size());
+        java.util.List<String> names = new ArrayList<String>(templates.size());
         File current = mValues.activityValues.getTemplateLocation();
+        mTemplates = Lists.newArrayListWithExpectedSize(templates.size());
         int index = -1;
-        for (int i = 0, n = mTemplates.size(); i < n; i++) {
-            File template = mTemplates.get(i);
-            names.add(template.getName());
+        for (int i = 0, n = templates.size(); i < n; i++) {
+            File template = templates.get(i);
+            TemplateMetadata metadata = manager.getTemplate(template);
+            if (metadata == null) {
+                continue;
+            }
+            if (mLauncherActivitiesOnly) {
+                Parameter parameter = metadata.getParameter(IS_LAUNCHER);
+                if (parameter == null) {
+                    continue;
+                }
+            }
+            mTemplates.add(template);
+            names.add(metadata.getTitle());
             if (template.equals(current)) {
-                index = i;
+                index = names.size();
             }
         }
         String[] items = names.toArray(new String[names.size()]);

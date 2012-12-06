@@ -59,7 +59,7 @@ import java.util.Set;
 public class NewProjectWizard extends TemplateWizard {
     private static final String PARENT_ACTIVITY_CLASS = "parentActivityClass";  //$NON-NLS-1$
     private static final String ACTIVITY_TITLE = "activityTitle";  //$NON-NLS-1$
-    private static final String IS_LAUNCHER = "isLauncher";        //$NON-NLS-1$
+    static final String IS_LAUNCHER = "isLauncher";                //$NON-NLS-1$
     static final String IS_NEW_PROJECT = "isNewProject";           //$NON-NLS-1$
     static final String IS_LIBRARY_PROJECT = "isLibraryProject";   //$NON-NLS-1$
     static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
@@ -100,6 +100,7 @@ public class NewProjectWizard extends TemplateWizard {
         mContentsPage = new ProjectContentsPage(mValues);
         mContentsPage.init(selection, AdtUtils.getActivePart());
         mActivityPage = new ActivityPage(mValues, true, true);
+        mActivityPage.setLauncherActivitiesOnly(true);
     }
 
     @Override
