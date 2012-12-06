@@ -282,10 +282,12 @@ public class GridLayoutPainter {
             gc.drawRect(b.x + 2 * radius, b.y + 2 * radius,
                     b.x2() - 2 * radius, b.y2() - 2 * radius);
 
-            int column = data.getColumnMatch().cellIndex;
-            int row = data.getRowMatch().cellIndex;
-            boolean createColumn = data.getColumnMatch().createCell;
-            boolean createRow = data.getRowMatch().createCell;
+            GridMatch columnMatch = data.getColumnMatch();
+            GridMatch rowMatch = data.getRowMatch();
+            int column = columnMatch.cellIndex;
+            int row = rowMatch.cellIndex;
+            boolean createColumn = columnMatch.createCell;
+            boolean createRow = rowMatch.createCell;
 
             Rect cellBounds = grid.getCellBounds(row, column, 1, 1);
 
@@ -312,7 +314,22 @@ public class GridLayoutPainter {
             }
 
             gc.useStyle(DrawingStyle.DROP_PREVIEW);
-            mRule.drawElement(gc, first, offsetX, offsetY);
+
+            Rect bounds = first.getBounds();
+            int x = offsetX;
+            int y = offsetY;
+            if (columnMatch.type == SegmentType.RIGHT) {
+                x += cellBounds.w - bounds.w;
+            } else if (columnMatch.type == SegmentType.CENTER_HORIZONTAL) {
+                x += cellBounds.w / 2 - bounds.w / 2;
+            }
+            if (rowMatch.type == SegmentType.BOTTOM) {
+                y += cellBounds.h - bounds.h;
+            } else if (rowMatch.type == SegmentType.CENTER_VERTICAL) {
+                y += cellBounds.h / 2 - bounds.h / 2;
+            }
+
+            mRule.drawElement(gc, first, x, y);
         }
     }
 
