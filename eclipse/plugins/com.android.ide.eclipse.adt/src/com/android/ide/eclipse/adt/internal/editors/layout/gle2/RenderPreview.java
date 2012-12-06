@@ -56,7 +56,6 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.IAbstractFile;
 import com.android.resources.Density;
-import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.sdklib.IAndroidTarget;
@@ -384,7 +383,7 @@ public class RenderPreview implements IJobChangeListener {
                 ProjectResources resources = chooser.getResources();
                 if (resources != null) {
                     ResourceFile best = resources.getMatchingFile(editedFile.getName(),
-                            ResourceFolderType.LAYOUT, config);
+                            ResourceType.LAYOUT, config);
                     if (best != null) {
                         IAbstractFile file = best.getFile();
                         if (file instanceof IFileWrapper) {

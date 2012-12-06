@@ -16,6 +16,11 @@
 
 package com.android.ide.common.resources;
 
+import static com.android.SdkConstants.ATTR_REF_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,7 +35,9 @@ import com.android.io.IAbstractResource;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.utils.Pair;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -510,39 +517,126 @@ public abstract class ResourceRepository {
     }
 
     /**
-     * Returns the {@link ResourceFile} matching the given name, {@link ResourceFolderType} and
-     * configuration.
-     * <p/>This only works with files generating one resource named after the file (for instance,
-     * layouts, bitmap based drawable, xml, anims).
+     * Returns the {@link ResourceFile} matching the given name,
+     * {@link ResourceFolderType} and configuration.
+     * <p/>
+     * This only works with files generating one resource named after the file
+     * (for instance, layouts, bitmap based drawable, xml, anims).
+     *
+     * @param name the resource name or file name
+     * @param type the folder type search for
+     * @param config the folder configuration to match for
      * @return the matching file or <code>null</code> if no match was found.
      */
     @Nullable
-    public ResourceFile getMatchingFile(@NonNull String name, @NonNull ResourceFolderType type,
+    public ResourceFile getMatchingFile(
+            @NonNull String name,
+            @NonNull ResourceFolderType type,
             @NonNull FolderConfiguration config) {
-        ensureInitialized();
-
-        // get the folders for the given type
-        List<ResourceFolder> folders = mFolderMap.get(type);
-
-        // look for folders containing a file with the given name.
-        ArrayList<ResourceFolder> matchingFolders = new ArrayList<ResourceFolder>(folders.size());
-
-        // remove the folders that do not have a file with the given name.
-        for (int i = 0 ; i < folders.size(); i++) {
-            ResourceFolder folder = folders.get(i);
-
-            if (folder.hasFile(name) == true) {
-                matchingFolders.add(folder);
+        List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(type);
+        for (ResourceType t : types) {
+            if (t == ResourceType.ID) {
+                continue;
+            }
+            ResourceFile match = getMatchingFile(name, type, config);
+            if (match != null) {
+                return match;
             }
         }
 
-        // from those, get the folder with a config matching the given reference configuration.
-        Configurable match = config.findMatchingConfigurable(matchingFolders);
+        return null;
+    }
 
-        // do we have a matching folder?
-        if (match instanceof ResourceFolder) {
-            // get the ResourceFile from the filename
-            return ((ResourceFolder)match).getFile(name);
+    /**
+     * Returns the {@link ResourceFile} matching the given name,
+     * {@link ResourceType} and configuration.
+     * <p/>
+     * This only works with files generating one resource named after the file
+     * (for instance, layouts, bitmap based drawable, xml, anims).
+     *
+     * @param name the resource name or file name
+     * @param type the folder type search for
+     * @param config the folder configuration to match for
+     * @return the matching file or <code>null</code> if no match was found.
+     */
+    @Nullable
+    public ResourceFile getMatchingFile(
+            @NonNull String name,
+            @NonNull ResourceType type,
+            @NonNull FolderConfiguration config) {
+        ensureInitialized();
+
+        String resourceName = name;
+        int dot = resourceName.indexOf('.');
+        if (dot != -1) {
+            resourceName = resourceName.substring(0, dot);
+        }
+
+        Map<String, ResourceItem> items = mResourceMap.get(type);
+        if (items != null) {
+            ResourceItem item = items.get(resourceName);
+            if (item != null) {
+                List<ResourceFile> files = item.getSourceFileList();
+                if (files != null) {
+                    if (files.size() > 1) {
+                        ResourceValue value = item.getResourceValue(type, config,
+                                isFrameworkRepository());
+                        if (value != null) {
+                            String v = value.getValue();
+                            if (v != null) {
+                                Pair<ResourceType, String> pair = parseResource(v);
+                                if (pair != null) {
+                                    return getMatchingFile(pair.getSecond(), pair.getFirst(),
+                                            config);
+                                } else {
+                                    // Looks like the resource value is pointing to a file
+                                    // It's most likely one of the source files for this
+                                    // resource item, so check those first
+                                    for (ResourceFile f : files) {
+                                        if (v.equals(f.getFile().getOsLocation())) {
+                                            // Found the file
+                                            return f;
+                                        }
+                                    }
+
+                                    // No; look up the resource file from the full path
+                                    File file = new File(v);
+                                    if (file.exists()) {
+                                        ResourceFile f = findResourceFile(file);
+                                        if (f != null) {
+                                            return f;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (files.size() == 1) {
+                        // Single file: see if it matches
+                        ResourceFile matchingFile = files.get(0);
+                        if (matchingFile.getFolder().getConfiguration().isMatchFor(config)) {
+                            return matchingFile;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private ResourceFile findResourceFile(@NonNull File file) {
+        // Look up the right resource file for this path
+        String parentName = file.getParentFile().getName();
+        IAbstractFolder folder = getResFolder().getFolder(parentName);
+        if (folder != null) {
+            ResourceFolder resourceFolder = getResourceFolder(folder);
+            if (resourceFolder != null) {
+                ResourceFile resourceFile = resourceFolder.getFile(file.getName());
+                if (resourceFile != null) {
+                    return resourceFile;
+                }
+            }
         }
 
         return null;
@@ -774,6 +868,64 @@ public abstract class ResourceRepository {
         }
 
         return null;
+    }
+
+    /**
+     * Return the resource type of the given url, and the resource name
+     *
+     * @param url the resource url to be parsed
+     * @return a pair of the resource type and the resource name
+     */
+    public static Pair<ResourceType,String> parseResource(String url) {
+        // Handle theme references
+        if (url.startsWith(PREFIX_THEME_REF)) {
+            String remainder = url.substring(PREFIX_THEME_REF.length());
+            if (url.startsWith(ATTR_REF_PREFIX)) {
+                url = PREFIX_RESOURCE_REF + url.substring(1);
+                return parseResource(url);
+            }
+            int colon = url.indexOf(':');
+            if (colon != -1) {
+                // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
+                if (remainder.indexOf('/', colon) == -1) {
+                    remainder = remainder.substring(0, colon) + RESOURCE_CLZ_ATTR + '/'
+                            + remainder.substring(colon);
+                }
+                url = PREFIX_RESOURCE_REF + remainder;
+                return parseResource(url);
+            } else {
+                int slash = url.indexOf('/');
+                if (slash == -1) {
+                    url = PREFIX_RESOURCE_REF + RESOURCE_CLZ_ATTR + '/' + remainder;
+                    return parseResource(url);
+                }
+            }
+        }
+
+        if (!url.startsWith(PREFIX_RESOURCE_REF)) {
+            return null;
+        }
+        int typeEnd = url.indexOf('/', 1);
+        if (typeEnd == -1) {
+            return null;
+        }
+        int nameBegin = typeEnd + 1;
+
+        // Skip @ and @+
+        int typeBegin = url.startsWith("@+") ? 2 : 1; //$NON-NLS-1$
+
+        int colon = url.lastIndexOf(':', typeEnd);
+        if (colon != -1) {
+            typeBegin = colon + 1;
+        }
+        String typeName = url.substring(typeBegin, typeEnd);
+        ResourceType type = ResourceType.getEnum(typeName);
+        if (type == null) {
+            return null;
+        }
+        String name = url.substring(nameBegin);
+
+        return Pair.of(type, name);
     }
 }
 

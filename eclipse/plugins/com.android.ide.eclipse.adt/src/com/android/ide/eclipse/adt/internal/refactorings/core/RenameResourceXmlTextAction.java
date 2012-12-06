@@ -24,8 +24,8 @@ import static com.android.SdkConstants.TAG_ITEM;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.resources.ResourceType;
 import com.android.utils.Pair;
@@ -173,7 +173,7 @@ public final class RenameResourceXmlTextAction extends Action {
                         return null;
                     }
 
-                    return Hyperlinks.parseResource(url);
+                    return ResourceRepository.parseResource(url);
                 }
             }
         } catch (BadLocationException e) {

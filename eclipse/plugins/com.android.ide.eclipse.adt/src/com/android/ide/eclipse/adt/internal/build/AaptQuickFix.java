@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.XMLNS_ANDROID;
 import static com.android.SdkConstants.XMLNS_URI;
 
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -343,7 +344,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
         }
 
         private void perform() {
-            Pair<ResourceType,String> resource = ResourceHelper.parseResource(mResource);
+            Pair<ResourceType,String> resource = ResourceRepository.parseResource(mResource);
             ResourceType type = resource.getFirst();
             String name = resource.getSecond();
             String value = ""; //$NON-NLS-1$
