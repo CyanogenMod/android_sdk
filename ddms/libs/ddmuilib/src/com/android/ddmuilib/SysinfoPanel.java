@@ -18,14 +18,17 @@ package com.android.ddmuilib;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmuilib.SysinfoPanel.BugReportParser.GfxProfileData;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -39,6 +42,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 
@@ -48,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,6 +69,12 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
     private Combo mDisplayMode;
 
     private DefaultPieDataset mDataset;
+    private DefaultCategoryDataset mBarDataSet;
+
+    private StackLayout mStackLayout;
+    private Composite mChartComposite;
+    private Composite mPieChartComposite;
+    private Composite mStackedBarComposite;
 
     // The bugreport file to process
     private File mDataFile;
@@ -72,19 +84,23 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
 
     // Selects the current display: MODE_CPU, etc.
     private int mMode = 0;
+    private String mGfxPackageName;
 
     private static final int MODE_CPU = 0;
     private static final int MODE_MEMINFO = 1;
+    private static final int MODE_GFXINFO = 2;
 
     // argument to dumpsys; section in the bugreport holding the data
     private static final String DUMP_COMMAND[] = {
         "dumpsys cpuinfo",
         "cat /proc/meminfo ; procrank",
+        "dumpsys gfxinfo",
     };
 
     private static final String CAPTIONS[] = {
         "CPU load",
         "Memory usage",
+        "Frame Render Time",
     };
 
     /**
@@ -102,6 +118,8 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                 readCpuDataset(br);
             } else if (mMode == MODE_MEMINFO) {
                 readMeminfoDataset(br);
+            } else if (mMode == MODE_GFXINFO) {
+                readGfxInfoDataset(br);
             }
             br.close();
         } catch (IOException e) {
@@ -146,6 +164,11 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
     private void loadFromDevice() {
         clearDataSet();
 
+        final String command = getDumpsysCommand(mMode);
+        if (command == null) {
+            return;
+        }
+
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -155,7 +178,7 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                         // Hack to add bugreport-style section header for meminfo
                         mTempStream.write("------ MEMORY INFO ------\n".getBytes());
                     }
-                    getCurrentDevice().executeShellCommand(DUMP_COMMAND[mMode], SysinfoPanel.this);
+                    getCurrentDevice().executeShellCommand(command, SysinfoPanel.this);
                 } catch (IOException e) {
                     Log.e("DDMS", e);
                 } catch (TimeoutException e) {
@@ -168,6 +191,31 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
             }
         }, "Sysinfo Output Collector");
         t.start();
+    }
+
+    private String getDumpsysCommand(int mode) {
+        if (mode == MODE_GFXINFO) {
+            Client c = getCurrentClient();
+            if (c == null) {
+                return null;
+            }
+
+            ClientData cd = c.getClientData();
+            if (cd == null) {
+                return null;
+            }
+
+            mGfxPackageName = cd.getClientDescription();
+            if (mGfxPackageName == null) {
+                return null;
+            }
+
+            return "dumpsys gfxinfo " + mGfxPackageName;
+        } else if (mode < DUMP_COMMAND.length) {
+            return DUMP_COMMAND[mode];
+        }
+
+        return null;
     }
 
     /**
@@ -265,11 +313,42 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
         mLabel = new Label(top, SWT.NONE);
         mLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
+        mChartComposite = new Composite(top, SWT.NONE);
+        mChartComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
+        mStackLayout = new StackLayout();
+        mChartComposite.setLayout(mStackLayout);
+
+        mPieChartComposite = createPieChartComposite(mChartComposite);
+        mStackedBarComposite = createStackedBarComposite(mChartComposite);
+
+        mStackLayout.topControl = mPieChartComposite;
+
+        return top;
+    }
+
+    private Composite createStackedBarComposite(Composite chartComposite) {
+        mBarDataSet = new DefaultCategoryDataset();
+        JFreeChart chart = ChartFactory.createStackedBarChart("Per Frame Rendering Time",
+                "Frame #", "Time (ms)", mBarDataSet, PlotOrientation.VERTICAL,
+                true /* legend */, true /* tooltips */, false /* urls */);
+
+        ChartComposite c = newChartComposite(chart, chartComposite);
+        c.setLayoutData(new GridData(GridData.FILL_BOTH));
+        return c;
+    }
+
+    private Composite createPieChartComposite(Composite chartComposite) {
         mDataset = new DefaultPieDataset();
         JFreeChart chart = ChartFactory.createPieChart("", mDataset, false
                 /* legend */, true/* tooltips */, false /* urls */);
 
-        ChartComposite chartComposite = new ChartComposite(top,
+        ChartComposite c = newChartComposite(chart, chartComposite);
+        c.setLayoutData(new GridData(GridData.FILL_BOTH));
+        return c;
+    }
+
+    private ChartComposite newChartComposite(JFreeChart chart, Composite parent) {
+        return new ChartComposite(parent,
                 SWT.BORDER, chart,
                 ChartComposite.DEFAULT_HEIGHT,
                 ChartComposite.DEFAULT_HEIGHT,
@@ -285,8 +364,6 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                 true,  // print
                 false,  // zoom
                 true);
-        chartComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
-        return top;
     }
 
     @Override
@@ -350,6 +427,60 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
                 value = v;
             }
         };
+
+        /** Components of the time it takes to draw a single frame. */
+        public static final class GfxProfileData {
+            /** draw time (time spent building display lists) in ms */
+            final double draw;
+
+            /** process time (time spent by Android's 2D renderer to execute display lists) (ms) */
+            final double process;
+
+            /** execute time (time spent to send frame to the compositor) in ms */
+            final double execute;
+
+            public GfxProfileData(double draw, double process, double execute) {
+                this.draw = draw;
+                this.process = process;
+                this.execute = execute;
+            }
+        }
+
+        public static List<GfxProfileData> parseGfxInfo(BufferedReader br) throws IOException {
+            Pattern headerPattern = Pattern.compile("\\s+Draw\\s+Process\\s+Execute");
+
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                Matcher m = headerPattern.matcher(line);
+                if (m.find()) {
+                    break;
+                }
+            }
+
+            if (line == null) {
+                return Collections.emptyList();
+            }
+
+            // parse something like: "  0.85    1.10    0.61\n", 3 doubles basically
+            Pattern dataPattern =
+                    Pattern.compile("(\\d*\\.\\d+)\\s+(\\d*\\.\\d+)\\s+(\\d*\\.\\d+)");
+
+            List<GfxProfileData> data = new ArrayList<BugReportParser.GfxProfileData>(128);
+            while ((line = br.readLine()) != null) {
+                Matcher m = dataPattern.matcher(line);
+                if (!m.find()) {
+                    break;
+                }
+
+                double draw = safeParseDouble(m.group(1));
+                double process = safeParseDouble(m.group(2));
+                double execute = safeParseDouble(m.group(3));
+
+                data.add(new GfxProfileData(draw, process, execute));
+            }
+
+            return data;
+        }
 
         /**
          * Processes wakelock information from bugreport. Updates mDataset with the
@@ -665,27 +796,58 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
     }
 
     private void readCpuDataset(BufferedReader br) throws IOException {
-        updateDataSet(BugReportParser.readCpuDataset(br), "");
+        updatePieDataSet(BugReportParser.readCpuDataset(br), "");
     }
 
     private void readMeminfoDataset(BufferedReader br) throws IOException {
-        updateDataSet(BugReportParser.readMeminfoDataset(br), "PSS in kB");
+        updatePieDataSet(BugReportParser.readMeminfoDataset(br), "PSS in kB");
+    }
+
+    private void readGfxInfoDataset(BufferedReader br) throws IOException {
+        updateBarChartDataSet(BugReportParser.parseGfxInfo(br),
+                mGfxPackageName == null ? "" : mGfxPackageName);
     }
 
     private void clearDataSet() {
         mLabel.setText("");
         mDataset.clear();
+        mBarDataSet.clear();
     }
 
-    private void updateDataSet(final List<BugReportParser.DataValue> data, final String label) {
+    private void updatePieDataSet(final List<BugReportParser.DataValue> data, final String label) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
                 mLabel.setText(label);
+                mStackLayout.topControl = mPieChartComposite;
+                mChartComposite.layout();
+
                 for (BugReportParser.DataValue d : data) {
                     mDataset.setValue(d.name, d.value);
                 }
             }
         });
     }
+
+    private void updateBarChartDataSet(final List<GfxProfileData> gfxProfileData,
+            final String label) {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                mLabel.setText(label);
+                mStackLayout.topControl = mStackedBarComposite;
+                mChartComposite.layout();
+
+                for (int i = 0; i < gfxProfileData.size(); i++) {
+                    GfxProfileData d = gfxProfileData.get(i);
+                    String frameNumber = Integer.toString(i);
+
+                    mBarDataSet.addValue(d.draw, "Draw", frameNumber);
+                    mBarDataSet.addValue(d.process, "Process", frameNumber);
+                    mBarDataSet.addValue(d.execute, "Execute", frameNumber);
+                }
+            }
+        });
+    }
+
 }
