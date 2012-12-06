@@ -64,6 +64,7 @@
            ...
     -->
     <property name="dex.force.jumbo" value="false" />
+    <property name="dex.disable.merger" value="false" />
 
     <!-- compilation options -->
     <property name="java.encoding" value="UTF-8" />
@@ -285,6 +286,7 @@
                     dexedlibs="${out.dexed.absolute.dir}"
                     nolocals="@{nolocals}"
                     forceJumbo="${dex.force.jumbo}"
+                    disableDexMerger="${dex.disable.merger}"
                     verbose="${verbose}">
                 <path path="${out.dex.input.absolute.dir}"/>
                 <path refid="out.dex.jar.input.ref" />

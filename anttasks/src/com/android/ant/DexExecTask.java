@@ -44,6 +44,7 @@ public class DexExecTask extends SingleDependencyTask {
     private boolean mVerbose = false;
     private boolean mNoLocals = false;
     private boolean mForceJumbo = false;
+    private boolean mDisableDexMerger = false;
     private List<Path> mPathInputs;
     private List<FileSet> mFileSetInputs;
 
@@ -88,6 +89,10 @@ public class DexExecTask extends SingleDependencyTask {
         mForceJumbo = forceJumbo;
     }
 
+    public void setDisableDexMerger(boolean disableMerger) {
+        mDisableDexMerger  = disableMerger;
+    }
+
     /**
      * Returns an object representing a nested <var>path</var> element.
      */
@@ -119,7 +124,7 @@ public class DexExecTask extends SingleDependencyTask {
 
 
     private void preDexLibraries(List<File> inputs) {
-        if (inputs.size() == 1) {
+        if (mDisableDexMerger || inputs.size() == 1) {
             // only one input, no need to put a pre-dexed version, even if this path is
             // just a jar file (case for proguard'ed builds)
             return;
