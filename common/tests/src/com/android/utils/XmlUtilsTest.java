@@ -15,11 +15,14 @@
  */
 package com.android.utils;
 
+import static com.android.SdkConstants.XMLNS;
+
 import com.android.SdkConstants;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -55,8 +58,31 @@ public class XmlUtilsTest extends TestCase {
         assertEquals("customPrefix", prefix);
 
         prefix = XmlUtils.lookupNamespacePrefix(baz,
-                "http://schemas.android.com/tools", "tools");
+                "http://schemas.android.com/tools", "tools", false);
         assertEquals("tools", prefix);
+
+        prefix = XmlUtils.lookupNamespacePrefix(baz,
+                "http://schemas.android.com/apk/res/my/pkg", "app", false);
+        assertEquals("app", prefix);
+        assertFalse(declaresNamespace(document, "http://schemas.android.com/apk/res/my/pkg"));
+
+        prefix = XmlUtils.lookupNamespacePrefix(baz,
+                "http://schemas.android.com/apk/res/my/pkg", "app", true /*create*/);
+        assertEquals("app", prefix);
+        assertTrue(declaresNamespace(document, "http://schemas.android.com/apk/res/my/pkg"));
+    }
+
+    private static boolean declaresNamespace(Document document, String uri) {
+        NamedNodeMap attributes = document.getDocumentElement().getAttributes();
+        for (int i = 0, n = attributes.getLength(); i < n; i++) {
+            Attr attribute = (Attr) attributes.item(i);
+            String name = attribute.getName();
+            if (name.startsWith(XMLNS) && uri.equals(attribute.getValue())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void testToXmlAttributeValue() throws Exception {

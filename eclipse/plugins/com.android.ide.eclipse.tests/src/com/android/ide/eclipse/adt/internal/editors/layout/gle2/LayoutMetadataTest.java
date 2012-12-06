@@ -53,11 +53,11 @@ public class LayoutMetadataTest extends AdtProjectTest {
         assertNull(LayoutMetadata.getProperty(node, "foo"));
 
         Element element = (Element) node;
-        String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null);
+        String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null, false);
         if (prefix == null) {
             // Add in new prefix...
             prefix = XmlUtils.lookupNamespacePrefix(element,
-                    TOOLS_URI, TOOLS_PREFIX);
+                    TOOLS_URI, TOOLS_PREFIX, true);
         }
         element.setAttribute(prefix + ':' + "foo", "bar");
     }

@@ -753,11 +753,11 @@ public class AdtUtils {
         editor.wrapUndoEditXmlModel(description, new Runnable() {
             @Override
             public void run() {
-                String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null);
+                String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null, true);
                 if (prefix == null) {
                     // Add in new prefix...
                     prefix = XmlUtils.lookupNamespacePrefix(element,
-                            TOOLS_URI, TOOLS_PREFIX);
+                            TOOLS_URI, TOOLS_PREFIX, true /*create*/);
                     if (value != null) {
                         // ...and ensure that the header is formatted such that
                         // the XML namespace declaration is placed in the right
@@ -880,11 +880,11 @@ public class AdtUtils {
                         Document doc = domModel.getDocument();
                         if (doc != null && element.getOwnerDocument() == doc) {
                             String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI,
-                                    null);
+                                    null, true);
                             if (prefix == null) {
                                 // Add in new prefix...
                                 prefix = XmlUtils.lookupNamespacePrefix(element,
-                                        TOOLS_URI, TOOLS_PREFIX);
+                                        TOOLS_URI, TOOLS_PREFIX, true);
                             }
 
                             String v = value;
