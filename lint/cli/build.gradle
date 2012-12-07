@@ -19,22 +19,8 @@ group = 'com.android.tools.lint'
 archivesBaseName = 'lint'
 
 sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-        resources {
-            srcDir 'src'
-        }
-    }
-    test {
-        java {
-            srcDir 'tests/src'
-        }
-        resources {
-            srcDir 'tests/src'
-        }
-    }
+    main.resources.srcDir 'src/main/java'
+    test.resources.srcDir 'src/test/java'
 }
 
 jar {

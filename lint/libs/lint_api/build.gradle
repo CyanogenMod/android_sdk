@@ -22,14 +22,8 @@ group = 'com.android.tools.lint'
 archivesBaseName = 'lint-api'
 
 sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-        resources {
-            srcDir 'src'
-        }
-    }
+    main.resources.srcDir 'src/main/java'
+    test.resources.srcDir 'src/test/java'
 }
 
 uploadArchives {

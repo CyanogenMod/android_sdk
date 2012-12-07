@@ -4,4 +4,4 @@ libs/lint_api/bin
 libs/lint_api/build
 libs/lint_checks/bin
 libs/lint_checks/build
-libs/lint_checks/tests/bin
+libs/lint_checks/src/test/bin

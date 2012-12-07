@@ -3,8 +3,8 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_JAVA_RESOURCE_DIRS := src
+LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
+LOCAL_JAVA_RESOURCE_DIRS := src/main/java
 
 LOCAL_JAR_MANIFEST := etc/manifest.txt
 
