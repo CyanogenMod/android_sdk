@@ -18,11 +18,13 @@ package com.android.utils;
 import static com.android.SdkConstants.XMLNS;
 
 import com.android.SdkConstants;
+import com.android.annotations.Nullable;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -112,5 +114,57 @@ public class XmlUtilsTest extends TestCase {
         StringBuilder sb = new StringBuilder();
         XmlUtils.appendXmlTextValue(sb, "<\"'>&");
         assertEquals("&lt;\"'>&amp;", sb.toString());
+    }
+
+    public void testNew() throws Exception {
+        Document doc = createEmptyPlainDocument();
+        Element root = doc.createElement("myroot");
+        doc.appendChild(root);
+        root.setAttribute("foo", "bar");
+        root.setAttribute("baz", "baz");
+        Element child = doc.createElement("mychild");
+        root.appendChild(child);
+        Element child2 = doc.createElement("hasComment");
+        root.appendChild(child2);
+        Node comment = doc.createComment("This is my comment");
+        child2.appendChild(comment);
+        Element child3 = doc.createElement("hasText");
+        root.appendChild(child3);
+        Node text = doc.createTextNode("  This is my text  ");
+        child3.appendChild(text);
+
+        String xml = XmlUtils.toXml(doc, false);
+        assertEquals(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<myroot baz=\"baz\" foo=\"bar\">\n" +
+                "    <mychild/>\n" +
+                "    <hasComment>\n" +
+                "        <!--\n" +
+                "            This is my comment\n" +
+                "        -->\n" +
+                "    </hasComment>\n" +
+                "    <hasText>\n" +
+                "            This is my text\n" +
+                "    </hasText>\n" +
+                "</myroot>\n",
+                xml);
+
+        xml = XmlUtils.toXml(doc, true);
+        assertEquals(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<myroot baz=\"baz\" foo=\"bar\"><mychild/><hasComment><!--This is my comment--></hasComment><hasText>  This is my text  </hasText></myroot>",
+               xml);
+
+    }
+
+    @Nullable
+    private static Document createEmptyPlainDocument() throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        factory.setIgnoringComments(true);
+        DocumentBuilder builder;
+        builder = factory.newDocumentBuilder();
+        return builder.newDocument();
     }
 }

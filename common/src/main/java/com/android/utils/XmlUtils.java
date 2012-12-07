@@ -29,11 +29,14 @@ import static com.android.SdkConstants.XMLNS_URI;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Splitter;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.HashSet;
 
@@ -273,6 +276,141 @@ public class XmlUtils {
             } else {
                 sb.append(c);
             }
+        }
+    }
+
+    /**
+     * Dump an XML tree to string. This isn't going to do a beautiful job pretty
+     * printing the XML; it's intended mostly for non-user editable files and
+     * for debugging. If true, preserve whitespace exactly as in the DOM
+     * document (typically used for a DOM which is already formatted), otherwise
+     * this method will insert some newlines here and there (for example, one
+     * per element and one per attribute.)
+     *
+     * @param node the node (which can be a document, an element, a text node,
+     *            etc.
+     * @param preserveWhitespace whether to preserve the whitespace (text nodes)
+     *            in the DOM
+     * @return a string version of the file
+     */
+    public static String toXml(Node node, boolean preserveWhitespace) {
+        StringBuilder sb = new StringBuilder(1000);
+
+        append(sb, node, 0, preserveWhitespace);
+
+        return sb.toString();
+    }
+
+    private static void indent(StringBuilder sb, int indent) {
+        for (int i = 0; i < indent; i++) {
+            sb.append("    ");
+        }
+    }
+
+    private static void append(
+            @NonNull StringBuilder sb,
+            @NonNull Node node,
+            int indent,
+            boolean preserveWhitespace) {
+        short nodeType = node.getNodeType();
+        switch (nodeType) {
+            case Node.DOCUMENT_NODE:
+            case Node.DOCUMENT_FRAGMENT_NODE: {
+                sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"); //$NON-NLS-1$
+                NodeList children = node.getChildNodes();
+                for (int i = 0, n = children.getLength(); i < n; i++) {
+                    append(sb, children.item(i), indent, preserveWhitespace);
+                }
+                break;
+            }
+            case Node.COMMENT_NODE:
+            case Node.TEXT_NODE: {
+                if (nodeType == Node.COMMENT_NODE) {
+                    if (!preserveWhitespace) {
+                        indent(sb, indent);
+                    }
+                    sb.append("<!--"); //$NON-NLS-1$
+                    if (!preserveWhitespace) {
+                        sb.append('\n');
+                    }
+                }
+                String text = node.getNodeValue();
+                if (!preserveWhitespace) {
+                    text = text.trim();
+                    for (String line : Splitter.on('\n').split(text)) {
+                        indent(sb, indent + 1);
+                        sb.append(toXmlTextValue(line));
+                        sb.append('\n');
+                    }
+                } else {
+                    sb.append(toXmlTextValue(text));
+                }
+                if (nodeType == Node.COMMENT_NODE) {
+                    if (!preserveWhitespace) {
+                        indent(sb, indent);
+                    }
+                    sb.append("-->"); //$NON-NLS-1$
+                    if (!preserveWhitespace) {
+                        sb.append('\n');
+                    }
+                }
+                break;
+            }
+            case Node.ELEMENT_NODE: {
+                if (!preserveWhitespace) {
+                    indent(sb, indent);
+                }
+                sb.append('<');
+                Element element = (Element) node;
+                sb.append(element.getTagName());
+
+                NamedNodeMap attributes = element.getAttributes();
+                NodeList children = element.getChildNodes();
+                int childCount = children.getLength();
+                int attributeCount = attributes.getLength();
+
+                if (attributeCount > 0) {
+                    for (int i = 0; i < attributeCount; i++) {
+                        Node attribute = attributes.item(i);
+                        sb.append(' ');
+                        sb.append(attribute.getNodeName());
+                        sb.append('=').append('"');
+                        sb.append(toXmlAttributeValue(attribute.getNodeValue()));
+                        sb.append('"');
+                    }
+                }
+
+                if (childCount == 0) {
+                    sb.append('/');
+                }
+                sb.append('>');
+                if (!preserveWhitespace) {
+                    sb.append('\n');
+                }
+                if (childCount > 0) {
+                    for (int i = 0; i < childCount; i++) {
+                        Node child = children.item(i);
+                        append(sb, child, indent + 1, preserveWhitespace);
+                    }
+                    if (!preserveWhitespace) {
+                        if (sb.charAt(sb.length() - 1) != '\n') {
+                            sb.append('\n');
+                        }
+                        indent(sb, indent);
+                    }
+                    sb.append('<').append('/');
+                    sb.append(element.getTagName());
+                    sb.append('>');
+                    if (!preserveWhitespace) {
+                        sb.append('\n');
+                    }
+                }
+                break;
+            }
+
+            default:
+                throw new UnsupportedOperationException(
+                        "Unsupported node type " + nodeType + ": not yet implemented");
         }
     }
 }
