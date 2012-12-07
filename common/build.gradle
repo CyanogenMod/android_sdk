@@ -16,25 +16,6 @@ version = getVersion()
 group = 'com.android.tools'
 archivesBaseName = 'common'
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-        resources {
-            srcDir 'resources'
-        }
-    }
-    test {
-        java {
-            srcDir 'tests/src'
-        }
-        resources {
-            srcDir 'tests/resources'
-        }
-    }
-}
-
 uploadArchives {
     repositories {
         mavenDeployer {

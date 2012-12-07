@@ -16,7 +16,7 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src)
+LOCAL_SRC_FILES := $(call all-java-files-under,src/main/java)
 
 LOCAL_JAR_MANIFEST := manifest.txt
 
@@ -32,5 +32,14 @@ LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
-# Build all sub-directories
-include $(call all-makefiles-under,$(LOCAL_PATH))
+# build the tests
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
+
+LOCAL_MODULE := common-tests
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_JAVA_LIBRARIES := common junit
+
+include $(BUILD_HOST_JAVA_LIBRARY)
