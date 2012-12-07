@@ -16,12 +16,25 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src)
+LOCAL_SRC_FILES := $(call all-java-files-under,src/main/java)
 
 LOCAL_JAVA_LIBRARIES := \
 	common \
 	kxml2-2.3.0
 
 LOCAL_MODULE := layoutlib_api
+
+include $(BUILD_HOST_JAVA_LIBRARY)
+
+# build tests
+include $(CLEAR_VARS)
+
+# Only compile source java files in this lib.
+LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
+
+LOCAL_MODULE := layoutlib_api-tests
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_JAVA_LIBRARIES := layoutlib_api junit
 
 include $(BUILD_HOST_JAVA_LIBRARY)

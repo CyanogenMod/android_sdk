@@ -17,25 +17,6 @@ version = getVersion()
 group = 'com.android.tools.layoutlib'
 archivesBaseName = 'layoutlib-api'
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-        resources {
-            srcDir 'src'
-        }
-    }
-    test {
-        java {
-            srcDir 'tests/src'
-        }
-        resources {
-            srcDir 'tests/src'
-        }
-    }
-}
-
 uploadArchives {
     repositories {
         mavenDeployer {
