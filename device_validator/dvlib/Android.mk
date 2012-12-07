@@ -15,12 +15,27 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_JAVA_RESOURCE_DIRS := src
+LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
+LOCAL_JAVA_RESOURCE_DIRS := src/main/resources
 
 LOCAL_MODULE := dvlib
 LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
-include $(call all-makefiles-under,$(LOCAL_PATH))
+
+# Build tests
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
+LOCAL_JAVA_RESOURCE_DIRS := src/main/resources
+
+LOCAL_MODULE := dvlib-tests
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_JAVA_LIBRARIES := \
+	dvlib \
+	junit
+
+include $(BUILD_HOST_JAVA_LIBRARY)
