@@ -42,19 +42,19 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* strings.xml - /testRefactor1/res/values/strings.xml\n" +
+                "[x] strings.xml - /testRefactor1/res/values/strings.xml\n" +
                 "  @@ -4 +4\n" +
                 "  -     <string name=\"app_name\">RefactoringTest</string>\n" +
                 "  +     <string name=\"myname\">RefactoringTest</string>\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor1/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor1/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -29 +29\n" +
                 "  -         public static final int app_name=0x7f040000;\n" +
                 "  +         public static final int myname=0x7f040000;\n" +
                 "\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
                 "  @@ -13 +13\n" +
                 "  -         android:label=\"@string/app_name\"\n" +
                 "  +         android:label=\"@string/myname\"\n" +
@@ -72,13 +72,13 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* activity_main.xml - /testRefactor2/res/menu/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor2/res/menu/activity_main.xml\n" +
                 "  @@ -4 +4\n" +
                 "  -         android:id=\"@+id/menu_settings\"\n" +
                 "  +         android:id=\"@+id/new_id_for_the_action_bar\"\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor2/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor2/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -19 +19\n" +
                 "  -         public static final int menu_settings=0x7f070003;\n" +
                 "  +         public static final int new_id_for_the_action_bar=0x7f070003;");
@@ -93,7 +93,7 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* activity_main.xml - /testRefactor3/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor3/res/layout/activity_main.xml\n" +
                 "  @@ -8 +8\n" +
                 "  -         android:id=\"@+id/textView1\"\n" +
                 "  +         android:id=\"@+id/output\"\n" +
@@ -104,13 +104,13 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "  +         android:layout_below=\"@+id/output\"\n" +
                 "\n" +
                 "\n" +
-                "* MainActivity.java - /testRefactor3/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor3/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -14 +14\n" +
                 "  -         View view1 = findViewById(R.id.textView1);\n" +
                 "  +         View view1 = findViewById(R.id.output);\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor3/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor3/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -20 +20\n" +
                 "  -         public static final int textView1=0x7f070000;\n" +
                 "  +         public static final int output=0x7f070000;");
@@ -126,7 +126,7 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* activity_main.xml - /testRefactor4/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor4/res/layout/activity_main.xml\n" +
                 "  @@ -8 +8\n" +
                 "  -         android:id=\"@+id/textView1\"\n" +
                 "  +         android:id=\"@+id/output\"\n" +
@@ -137,13 +137,13 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
                 "  +         android:layout_below=\"@+id/output\"\n" +
                 "\n" +
                 "\n" +
-                "* MainActivity.java - /testRefactor4/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor4/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -14 +14\n" +
                 "  -         View view1 = findViewById(R.id.textView1);\n" +
                 "  +         View view1 = findViewById(R.id.output);\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor4/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor4/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -20 +20\n" +
                 "  -         public static final int textView1=0x7f070000;\n" +
                 "  +         public static final int output=0x7f070000;");
@@ -158,21 +158,21 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* MainActivity.java - /testRefactor5/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor5/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -13 +13\n" +
                 "  -         setContentView(R.layout.activity_main);\n" +
                 "  +         setContentView(R.layout.newlayout);\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor5/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor5/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
                 "  +         public static final int newlayout=0x7f030000;\n" +
                 "\n" +
                 "\n" +
-                "* Rename 'testRefactor5/res/layout/activity_main.xml' to 'newlayout.xml'\n" +
+                "[x] Rename 'testRefactor5/res/layout/activity_main.xml' to 'newlayout.xml'\n" +
                 "\n" +
-                "* Rename 'testRefactor5/res/layout-land/activity_main.xml' to 'newlayout.xml'");
+                "[x] Rename 'testRefactor5/res/layout-land/activity_main.xml' to 'newlayout.xml'");
     }
 
     public void testRefactor6() throws Exception {
@@ -184,21 +184,21 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* R.java - /testRefactor6/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor6/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -14 +14\n" +
                 "  -         public static final int ic_launcher=0x7f020000;\n" +
                 "  +         public static final int newlauncher=0x7f020000;\n" +
                 "\n" +
                 "\n" +
-                "* Rename 'testRefactor6/res/drawable-xhdpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "[x] Rename 'testRefactor6/res/drawable-xhdpi/ic_launcher.png' to 'newlauncher.png'\n" +
                 "\n" +
-                "* Rename 'testRefactor6/res/drawable-mdpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "[x] Rename 'testRefactor6/res/drawable-mdpi/ic_launcher.png' to 'newlauncher.png'\n" +
                 "\n" +
-                "* Rename 'testRefactor6/res/drawable-ldpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "[x] Rename 'testRefactor6/res/drawable-ldpi/ic_launcher.png' to 'newlauncher.png'\n" +
                 "\n" +
-                "* Rename 'testRefactor6/res/drawable-hdpi/ic_launcher.png' to 'newlauncher.png'\n" +
+                "[x] Rename 'testRefactor6/res/drawable-hdpi/ic_launcher.png' to 'newlauncher.png'\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor6/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor6/AndroidManifest.xml\n" +
                 "  @@ -12 +12\n" +
                 "  -         android:icon=\"@drawable/ic_launcher\"\n" +
                 "  +         android:icon=\"@drawable/newlauncher\"");
@@ -216,21 +216,21 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* MainActivity.java - /testRefactor7/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor7/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -13 +13\n" +
                 "  -         setContentView(R.layout.activity_main);\n" +
                 "  +         setContentView(R.layout.newlayout);\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor7/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor7/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
                 "  +         public static final int newlayout=0x7f030000;\n" +
                 "\n" +
                 "\n" +
-                "* Rename 'testRefactor7/res/layout-land/activity_main.xml' to 'newlayout.xml'\n" +
+                "[x] Rename 'testRefactor7/res/layout-land/activity_main.xml' to 'newlayout.xml'\n" +
                 "\n" +
-                "* Rename 'testRefactor7/res/layout/activity_main.xml' to 'newlayout.xml'",
+                "[x] Rename 'testRefactor7/res/layout/activity_main.xml' to 'newlayout.xml'",
                 null);
     }
 
@@ -258,17 +258,17 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename 'testRefactor8/res/layout/activity_main.xml' to 'newlauncher.xml'\n" +
+                "[x] Rename 'testRefactor8/res/layout/activity_main.xml' to 'newlauncher.xml'\n" +
                 "\n" +
-                "* Rename 'testRefactor8/res/layout-land/activity_main.xml' to 'newlauncher.xml'\n" +
+                "[x] Rename 'testRefactor8/res/layout-land/activity_main.xml' to 'newlauncher.xml'\n" +
                 "\n" +
-                "* MainActivity.java - /testRefactor8/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor8/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -13 +13\n" +
                 "  -         setContentView(R.layout.activity_main);\n" +
                 "  +         setContentView(R.layout.newlauncher);\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor8/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor8/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -23 +23\n" +
                 "  -         public static final int activity_main=0x7f030000;\n" +
                 "  +         public static final int newlauncher=0x7f030000;",
@@ -302,13 +302,13 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* activity_main.xml - /testRefactor9/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor9/res/layout/activity_main.xml\n" +
                 "  @@ -8 +8\n" +
                 "  -         android:id=\"@+id/textView1\"\n" +
                 "  +         android:id=\"@+id/output\"\n" +
                 "\n" +
                 "\n" +
-                "* R.java - /testRefactor9/gen/com/example/refactoringtest/R.java\n" +
+                "[ ] R.java - /testRefactor9/gen/com/example/refactoringtest/R.java\n" +
                 "  @@ -20 +20\n" +
                 "  -         public static final int textView1=0x7f070000;\n" +
                 "  +         public static final int output=0x7f070000;");
@@ -324,7 +324,7 @@ public class RenameResourceParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* activity_main.xml - /testRefactor10/res/layout-land/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor10/res/layout-land/activity_main.xml\n" +
                 "  @@ -10 +10\n" +
                 "  -         tools:listitem=\"@layout/preview\" >\n" +
                 "  +         tools:listitem=\"@layout/newlayout\" >\n" +

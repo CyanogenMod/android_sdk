@@ -146,7 +146,11 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
 
             // Describe this change
             indent(sb, indent);
-            sb.append("* ");
+            if (change.isEnabled()) {
+                sb.append("[x] ");
+            } else {
+                sb.append("[ ] ");
+            }
             sb.append(changeName);
 
             IFile file = getFile(change);
@@ -580,6 +584,19 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
             "    }\n" +
             "}\n";
 
+    protected static final String CUSTOM_VIEW_1_STYLES =
+            "<resources>\n" +
+            "\n" +
+            "    <!-- Aattributes for the custom view -->\n" +
+            "    <declare-styleable name=\"CustomView1\">\n" +
+            "        <attr name=\"exampleString\" format=\"string\" />\n" +
+            "        <attr name=\"exampleDimension\" format=\"dimension\" />\n" +
+            "        <attr name=\"exampleColor\" format=\"color\" />\n" +
+            "        <attr name=\"exampleDrawable\" format=\"color|reference\" />\n" +
+            "    </declare-styleable>\n" +
+            "\n" +
+            "</resources>";
+
     protected static final String CUSTOM_VIEW_2 =
             "package com.example.refactoringtest.subpackage;\n" +
             "\n" +
@@ -624,6 +641,9 @@ public abstract class RefactoringTestBase extends AdtProjectTest {
 
         "src/com/example/refactoringtest/CustomView1.java",
         CUSTOM_VIEW_1,
+
+        "res/values/attrs_custom_view.xml",
+        CUSTOM_VIEW_1_STYLES,
 
         "src/com/example/refactoringtest/subpackage/CustomView2.java",
         CUSTOM_VIEW_2,

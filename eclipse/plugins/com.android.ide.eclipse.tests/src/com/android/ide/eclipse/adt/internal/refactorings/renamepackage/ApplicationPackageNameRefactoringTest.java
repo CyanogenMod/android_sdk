@@ -32,25 +32,23 @@ public class ApplicationPackageNameRefactoringTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Refactoring Application package name\n" +
-                "\n" +
-                "  * MainActivity2.java - /testRefactor1/src/com/example/refactoringtest/MainActivity2.java\n" +
-                "    @@ -7 +7\n" +
-                "    + import my.pkg.name.R;\n" +
+                "[x] MainActivity2.java - /testRefactor1/src/com/example/refactoringtest/MainActivity2.java\n" +
+                "  @@ -7 +7\n" +
+                "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "  * MainActivity.java - /testRefactor1/src/com/example/refactoringtest/MainActivity.java\n" +
-                "    @@ -7 +7\n" +
-                "    + import my.pkg.name.R;\n" +
+                "[x] MainActivity.java - /testRefactor1/src/com/example/refactoringtest/MainActivity.java\n" +
+                "  @@ -7 +7\n" +
+                "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "  * Make Manifest edits - /testRefactor1/AndroidManifest.xml\n" +
-                "    @@ -3 +3\n" +
-                "    -     package=\"com.example.refactoringtest\"\n" +
-                "    +     package=\"my.pkg.name\"\n" +
-                "    @@ -25 +25\n" +
-                "    -             android:name=\".MainActivity2\"\n" +
-                "    +             android:name=\"com.example.refactoringtest.MainActivity2\"");
+                "[x] Make Manifest edits - /testRefactor1/AndroidManifest.xml\n" +
+                "  @@ -3 +3\n" +
+                "  -     package=\"com.example.refactoringtest\"\n" +
+                "  +     package=\"my.pkg.name\"\n" +
+                "  @@ -25 +25\n" +
+                "  -             android:name=\".MainActivity2\"\n" +
+                "  +             android:name=\"com.example.refactoringtest.MainActivity2\"");
     }
 
     public void testRefactor2() throws Exception {
@@ -61,30 +59,28 @@ public class ApplicationPackageNameRefactoringTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Refactoring Application package name\n" +
-                "\n" +
-                "  * MyFragment.java - /testRefactor2/src/com/example/refactoringtest/MyFragment.java\n" +
-                "    @@ -3 +3\n" +
-                "    + import my.pkg.name.R;\n" +
+                "[x] MyFragment.java - /testRefactor2/src/com/example/refactoringtest/MyFragment.java\n" +
+                "  @@ -3 +3\n" +
+                "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "  * MainActivity.java - /testRefactor2/src/com/example/refactoringtest/MainActivity.java\n" +
-                "    @@ -7 +7\n" +
-                "    + import my.pkg.name.R;\n" +
+                "[x] MainActivity.java - /testRefactor2/src/com/example/refactoringtest/MainActivity.java\n" +
+                "  @@ -7 +7\n" +
+                "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "  * CustomView1.java - /testRefactor2/src/com/example/refactoringtest/CustomView1.java\n" +
-                "    @@ -5 +5\n" +
-                "    + import my.pkg.name.R;\n" +
+                "[x] CustomView1.java - /testRefactor2/src/com/example/refactoringtest/CustomView1.java\n" +
+                "  @@ -5 +5\n" +
+                "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "  * Make Manifest edits - /testRefactor2/AndroidManifest.xml\n" +
-                "    @@ -3 +3\n" +
-                "    -     package=\"com.example.refactoringtest\"\n" +
-                "    +     package=\"my.pkg.name\"\n" +
-                "    @@ -25 +25\n" +
-                "    -             android:name=\".MainActivity2\"\n" +
-                "    +             android:name=\"com.example.refactoringtest.MainActivity2\"");
+                "[x] Make Manifest edits - /testRefactor2/AndroidManifest.xml\n" +
+                "  @@ -3 +3\n" +
+                "  -     package=\"com.example.refactoringtest\"\n" +
+                "  +     package=\"my.pkg.name\"\n" +
+                "  @@ -25 +25\n" +
+                "  -             android:name=\".MainActivity2\"\n" +
+                "  +             android:name=\"com.example.refactoringtest.MainActivity2\"");
     }
 
     // ---- Test infrastructure ----

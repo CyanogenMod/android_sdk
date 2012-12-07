@@ -46,17 +46,17 @@ public class AndroidTypeMoveParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Move resource 'testRefactor1/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
+                "[x] Move resource 'testRefactor1/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
                 "\n" +
-                "* Move resource 'testRefactor1/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
+                "[x] Move resource 'testRefactor1/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor1/res/layout/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor1/res/layout/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <com.example.refactoringtest.subpackage.CustomView1\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor1/res/layout-land/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor1/res/layout-land/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <com.example.refactoringtest.subpackage.CustomView1");
@@ -71,11 +71,11 @@ public class AndroidTypeMoveParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Move resource 'testRefactorFragment/src/com/example/refactoringtest/MyFragment.java' to 'subpackage'\n" +
+                "[x] Move resource 'testRefactorFragment/src/com/example/refactoringtest/MyFragment.java' to 'subpackage'\n" +
                 "\n" +
-                "* Move resource 'testRefactorFragment/src/com/example/refactoringtest/MyFragment.java' to 'subpackage'\n" +
+                "[x] Move resource 'testRefactorFragment/src/com/example/refactoringtest/MyFragment.java' to 'subpackage'\n" +
                 "\n" +
-                "* activity_main.xml - /testRefactorFragment/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactorFragment/res/layout/activity_main.xml\n" +
                 "  @@ -33 +33\n" +
                 "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
                 "  +     <fragment android:name=\"com.example.refactoringtest.subpackage.MyFragment\"/>");
@@ -90,9 +90,9 @@ public class AndroidTypeMoveParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Move resource 'testRefactor1_norefs/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
+                "[x] Move resource 'testRefactor1_norefs/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'\n" +
                 "\n" +
-                "* Move resource 'testRefactor1_norefs/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'");
+                "[x] Move resource 'testRefactor1_norefs/src/com/example/refactoringtest/CustomView1.java' to 'subpackage'");
     }
 
     // ---- Test infrastructure ----

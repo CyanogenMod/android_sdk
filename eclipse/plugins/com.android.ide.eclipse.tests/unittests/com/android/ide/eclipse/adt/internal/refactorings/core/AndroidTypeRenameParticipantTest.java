@@ -36,21 +36,21 @@ public class AndroidTypeRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename compilation unit 'MainActivity.java' to 'NewActivityName.java'\n" +
+                "[x] Rename compilation unit 'MainActivity.java' to 'NewActivityName.java'\n" +
                 "\n" +
-                "* activity_main.xml - /testRefactor1/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor1/res/layout/activity_main.xml\n" +
                 "  @@ -5 +5\n" +
                 "  -     tools:context=\".MainActivity\" >\n" +
                 "  +     tools:context=\".NewActivityName\" >\n" +
                 "\n" +
                 "\n" +
-                "* activity_main.xml - /testRefactor1/res/layout-land/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor1/res/layout-land/activity_main.xml\n" +
                 "  @@ -5 +5\n" +
                 "  -     tools:context=\".MainActivity\" >\n" +
                 "  +     tools:context=\".NewActivityName\" >\n" +
                 "\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
                 "  +             android:name=\"com.example.refactoringtest.NewActivityName\"");
@@ -65,9 +65,9 @@ public class AndroidTypeRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename compilation unit 'MainActivity2.java' to 'NewActivityName.java'\n" +
+                "[x] Rename compilation unit 'MainActivity2.java' to 'NewActivityName.java'\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor1b/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor1b/AndroidManifest.xml\n" +
                 "  @@ -25 +25\n" +
                 "  -             android:name=\".MainActivity2\"\n" +
                 "  +             android:name=\".NewActivityName\"");
@@ -82,7 +82,7 @@ public class AndroidTypeRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename compilation unit 'MainActivity.java' to 'NewActivityName.java'");
+                "[x] Rename compilation unit 'MainActivity.java' to 'NewActivityName.java'");
     }
 
     public void testRefactor2() throws Exception {
@@ -94,15 +94,21 @@ public class AndroidTypeRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename compilation unit 'CustomView1.java' to 'NewCustomViewName.java'\n" +
+                "[x] Rename compilation unit 'CustomView1.java' to 'NewCustomViewName.java'\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2/res/layout/customviews.xml\n" +
+                "[x] attrs_custom_view.xml - /testRefactor2/res/values/attrs_custom_view.xml\n" +
+                "  @@ -4 +4\n" +
+                "  -     <declare-styleable name=\"CustomView1\">\n" +
+                "  +     <declare-styleable name=\"NewCustomViewName\">\n" +
+                "\n" +
+                "\n" +
+                "[x] customviews.xml - /testRefactor2/res/layout/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <com.example.refactoringtest.NewCustomViewName\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2/res/layout-land/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2/res/layout-land/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <com.example.refactoringtest.NewCustomViewName");
@@ -117,9 +123,9 @@ public class AndroidTypeRenameParticipantTest extends RefactoringTestBase {
 
             "CHANGES:\n" +
             "-------\n" +
-            "* Rename compilation unit 'MyFragment.java' to 'NewFragmentName.java'\n" +
+            "[x] Rename compilation unit 'MyFragment.java' to 'NewFragmentName.java'\n" +
             "\n" +
-            "* activity_main.xml - /testRefactorFragment/res/layout/activity_main.xml\n" +
+            "[x] activity_main.xml - /testRefactorFragment/res/layout/activity_main.xml\n" +
             "  @@ -33 +33\n" +
             "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
             "  +     <fragment android:name=\"com.example.refactoringtest.NewFragmentName\"/>");

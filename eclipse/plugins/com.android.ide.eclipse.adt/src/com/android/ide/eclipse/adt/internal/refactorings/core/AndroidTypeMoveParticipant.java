@@ -32,6 +32,8 @@ import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
 import com.android.utils.SdkUtils;
 
@@ -69,6 +71,7 @@ import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -166,7 +169,17 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
         // Update layout files; we don't just need to react to custom view
         // changes, we need to update fragment references and even tool:context activity
         // references
-        addLayoutFileChanges(result);
+        addLayoutFileChanges(mProject, result);
+
+        // Also update in dependent projects
+        ProjectState projectState = Sdk.getProjectState(mProject);
+        if (projectState != null) {
+            Collection<ProjectState> parentProjects = projectState.getFullParentProjects();
+            for (ProjectState parentProject : parentProjects) {
+                IProject project = parentProject.getProject();
+                addLayoutFileChanges(project, result);
+            }
+        }
 
         return (result.getChildren().length == 0) ? null : result;
     }
@@ -175,10 +188,10 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
         addXmlFileChanges(mManifestFile, result, true);
     }
 
-    private void addLayoutFileChanges(CompositeChange result) {
+    private void addLayoutFileChanges(IProject project, CompositeChange result) {
         try {
             // Update references in XML resource files
-            IFolder resFolder = mProject.getFolder(SdkConstants.FD_RESOURCES);
+            IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
 
             IResource[] folders = resFolder.members();
             for (IResource folder : folders) {
