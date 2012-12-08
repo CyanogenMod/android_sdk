@@ -33,7 +33,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -123,6 +125,26 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     private Color mGldrawTextColor;
     private Color mGlCallErrorColor;
+
+    /**
+     * Job to refresh the tree view & frame summary view.
+     *
+     * When the currently displayed frame is changed, either via the {@link #mFrameSelectionScale}
+     * or via {@link #mFrameSelectionSpinner}, we need to update the displayed tree of calls for
+     * that frame, and the frame summary view. Both these operations need to happen on the UI
+     * thread, but are time consuming. This works out ok if the frame selection is not changing
+     * rapidly (i.e., when the spinner or scale is moved to the target frame in a single action).
+     * However, if the spinner is constantly pressed, then the user is scrolling through a sequence
+     * of frames, and rather than refreshing the details for each of the intermediate frames,
+     * we create a job to refresh the details and schedule the job after a short interval
+     * {@link #TREE_REFRESH_INTERVAL}. This allows us to stay responsive to the spinner/scale,
+     * and not do the costly refresh for each of the intermediate frames.
+     */
+    private Job mTreeRefresherJob;
+    private final Object mTreeRefresherLock = new Object();
+    private static final int TREE_REFRESH_INTERVAL_MS = 250;
+
+    private int mCurrentFrame;
 
     // Currently displayed frame's start and end call indices.
     private int mCallStartIndex;
@@ -309,18 +331,9 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionSpinner.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                // Disable spinner until all necessary action is complete.
-                // This seems to be necessary (atleast on Linux) for the spinner to not get
-                // stuck in a pressed state if it is pressed for more than a few seconds
-                // continuously.
-                mFrameSelectionSpinner.setEnabled(false);
-
                 int selectedFrame = mFrameSelectionSpinner.getSelection();
                 mFrameSelectionScale.setSelection(selectedFrame);
                 selectFrame(selectedFrame);
-
-                // re-enable spinner
-                mFrameSelectionSpinner.setEnabled(true);
             }
         });
     }
@@ -338,24 +351,22 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionScale.setSelection(selectedFrame);
         mFrameSelectionSpinner.setSelection(selectedFrame);
 
-        if (mTrace != null) {
-            GLFrame f = mTrace.getFrame(selectedFrame - 1);
-            mCallStartIndex = f.getStartIndex();
-            mCallEndIndex = f.getEndIndex();
-        } else {
-            mCallStartIndex = mCallEndIndex = 0;
-        }
+        synchronized (mTreeRefresherLock) {
+            if (mTrace != null) {
+                GLFrame f = mTrace.getFrame(selectedFrame - 1);
+                mCallStartIndex = f.getStartIndex();
+                mCallEndIndex = f.getEndIndex();
+            } else {
+                mCallStartIndex = mCallEndIndex = 0;
+            }
 
-        // update tree view in the editor
-        refreshTree(mCallStartIndex, mCallEndIndex, mCurrentlyDisplayedContext);
+            mCurrentFrame = selectedFrame - 1;
+
+            scheduleNewRefreshJob();
+        }
 
         // update minimap view
         mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
-
-        // update the frame summary view
-        if (mFrameSummaryViewPage != null) {
-            mFrameSummaryViewPage.setSelectedFrame(selectedFrame - 1);
-        }
     }
 
     /**
@@ -368,8 +379,47 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             return;
         }
 
-        mCurrentlyDisplayedContext = context;
-        refreshTree(mCallStartIndex, mCallEndIndex, mCurrentlyDisplayedContext);
+        synchronized (mTreeRefresherLock) {
+            mCurrentlyDisplayedContext = context;
+            scheduleNewRefreshJob();
+        }
+    }
+
+    private void scheduleNewRefreshJob() {
+        if (mTreeRefresherJob != null) {
+            return;
+        }
+
+        mTreeRefresherJob = new Job("Refresh GL Trace View Tree") {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                final int start, end, context;
+
+                synchronized (mTreeRefresherLock) {
+                    start = mCallStartIndex;
+                    end = mCallEndIndex;
+                    context = mCurrentlyDisplayedContext;
+
+                    mTreeRefresherJob = null;
+                }
+
+                // update tree view in the editor
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        refreshTree(start, end, context);
+
+                        // update the frame summary view
+                        if (mFrameSummaryViewPage != null) {
+                            mFrameSummaryViewPage.setSelectedFrame(mCurrentFrame);
+                        }
+                    }
+                });
+                return Status.OK_STATUS;
+            }
+        };
+        mTreeRefresherJob.setPriority(Job.SHORT);
+        mTreeRefresherJob.schedule(TREE_REFRESH_INTERVAL_MS);
     }
 
     private void refreshTree(int startCallIndex, int endCallIndex, int contextToDisplay) {
