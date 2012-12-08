@@ -28,3 +28,16 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 
 # Build all sub-directories
 include $(call all-makefiles-under,$(LOCAL_PATH))
+
+# Build tests
+include $(CLEAR_VARS)
+
+# Only compile source java files in this lib.
+LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
+
+LOCAL_MODULE := lint_checks-tests
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_JAVA_LIBRARIES := common sdklib lint_api lint_checks lint junit easymock asm-tools asm-tree-tools guava-tools layoutlib_api sdktestutils
+
+include $(BUILD_HOST_JAVA_LIBRARY)
