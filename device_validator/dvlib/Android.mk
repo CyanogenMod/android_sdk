@@ -29,7 +29,7 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/main/resources
+LOCAL_JAVA_RESOURCE_DIRS := src/test/resources
 
 LOCAL_MODULE := dvlib-tests
 LOCAL_MODULE_TAGS := optional
