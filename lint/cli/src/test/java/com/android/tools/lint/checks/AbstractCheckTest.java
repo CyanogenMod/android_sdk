@@ -376,18 +376,15 @@ public abstract class AbstractCheckTest extends SdkTestCase {
             try {
                 File dir = new File(location.toURI());
                 assertTrue(dir.getPath(), dir.exists());
-                File rootDir = dir.getParentFile().getParentFile().getParentFile()
-                        .getParentFile().getParentFile().getParentFile();
-
-                // check if "settings.gradle" is there. This will let us know if we need
-                // to go up one extra level, which is the case when running the tests
-                // from gradle.
-                File settingsGradle = new File(rootDir, "settings.gradle"); //$NON-NLS-1$
-                if (settingsGradle.isFile()) {
-                    rootDir = rootDir.getParentFile();
+                while (dir != null) {
+                    File settingsGradle = new File(dir, "settings.gradle"); //$NON-NLS-1$
+                    if (settingsGradle.exists()) {
+                        return dir.getParentFile();
+                    }
+                    dir = dir.getParentFile();
                 }
 
-                return rootDir;
+                return null;
             } catch (URISyntaxException e) {
                 fail(e.getLocalizedMessage());
             }
