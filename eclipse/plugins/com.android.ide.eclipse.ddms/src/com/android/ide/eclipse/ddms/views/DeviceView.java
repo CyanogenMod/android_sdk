@@ -42,10 +42,12 @@ import com.android.ide.eclipse.ddms.IDebuggerConnector;
 import com.android.ide.eclipse.ddms.editors.UiAutomatorViewer;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
-import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialog;
-import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialog.SystraceOptions;
+import com.android.ide.eclipse.ddms.systrace.ISystraceOptions;
+import com.android.ide.eclipse.ddms.systrace.ISystraceOptionsDialog;
+import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialogV1;
 import com.android.ide.eclipse.ddms.systrace.SystraceOutputParser;
 import com.android.ide.eclipse.ddms.systrace.SystraceTask;
+import com.android.ide.eclipse.ddms.systrace.SystraceVersionDetector;
 import com.android.uiautomator.UiAutomatorHelper;
 import com.android.uiautomator.UiAutomatorHelper.UiAutomatorException;
 import com.android.uiautomator.UiAutomatorHelper.UiAutomatorResult;
@@ -562,16 +564,32 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
     };
 
     private void launchSystrace(final IDevice device, final Shell parentShell) {
-        final SystraceOptionsDialog dlg = new SystraceOptionsDialog(parentShell);
-        if (dlg.open() != SystraceOptionsDialog.OK) {
+        SystraceVersionDetector detector = new SystraceVersionDetector(device);
+        try {
+            new ProgressMonitorDialog(parentShell).run(true, false, detector);
+        } catch (InvocationTargetException e) {
+            MessageDialog.openError(parentShell,
+                    "Systrace",
+                    "Unexpected error while detecting atrace version: " + e);
+            return;
+        } catch (InterruptedException e) {
             return;
         }
 
-        final SystraceOptions options = dlg.getSystraceOptions();
+        final ISystraceOptionsDialog dlg =
+                (detector.getVersion() == SystraceVersionDetector.SYSTRACE_V1) ?
+                        new SystraceOptionsDialogV1(parentShell) :
+                            new SystraceOptionsDialogV2(parentShell, detector.getTags());
+
+        if (dlg.open() != SystraceOptionsDialogV1.OK) {
+            return;
+        }
+
+        final ISystraceOptions options = dlg.getSystraceOptions();
 
         // set trace tag if necessary:
         //      adb shell setprop debug.atrace.tags.enableflags <tag>
-        String tag = options.getTraceTag();
+        String tag = options.getTags();
         if (tag != null) {
             CountDownLatch setTagLatch = new CountDownLatch(1);
             CollectingOutputReceiver receiver = new CollectingOutputReceiver(setTagLatch);
@@ -602,7 +620,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                     boolean COMPRESS_DATA = true;
 
                     monitor.setTaskName("Collecting Trace Information");
-                    final String atraceOptions = options.getCommandLineOptions()
+                    final String atraceOptions = options.getOptions()
                                                 + (COMPRESS_DATA ? " -z" : "");
                     SystraceTask task = new SystraceTask(device, atraceOptions);
                     Thread t = new Thread(task, "Systrace Output Receiver");

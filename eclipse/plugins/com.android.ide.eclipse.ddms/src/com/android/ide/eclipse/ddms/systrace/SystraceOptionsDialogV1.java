@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.ide.eclipse.ddms.systrace;
 
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -19,7 +35,7 @@ import org.eclipse.swt.widgets.Text;
 
 import java.io.File;
 
-public class SystraceOptionsDialog extends TitleAreaDialog {
+public class SystraceOptionsDialogV1 extends TitleAreaDialog implements ISystraceOptionsDialog {
     private static final String TITLE = "Android System Trace";
     private static final String DEFAULT_MESSAGE =
             "Settings to use while capturing system level trace";
@@ -72,7 +88,7 @@ public class SystraceOptionsDialog extends TitleAreaDialog {
 
     private final SystraceOptions mOptions = new SystraceOptions();
 
-    public SystraceOptionsDialog(Shell parentShell) {
+    public SystraceOptionsDialogV1(Shell parentShell) {
         super(parentShell);
     }
 
@@ -356,15 +372,17 @@ public class SystraceOptionsDialog extends TitleAreaDialog {
         super.okPressed();
     }
 
+    @Override
     public SystraceOptions getSystraceOptions() {
         return mOptions;
     }
 
+    @Override
     public String getTraceFilePath() {
         return mDestinationPath;
     }
 
-    public class SystraceOptions {
+    private class SystraceOptions implements ISystraceOptions {
         // This list is based on the tags in frameworks/native/include/utils/Trace.h
         private static final int TAG_GFX = 1 << 1;
         private static final int TAG_INPUT = 1 << 2;
@@ -393,11 +411,13 @@ public class SystraceOptionsDialog extends TitleAreaDialog {
             mTag |= tag;
         }
 
-        public String getTraceTag() {
+        @Override
+        public String getTags() {
             return mTag == 0 ? null : Integer.toHexString(mTag);
         }
 
-        public String getCommandLineOptions() {
+        @Override
+        public String getOptions() {
             StringBuilder sb = new StringBuilder(20);
 
             if (mTraceCpuFreq) sb.append("-f "); //$NON-NLS-1$
