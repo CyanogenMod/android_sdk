@@ -63,6 +63,8 @@ import java.util.Map;
 public class FrameSummaryViewPage extends Page {
     private GLTrace mTrace;
 
+    private final Object mLock = new Object();
+    private Job mRefresherJob;
     private int mCurrentFrame;
 
     private SashForm mSash;
@@ -217,17 +219,39 @@ public class FrameSummaryViewPage extends Page {
     }
 
     public void setSelectedFrame(int frame) {
-        mCurrentFrame = frame;
         if (mTrace == null) {
             return;
         }
 
-        updateImageCanvas();
-        updateFrameStats();
+        synchronized (mLock) {
+            mCurrentFrame = frame;
+
+            if (mRefresherJob != null) {
+                return;
+            }
+
+            mRefresherJob = new Job("Update Frame Summary Task") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    final int currentFrame;
+                    synchronized (mLock) {
+                        currentFrame = mCurrentFrame;
+                        mRefresherJob = null;
+                    };
+
+                    updateImageCanvas(currentFrame);
+                    updateFrameStats(currentFrame);
+
+                    return Status.OK_STATUS;
+                }
+            };
+            mRefresherJob.setPriority(Job.SHORT);
+            mRefresherJob.schedule(500);
+        };
     }
 
-    private void updateFrameStats() {
-        final List<GLCall> calls = mTrace.getGLCallsForFrame(mCurrentFrame);
+    private void updateFrameStats(int frame) {
+        final List<GLCall> calls = mTrace.getGLCallsForFrame(frame);
 
         Job job = new Job("Update Frame Statistics") {
             @Override
@@ -278,8 +302,8 @@ public class FrameSummaryViewPage extends Page {
         return String.format("%.2f ms", milliSeconds);          //$NON-NLS-1$
     }
 
-    private void updateImageCanvas() {
-        int lastCallIndex = mTrace.getFrame(mCurrentFrame).getEndIndex() - 1;
+    private void updateImageCanvas(int frame) {
+        int lastCallIndex = mTrace.getFrame(frame).getEndIndex() - 1;
         if (lastCallIndex >= 0 && lastCallIndex < mTrace.getGLCalls().size()) {
             GLCall call = mTrace.getGLCalls().get(lastCallIndex);
             final Image image = mTrace.getImage(call);
