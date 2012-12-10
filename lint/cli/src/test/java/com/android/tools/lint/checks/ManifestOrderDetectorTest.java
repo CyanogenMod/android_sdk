@@ -214,6 +214,7 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                 "0 errors, 1 warnings\n",
                 lintProject(
                         "AndroidManifest.xml",
+                        "apicheck/minsdk14.xml=>AndroidManifest.xml",
                         "res/values/strings.xml"));
     }
 
@@ -225,6 +226,18 @@ public class ManifestOrderDetectorTest extends AbstractCheckTest {
                         "allowbackup.xml=>AndroidManifest.xml",
                         "res/values/strings.xml"));
     }
+
+    public void testAllowBackupOk2() throws Exception {
+        // Requires build api >= 4
+        mEnabled = Collections.singleton(ManifestOrderDetector.ALLOW_BACKUP);
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        "AndroidManifest.xml",
+                        "apicheck/minsdk1.xml=>AndroidManifest.xml",
+                        "res/values/strings.xml"));
+    }
+
 
     public void testAllowIgnore() throws Exception {
         mEnabled = Collections.singleton(ManifestOrderDetector.ALLOW_BACKUP);
