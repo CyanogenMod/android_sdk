@@ -1177,9 +1177,11 @@ public class AvdCreationDialog extends GridDialog {
             }
 
             mKeyboard.setSelection(
-                    props.get(HardwareProperties.HW_KEYBOARD) == HardwareProperties.BOOLEAN_YES);
+                    HardwareProperties.BOOLEAN_YES.equalsIgnoreCase(
+                            props.get(HardwareProperties.HW_KEYBOARD)));
             mSkin.setSelection(
-                    props.get(AvdManager.AVD_INI_SKIN_DYNAMIC) == HardwareProperties.BOOLEAN_YES);
+                    HardwareProperties.BOOLEAN_YES.equalsIgnoreCase(
+                            props.get(AvdManager.AVD_INI_SKIN_DYNAMIC)));
 
             String cameraFront = props.get(AvdManager.AVD_INI_CAMERA_FRONT);
             if (cameraFront != null) {
