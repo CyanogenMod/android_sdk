@@ -922,6 +922,21 @@ public class AvdCreationDialog extends GridDialog {
                     mAvdName.getText());
         }
 
+        // On Windows, display a warning if attempting to create AVD's with RAM > 512 MB.
+        // This restriction should go away when we switch to using a 64 bit emulator.
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            long ramSize = 0;
+            try {
+                ramSize = Long.parseLong(mRam.getText());
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+
+            if (ramSize > 512) {
+                warning = "On Windows, set emulated RAM to be less than or equal to 512 MB.";
+            }
+        }
+
         if (mGpuEmulation.getSelection() && mSnapshot.getSelection()) {
             valid = false;
             error = "GPU Emulation and Snapshot cannot be used simultaneously";
