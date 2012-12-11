@@ -16,12 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.core;
 
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_CONTEXT;
 import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.EXT_XML;
+import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.SdkConstants.VIEW_TAG;
@@ -31,8 +34,14 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
 
 import org.eclipse.core.resources.IFile;
@@ -41,10 +50,13 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameCompilationUnitProcessor;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameTypeProcessor;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -54,6 +66,7 @@ import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RefactoringProcessor;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
+import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -70,6 +83,7 @@ import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -88,8 +102,19 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
     private IFile mManifestFile;
     private String mOldFqcn;
     private String mNewFqcn;
+    private String mOldSimpleName;
+    private String mNewSimpleName;
     private String mOldDottedName;
     private String mNewDottedName;
+    private boolean mIsCustomView;
+
+    /**
+     * Set while we are creating an embedded Java refactoring. This could cause a recursive
+     * invocation of the XML renaming refactoring to react to the field, so this is flag
+     * during the call to the Java processor, and is used to ignore requests for adding in
+     * field reactions during that time.
+     */
+    private static boolean sIgnore;
 
     @Override
     public String getName() {
@@ -104,6 +129,10 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
 
     @Override
     protected boolean initialize(Object element) {
+        if (sIgnore) {
+            return false;
+        }
+
         if (element instanceof IType) {
             IType type = (IType) element;
             IJavaProject javaProject = (IJavaProject) type.getAncestor(IJavaElement.JAVA_PROJECT);
@@ -119,20 +148,35 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
                                 mProject.getName()));
                 return false;
             }
+
+            try {
+                IType classView = javaProject.findType(CLASS_VIEW);
+                if (classView != null) {
+                    ITypeHierarchy hierarchy = type.newSupertypeHierarchy(new NullProgressMonitor());
+                    if (hierarchy.contains(classView)) {
+                        mIsCustomView = true;
+                    }
+                }
+            } catch (CoreException e) {
+                AdtPlugin.log(e, null);
+            }
+
             mManifestFile = (IFile) manifestResource;
             ManifestData manifestData;
             manifestData = AndroidManifestHelper.parseForData(mManifestFile);
             if (manifestData == null) {
                 return false;
             }
-            mOldDottedName = '.' + type.getElementName();
+            mOldSimpleName = type.getElementName();
+            mOldDottedName = '.' + mOldSimpleName;
             mOldFqcn = type.getFullyQualifiedName();
             String packageName = type.getPackageFragment().getElementName();
-            mNewDottedName = '.' + getArguments().getNewName();
+            mNewSimpleName = getArguments().getNewName();
+            mNewDottedName = '.' + mNewSimpleName;
             if (packageName != null) {
                 mNewFqcn = packageName + mNewDottedName;
             } else {
-                mNewFqcn = getArguments().getNewName();
+                mNewFqcn = mNewSimpleName;
             }
             if (mOldFqcn == null || mNewFqcn == null) {
                 return false;
@@ -178,26 +222,118 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
         // Only show the children in the refactoring preview dialog
         result.markAsSynthetic();
 
-        addManifestFileChanges(result);
-        addLayoutFileChanges(result);
+        addManifestFileChanges(mManifestFile, result);
+        addLayoutFileChanges(mProject, result);
+        addJavaChanges(mProject, result, pm);
+
+        // Also update in dependent projects
+        // TODO: Also do the Java elements, if they are in Jar files, since the library
+        // projects do this (and the JDT refactoring does not include them)
+        ProjectState projectState = Sdk.getProjectState(mProject);
+        if (projectState != null) {
+            Collection<ProjectState> parentProjects = projectState.getFullParentProjects();
+            for (ProjectState parentProject : parentProjects) {
+                IProject project = parentProject.getProject();
+                IResource manifestResource = project.findMember(AdtConstants.WS_SEP
+                        + SdkConstants.FN_ANDROID_MANIFEST_XML);
+                if (manifestResource != null && manifestResource.exists()
+                        && manifestResource instanceof IFile) {
+                    addManifestFileChanges((IFile) manifestResource, result);
+                }
+                addLayoutFileChanges(project, result);
+                addJavaChanges(project, result, pm);
+            }
+        }
+
+        // Look for the field change on the R.java class; it's a derived file
+        // and will generate file modified manually warnings. Disable it.
+        RenameResourceParticipant.disableRClassChanges(result);
 
         return (result.getChildren().length == 0) ? null : result;
     }
 
-    private void addManifestFileChanges(CompositeChange result) {
-        addXmlFileChanges(mManifestFile, result, true);
+    private void addJavaChanges(IProject project, CompositeChange result, IProgressMonitor monitor) {
+        if (!mIsCustomView) {
+            return;
+        }
+
+        // Also rename styleables, if any
+        try {
+            // Find R class
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+            ManifestInfo info = ManifestInfo.get(project);
+            info.getPackage();
+            String rFqcn = info.getPackage() + '.' + R_CLASS;
+            IType styleable = javaProject.findType(rFqcn + '.' + ResourceType.STYLEABLE.getName());
+            if (styleable != null) {
+                IField[] fields = styleable.getFields();
+                CompositeChange fieldChanges = null;
+                for (IField field : fields) {
+                    String name = field.getElementName();
+                    if (name.equals(mOldSimpleName) || name.startsWith(mOldSimpleName)
+                            && name.length() > mOldSimpleName.length()
+                            && name.charAt(mOldSimpleName.length()) == '_') {
+                        // Rename styleable fields
+                        String newName = name.equals(mOldSimpleName) ? mNewSimpleName :
+                            mNewSimpleName + name.substring(mOldSimpleName.length());
+                        RenameRefactoring refactoring =
+                                RenameResourceParticipant.createFieldRefactoring(field,
+                                        newName, true);
+
+                        try {
+                            sIgnore = true;
+                            RefactoringStatus status = refactoring.checkAllConditions(monitor);
+                            if (status != null && !status.hasError()) {
+                                Change fieldChange = refactoring.createChange(monitor);
+                                if (fieldChange != null) {
+                                    if (fieldChanges == null) {
+                                        fieldChanges = new CompositeChange(
+                                                "Update custom view styleable fields");
+                                        // Disable these changes. They sometimes end up
+                                        // editing the wrong offsets. It looks like Eclipse
+                                        // doesn't ensure that after applying each change it
+                                        // also adjusts the other field offsets. I poked around
+                                        // and couldn't find a way to do this properly, but
+                                        // at least by listing the diffs here it shows what should
+                                        // be done.
+                                        fieldChanges.setEnabled(false);
+                                    }
+                                    // Disable change: see comment above.
+                                    fieldChange.setEnabled(false);
+                                    fieldChanges.add(fieldChange);
+                                }
+                            }
+                        } catch (CoreException e) {
+                            AdtPlugin.log(e, null);
+                        } finally {
+                            sIgnore = false;
+                        }
+                    }
+                }
+                if (fieldChanges != null) {
+                    result.add(fieldChanges);
+                }
+            }
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        }
     }
 
-    private void addLayoutFileChanges(CompositeChange result) {
+    private void addManifestFileChanges(IFile manifestFile, CompositeChange result) {
+        addXmlFileChanges(manifestFile, result, null);
+    }
+
+    private void addLayoutFileChanges(IProject project, CompositeChange result) {
         try {
             // Update references in XML resource files
-            IFolder resFolder = mProject.getFolder(SdkConstants.FD_RESOURCES);
+            IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
 
             IResource[] folders = resFolder.members();
             for (IResource folder : folders) {
                 String folderName = folder.getName();
                 ResourceFolderType folderType = ResourceFolderType.getFolderType(folderName);
-                if (folderType != ResourceFolderType.LAYOUT) {
+                if (folderType != ResourceFolderType.LAYOUT &&
+                        folderType != ResourceFolderType.VALUES) {
                     continue;
                 }
                 if (!(folder instanceof IFolder)) {
@@ -211,7 +347,7 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
                         String fileName = member.getName();
 
                         if (SdkUtils.endsWith(fileName, DOT_XML)) {
-                            addXmlFileChanges(file, result, false);
+                            addXmlFileChanges(file, result, folderType);
                         }
                     }
                 }
@@ -221,7 +357,8 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
         }
     }
 
-    private boolean addXmlFileChanges(IFile file, CompositeChange changes, boolean isManifest) {
+    private boolean addXmlFileChanges(IFile file, CompositeChange changes,
+            ResourceFolderType folderType) {
         IModelManager modelManager = StructuredModelManager.getModelManager();
         IStructuredModel model = null;
         try {
@@ -236,9 +373,13 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
                     Element root = domModel.getDocument().getDocumentElement();
                     if (root != null) {
                         List<TextEdit> edits = new ArrayList<TextEdit>();
-                        if (isManifest) {
+                        if (folderType == null) {
+                            assert file.getName().equals(ANDROID_MANIFEST_XML);
                             addManifestReplacements(edits, root, document);
+                        } else if (folderType == ResourceFolderType.VALUES) {
+                            addValueReplacements(edits, root, document);
                         } else {
+                            assert folderType == ResourceFolderType.LAYOUT;
                             addLayoutReplacements(edits, root, document);
                         }
                         if (!edits.isEmpty()) {
@@ -324,6 +465,28 @@ public class AndroidTypeRenameParticipant extends RenameParticipant {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 addLayoutReplacements(edits, (Element) child, document);
+            }
+        }
+    }
+
+    private void addValueReplacements(
+            @NonNull List<TextEdit> edits,
+            @NonNull Element root,
+            @NonNull IStructuredDocument document) {
+        // Look for styleable renames for custom views
+        String declareStyleable = ResourceType.DECLARE_STYLEABLE.getName();
+        List<Element> topLevel = DomUtilities.getChildren(root);
+        for (Element element : topLevel) {
+            String tag = element.getTagName();
+            if (declareStyleable.equals(tag)) {
+                Attr nameNode = element.getAttributeNode(ATTR_NAME);
+                if (nameNode != null && mOldSimpleName.equals(nameNode.getValue())) {
+                    int start = RefactoringUtil.getAttributeValueRangeStart(nameNode, document);
+                    if (start != -1) {
+                        int end = start + mOldSimpleName.length();
+                        edits.add(new ReplaceEdit(start, end - start, mNewSimpleName));
+                    }
+                }
             }
         }
     }

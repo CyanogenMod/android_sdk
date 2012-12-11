@@ -52,6 +52,43 @@ public class RenameResourceXmlTextActionTest extends TestCase {
         checkWord("\n^?foo\"", Pair.of(ResourceType.ATTR, "foo"));
     }
 
+    public void testClassNames() throws Exception {
+        checkClassName("^foo", null);
+        checkClassName("<^foo>", null);
+        checkClassName("'foo.bar.Baz'^", null);
+        checkClassName("<^foo.bar.Baz ", "foo.bar.Baz");
+        checkClassName("<^foo.bar.Baz>", "foo.bar.Baz");
+        checkClassName("<foo.^bar.Baz>", "foo.bar.Baz");
+        checkClassName("<foo.bar.Baz^>", "foo.bar.Baz");
+        checkClassName("<foo.bar.Baz^ >", "foo.bar.Baz");
+        checkClassName("<foo.bar$Baz^ >", "foo.bar.Baz");
+        checkClassName("</^foo.bar.Baz>", "foo.bar.Baz");
+        checkClassName("</foo.^bar.Baz>", "foo.bar.Baz");
+
+        checkClassName("\"^foo.bar.Baz\"", "foo.bar.Baz");
+        checkClassName("\"foo.^bar.Baz\"", "foo.bar.Baz");
+        checkClassName("\"foo.bar.Baz^\"", "foo.bar.Baz");
+        checkClassName("\"foo.bar$Baz^\"", "foo.bar.Baz");
+
+        checkClassName("<foo.^bar@Baz>", null);
+    }
+
+    private void checkClassName(String contents, String expectedClassName)
+            throws Exception {
+        int cursor = contents.indexOf('^');
+        assertTrue("Must set cursor position with ^ in " + contents, cursor != -1);
+        contents = contents.substring(0, cursor) + contents.substring(cursor + 1);
+        assertEquals(-1, contents.indexOf('^'));
+        assertEquals(-1, contents.indexOf('['));
+        assertEquals(-1, contents.indexOf(']'));
+
+        IDocument document = new Document();
+        document.replace(0, 0, contents);
+        String className =
+                RenameResourceXmlTextAction.findClassName(document, null, cursor);
+        assertEquals(expectedClassName, className);
+    }
+
     private void checkWord(String contents, Pair<ResourceType, String> expectedResource)
             throws Exception {
         int cursor = contents.indexOf('^');

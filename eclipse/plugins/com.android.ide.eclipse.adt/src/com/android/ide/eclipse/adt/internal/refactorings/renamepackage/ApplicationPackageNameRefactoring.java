@@ -405,6 +405,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
             Collections.reverse(mChanges);
             CompositeChange change = new CompositeChange("Refactoring Application package name",
                     mChanges.toArray(new Change[mChanges.size()]));
+            change.markAsSynthetic();
             return change;
         }
 

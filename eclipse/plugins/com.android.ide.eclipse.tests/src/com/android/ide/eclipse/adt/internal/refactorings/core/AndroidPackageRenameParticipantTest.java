@@ -41,21 +41,21 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' to 'my.pkg.name'\n" +
+                "[x] Rename package 'com.example.refactoringtest' to 'my.pkg.name'\n" +
                 "\n" +
-                "* MainActivity.java - /testRefactor1/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor1/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -3 +3\n" +
                 "  + import com.example.refactoringtest.R;\n" +
                 "  +\n" +
                 "\n" +
                 "\n" +
-                "* activity_main.xml - /testRefactor1/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor1/res/layout/activity_main.xml\n" +
                 "  @@ -33 +33\n" +
                 "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
                 "  +     <fragment android:name=\"my.pkg.name.MyFragment\"/>\n" +
                 "\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor1/AndroidManifest.xml\n" +
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
                 "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
@@ -74,7 +74,7 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' to 'my.pkg.name'",
+                "[x] Rename package 'com.example.refactoringtest' to 'my.pkg.name'",
                 false);
     }
 
@@ -88,33 +88,33 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' to 'my.pkg.name'\n" +
+                "[x] Rename package 'com.example.refactoringtest' to 'my.pkg.name'\n" +
                 "\n" +
-                "* MainActivity.java - /testRefactor2/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor2/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -3 +3\n" +
                 "  + import com.example.refactoringtest.R;\n" +
                 "  +\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2/res/layout/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2/res/layout/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <my.pkg.name.CustomView1\n" +
                 "\n" +
                 "\n" +
-                "* activity_main.xml - /testRefactor2/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor2/res/layout/activity_main.xml\n" +
                 "  @@ -33 +33\n" +
                 "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
                 "  +     <fragment android:name=\"my.pkg.name.MyFragment\"/>\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2/res/layout-land/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2/res/layout-land/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <my.pkg.name.CustomView1\n" +
                 "\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor2/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor2/AndroidManifest.xml\n" +
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
                 "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
@@ -134,33 +134,33 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' and subpackages to 'my.pkg.name'\n" +
+                "[x] Rename package 'com.example.refactoringtest' and subpackages to 'my.pkg.name'\n" +
                 "\n" +
-                "* MainActivity.java - /testRefactor2_renamesub/src/com/example/refactoringtest/MainActivity.java\n" +
+                "[x] MainActivity.java - /testRefactor2_renamesub/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -3 +3\n" +
                 "  + import com.example.refactoringtest.R;\n" +
                 "  +\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2_renamesub/res/layout/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2_renamesub/res/layout/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <my.pkg.name.CustomView1\n" +
                 "\n" +
                 "\n" +
-                "* activity_main.xml - /testRefactor2_renamesub/res/layout/activity_main.xml\n" +
+                "[x] activity_main.xml - /testRefactor2_renamesub/res/layout/activity_main.xml\n" +
                 "  @@ -33 +33\n" +
                 "  -     <fragment android:name=\"com.example.refactoringtest.MyFragment\"/>\n" +
                 "  +     <fragment android:name=\"my.pkg.name.MyFragment\"/>\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2_renamesub/res/layout-land/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2_renamesub/res/layout-land/customviews.xml\n" +
                 "  @@ -9 +9\n" +
                 "  -     <com.example.refactoringtest.CustomView1\n" +
                 "  +     <my.pkg.name.CustomView1\n" +
                 "\n" +
                 "\n" +
-                "* AndroidManifest.xml - /testRefactor2_renamesub/AndroidManifest.xml\n" +
+                "[x] AndroidManifest.xml - /testRefactor2_renamesub/AndroidManifest.xml\n" +
                 "  @@ -16 +16\n" +
                 "  -             android:name=\"com.example.refactoringtest.MainActivity\"\n" +
                 "  +             android:name=\"my.pkg.name.MainActivity\"\n" +
@@ -169,13 +169,13 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
                 "  +             android:name=\"my.pkg.name.MainActivity2\"\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2_renamesub/res/layout/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2_renamesub/res/layout/customviews.xml\n" +
                 "  @@ -15 +15\n" +
                 "  -     <com.example.refactoringtest.subpackage.CustomView2\n" +
                 "  +     <my.pkg.name.subpackage.CustomView2\n" +
                 "\n" +
                 "\n" +
-                "* customviews.xml - /testRefactor2_renamesub/res/layout-land/customviews.xml\n" +
+                "[x] customviews.xml - /testRefactor2_renamesub/res/layout-land/customviews.xml\n" +
                 "  @@ -15 +15\n" +
                 "  -     <com.example.refactoringtest.subpackage.CustomView2\n" +
                 "  +     <my.pkg.name.subpackage.CustomView2",
@@ -192,7 +192,7 @@ public class AndroidPackageRenameParticipantTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "* Rename package 'com.example.refactoringtest' and subpackages to 'my.pkg.name'",
+                "[x] Rename package 'com.example.refactoringtest' and subpackages to 'my.pkg.name'",
                 false);
     }
 

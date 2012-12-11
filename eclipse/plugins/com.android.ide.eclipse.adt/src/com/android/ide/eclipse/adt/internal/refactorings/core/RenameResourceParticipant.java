@@ -264,13 +264,29 @@ public class RenameResourceParticipant extends RenameParticipant {
 
     /** Create nested Java refactoring which updates the R field references, if applicable */
     private RenameRefactoring createFieldRefactoring(IField field) {
+        return createFieldRefactoring(field, mNewName, mUpdateReferences);
+    }
+
+    /**
+     * Create nested Java refactoring which updates the R field references, if
+     * applicable
+     *
+     * @param field the field to be refactored
+     * @param newName the new name
+     * @param updateReferences whether references should be updated
+     * @return a new rename refactoring
+     */
+    public static RenameRefactoring createFieldRefactoring(
+            @NonNull IField field,
+            @NonNull String newName,
+            boolean updateReferences) {
         RenameFieldProcessor processor = new RenameFieldProcessor(field);
         processor.setRenameGetter(false);
         processor.setRenameSetter(false);
         RenameRefactoring refactoring = new RenameRefactoring(processor);
-        processor.setUpdateReferences(mUpdateReferences);
+        processor.setUpdateReferences(updateReferences);
         processor.setUpdateTextualMatches(false);
-        processor.setNewElementName(mNewName);
+        processor.setNewElementName(newName);
         try {
             if (refactoring.isApplicable()) {
                 return refactoring;
@@ -469,7 +485,7 @@ public class RenameResourceParticipant extends RenameParticipant {
 
                 // Look for the field change on the R.java class; it's a derived file
                 // and will generate file modified manually warnings. Disable it.
-                disableResourceFileChange(fieldChanges);
+                disableRClassChanges(fieldChanges);
             }
         }
     }
@@ -680,6 +696,7 @@ public class RenameResourceParticipant extends RenameParticipant {
             }
 
             String pkg = ManifestInfo.get(project).getPackage();
+            // TODO: Rename in all libraries too?
             IType t = javaProject.findType(pkg + '.' + R_CLASS + '.' + type.getName());
             if (t == null) {
                 return null;
@@ -717,19 +734,18 @@ public class RenameResourceParticipant extends RenameParticipant {
      * Searches for existing changes in the refactoring which modifies the R
      * field to rename it. it's derived so performing this change will generate
      * a "generated code was modified manually" warning
+     *
+     * @param change the change to disable R file changes in
      */
-    private void disableResourceFileChange(Change change) {
+    public static void disableRClassChanges(Change change) {
+        if (change.getName().equals(FN_RESOURCE_CLASS)) {
+            change.setEnabled(false);
+        }
         // Look for the field change on the R.java class; it's a derived file
         // and will generate file modified manually warnings. Disable it.
         if (change instanceof CompositeChange) {
             for (Change outer : ((CompositeChange) change).getChildren()) {
-                if (outer instanceof CompositeChange) {
-                    for (Change inner : ((CompositeChange) outer).getChildren()) {
-                        if (FN_RESOURCE_CLASS.equals(inner.getName())) {
-                            inner.setEnabled(false);
-                        }
-                    }
-                }
+                disableRClassChanges(outer);
             }
         }
     }
