@@ -78,8 +78,9 @@ public class TextFieldDetector extends LayoutDetector {
     public TextFieldDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -204,7 +205,7 @@ public class TextFieldDetector extends LayoutDetector {
         }
     }
 
-    private void reportMismatch(XmlContext context, Attr idNode, Attr inputTypeNode,
+    private static void reportMismatch(XmlContext context, Attr idNode, Attr inputTypeNode,
             String message) {
         Location location;
         if (inputTypeNode != null) {

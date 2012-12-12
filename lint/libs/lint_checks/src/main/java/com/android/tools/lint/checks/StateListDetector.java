@@ -69,8 +69,9 @@ public class StateListDetector extends ResourceXmlDetector {
         return folderType == ResourceFolderType.DRAWABLE;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -103,7 +104,7 @@ public class StateListDetector extends ResourceXmlDetector {
                         stateNames.add(name + '=' + attribute.getValue());
                     } else {
                         String namespaceUri = attribute.getNamespaceURI();
-                        if (namespaceUri != null && namespaceUri.length() > 0 &&
+                        if (namespaceUri != null && !namespaceUri.isEmpty() &&
                                 !ANDROID_URI.equals(namespaceUri)) {
                             // There is a custom attribute on this item.
                             // This could be a state, see

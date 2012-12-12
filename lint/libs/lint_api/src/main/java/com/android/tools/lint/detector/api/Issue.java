@@ -521,7 +521,7 @@ public final class Issue implements Comparable<Issue> {
         return sb.toString();
     }
 
-    static void appendEscapedText(StringBuilder sb, String text, boolean html,
+    private static void appendEscapedText(StringBuilder sb, String text, boolean html,
             int start, int end) {
         if (html) {
             for (int i = start; i < end; i++) {

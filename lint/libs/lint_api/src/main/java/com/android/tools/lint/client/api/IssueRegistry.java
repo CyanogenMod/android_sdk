@@ -70,7 +70,7 @@ public abstract class IssueRegistry {
     @NonNull
     public static final Issue LINT_ERROR = Issue.create(
             "LintError", //$NON-NLS-1$
-            "Isues related to running lint itself, such as failure to read files, etc",
+            "Issues related to running lint itself, such as failure to read files, etc",
             "This issue type represents a problem running lint itself. Examples include " +
             "failure to find bytecode for source files (which means certain detectors " +
             "could not be run), parsing errors in lint configuration files, etc." +
@@ -234,8 +234,8 @@ public abstract class IssueRegistry {
      * @return true if the given string is a valid category
      */
     public final boolean isCategoryName(@NonNull String name) {
-        for (Category c : getCategories()) {
-            if (c.getName().equals(name) || c.getFullName().equals(name)) {
+        for (Category category : getCategories()) {
+            if (category.getName().equals(name) || category.getFullName().equals(name)) {
                 return true;
             }
         }

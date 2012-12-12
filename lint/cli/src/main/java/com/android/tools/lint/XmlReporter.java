@@ -62,7 +62,7 @@ public class XmlReporter extends Reporter {
         }
         mWriter.write(">\n");                                               //$NON-NLS-1$
 
-        if (issues.size() > 0) {
+        if (!issues.isEmpty()) {
             for (Warning warning : issues) {
                 mWriter.write('\n');
                 indent(mWriter, 1);

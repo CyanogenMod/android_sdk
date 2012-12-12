@@ -357,8 +357,9 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
     public IconDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.SLOW;
     }
 
@@ -443,7 +444,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     checkDuplicates(context, pixelSizes, fileSizes);
                 }
 
-                if (checkFolders && folderToNames.size() > 0) {
+                if (checkFolders && !folderToNames.isEmpty()) {
                     checkDensities(context, res, folderToNames, nonDpiFolderNames);
                 }
             }
@@ -459,7 +460,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
     // This method looks for duplicates in the assets. This uses two pieces of information
     // (file sizes and image dimensions) to quickly reject candidates, such that it only
     // needs to check actual file contents on a small subset of the available files.
-    private void checkDuplicates(Context context, Map<File, Dimension> pixelSizes,
+    private static void checkDuplicates(Context context, Map<File, Dimension> pixelSizes,
             Map<File, Long> fileSizes) {
         Map<Long, Set<File>> sameSizes = new HashMap<Long, Set<File>>();
         Map<Long, File> seenSizes = new HashMap<Long, File>(fileSizes.size());
@@ -479,7 +480,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             }
         }
 
-        if (sameSizes.size() == 0) {
+        if (sameSizes.isEmpty()) {
             return;
         }
 
@@ -509,8 +510,8 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
             // Files that we have no dimensions for must be compared against everything
             Collection<Set<File>> sets = sameDimensions.values();
-            if (noSize.size() > 0) {
-                if (sets.size() > 0) {
+            if (!noSize.isEmpty()) {
+                if (!sets.isEmpty()) {
                     for (Set<File> set : sets) {
                         set.addAll(noSize);
                     }
@@ -588,7 +589,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     }
                 }
 
-                if (equal.size() > 0) {
+                if (!equal.isEmpty()) {
                     Map<File, Set<File>> partitions = new HashMap<File, Set<File>>();
                     List<Set<File>> sameSets = new ArrayList<Set<File>>();
                     for (Map.Entry<File, File> entry : equal.entrySet()) {
@@ -614,7 +615,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     // for stable output.
                     List<List<File>> lists = new ArrayList<List<File>>();
                     for (Set<File> same : sameSets) {
-                        assert same.size() > 0;
+                        assert !same.isEmpty();
                         ArrayList<File> sorted = new ArrayList<File>(same);
                         Collections.sort(sorted);
                         lists.add(sorted);
@@ -643,7 +644,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                         }
 
                         if (sameNames) {
-                            StringBuilder sb = new StringBuilder();
+                            StringBuilder sb = new StringBuilder(sameFiles.size() * 16);
                             for (File file : sameFiles) {
                                 if (sb.length() > 0) {
                                     sb.append(", "); //$NON-NLS-1$
@@ -655,7 +656,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                                         lastName, sb.toString());
                                 context.report(DUPLICATES_CONFIGURATIONS, location, message, null);
                         } else {
-                            StringBuilder sb = new StringBuilder();
+                            StringBuilder sb = new StringBuilder(sameFiles.size() * 16);
                             for (File file : sameFiles) {
                                 if (sb.length() > 0) {
                                     sb.append(", "); //$NON-NLS-1$
@@ -677,7 +678,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
     // This method checks the given map from resource file to pixel dimensions for each
     // such image and makes sure that the normalized dip sizes across all the densities
     // are mostly the same.
-    private void checkDipSizes(Context context, Map<File, Dimension> pixelSizes) {
+    private static void checkDipSizes(Context context, Map<File, Dimension> pixelSizes) {
         // Partition up the files such that I can look at a series by name. This
         // creates a map from filename (such as foo.png) to a list of files
         // providing that icon in various folders: drawable-mdpi/foo.png, drawable-hdpi/foo.png
@@ -797,7 +798,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
                 if (widthStdDev > meanWidth / 10 || heightStdDev > meanHeight) {
                     Location location = null;
-                    StringBuilder sb = new StringBuilder();
+                    StringBuilder sb = new StringBuilder(100);
 
                     // Sort entries by decreasing dip size
                     List<Map.Entry<File, Dimension>> entries =
@@ -846,7 +847,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         }
     }
 
-    private void checkDensities(Context context, File res,
+    private static void checkDensities(Context context, File res,
             Map<File, Set<String>> folderToNames,
             Map<File, Set<String>> nonDpiFolderNames) {
         // TODO: Is there a way to look at the manifest and figure out whether
@@ -870,7 +871,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     missing.add(density);
                 }
             }
-            if (missing.size() > 0 ) {
+            if (!missing.isEmpty()) {
                 context.report(
                     ICON_MISSING_FOLDER,
                     Location.create(res),
@@ -888,7 +889,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     noDpiNames.addAll(entry.getValue());
                 }
             }
-            if (noDpiNames.size() > 0) {
+            if (!noDpiNames.isEmpty()) {
                 // Make sure that none of the nodpi names appear in a non-nodpi folder
                 Set<String> inBoth = new HashSet<String>();
                 List<File> files = new ArrayList<File>();
@@ -905,7 +906,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                     }
                 }
 
-                if (inBoth.size() > 0) {
+                if (!inBoth.isEmpty()) {
                     List<String> list = new ArrayList<String>(inBoth);
                     Collections.sort(list);
 
@@ -1021,7 +1022,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                 Set<String> names = entry.getValue();
                 if (names.size() != allNames.size()) {
                     List<String> delta = new ArrayList<String>(nameDifferences(allNames,  names));
-                    if (delta.size() == 0) {
+                    if (delta.isEmpty()) {
                         continue;
                     }
                     Collections.sort(delta);
@@ -1035,7 +1036,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
                                 defined.add(e.getKey().getName());
                             }
                         }
-                        if (defined.size() > 0) {
+                        if (!defined.isEmpty()) {
                             foundIn = String.format(" (found in %1$s)",
                                     LintUtils.formatList(defined,
                                             context.getDriver().isAbbreviating() ? 5 : -1));
@@ -1060,7 +1061,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
      * Sets.difference(a, b) because we want to make the comparisons <b>without
      * file extensions</b> and return the result <b>with</b>..
      */
-    private Set<String> nameDifferences(Set<String> a, Set<String> b) {
+    private static Set<String> nameDifferences(Set<String> a, Set<String> b) {
         Set<String> names1 = new HashSet<String>(a.size());
         for (String s : a) {
             names1.add(LintUtils.getBaseName(s));
@@ -1072,7 +1073,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
         names1.removeAll(names2);
 
-        if (names1.size() > 0) {
+        if (!names1.isEmpty()) {
             // Map filenames back to original filenames with extensions
             Set<String> result = new HashSet<String>(names1.size());
             for (String s : a) {
@@ -1097,7 +1098,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
      * Sets.intersection(a, b) because we want to make the comparisons <b>without
      * file extensions</b> and return the result <b>with</b>.
      */
-    private Set<String> nameIntersection(Set<String> a, Set<String> b) {
+    private static Set<String> nameIntersection(Set<String> a, Set<String> b) {
         Set<String> names1 = new HashSet<String>(a.size());
         for (String s : a) {
             names1.add(LintUtils.getBaseName(s));
@@ -1109,7 +1110,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
 
         names1.retainAll(names2);
 
-        if (names1.size() > 0) {
+        if (!names1.isEmpty()) {
             // Map filenames back to original filenames with extensions
             Set<String> result = new HashSet<String>(names1.size());
             for (String s : a) {
@@ -1404,7 +1405,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         return null;
     }
 
-    private void checkExtension(Context context, File file) {
+    private static void checkExtension(Context context, File file) {
         try {
             ImageInputStream input = ImageIO.createImageInputStream(file);
             if (input != null) {
@@ -1527,7 +1528,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
      * case if it specifies -v11+, or if the minimum SDK version declared in the
      * manifest is at least 11.
      */
-    private boolean isAndroid30(Context context, int folderVersion) {
+    private static boolean isAndroid30(Context context, int folderVersion) {
         return folderVersion >= 11 || context.getMainProject().getMinSdk() >= 11;
     }
 
@@ -1536,7 +1537,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
      * case if it specifies -v9 or -v10, or if the minimum SDK version declared in the
      * manifest is 9 or 10 (and it does not specify some higher version like -v11
      */
-    private boolean isAndroid23(Context context, int folderVersion) {
+    private static boolean isAndroid23(Context context, int folderVersion) {
         if (isAndroid30(context, folderVersion)) {
             return false;
         }
@@ -1550,7 +1551,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         return minSdk == 9 || minSdk == 10;
     }
 
-    private float getMdpiScalingFactor(String folderName) {
+    private static float getMdpiScalingFactor(String folderName) {
         // Can't do startsWith(DRAWABLE_MDPI) because the folder could
         // be something like "drawable-sw600dp-mdpi".
         if (folderName.contains("-mdpi")) {            //$NON-NLS-1$
@@ -1566,7 +1567,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         }
     }
 
-    private void checkSize(Context context, String folderName, File file,
+    private static void checkSize(Context context, String folderName, File file,
             int mdpiWidth, int mdpiHeight, boolean exactMatch) {
         String fileName = file.getName();
         // Only scan .png files (except 9-patch png's) and jpg files
@@ -1575,8 +1576,8 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
             return;
         }
 
-        int width = -1;
-        int height = -1;
+        int width;
+        int height;
         // Use 3:4:6:8 scaling ratio to look up the other expected sizes
         if (folderName.startsWith(DRAWABLE_MDPI)) {
             width = mdpiWidth;
@@ -1622,7 +1623,7 @@ public class IconDetector extends ResourceXmlDetector implements Detector.JavaSc
         }
     }
 
-    private Dimension getSize(File file) {
+    private static Dimension getSize(File file) {
         try {
             ImageInputStream input = ImageIO.createImageInputStream(file);
             if (input != null) {

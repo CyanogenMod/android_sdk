@@ -71,8 +71,9 @@ public class HardcodedValuesDetector extends LayoutDetector {
     public HardcodedValuesDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -99,7 +100,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
-        if (value.length() > 0 && (value.charAt(0) != '@' && value.charAt(0) != '?')) {
+        if (!value.isEmpty() && (value.charAt(0) != '@' && value.charAt(0) != '?')) {
             // Make sure this is really one of the android: attributes
             if (!ANDROID_URI.equals(attribute.getNamespaceURI())) {
                 return;

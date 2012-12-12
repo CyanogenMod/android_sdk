@@ -152,7 +152,7 @@ public class Project {
                     for (int i = 1; i < 1000; i++) {
                         String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);
                         String library = properties.getProperty(key);
-                        if (library == null || library.length() == 0) {
+                        if (library == null || library.isEmpty()) {
                             // No holes in the numbering sequence is allowed
                             break;
                         }
@@ -171,13 +171,13 @@ public class Project {
                             // the reference dir as well
                             libraryReferenceDir = libraryReferenceDir.getCanonicalFile();
                             if (!libraryDir.getPath().startsWith(referenceDir.getPath())) {
-                                File f = libraryReferenceDir;
-                                while (f != null && f.getPath().length() > 0) {
-                                    if (libraryDir.getPath().startsWith(f.getPath())) {
-                                        libraryReferenceDir = f;
+                                File file = libraryReferenceDir;
+                                while (file != null && !file.getPath().isEmpty()) {
+                                    if (libraryDir.getPath().startsWith(file.getPath())) {
+                                        libraryReferenceDir = file;
                                         break;
                                     }
-                                    f = f.getParentFile();
+                                    file = file.getParentFile();
                                 }
                             }
                         }
@@ -206,7 +206,7 @@ public class Project {
 
     @Override
     public String toString() {
-        return "Project [dir=" + mDir + "]";
+        return "Project [dir=" + mDir + ']';
     }
 
     @Override
@@ -570,7 +570,7 @@ public class Project {
     @NonNull
     public List<Project> getAllLibraries() {
         if (mAllLibraries == null) {
-            if (mDirectLibraries.size() == 0) {
+            if (mDirectLibraries.isEmpty()) {
                 return mDirectLibraries;
             }
 
@@ -776,7 +776,7 @@ public class Project {
             }
         }
 
-        if (sources.size() == 0) {
+        if (sources.isEmpty()) {
             mClient.log(null,
                     "Warning: Could not find sources or generated sources for project %1$s",
                     getName());
@@ -800,7 +800,7 @@ public class Project {
             }
         }
 
-        if (classDirs.size() == 0) {
+        if (classDirs.isEmpty()) {
             mClient.log(null,
                     "No bytecode found: Has the project been built? (%1$s)", getName());
         }
@@ -886,7 +886,7 @@ public class Project {
     private static int sCurrentVersion;
 
     /** In an AOSP build environment, identify the currently built image version, if available */
-    private int findCurrentAospVersion() {
+    private static int findCurrentAospVersion() {
         if (sCurrentVersion < 1) {
             File apiDir = new File(getAospTop(), "frameworks/base/api" //$NON-NLS-1$
                     .replace('/', File.separatorChar));

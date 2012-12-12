@@ -95,14 +95,14 @@ public class NamespaceDetector extends LayoutDetector {
 
     private Map<String, Attr> mUnusedNamespaces;
     private boolean mCheckUnused;
-    private boolean mCheckCustomAttrs;
 
-    /** Constructs a new {@link NamespaceDetector} */
+  /** Constructs a new {@link NamespaceDetector} */
     public NamespaceDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -184,15 +184,15 @@ public class NamespaceDetector extends LayoutDetector {
         }
 
         if (haveCustomNamespace) {
-            mCheckCustomAttrs = context.isEnabled(CUSTOMVIEW) && context.getProject().isLibrary();
+          boolean checkCustomAttrs = context.isEnabled(CUSTOMVIEW) && context.getProject().isLibrary();
             mCheckUnused = context.isEnabled(UNUSED);
 
-            if (mCheckCustomAttrs) {
+            if (checkCustomAttrs) {
                 checkCustomNamespace(context, root);
             }
             checkElement(context, root);
 
-            if (mCheckUnused && mUnusedNamespaces.size() > 0) {
+            if (mCheckUnused && !mUnusedNamespaces.isEmpty()) {
                 for (Map.Entry<String, Attr> entry : mUnusedNamespaces.entrySet()) {
                     String prefix = entry.getKey();
                     Attr attribute = entry.getValue();
@@ -203,13 +203,13 @@ public class NamespaceDetector extends LayoutDetector {
         }
     }
 
-    private void checkCustomNamespace(XmlContext context, Element element) {
+    private static void checkCustomNamespace(XmlContext context, Element element) {
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Attr attribute = (Attr) attributes.item(i);
             if (attribute.getName().startsWith(XMLNS_PREFIX)) {
                 String uri = attribute.getValue();
-                if (uri != null && uri.length() > 0 && uri.startsWith(URI_PREFIX)
+                if (uri != null && !uri.isEmpty() && uri.startsWith(URI_PREFIX)
                         && !uri.equals(ANDROID_URI)) {
                     context.report(CUSTOMVIEW, attribute, context.getLocation(attribute),
                         "When using a custom namespace attribute in a library project, " +
@@ -222,7 +222,7 @@ public class NamespaceDetector extends LayoutDetector {
     private void checkElement(XmlContext context, Node node) {
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             if (mCheckUnused) {
-                NamedNodeMap attributes = ((Element) node).getAttributes();
+                NamedNodeMap attributes = node.getAttributes();
                 for (int i = 0, n = attributes.getLength(); i < n; i++) {
                     Attr attribute = (Attr) attributes.item(i);
                     String prefix = attribute.getPrefix();

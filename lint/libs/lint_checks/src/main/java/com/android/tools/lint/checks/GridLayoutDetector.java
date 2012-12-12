@@ -60,8 +60,9 @@ public class GridLayoutDetector extends LayoutDetector {
     public GridLayoutDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -74,7 +75,7 @@ public class GridLayoutDetector extends LayoutDetector {
 
     private static int getInt(Element element, String attribute, int defaultValue) {
         String valueString = element.getAttributeNS(ANDROID_URI, attribute);
-        if (valueString != null && valueString.length() > 0) {
+        if (valueString != null && !valueString.isEmpty()) {
             try {
                 return Integer.decode(valueString);
             } catch (NumberFormatException nufe) {

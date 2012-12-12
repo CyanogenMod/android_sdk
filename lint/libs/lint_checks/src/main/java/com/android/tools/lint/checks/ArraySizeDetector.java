@@ -180,9 +180,9 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                     // Make sure we still have a conflict, in case one or more of the
                     // elements were marked with tools:ignore
                     int count = -1;
-                    Location curr = location;
                     LintDriver driver = context.getDriver();
                     boolean foundConflict = false;
+                    Location curr;
                     for (curr = location; curr != null; curr = curr.getSecondary()) {
                         Object clientData = curr.getClientData();
                         if (clientData instanceof Node) {
@@ -226,7 +226,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
         int phase = context.getPhase();
 
         Attr attribute = element.getAttributeNode(ATTR_NAME);
-        if (attribute == null || attribute.getValue().length() == 0) {
+        if (attribute == null || attribute.getValue().isEmpty()) {
             if (phase != 1) {
                 return;
             }

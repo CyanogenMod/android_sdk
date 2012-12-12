@@ -215,7 +215,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             unused.removeAll(styles);
 
             // Remove id's if the user has disabled reporting issue ids
-            if (unused.size() > 0 && !context.isEnabled(ISSUE_IDS)) {
+            if (!unused.isEmpty() && !context.isEnabled(ISSUE_IDS)) {
                 // Remove all R.id references
                 List<String> ids = new ArrayList<String>();
                 for (String resource : unused) {
@@ -226,7 +226,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 unused.removeAll(ids);
             }
 
-            if (unused.size() > 0 && !context.getDriver().hasParserErrors()) {
+            if (!unused.isEmpty() && !context.getDriver().hasParserErrors()) {
                 mUnused = new HashMap<String, Location>(unused.size());
                 for (String resource : unused) {
                     mUnused.put(resource, null);
@@ -241,7 +241,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
             // Report any resources that we (for some reason) could not find a declaration
             // location for
-            if (mUnused.size() > 0) {
+            if (!mUnused.isEmpty()) {
                 // Fill in locations for files that we didn't encounter in other ways
                 for (Map.Entry<String, Location> entry : mUnused.entrySet()) {
                     String resource = entry.getKey();
@@ -480,8 +480,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         }
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.SLOW;
     }
 

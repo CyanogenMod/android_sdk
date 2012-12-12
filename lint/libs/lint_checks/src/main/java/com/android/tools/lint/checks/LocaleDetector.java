@@ -106,8 +106,9 @@ public class LocaleDetector extends Detector implements ClassScanner {
     public LocaleDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -204,7 +205,7 @@ public class LocaleDetector extends Detector implements ClassScanner {
         }
     }
 
-    private class StringValue extends SourceValue {
+    private static class StringValue extends SourceValue {
         private final String mString;
 
         StringValue(int size, String string) {

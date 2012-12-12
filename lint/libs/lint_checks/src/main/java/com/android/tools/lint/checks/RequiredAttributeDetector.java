@@ -100,29 +100,29 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
             EnumSet.of(Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES));
 
     /** Map from each style name to parent style */
-    private @Nullable Map<String, String> mStyleParents;
+    @Nullable private Map<String, String> mStyleParents;
 
     /** Set of style names where the style sets the layout width */
-    private @Nullable Set<String> mWidthStyles;
+    @Nullable private Set<String> mWidthStyles;
 
     /** Set of style names where the style sets the layout height */
-    private @Nullable Set<String> mHeightStyles;
+    @Nullable private Set<String> mHeightStyles;
 
     /** Set of layout names for layouts that are included by an {@code <include>} tag
      * where the width is set on the include */
-    private @Nullable Set<String> mIncludedWidths;
+    @Nullable private Set<String> mIncludedWidths;
 
     /** Set of layout names for layouts that are included by an {@code <include>} tag
      * where the height is set on the include */
-    private @Nullable Set<String> mIncludedHeights;
+    @Nullable private Set<String> mIncludedHeights;
 
     /** Set of layout names for layouts that are included by an {@code <include>} tag
      * where the width is <b>not</b> set on the include */
-    private @Nullable Set<String> mNotIncludedWidths;
+    @Nullable private Set<String> mNotIncludedWidths;
 
     /** Set of layout names for layouts that are included by an {@code <include>} tag
      * where the height is <b>not</b> set on the include */
-    private @Nullable Set<String> mNotIncludedHeights;
+    @Nullable private Set<String> mNotIncludedHeights;
 
     /** Whether the width was set in a theme definition */
     private boolean mSetWidthInTheme;
@@ -134,8 +134,9 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
     public RequiredAttributeDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -178,7 +179,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
         return isSizeStyle(stripStylePrefix(style), sizeStyles, 0);
     }
 
-    private boolean isFrameworkSizeStyle(String style) {
+    private static boolean isFrameworkSizeStyle(String style) {
         // The styles Widget.TextView.ListSeparator (and several theme variations, such as
         // Widget.Holo.TextView.ListSeparator, Widget.Holo.Light.TextView.ListSeparator, etc)
         // define layout_width and layout_height.
@@ -610,7 +611,6 @@ public class RequiredAttributeDetector extends LayoutDetector implements Detecto
                     // it has the same net effect
                     recordIncludeWidth(layout, true);
                     recordIncludeHeight(layout, true);
-                    return;
                 }
             }
         }

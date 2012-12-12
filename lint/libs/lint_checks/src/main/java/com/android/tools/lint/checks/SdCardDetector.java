@@ -68,8 +68,9 @@ public class SdCardDetector extends Detector implements Detector.JavaScanner {
         return true;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

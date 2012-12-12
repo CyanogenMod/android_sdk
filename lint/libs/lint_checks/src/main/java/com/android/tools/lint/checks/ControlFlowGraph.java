@@ -153,7 +153,7 @@ public class ControlFlowGraph {
          */
         @NonNull
         public String toString(boolean includeAdjacent) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(100);
 
             sb.append(getId(instruction));
             sb.append(':');
@@ -164,7 +164,7 @@ public class ControlFlowGraph {
                 //sb.append('L' + l.getLabel().info + ":");
                 sb.append("LABEL");
             } else if (instruction instanceof LineNumberNode) {
-                sb.append("LINENUMBER " + ((LineNumberNode) instruction).line);
+                sb.append("LINENUMBER ").append(((LineNumberNode)instruction).line);
             } else if (instruction instanceof FrameNode) {
                 sb.append("FRAME");
             } else {
@@ -172,14 +172,14 @@ public class ControlFlowGraph {
                 // AbstractVisitor isn't available unless debug/util is included,
                 boolean printed = false;
                 try {
-                    Class<?> c = Class.forName("org.objectweb.asm.util"); //$NON-NLS-1$
-                    Field field = c.getField("OPCODES");
+                    Class<?> cls = Class.forName("org.objectweb.asm.util"); //$NON-NLS-1$
+                    Field field = cls.getField("OPCODES");
                     String[] OPCODES = (String[]) field.get(null);
                     printed = true;
                     if (opcode > 0 && opcode <= OPCODES.length) {
                         sb.append(OPCODES[opcode]);
                         if (instruction.getType() == AbstractInsnNode.METHOD_INSN) {
-                            sb.append("(" + ((MethodInsnNode)instruction).name + ")");
+                            sb.append('(').append(((MethodInsnNode)instruction).name).append(')');
                         }
                     }
                 } catch (Throwable t) {
@@ -187,7 +187,7 @@ public class ControlFlowGraph {
                 }
                 if (!printed) {
                     if (instruction.getType() == AbstractInsnNode.METHOD_INSN) {
-                        sb.append("(" + ((MethodInsnNode)instruction).name + ")");
+                        sb.append('(').append(((MethodInsnNode)instruction).name).append(')');
                     } else {
                         sb.append(instruction.toString());
                     }
@@ -197,17 +197,17 @@ public class ControlFlowGraph {
             if (includeAdjacent) {
                 if (successors != null && !successors.isEmpty()) {
                     sb.append(" Next:");
-                    for (Node s : successors) {
+                    for (Node successor : successors) {
                         sb.append(' ');
-                        sb.append(s.toString(false));
+                        sb.append(successor.toString(false));
                     }
                 }
 
                 if (exceptions != null && !exceptions.isEmpty()) {
                     sb.append(" Exceptions:");
-                    for (Node s : exceptions) {
+                    for (Node exception : exceptions) {
                         sb.append(' ');
-                        sb.append(s.toString(false));
+                        sb.append(exception.toString(false));
                     }
                 }
                 sb.append('\n');
@@ -278,9 +278,9 @@ public class ControlFlowGraph {
      */
     @NonNull
     public String toString(@Nullable Node start) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(400);
 
-        AbstractInsnNode curr = null;
+        AbstractInsnNode curr;
         if (start != null) {
             curr = start.instruction;
         } else {
@@ -295,9 +295,9 @@ public class ControlFlowGraph {
         }
 
         while (curr != null) {
-            Node n = mNodeMap.get(curr);
-            if (n != null) {
-                sb.append(n.toString(true));
+            Node node = mNodeMap.get(curr);
+            if (node != null) {
+                sb.append(node.toString(true));
             }
             curr = curr.getNext();
         }

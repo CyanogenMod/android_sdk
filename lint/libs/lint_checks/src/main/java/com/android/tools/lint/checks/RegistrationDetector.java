@@ -62,7 +62,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
         "Ensures that Activities, Services and Content Providers are registered in the manifest",
 
         "Activities, services and content providers should be registered in the " +
-        "`AndroidManifext.xml` file using `<activity>`, `<service>` and `<provider>` tags.\n" +
+        "`AndroidManifest.xml` file using `<activity>`, `<service>` and `<provider>` tags.\n" +
         "\n" +
         "If your activity is simply a parent class intended to be subclassed by other " +
         "\"real\" activities, make it an abstract class.",
@@ -80,8 +80,9 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     public RegistrationDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -231,7 +232,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     };
 
     /** Looks up the corresponding framework class a given manifest tag's class should extend */
-    private static final String tagToClass(String tag) {
+    private static String tagToClass(String tag) {
         for (int i = 0, n = sTags.length; i < n; i++) {
             if (sTags[i].equals(tag)) {
                 return sClasses[i];
@@ -242,7 +243,7 @@ public class RegistrationDetector extends LayoutDetector implements ClassScanner
     }
 
     /** Looks up the manifest tag a given framework class should be registered with */
-    private static final String classToTag(String className) {
+    private static String classToTag(String className) {
         for (int i = 0, n = sClasses.length; i < n; i++) {
             if (sClasses[i].equals(className)) {
                 return sTags[i];

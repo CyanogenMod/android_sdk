@@ -90,14 +90,15 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
      * user has added libraries in this package namespace (such as the
      * null annotations jars) we don't flag these.
      */
-    private Set<String> mJavaxLibraryClasses = Sets.newHashSetWithExpectedSize(64);
+    private final Set<String> mJavaxLibraryClasses = Sets.newHashSetWithExpectedSize(64);
 
     /** Constructs a new package check */
     public InvalidPackageDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.SLOW;
     }
 
@@ -110,7 +111,7 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
 
     @SuppressWarnings("rawtypes") // ASM API
     @Override
-    public void checkClass(final @NonNull ClassContext context, @NonNull ClassNode classNode) {
+    public void checkClass(@NonNull final ClassContext context, @NonNull ClassNode classNode) {
         if (!context.isFromClassLibrary() || shouldSkip(context.file)) {
             return;
         }
@@ -245,7 +246,7 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
         }
     }
 
-    private Object getPackageName(String owner) {
+    private static Object getPackageName(String owner) {
         String pkg = owner;
         int index = pkg.lastIndexOf('/');
         if (index != -1) {
@@ -255,7 +256,7 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
         return ClassContext.getFqcn(pkg);
     }
 
-    private boolean shouldSkip(File file) {
+    private static boolean shouldSkip(File file) {
         // No need to do work on this library, which is included in pretty much all new ADT
         // projects
         if (file.getPath().endsWith("android-support-v4.jar")) { //$NON-NLS-1$

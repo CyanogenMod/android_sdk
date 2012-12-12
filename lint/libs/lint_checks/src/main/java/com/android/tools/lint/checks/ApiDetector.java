@@ -151,8 +151,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     public ApiDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.SLOW;
     }
 
@@ -190,7 +191,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
         String value = attribute.getValue();
 
-        String prefix = null;
+        String prefix;
         if (value.startsWith(ANDROID_PREFIX)) {
             prefix = ANDROID_PREFIX;
         } else if (value.startsWith(ANDROID_THEME_PREFIX)) {
@@ -198,7 +199,6 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         } else {
             return;
         }
-        assert prefix != null;
 
         // Convert @android:type/foo into android/R$type and "foo"
         int index = value.indexOf('/', prefix.length());
@@ -318,7 +318,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
 
     @SuppressWarnings("rawtypes") // ASM API
     @Override
-    public void checkClass(final @NonNull ClassContext context, @NonNull ClassNode classNode) {
+    public void checkClass(@NonNull final ClassContext context, @NonNull ClassNode classNode) {
         if (mApiDatabase == null) {
             return;
         }
@@ -575,7 +575,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         }
     }
 
-    private void checkSimpleDateFormat(ClassContext context, MethodNode method,
+    private static void checkSimpleDateFormat(ClassContext context, MethodNode method,
             MethodInsnNode node, int minSdk) {
         if (minSdk >= 9) {
             // Already OK
@@ -612,7 +612,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     }
 
     @SuppressWarnings("rawtypes") // ASM API
-    private boolean methodDefinedLocally(ClassNode classNode, String name, String desc) {
+    private static boolean methodDefinedLocally(ClassNode classNode, String name, String desc) {
         List methodList = classNode.methods;
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;
@@ -625,8 +625,9 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
     }
 
     @SuppressWarnings("rawtypes") // ASM API
-    private void checkSwitchBlock(ClassContext context, ClassNode classNode, FieldInsnNode field,
-            MethodNode method, String name, String owner, int api, int minSdk) {
+    private static void checkSwitchBlock(ClassContext context, ClassNode classNode,
+            FieldInsnNode field, MethodNode method, String name, String owner, int api,
+            int minSdk) {
         // Switch statements on enums are tricky. The compiler will generate a method
         // which returns an array of the enum constants, indexed by their ordinal() values.
         // However, we only want to complain if the code is actually referencing one of
@@ -688,7 +689,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         if (next == null) {
             return;
         }
-        int ordinal = -1;
+        int ordinal;
         switch (next.getOpcode()) {
             case Opcodes.ICONST_0: ordinal = 0; break;
             case Opcodes.ICONST_1: ordinal = 1; break;
@@ -753,7 +754,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
      * methods (for anonymous inner classes) or outer classes (for inner classes)
      * of the given class.
      */
-    private int getClassMinSdk(ClassContext context, ClassNode classNode) {
+    private static int getClassMinSdk(ClassContext context, ClassNode classNode) {
         int classMinSdk = getLocalMinSdk(classNode.invisibleAnnotations);
         if (classMinSdk != -1) {
             return classMinSdk;
@@ -832,7 +833,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
      * @param element the element to look at, including parents
      * @return the API level to use for this element, or -1
      */
-    private int getLocalMinSdk(@NonNull Element element) {
+    private static int getLocalMinSdk(@NonNull Element element) {
         while (element != null) {
             String targetApi = element.getAttributeNS(TOOLS_URI, ATTR_TARGET_API);
             if (targetApi != null && !targetApi.isEmpty()) {
@@ -863,7 +864,7 @@ public class ApiDetector extends ResourceXmlDetector implements Detector.ClassSc
         return -1;
     }
 
-    private void report(final ClassContext context, String message, AbstractInsnNode node,
+    private static void report(final ClassContext context, String message, AbstractInsnNode node,
             MethodNode method, String patternStart, String patternEnd, SearchHints hints) {
         int lineNumber = node != null ? ClassContext.findLineNumber(node) : -1;
 

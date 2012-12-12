@@ -57,8 +57,9 @@ public class HandlerDetector extends Detector implements ClassScanner {
     public HandlerDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

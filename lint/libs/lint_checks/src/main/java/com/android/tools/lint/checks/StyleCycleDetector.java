@@ -63,8 +63,9 @@ public class StyleCycleDetector extends ResourceXmlDetector {
         return folderType == ResourceFolderType.VALUES;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

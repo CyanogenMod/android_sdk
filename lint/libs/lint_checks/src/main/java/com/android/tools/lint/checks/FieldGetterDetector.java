@@ -77,8 +77,9 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
     public FieldGetterDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -153,7 +154,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
             }
 
             Map<String, String> getters = checkMethods(context.getClassNode(), names);
-            if (getters.size() > 0) {
+            if (!getters.isEmpty()) {
                 for (String getter : getters.keySet()) {
                     for (Entry entry : mPendingCalls) {
                         String name = entry.name;
@@ -193,7 +194,7 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
     }
 
     // Validate that these getter methods are really just simple field getters
-    // like these int and STring getters:
+    // like these int and String getters:
     // public int getFoo();
     //   Code:
     //    0:   aload_0

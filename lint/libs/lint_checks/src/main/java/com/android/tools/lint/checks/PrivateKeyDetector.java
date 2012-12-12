@@ -54,9 +54,9 @@ public class PrivateKeyDetector extends Detector {
     public PrivateKeyDetector() {
     }
 
-    private boolean isPrivateKeyFile(File file) {
+    private static boolean isPrivateKeyFile(File file) {
         if (!file.isFile() ||
-            (!LintUtils.endsWith(file.getPath(), "pem") && //NON-NLS-1$
+            (!LintUtils.endsWith(file.getPath(), "pem") &&  //NON-NLS-1$
              !LintUtils.endsWith(file.getPath(), "key"))) { //NON-NLS-1$
             return false;
         }
@@ -64,7 +64,7 @@ public class PrivateKeyDetector extends Detector {
         try {
             String firstLine = Files.readFirstLine(file, Charsets.US_ASCII);
             return firstLine != null &&
-                firstLine.startsWith("---") && //NON-NLS-1$
+                firstLine.startsWith("---") &&     //NON-NLS-1$
                 firstLine.contains("PRIVATE KEY"); //NON-NLS-1$
         } catch (IOException ex) {
             // Don't care
@@ -73,7 +73,7 @@ public class PrivateKeyDetector extends Detector {
         return false;
     }
 
-    private void checkFolder(Context context, File dir) {
+    private static void checkFolder(Context context, File dir) {
         if (dir.isDirectory()) {
             File[] files = dir.listFiles();
             if (files != null) {
@@ -118,8 +118,9 @@ public class PrivateKeyDetector extends Detector {
         return true;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.NORMAL;
     }
 }

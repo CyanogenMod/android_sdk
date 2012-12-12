@@ -92,7 +92,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             "ExportedContentProvider", //$NON-NLS-1$
             "Checks for exported content providers that do not require permissions",
             "Content providers are exported by default and any application on the " +
-            "system can potentially use them to read and write data. If the content" +
+            "system can potentially use them to read and write data. If the content " +
             "provider provides access to sensitive data, it should be protected by " +
             "specifying `export=false` in the manifest or by protecting it with a " +
             "permission that can be granted to other applications.",
@@ -179,8 +179,9 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
     public SecurityDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
     @Override
@@ -217,10 +218,10 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         }
     }
 
-    private boolean getExported(Element element) {
+    private static boolean getExported(Element element) {
         // Used to check whether an activity, service or broadcast receiver is exported.
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
-        if (exportValue != null && exportValue.length() > 0) {
+        if (exportValue != null && !exportValue.isEmpty()) {
             return Boolean.valueOf(exportValue);
         } else {
             for (Element child : LintUtils.getChildren(element)) {
@@ -233,24 +234,24 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
       return false;
     }
 
-    private boolean isUnprotectedByPermission(Element element) {
+    private static boolean isUnprotectedByPermission(Element element) {
         // Used to check whether an activity, service or broadcast receiver are
         // protected by a permission.
         String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-        if (permission == null || permission.length() == 0) {
+        if (permission == null || permission.isEmpty()) {
             Node parent = element.getParentNode();
             if (parent.getNodeType() == Node.ELEMENT_NODE
                     && parent.getNodeName().equals(TAG_APPLICATION)) {
                 Element application = (Element) parent;
                 permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-                return permission == null || permission.length() == 0;
+                return permission == null || permission.isEmpty();
             }
         }
 
         return false;
     }
 
-    private boolean isLauncher(Element element) {
+    private static boolean isLauncher(Element element) {
         // Checks whether an element is a launcher activity.
         for (Element child : LintUtils.getChildren(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
@@ -266,7 +267,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         return false;
     }
 
-    private void checkActivity(XmlContext context, Element element) {
+    private static void checkActivity(XmlContext context, Element element) {
         // Do not flag launch activities. Even if not explicitly exported, it's
         // safe to assume that those activities should be exported.
         if (getExported(element) && isUnprotectedByPermission(element) && !isLauncher(element)) {
@@ -276,7 +277,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         }
     }
 
-    private boolean isStandardReceiver(Element element) {
+    private static boolean isStandardReceiver(Element element) {
       // Checks whether a broadcast receiver receives a standard Android action
         for (Element child : LintUtils.getChildren(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
@@ -291,7 +292,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         return false;
     }
 
-    private void checkReceiver(XmlContext context, Element element) {
+    private static void checkReceiver(XmlContext context, Element element) {
         if (getExported(element) && isUnprotectedByPermission(element) &&
             !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
@@ -300,7 +301,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         }
     }
 
-    private void checkService(XmlContext context, Element element) {
+    private static void checkService(XmlContext context, Element element) {
         if (getExported(element) && isUnprotectedByPermission(element)) {
             // No declared permission for this exported service: complain
             context.report(EXPORTED_SERVICE, element, context.getLocation(element),
@@ -308,7 +309,7 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         }
     }
 
-    private void checkGrantPermission(XmlContext context, Element element) {
+    private static void checkGrantPermission(XmlContext context, Element element) {
         Attr path = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH);
         Attr prefix = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PREFIX);
         Attr pattern = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PATTERN);
@@ -326,11 +327,11 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
         }
     }
 
-    private void checkProvider(XmlContext context, Element element) {
+    private static void checkProvider(XmlContext context, Element element) {
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
         // Content providers are exported by default
         boolean exported = true;
-        if (exportValue != null && exportValue.length() > 0) {
+        if (exportValue != null && !exportValue.isEmpty()) {
             exported = Boolean.valueOf(exportValue);
         }
 
@@ -339,11 +340,11 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner,
             // of the permissions. We'll accept the permission, readPermission, or writePermission
             // attributes on the provider element, or a path-permission element.
             String permission = element.getAttributeNS(ANDROID_URI, ATTR_READ_PERMISSION);
-            if (permission == null || permission.length() == 0) {
+            if (permission == null || permission.isEmpty()) {
                 permission = element.getAttributeNS(ANDROID_URI, ATTR_WRITE_PERMISSION);
-                if (permission == null || permission.length() == 0) {
+                if (permission == null || permission.isEmpty()) {
                     permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-                    if (permission == null || permission.length() == 0) {
+                    if (permission == null || permission.isEmpty()) {
                         // No permission attributes? Check for path-permission.
 
                         // TODO: Add a Lint check to ensure the path-permission is good, similar to

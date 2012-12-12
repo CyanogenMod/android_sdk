@@ -62,7 +62,7 @@ public enum Severity {
     @NonNull
     private final String mDisplay;
 
-    private Severity(@NonNull String display) {
+    Severity(@NonNull String display) {
         mDisplay = display;
     }
 
@@ -71,7 +71,8 @@ public enum Severity {
      *
      * @return a description of the severity
      */
-    public @NonNull String getDescription() {
+    @NonNull
+    public String getDescription() {
         return mDisplay;
     }
 }

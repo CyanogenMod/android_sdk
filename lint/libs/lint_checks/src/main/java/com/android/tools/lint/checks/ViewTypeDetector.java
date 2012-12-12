@@ -70,10 +70,11 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
             ViewTypeDetector.class,
             EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES));
 
-    private Map<String, Object> mIdToViewTag = new HashMap<String, Object>(50);
+    private final Map<String, Object> mIdToViewTag = new HashMap<String, Object>(50);
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.SLOW;
     }
 
@@ -173,7 +174,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements Detector.Ja
     }
 
     /** Check if the view and cast type are compatible */
-    private void checkCompatible(JavaContext context, String castType, String layoutType,
+    private static void checkCompatible(JavaContext context, String castType, String layoutType,
             List<String> layoutTypes, Cast node) {
         assert layoutType == null || layoutTypes == null; // Should only specify one or the other
         boolean compatible = true;

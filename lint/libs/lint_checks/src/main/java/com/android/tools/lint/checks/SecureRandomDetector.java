@@ -134,7 +134,7 @@ public class SecureRandomDetector extends Detector implements ClassScanner {
         }
     }
 
-    private void checkValidSetSeed(ClassContext context, MethodInsnNode call) {
+    private static void checkValidSetSeed(ClassContext context, MethodInsnNode call) {
         assert call.name.equals(SET_SEED);
 
         // Make sure the argument passed is not a literal

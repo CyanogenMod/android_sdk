@@ -58,6 +58,10 @@ import lombok.ast.ImportDeclaration;
  */
 @Beta
 public class LintUtils {
+    // Utility class, do not instantiate
+    private LintUtils() {
+    }
+
     /**
      * Format a list of strings, and cut of the list at {@code maxItems} if the
      * number of items are greater.
@@ -335,7 +339,7 @@ public class LintUtils {
      *
      * @param path the path variable to split, which can use both : and ; as
      *            path separators.
-     * @return the individual path components as an iterable of strings
+     * @return the individual path components as an Iterable of strings
      */
     public static Iterable<String> splitPath(String path) {
         if (path.indexOf(';') != -1) {
@@ -447,7 +451,7 @@ public class LintUtils {
             return PositionXmlParser.getXmlString(bytes);
         }
 
-        return LintUtils.getEncodedString(bytes);
+        return getEncodedString(bytes);
     }
 
     /**

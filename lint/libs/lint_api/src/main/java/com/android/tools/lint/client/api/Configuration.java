@@ -111,7 +111,7 @@ public abstract class Configuration {
 
     /**
      * Marks the beginning of a "bulk" editing operation with repeated calls to
-     * {@link #setSeverity} or {@link #ignore}. After all the values haver been
+     * {@link #setSeverity} or {@link #ignore}. After all the values have been
      * set, the client <b>must</b> call {@link #finishBulkEditing()}. This
      * allows configurations to avoid doing expensive I/O (such as writing out a
      * config XML file) for each and every editing operation when they are

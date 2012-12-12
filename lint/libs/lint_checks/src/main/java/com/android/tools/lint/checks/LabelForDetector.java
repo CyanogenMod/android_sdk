@@ -76,8 +76,9 @@ public class LabelForDetector extends LayoutDetector {
     public LabelForDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

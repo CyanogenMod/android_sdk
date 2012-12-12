@@ -57,8 +57,9 @@ public class Utf8Detector extends LayoutDetector {
     public Utf8Detector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -71,7 +72,8 @@ public class Utf8Detector extends LayoutDetector {
 
         // AAPT: The prologue must be in the first line
         int lineEnd = 0;
-        for (int max = xml.length(); lineEnd < max; lineEnd++) {
+        int max = xml.length();
+        for (; lineEnd < max; lineEnd++) {
             char c = xml.charAt(lineEnd);
             if (c == '\n' || c == '\r') {
                 break;

@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
 
+import lombok.ast.Node;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -115,7 +116,7 @@ public abstract class Detector {
          * @return the list of applicable node types (AST node classes), or null
          */
         @Nullable
-        List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes();
+        List<Class<? extends Node>> getApplicableNodeTypes();
 
         /**
          * Return the list of method names this detector is interested in, or
@@ -129,7 +130,7 @@ public abstract class Detector {
          * This makes it easy to write detectors that focus on some fixed calls.
          * For example, the StringFormatDetector uses this mechanism to look for
          * "format" calls, and when found it looks around (using the AST's
-         * {@link lombok.ast.Node#getParent()} method) to see if it's called on
+         * {@link Node#getParent()} method) to see if it's called on
          * a String class instance, and if so do its normal processing. Note
          * that since it doesn't need to do any other AST processing, that
          * detector does not actually supply a visitor.
@@ -190,7 +191,7 @@ public abstract class Detector {
         void visitResourceReference(
                 @NonNull JavaContext context,
                 @Nullable AstVisitor visitor,
-                @NonNull lombok.ast.Node node,
+                @NonNull Node node,
                 @NonNull String type,
                 @NonNull String name,
                 boolean isFramework);
@@ -367,7 +368,7 @@ public abstract class Detector {
          * invoked on all elements or all attributes
          */
         @NonNull
-        public static final List<String> ALL = new ArrayList<String>(0); // NOT Collections.EMPTY!
+        List<String> ALL = new ArrayList<String>(0); // NOT Collections.EMPTY!
         // We want to distinguish this from just an *empty* list returned by the caller!
     }
 
@@ -477,7 +478,7 @@ public abstract class Detector {
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         // This method must be overridden if your detector does
         // not return something from getApplicableElements or
-        // getApplicableATtributes
+        // getApplicableAttributes
         assert false;
     }
 
@@ -524,7 +525,7 @@ public abstract class Detector {
     }
 
     @Nullable @SuppressWarnings("javadoc")
-    public List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes() {
+    public List<Class<? extends Node>> getApplicableNodeTypes() {
         return null;
     }
 
@@ -540,7 +541,7 @@ public abstract class Detector {
 
     @SuppressWarnings("javadoc")
     public void visitResourceReference(@NonNull JavaContext context, @Nullable AstVisitor visitor,
-            @NonNull lombok.ast.Node node, @NonNull String type, @NonNull String name,
+            @NonNull Node node, @NonNull String type, @NonNull String name,
             boolean isFramework) {
     }
 

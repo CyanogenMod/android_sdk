@@ -56,8 +56,9 @@ public class DosLineEndingDetector extends LayoutDetector {
     public DosLineEndingDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.NORMAL;
     }
 

@@ -78,8 +78,9 @@ public class AccessibilityDetector extends LayoutDetector {
     public AccessibilityDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -120,7 +121,7 @@ public class AccessibilityDetector extends LayoutDetector {
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             String attribute = attributeNode.getValue();
-            if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
+            if (attribute.isEmpty() || attribute.equals("TODO")) { //$NON-NLS-1$
                 context.report(ISSUE, attributeNode, context.getLocation(attributeNode),
                         "[Accessibility] Empty contentDescription attribute on image", null);
             }

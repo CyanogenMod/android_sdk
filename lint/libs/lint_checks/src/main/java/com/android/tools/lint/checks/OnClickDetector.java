@@ -81,14 +81,15 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
     public OnClickDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        if (mNames != null && mNames.size() > 0 && mHaveBytecode) {
+        if (mNames != null && !mNames.isEmpty() && mHaveBytecode) {
             List<String> names = new ArrayList<String>(mNames.keySet());
             Collections.sort(names);
             LintDriver driver = context.getDriver();
@@ -109,8 +110,7 @@ public class OnClickDetector extends LayoutDetector implements ClassScanner {
                 List<String> similar = mSimilar != null ? mSimilar.get(name) : null;
                 if (similar != null) {
                     Collections.sort(similar);
-                    message = message + String.format(" (did you mean %1$s ?)",
-                            Joiner.on(", ").join(similar));
+                  message += String.format(" (did you mean %1$s ?)", Joiner.on(", ").join(similar));
                 }
                 context.report(ISSUE, location, message, null);
             }

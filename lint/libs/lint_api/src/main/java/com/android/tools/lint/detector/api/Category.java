@@ -29,7 +29,6 @@ import com.google.common.annotations.Beta;
 @Beta
 public final class Category implements Comparable<Category> {
     private final String mName;
-    private final String mExplanation;
     private final int mPriority;
     private final Category mParent;
 
@@ -38,17 +37,14 @@ public final class Category implements Comparable<Category> {
      *
      * @param parent the name of a parent category, or null
      * @param name the name of the category
-     * @param explanation an optional explanation of the category
      * @param priority a sorting priority, with higher being more important
      */
     private Category(
             @Nullable Category parent,
             @NonNull String name,
-            @Nullable String explanation,
             int priority) {
         mParent = parent;
         mName = name;
-        mExplanation = explanation;
         mPriority = priority;
     }
 
@@ -61,7 +57,7 @@ public final class Category implements Comparable<Category> {
      */
     @NonNull
     public static Category create(@NonNull String name, int priority) {
-        return new Category(null, name, null, priority);
+        return new Category(null, name, priority);
     }
 
     /**
@@ -69,17 +65,12 @@ public final class Category implements Comparable<Category> {
      *
      * @param parent the name of a parent category, or null
      * @param name the name of the category
-     * @param explanation an optional explanation of the category
      * @param priority a sorting priority, with higher being more important
      * @return a new category
      */
     @NonNull
-    public static Category create(
-            @Nullable Category parent,
-            @NonNull String name,
-            @Nullable String explanation,
-            int priority) {
-        return new Category(parent, name, null, priority);
+    public static Category create(@Nullable Category parent, @NonNull String name, int priority) {
+        return new Category(parent, name, priority);
     }
 
     /**
@@ -98,15 +89,6 @@ public final class Category implements Comparable<Category> {
      */
     public String getName() {
         return mName;
-    }
-
-    /**
-     * Returns an explanation for this category, or null
-     *
-     * @return an explanation for this category, or null
-     */
-    public String getExplanation() {
-        return mExplanation;
     }
 
     /**
@@ -137,34 +119,34 @@ public final class Category implements Comparable<Category> {
     }
 
     /** Issues related to running lint itself */
-    public static final Category LINT = Category.create("Lint", 110);
+    public static final Category LINT = create("Lint", 110);
 
     /** Issues related to correctness */
-    public static final Category CORRECTNESS = Category.create("Correctness", 100);
+    public static final Category CORRECTNESS = create("Correctness", 100);
 
     /** Issues related to security */
-    public static final Category SECURITY = Category.create("Security", 90);
+    public static final Category SECURITY = create("Security", 90);
 
     /** Issues related to performance */
-    public static final Category PERFORMANCE = Category.create("Performance", 80);
+    public static final Category PERFORMANCE = create("Performance", 80);
 
     /** Issues related to usability */
-    public static final Category USABILITY = Category.create("Usability", 70);
+    public static final Category USABILITY = create("Usability", 70);
 
     /** Issues related to accessibility */
-    public static final Category A11Y = Category.create("Accessibility", 60);
+    public static final Category A11Y = create("Accessibility", 60);
 
     /** Issues related to internationalization */
-    public static final Category I18N = Category.create("Internationalization", 50);
+    public static final Category I18N = create("Internationalization", 50);
 
     // Sub categories
 
     /** Issues related to icons */
-    public static final Category ICONS = Category.create(USABILITY, "Icons", null, 73);
+    public static final Category ICONS = create(USABILITY, "Icons", 73);
 
     /** Issues related to typography */
-    public static final Category TYPOGRAPHY = Category.create(USABILITY, "Typography", null, 76);
+    public static final Category TYPOGRAPHY = create(USABILITY, "Typography", 76);
 
     /** Issues related to messages/strings */
-    public static final Category MESSAGES = Category.create(CORRECTNESS, "Messages", null, 95);
+    public static final Category MESSAGES = create(CORRECTNESS, "Messages", 95);
 }

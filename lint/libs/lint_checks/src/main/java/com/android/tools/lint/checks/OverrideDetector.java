@@ -74,7 +74,7 @@ public class OverrideDetector extends Detector implements ClassScanner {
             EnumSet.of(Scope.ALL_CLASS_FILES));
 
     /** map from owner class name to JVM signatures for its package private methods  */
-    private Map<String, Set<String>> mPackagePrivateMethods = Maps.newHashMap();
+    private final Map<String, Set<String>> mPackagePrivateMethods = Maps.newHashMap();
 
     /** Map from owner to signature to super class being overridden */
     private Map<String, Map<String, String>> mErrors;
@@ -90,8 +90,9 @@ public class OverrideDetector extends Detector implements ClassScanner {
     public OverrideDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.NORMAL;
     }
 

@@ -156,8 +156,9 @@ public class ProguardDetector extends Detector {
         return true;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 }

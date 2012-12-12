@@ -187,14 +187,15 @@ public class SharedPrefsDetector extends Detector implements Detector.JavaScanne
         return null;
     }
 
-    private class CommitFinder extends ForwardingAstVisitor {
+    private static class CommitFinder extends ForwardingAstVisitor {
+        /** The target edit call */
+        private final MethodInvocation mTarget;
+        /** whether it allows the commit call to be seen before the target node */
+        private final boolean mAllowCommitBeforeTarget;
         /** Whether we've found one of the commit/cancel methods */
         private boolean mFound;
-        /** The target edit call */
-        private MethodInvocation mTarget;
         /** Whether we've seen the target edit node yet */
         private boolean mSeenTarget;
-        private boolean mAllowCommitBeforeTarget;
 
         private CommitFinder(MethodInvocation target, boolean allowCommitBeforeTarget) {
             mTarget = target;

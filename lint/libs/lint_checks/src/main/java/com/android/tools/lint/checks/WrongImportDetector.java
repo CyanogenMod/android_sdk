@@ -32,6 +32,7 @@ import java.util.List;
 import lombok.ast.AstVisitor;
 import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.ImportDeclaration;
+import lombok.ast.Node;
 
 /**
  * Checks for "import android.R", which seems to be a common source of confusion
@@ -66,16 +67,17 @@ public class WrongImportDetector extends Detector implements Detector.JavaScanne
     public WrongImportDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
     // ---- Implements Detector.JavaScanner ----
 
     @Override
-    public List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes() {
-        return Collections.<Class<? extends lombok.ast.Node>> singletonList(
+    public List<Class<? extends Node>> getApplicableNodeTypes() {
+        return Collections.<Class<? extends Node>> singletonList(
                 ImportDeclaration.class);
     }
 

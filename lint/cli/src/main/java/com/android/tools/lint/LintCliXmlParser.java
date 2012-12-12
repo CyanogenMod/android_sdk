@@ -70,8 +70,9 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         return null;
     }
 
+    @NonNull
     @Override
-    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
+    public Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
         OffsetPosition pos = (OffsetPosition) getPosition(node, -1, -1);
         if (pos != null) {
             return Location.create(context.file, pos, (OffsetPosition) pos.getEnd());
@@ -80,8 +81,9 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         return Location.create(context.file);
     }
 
+    @NonNull
     @Override
-    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node,
+    public Location getLocation(@NonNull XmlContext context, @NonNull Node node,
             int start, int end) {
         OffsetPosition pos = (OffsetPosition) getPosition(node, start, end);
         if (pos != null) {
@@ -91,13 +93,15 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         return Location.create(context.file);
     }
 
+    @NonNull
     @Override
-    public @NonNull Handle createLocationHandle(@NonNull XmlContext context, @NonNull Node node) {
+    public Handle createLocationHandle(@NonNull XmlContext context, @NonNull Node node) {
         return new LocationHandle(context.file, node);
     }
 
+    @NonNull
     @Override
-    protected @NonNull OffsetPosition createPosition(int line, int column, int offset) {
+    protected OffsetPosition createPosition(int line, int column, int offset) {
         return new OffsetPosition(line, column, offset);
     }
 
@@ -119,7 +123,7 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
          * Linked position: for a begin offset this will point to the end
          * offset, and for an end offset this will be null
          */
-        private com.android.utils.PositionXmlParser.Position mEnd;
+        private PositionXmlParser.Position mEnd;
 
         /**
          * Creates a new {@link OffsetPosition}
@@ -150,19 +154,19 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
         }
 
         @Override
-        public com.android.utils.PositionXmlParser.Position getEnd() {
+        public PositionXmlParser.Position getEnd() {
             return mEnd;
         }
 
         @Override
-        public void setEnd(@NonNull com.android.utils.PositionXmlParser.Position end) {
+        public void setEnd(@NonNull PositionXmlParser.Position end) {
             mEnd = end;
         }
 
         @Override
         public String toString() {
             return "OffsetPosition [line=" + mLine + ", column=" + mColumn + ", offset="
-                    + mOffset + ", end=" + mEnd + "]";
+                    + mOffset + ", end=" + mEnd + ']';
         }
     }
 
@@ -172,8 +176,8 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
 
     /* Handle for creating DOM positions cheaply and returning full fledged locations later */
     private class LocationHandle implements Handle {
-        private File mFile;
-        private Node mNode;
+        private final File mFile;
+        private final Node mNode;
         private Object mClientData;
 
         public LocationHandle(File file, Node node) {
@@ -181,8 +185,9 @@ public class LintCliXmlParser extends PositionXmlParser implements IDomParser {
             mNode = node;
         }
 
+        @NonNull
         @Override
-        public @NonNull Location resolve() {
+        public Location resolve() {
             OffsetPosition pos = (OffsetPosition) getPosition(mNode);
             if (pos != null) {
                 return Location.create(mFile, pos, (OffsetPosition) pos.getEnd());

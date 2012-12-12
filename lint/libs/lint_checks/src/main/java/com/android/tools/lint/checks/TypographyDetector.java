@@ -197,8 +197,9 @@ public class TypographyDetector extends ResourceXmlDetector {
         return folderType == ResourceFolderType.VALUES;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -457,7 +458,7 @@ public class TypographyDetector extends ResourceXmlDetector {
         } else if (message.equals(SINGLE_QUOTE_MESSAGE)) {
             int offset = text.indexOf('\'');
             if (offset != -1) {
-                int endOffset = text.indexOf("'", offset + 1);           //$NON-NLS-1$
+                int endOffset = text.indexOf('\'', offset + 1);           //$NON-NLS-1$
                 if (endOffset != -1) {
                     edits.add(new ReplaceEdit(offset, 1, "\u2018"));     //$NON-NLS-1$
                     edits.add(new ReplaceEdit(endOffset, 1, "\u2019"));  //$NON-NLS-1$

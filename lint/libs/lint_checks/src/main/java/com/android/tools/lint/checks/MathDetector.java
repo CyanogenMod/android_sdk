@@ -61,8 +61,9 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
     public MathDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

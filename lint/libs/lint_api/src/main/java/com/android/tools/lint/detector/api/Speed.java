@@ -36,7 +36,7 @@ public enum Speed {
     /** The detector might take a long time to run */
     SLOW("Slow");
 
-    private String mDisplayName;
+    private final String mDisplayName;
 
     Speed(@NonNull String displayName) {
         mDisplayName = displayName;

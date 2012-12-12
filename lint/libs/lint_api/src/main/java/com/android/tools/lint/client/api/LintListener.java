@@ -30,7 +30,7 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface LintListener {
     /** The various types of events provided to lint listeners */
-    public enum EventType {
+    enum EventType {
         /** A lint check is about to begin */
         STARTING,
 
@@ -51,7 +51,7 @@ public interface LintListener {
 
         /** The lint check is done */
         COMPLETED,
-    };
+    }
 
     /**
      * Notifies listeners that the event of the given type has occurred.
@@ -65,6 +65,6 @@ public interface LintListener {
      * @param type the type of event that occurred
      * @param context the context providing additional information
      */
-    public void update(@NonNull LintDriver driver, @NonNull EventType type,
+    void update(@NonNull LintDriver driver, @NonNull EventType type,
             @Nullable Context context);
 }

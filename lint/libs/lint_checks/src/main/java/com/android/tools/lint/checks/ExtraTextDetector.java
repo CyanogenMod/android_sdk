@@ -69,8 +69,9 @@ public class ExtraTextDetector extends ResourceXmlDetector {
                 || folderType == ResourceFolderType.COLOR;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

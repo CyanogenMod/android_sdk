@@ -37,6 +37,7 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 
 /**
@@ -154,8 +155,9 @@ public class SystemPermissionsDetector extends Detector implements Detector.XmlS
     public SystemPermissionsDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -168,7 +170,7 @@ public class SystemPermissionsDetector extends Detector implements Detector.XmlS
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(TAG_USES_PERMISSION);
+        return Collections.singletonList(TAG_USES_PERMISSION);
     }
 
     @Override

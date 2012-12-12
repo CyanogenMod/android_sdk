@@ -47,7 +47,7 @@ public class LombokParser implements IJavaParser {
 
             // Don't analyze files containing errors
             List<ParseProblem> problems = source.getProblems();
-            if (problems != null && problems.size() > 0) {
+            if (problems != null && !problems.isEmpty()) {
                 context.getDriver().setHasParserErrors(true);
 
                 /* Silently ignore the errors. There are still some bugs in Lombok/Parboiled
@@ -97,17 +97,19 @@ public class LombokParser implements IJavaParser {
         }
     }
 
+    @NonNull
     @Override
-    public @NonNull Location getLocation(
+    public Location getLocation(
             @NonNull JavaContext context,
-            @NonNull lombok.ast.Node node) {
-        lombok.ast.Position position = node.getPosition();
+            @NonNull Node node) {
+        Position position = node.getPosition();
         return Location.create(context.file, context.getContents(),
                 position.getStart(), position.getEnd());
     }
 
+    @NonNull
     @Override
-    public @NonNull Handle createLocationHandle(@NonNull JavaContext context, @NonNull Node node) {
+    public Handle createLocationHandle(@NonNull JavaContext context, @NonNull Node node) {
         return new LocationHandle(context.file, node);
     }
 
@@ -116,9 +118,9 @@ public class LombokParser implements IJavaParser {
     }
 
     /* Handle for creating positions cheaply and returning full fledged locations later */
-    private class LocationHandle implements Handle {
-        private File mFile;
-        private Node mNode;
+    private static class LocationHandle implements Handle {
+        private final File mFile;
+        private final Node mNode;
         private Object mClientData;
 
         public LocationHandle(File file, Node node) {
@@ -126,8 +128,9 @@ public class LombokParser implements IJavaParser {
             mNode = node;
         }
 
+        @NonNull
         @Override
-        public @NonNull Location resolve() {
+        public Location resolve() {
             Position pos = mNode.getPosition();
             return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd());
         }

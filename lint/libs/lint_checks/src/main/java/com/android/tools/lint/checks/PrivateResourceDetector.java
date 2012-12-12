@@ -52,8 +52,9 @@ public class PrivateResourceDetector extends ResourceXmlDetector {
     public PrivateResourceDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

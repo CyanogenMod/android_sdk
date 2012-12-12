@@ -68,8 +68,9 @@ public class MissingIdDetector extends LayoutDetector {
     public MissingIdDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

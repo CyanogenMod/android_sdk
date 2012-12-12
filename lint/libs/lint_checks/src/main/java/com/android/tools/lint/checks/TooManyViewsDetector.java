@@ -73,14 +73,16 @@ public class TooManyViewsDetector extends LayoutDetector {
         if (countValue != null) {
             try {
                 maxViewCount = Integer.parseInt(countValue);
-            } catch (NumberFormatException nufe) {
+            } catch (NumberFormatException e) {
+                // pass: set to default below
             }
         }
         String depthValue = System.getenv("ANDROID_LINT_MAX_DEPTH"); //$NON-NLS-1$
         if (depthValue != null) {
             try {
                 maxDepth = Integer.parseInt(depthValue);
-            } catch (NumberFormatException nufe) {
+            } catch (NumberFormatException e) {
+                // pass: set to default below
             }
         }
         if (maxViewCount == 0) {
@@ -102,8 +104,9 @@ public class TooManyViewsDetector extends LayoutDetector {
     public TooManyViewsDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
