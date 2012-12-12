@@ -932,8 +932,10 @@ public class AvdCreationDialog extends GridDialog {
                 // ignore
             }
 
-            if (ramSize > 512) {
-                warning = "On Windows, set emulated RAM to be less than or equal to 512 MB.";
+            if (ramSize > 768) {
+                warning = "On Windows, emulating RAM greater than 768M may fail depending on the"
+                        + " system load.\nTry progressively smaller values of RAM if the emulator"
+                        + " fails to launch.";
             }
         }
 
