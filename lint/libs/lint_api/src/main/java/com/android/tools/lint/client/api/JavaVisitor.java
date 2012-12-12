@@ -138,7 +138,7 @@ public class JavaVisitor {
             new ArrayList<VisitingDetector>();
     private final List<VisitingDetector> mAllDetectors;
     private final List<VisitingDetector> mFullTreeDetectors;
-    private Map<Class<? extends Node>, List<VisitingDetector>> mNodeTypeDetectors =
+    private final Map<Class<? extends Node>, List<VisitingDetector>> mNodeTypeDetectors =
             new HashMap<Class<? extends Node>, List<VisitingDetector>>();
     private final IJavaParser mParser;
 
@@ -181,8 +181,8 @@ public class JavaVisitor {
 
             if (detector.appliesToResourceRefs()) {
                 mResourceFieldDetectors.add(v);
-            } else if ((names == null || names.size() == 0)
-                    && (nodeTypes == null || nodeTypes.size() ==0)) {
+            } else if ((names == null || names.isEmpty())
+                    && (nodeTypes == null || nodeTypes.isEmpty())) {
                 mFullTreeDetectors.add(v);
             }
         }
@@ -214,10 +214,10 @@ public class JavaVisitor {
                 }
             }
 
-            if (mMethodDetectors.size() > 0 || mResourceFieldDetectors.size() > 0) {
+            if (!mMethodDetectors.isEmpty() || !mResourceFieldDetectors.isEmpty()) {
                 AstVisitor visitor = new DelegatingJavaVisitor(context);
                 compilationUnit.accept(visitor);
-            } else if (mNodeTypeDetectors.size() > 0) {
+            } else if (!mNodeTypeDetectors.isEmpty()) {
                 AstVisitor visitor = new DispatchVisitor();
                 compilationUnit.accept(visitor);
             }
@@ -1113,8 +1113,8 @@ public class JavaVisitor {
         public DelegatingJavaVisitor(JavaContext context) {
             mContext = context;
 
-            mVisitMethods = mMethodDetectors.size() > 0;
-            mVisitResources = mResourceFieldDetectors.size() > 0;
+            mVisitMethods = !mMethodDetectors.isEmpty();
+            mVisitResources = !mResourceFieldDetectors.isEmpty();
         }
 
         @Override

@@ -51,9 +51,9 @@ import java.util.List;
 public class ClassContext extends Context {
     private final File mBinDir;
     /** The class file DOM root node */
-    private ClassNode mClassNode;
+    private final ClassNode mClassNode;
     /** The class file byte data */
-    private byte[] mBytes;
+    private final byte[] mBytes;
     /** The source file, if known/found */
     private File mSourceFile;
     /** The contents of the source file, if source file is known/found */
@@ -444,7 +444,7 @@ public class ClassContext extends Context {
         if (node.methods != null && !node.methods.isEmpty()) {
             MethodNode firstMethod = getFirstRealMethod(node);
             if (firstMethod != null) {
-                return ClassContext.findLineNumber(firstMethod);
+                return findLineNumber(firstMethod);
             }
         }
 
@@ -498,7 +498,7 @@ public class ClassContext extends Context {
                 }
             }
 
-            if (classNode.methods.size() > 0) {
+            if (!classNode.methods.isEmpty()) {
                 return (MethodNode) classNode.methods.get(0);
             }
         }
@@ -605,7 +605,7 @@ public class ClassContext extends Context {
      * @return a user-readable string
      */
     public static String createSignature(String owner, String name, String desc) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(100);
 
         if (desc != null) {
             Type returnType = Type.getReturnType(desc);
@@ -659,7 +659,7 @@ public class ClassContext extends Context {
     @NonNull
     public static String getInternalName(@NonNull String fqcn) {
         String[] parts = fqcn.split("\\."); //$NON-NLS-1$
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(fqcn.length());
         String prev = null;
         for (String part : parts) {
             if (prev != null) {

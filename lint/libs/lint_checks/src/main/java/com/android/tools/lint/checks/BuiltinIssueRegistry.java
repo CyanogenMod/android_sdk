@@ -216,8 +216,9 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     public BuiltinIssueRegistry() {
     }
 
+    @NonNull
     @Override
-    public @NonNull List<Issue> getIssues() {
+    public List<Issue> getIssues() {
         return sIssues;
     }
 
@@ -251,7 +252,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         }
 
         String lintClassPath = System.getenv("ANDROID_LINT_JARS"); //$NON-NLS-1$
-        if (lintClassPath != null && lintClassPath.length() > 0) {
+        if (lintClassPath != null && !lintClassPath.isEmpty()) {
             String[] paths = lintClassPath.split(File.pathSeparator);
             for (String path : paths) {
                 File jarFile = new File(path);
@@ -328,6 +329,10 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         // the primary purpose right now is to allow for example the HTML report
         // to give a hint to the user that some fixes don't require manual work
 
+        return getIssuesWithFixes().contains(issue);
+    }
+
+    private static Set<Issue> getIssuesWithFixes() {
         if (sAdtFixes == null) {
             sAdtFixes = new HashSet<Issue>(25);
             sAdtFixes.add(InefficientWeightDetector.INEFFICIENT_WEIGHT);
@@ -356,7 +361,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             sAdtFixes.add(DosLineEndingDetector.ISSUE);
         }
 
-        return sAdtFixes.contains(issue);
+        return sAdtFixes;
     }
 
     /**

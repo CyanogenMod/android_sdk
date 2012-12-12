@@ -31,7 +31,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testTranslation() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = false;
+        TranslationDetector.sCompleteRegions = false;
         assertEquals(
             // Sample files from the Home app
             "res/values/strings.xml:20: Error: \"show_all_apps\" is not translated in nl-rNL [MissingTranslation]\n" +
@@ -66,7 +66,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testTranslationWithCompleteRegions() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = true;
+        TranslationDetector.sCompleteRegions = true;
         assertEquals(
             // Sample files from the Home app
             "res/values/strings.xml:19: Error: \"home_title\" is not translated in es-rUS [MissingTranslation]\n" +
@@ -112,7 +112,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testTranslatedArrays() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = true;
+        TranslationDetector.sCompleteRegions = true;
         assertEquals(
             "No warnings.",
 
@@ -122,7 +122,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testTranslationSuppresss() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = false;
+        TranslationDetector.sCompleteRegions = false;
         assertEquals(
             "No warnings.",
 
@@ -166,7 +166,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testNonTranslatable1() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = true;
+        TranslationDetector.sCompleteRegions = true;
         assertEquals(
             "res/values-nb/nontranslatable.xml:3: Error: The resource string \"dummy\" has been marked as translatable=\"false\" [ExtraTranslation]\n" +
             "    <string name=\"dummy\">Ignore Me</string>\n" +
@@ -179,7 +179,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testNonTranslatable2() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = true;
+        TranslationDetector.sCompleteRegions = true;
         assertEquals(
             "res/values-nb/nontranslatable.xml:3: Error: Non-translatable resources should only be defined in the base values/ folder [ExtraTranslation]\n" +
             "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
@@ -191,7 +191,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testSpecifiedLanguageOk() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = false;
+        TranslationDetector.sCompleteRegions = false;
         assertEquals(
             "No warnings.",
 
@@ -201,7 +201,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testSpecifiedLanguage() throws Exception {
-        TranslationDetector.COMPLETE_REGIONS = false;
+        TranslationDetector.sCompleteRegions = false;
         assertEquals(
             "No warnings.",
 

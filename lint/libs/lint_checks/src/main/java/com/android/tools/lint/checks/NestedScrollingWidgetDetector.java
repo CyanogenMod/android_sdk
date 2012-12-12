@@ -68,8 +68,9 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
         mVisitingVerticalScroll = 0;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -140,7 +141,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
         }
     }
 
-    private boolean isVerticalScroll(Element element) {
+    private static boolean isVerticalScroll(Element element) {
         String view = element.getTagName();
         if (view.equals(GALLERY) || view.equals(HORIZONTAL_SCROLL_VIEW)) {
             return false;

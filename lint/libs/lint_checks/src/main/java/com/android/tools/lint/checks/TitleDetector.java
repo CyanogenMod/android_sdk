@@ -77,8 +77,9 @@ public class TitleDetector extends ResourceXmlDetector implements JavaScanner {
         return folderType == ResourceFolderType.MENU;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

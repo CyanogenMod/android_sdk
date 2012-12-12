@@ -29,15 +29,15 @@ import java.util.Map;
  */
 public class ApiParser extends DefaultHandler {
 
-    private final static String NODE_API = "api";
-    private final static String NODE_CLASS = "class";
-    private final static String NODE_FIELD = "field";
-    private final static String NODE_METHOD = "method";
-    private final static String NODE_EXTENDS = "extends";
-    private final static String NODE_IMPLEMENTS = "implements";
+    private static final String NODE_API = "api";
+    private static final String NODE_CLASS = "class";
+    private static final String NODE_FIELD = "field";
+    private static final String NODE_METHOD = "method";
+    private static final String NODE_EXTENDS = "extends";
+    private static final String NODE_IMPLEMENTS = "implements";
 
-    private final static String ATTR_NAME = "name";
-    private final static String ATTR_SINCE = "since";
+    private static final String ATTR_NAME = "name";
+    private static final String ATTR_SINCE = "since";
 
     private final Map<String, ApiClass> mClasses = new HashMap<String, ApiClass>();
 
@@ -54,7 +54,7 @@ public class ApiParser extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
 
-        if (localName == null || localName.length() == 0) {
+        if (localName == null || localName.isEmpty()) {
             localName = qName;
         }
 

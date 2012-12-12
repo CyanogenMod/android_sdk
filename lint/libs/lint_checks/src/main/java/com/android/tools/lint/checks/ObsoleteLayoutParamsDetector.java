@@ -211,15 +211,16 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * pair is a pair of an attribute name to be checked, and the file that
      * attribute is referenced in.
      */
-    private List<Pair<String, Location.Handle>> mPending =
+    private final List<Pair<String, Location.Handle>> mPending =
             new ArrayList<Pair<String,Location.Handle>>();
 
     /** Constructs a new {@link ObsoleteLayoutParamsDetector} */
     public ObsoleteLayoutParamsDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -373,7 +374,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     }
                 }
 
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder(40);
                 for (Pair<File, String> include : includes) {
                     if (sb.length() > 0) {
                         sb.append(", "); //$NON-NLS-1$

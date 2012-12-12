@@ -109,9 +109,9 @@ class XmlVisitor {
                 }
             }
 
-            if ((attributes == null || (attributes.size() == 0
+            if ((attributes == null || (attributes.isEmpty()
                     && attributes != XmlScanner.ALL))
-                  && (elements == null || (elements.size() == 0
+                  && (elements == null || (elements.isEmpty()
                   && elements != XmlScanner.ALL))) {
                 mDocumentDetectors.add(xmlDetector);
             }
@@ -145,8 +145,8 @@ class XmlVisitor {
                 check.visitDocument(context, context.document);
             }
 
-            if (mElementToCheck.size() > 0 || mAttributeToCheck.size() > 0
-                    || mAllAttributeDetectors.size() > 0 || mAllElementDetectors.size() > 0) {
+            if (!mElementToCheck.isEmpty() || !mAttributeToCheck.isEmpty()
+                    || !mAllAttributeDetectors.isEmpty() || !mAllElementDetectors.isEmpty()) {
                 visitElement(context, context.document.getDocumentElement());
             }
 
@@ -165,19 +165,17 @@ class XmlVisitor {
         List<Detector.XmlScanner> elementChecks = mElementToCheck.get(element.getTagName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;
-            for (int i = 0, n = elementChecks.size(); i < n; i++) {
-                Detector.XmlScanner check = elementChecks.get(i);
+            for (XmlScanner check : elementChecks) {
                 check.visitElement(context, element);
             }
         }
-        if (mAllElementDetectors.size() > 0) {
-            for (int i = 0, n = mAllElementDetectors.size(); i < n; i++) {
-                Detector.XmlScanner check = mAllElementDetectors.get(i);
+        if (!mAllElementDetectors.isEmpty()) {
+            for (XmlScanner check : mAllElementDetectors) {
                 check.visitElement(context, element);
             }
         }
 
-        if (mAttributeToCheck.size() > 0 || mAllAttributeDetectors.size() > 0) {
+        if (!mAttributeToCheck.isEmpty() || !mAllAttributeDetectors.isEmpty()) {
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attribute = (Attr) attributes.item(i);
@@ -187,14 +185,12 @@ class XmlVisitor {
                 }
                 List<Detector.XmlScanner> list = mAttributeToCheck.get(name);
                 if (list != null) {
-                    for (int j = 0, max = list.size(); j < max; j++) {
-                        Detector.XmlScanner check = list.get(j);
+                    for (XmlScanner check : list) {
                         check.visitAttribute(context, attribute);
                     }
                 }
-                if (mAllAttributeDetectors.size() > 0) {
-                    for (int j = 0, max = mAllAttributeDetectors.size(); j < max; j++) {
-                        Detector.XmlScanner check = mAllAttributeDetectors.get(j);
+                if (!mAllAttributeDetectors.isEmpty()) {
+                    for (XmlScanner check : mAllAttributeDetectors) {
                         check.visitAttribute(context, attribute);
                     }
                 }
@@ -212,14 +208,12 @@ class XmlVisitor {
 
         // Post hooks
         if (elementChecks != null) {
-            for (int i = 0, n = elementChecks.size(); i < n; i++) {
-                Detector.XmlScanner check = elementChecks.get(i);
+            for (XmlScanner check : elementChecks) {
                 check.visitElementAfter(context, element);
             }
         }
-        if (mAllElementDetectors.size() > 0) {
-            for (int i = 0, n = mAllElementDetectors.size(); i < n; i++) {
-                Detector.XmlScanner check = mAllElementDetectors.get(i);
+        if (!mAllElementDetectors.isEmpty()) {
+            for (XmlScanner check : mAllElementDetectors) {
                 check.visitElementAfter(context, element);
             }
         }

@@ -90,7 +90,6 @@ public class ApiLookup {
     private byte[] mData;
     private int[] mIndices;
     private int mClassCount;
-    private int mMethodCount;
     private String[] mJavaPackages;
 
     private static WeakReference<ApiLookup> sInstance =
@@ -155,7 +154,7 @@ public class ApiLookup {
      * @return a (possibly shared) instance of the API database, or null
      *         if its data can't be found
      */
-    public static ApiLookup get(LintClient client, File xmlFile) {
+    private static ApiLookup get(LintClient client, File xmlFile) {
         if (!xmlFile.exists()) {
             client.log(null, "The API database file %1$s does not exist", xmlFile);
             return null;
@@ -233,7 +232,7 @@ public class ApiLookup {
     /**
      * Database format:
      * <pre>
-     * 1. A file header, which is the exact contents of {@link FILE_HEADER} encoded
+     * 1. A file header, which is the exact contents of {@link #FILE_HEADER} encoded
      *     as ASCII characters. The purpose of the header is to identify what the file
      *     is for, for anyone attempting to open the file.
      * 2. A file version number. If the binary file does not match the reader's expected
@@ -295,7 +294,7 @@ public class ApiLookup {
             }
 
             mClassCount = buffer.getInt();
-            mMethodCount = buffer.getInt();
+            int methodCount = buffer.getInt();
 
             int javaPackageCount = buffer.getInt();
             // Read in the Java packages
@@ -308,7 +307,7 @@ public class ApiLookup {
             }
 
             // Read in the class table indices;
-            int count = mClassCount + mMethodCount;
+            int count = mClassCount + methodCount;
             int[] offsets = new int[count];
 
             // Another idea: I can just store the DELTAS in the file (and add them up
@@ -415,7 +414,7 @@ public class ApiLookup {
             }
 
             // Only include classes that have one or more members requiring version 2 or higher:
-            if (members.size() > 0) {
+            if (!members.isEmpty()) {
                 classes.add(className);
                 memberMap.put(apiClass, members);
                 memberCount += members.size();
@@ -583,7 +582,7 @@ public class ApiLookup {
     // For debugging only
     private String dumpEntry(int offset) {
         if (DEBUG_SEARCH) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(200);
             for (int i = offset; i < mData.length; i++) {
                 if (mData[i] == 0) {
                     break;
@@ -800,7 +799,7 @@ public class ApiLookup {
         return false;
     }
 
-    private int comparePackage(String s1, String s2, int max) {
+    private static int comparePackage(String s1, String s2, int max) {
         for (int i = 0; i < max; i++) {
             if (i == s1.length()) {
                 return -1;

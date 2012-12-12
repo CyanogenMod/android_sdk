@@ -56,7 +56,7 @@ public class CutPasteDetector extends Detector implements Detector.JavaScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "CutPasteId", //$NON-NLS-1$
-            "Looks for code cut & paste mistakes in findViewbyId() calls",
+            "Looks for code cut & paste mistakes in findViewById() calls",
 
             "This lint check looks for cases where you have cut & pasted calls to " +
             "`findViewById` but have forgotten to update the R.id field. It's possible " +
@@ -183,8 +183,8 @@ public class CutPasteDetector extends Detector implements Detector.JavaScanner {
     }
 
     private static class ReachableVisitor extends ForwardingAstVisitor {
-        private final @NonNull MethodInvocation mFrom;
-        private final @NonNull MethodInvocation mTo;
+        @NonNull private final MethodInvocation mFrom;
+        @NonNull private final MethodInvocation mTo;
         private boolean mReachable;
         private boolean mSeenEnd;
 

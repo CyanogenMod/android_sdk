@@ -114,11 +114,11 @@ public class ToastDetector extends Detector implements Detector.JavaScanner {
         }
     }
 
-    private class ShowFinder extends ForwardingAstVisitor {
+    private static class ShowFinder extends ForwardingAstVisitor {
+        /** The target makeText call */
+        private final MethodInvocation mTarget;
         /** Whether we've found the show method */
         private boolean mFound;
-        /** The target makeText call */
-        private MethodInvocation mTarget;
         /** Whether we've seen the target makeText node yet */
         private boolean mSeenTarget;
 

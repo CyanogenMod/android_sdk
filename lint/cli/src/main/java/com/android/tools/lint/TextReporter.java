@@ -54,7 +54,7 @@ public class TextReporter extends Reporter {
         boolean abbreviate = mClient.getDriver().isAbbreviating();
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
-        if (issues.size() == 0) {
+        if (issues.isEmpty()) {
             mWriter.write('\n');
             mWriter.write("No issues found.");
             mWriter.write('\n');
@@ -95,7 +95,7 @@ public class TextReporter extends Reporter {
 
                 output.append('\n');
 
-                if (warning.errorLine != null && warning.errorLine.length() > 0) {
+                if (warning.errorLine != null && !warning.errorLine.isEmpty()) {
                     output.append(warning.errorLine);
                 }
 
@@ -103,7 +103,7 @@ public class TextReporter extends Reporter {
                     Location location = warning.location.getSecondary();
                     while (location != null) {
                         if (location.getMessage() != null
-                                && location.getMessage().length() > 0) {
+                                && !location.getMessage().isEmpty()) {
                             output.append("    "); //$NON-NLS-1$
                             String path = mClient.getDisplayPath(warning.project,
                                     location.getFile());
@@ -119,7 +119,7 @@ public class TextReporter extends Reporter {
                             }
 
                             if (location.getMessage() != null
-                                    && location.getMessage().length() > 0) {
+                                    && !location.getMessage().isEmpty()) {
                                 output.append(':');
                                 output.append(' ');
                                 output.append(location.getMessage());
@@ -133,12 +133,12 @@ public class TextReporter extends Reporter {
 
                     if (!abbreviate) {
                         location = warning.location.getSecondary();
-                        StringBuilder sb = new StringBuilder();
+                        StringBuilder sb = new StringBuilder(100);
                         sb.append("Also affects: ");
                         int begin = sb.length();
                         while (location != null) {
                             if (location.getMessage() == null
-                                    || location.getMessage().length() > 0) {
+                                    || !location.getMessage().isEmpty()) {
                                 if (sb.length() > begin) {
                                     sb.append(", ");
                                 }

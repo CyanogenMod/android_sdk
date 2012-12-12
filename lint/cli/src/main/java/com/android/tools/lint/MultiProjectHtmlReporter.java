@@ -215,10 +215,10 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
     }
 
     private static class ProjectEntry implements Comparable<ProjectEntry> {
-        public int errorCount;
-        public int warningCount;
-        public String fileName;
-        public String path;
+        public final int errorCount;
+        public final int warningCount;
+        public final String fileName;
+        public final String path;
 
 
         public ProjectEntry(String fileName, int errorCount, int warningCount, String path) {

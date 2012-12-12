@@ -163,8 +163,9 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
         return LintUtils.isXmlFile(file) || LintUtils.endsWith(file.getName(), DOT_JAVA);
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -360,7 +361,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
         }
     }
 
-    private String getDrawableResource(File drawableFile) {
+    private static String getDrawableResource(File drawableFile) {
         String resource = drawableFile.getName();
         if (endsWith(resource, DOT_XML)) {
             resource = resource.substring(0, resource.length() - DOT_XML.length());
@@ -370,7 +371,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
 
     private void scanBitmap(Context context, Element element) {
         String tileMode = element.getAttributeNS(ANDROID_URI, ATTR_TILE_MODE);
-        if (!(tileMode.equals(VALUE_DISABLED) || tileMode.length() == 0)) {
+        if (!(tileMode.equals(VALUE_DISABLED) || tileMode.isEmpty())) {
             if (mValidDrawables != null) {
                 String resource = getDrawableResource(context.file);
                 mValidDrawables.remove(resource);
@@ -385,7 +386,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
         }
         if (name.startsWith(".")) {  //$NON-NLS-1$
             String pkg = context.getProject().getPackage();
-            if (pkg != null && pkg.length() > 0) {
+            if (pkg != null && !pkg.isEmpty()) {
                 name = pkg + name;
             }
         }
@@ -396,7 +397,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
         mActivities.add(name);
 
         String theme = element.getAttributeNS(ANDROID_URI, ATTR_THEME);
-        if (theme != null && theme.length() > 0) {
+        if (theme != null && !theme.isEmpty()) {
             if (mActivityToTheme == null) {
                 mActivityToTheme = new HashMap<String, String>();
             }
@@ -413,7 +414,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             parent = "";
         }
 
-        if (parent.length() == 0) {
+        if (parent.isEmpty()) {
             int index = styleName.lastIndexOf('.');
             if (index != -1) {
                 parent = styleName.substring(0, index);
@@ -435,7 +436,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                         if (textNode.getNodeType() == Node.TEXT_NODE) {
                             String text = textNode.getNodeValue();
                             String trim = text.trim();
-                            if (trim.length() > 0) {
+                            if (!trim.isEmpty()) {
                                 if (trim.equals(NULL_RESOURCE)
                                         || trim.equals(TRANSPARENT_COLOR)
                                         || mValidDrawables != null
@@ -459,7 +460,6 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                 mBlankThemes = new ArrayList<String>();
             }
             mBlankThemes.add(resource);
-            return;
         }
     }
 
@@ -499,7 +499,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                     CompilationUnit compilationUnit = (CompilationUnit) node.getParent();
                     packageName = compilationUnit.astPackageDeclaration().getPackageName();
                 }
-                mClassFqn = (packageName.length() > 0 ? (packageName + '.') : "") + name;
+                mClassFqn = (!packageName.isEmpty() ? (packageName + '.') : "") + name;
 
                 return false;
             }

@@ -294,14 +294,14 @@ public abstract class LintClient {
      * @return A new File corresponding to {@link LintClient#PROP_BIN_DIR} or null.
      */
     @Nullable
-    private File getLintBinDir() {
+    private static File getLintBinDir() {
         // First check the Java properties (e.g. set using "java -jar ... -Dname=value")
         String path = System.getProperty(PROP_BIN_DIR);
-        if (path == null || path.length() == 0) {
+        if (path == null || path.isEmpty()) {
             // If not found, check environment variables.
             path = System.getenv(PROP_BIN_DIR);
         }
-        if (path != null && path.length() > 0) {
+        if (path != null && !path.isEmpty()) {
             return new File(path);
         }
         return null;
@@ -472,7 +472,7 @@ public abstract class LintClient {
                 }
             }
 
-            if (classes.size() == 0) {
+            if (classes.isEmpty()) {
                 File folder = new File(projectDir, CLASS_FOLDER);
                 if (folder.exists()) {
                     classes.add(folder);
@@ -485,7 +485,7 @@ public abstract class LintClient {
 
                         // If it's maven, also correct the source path, "src" works but
                         // it's in a more specific subfolder
-                        if (sources.size() == 0) {
+                        if (sources.isEmpty()) {
                             File src = new File(projectDir,
                                     "src" + File.separator     //$NON-NLS-1$
                                     + "main" + File.separator  //$NON-NLS-1$
@@ -512,7 +512,7 @@ public abstract class LintClient {
             }
 
             // Fallback, in case there is no Eclipse project metadata here
-            if (sources.size() == 0) {
+            if (sources.isEmpty()) {
                 File src = new File(projectDir, SRC_FOLDER);
                 if (src.exists()) {
                     sources.add(src);

@@ -68,7 +68,7 @@ import java.util.Set;
 public class WrongIdDetector extends LayoutDetector {
 
     /** Ids bound to widgets in any of the layout files */
-    private Set<String> mGlobalIds = new HashSet<String>(100);
+    private final Set<String> mGlobalIds = new HashSet<String>(100);
 
     /** Ids bound to widgets in the current layout file */
     private Set<String> mFileIds;
@@ -132,8 +132,9 @@ public class WrongIdDetector extends LayoutDetector {
         return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.VALUES;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -219,7 +220,7 @@ public class WrongIdDetector extends LayoutDetector {
                     if (suggestions.size() > 1) {
                         suggestionMessage = String.format(" Did you mean one of {%2$s} ?",
                                 id, Joiner.on(", ").join(suggestions));
-                    } else if (suggestions.size() > 0) {
+                    } else if (!suggestions.isEmpty()) {
                         suggestionMessage = String.format(" Did you mean %2$s ?",
                                 id, suggestions.get(0));
                     } else {
@@ -251,7 +252,7 @@ public class WrongIdDetector extends LayoutDetector {
         }
     }
 
-    private void report(Context context, Issue issue, Handle handle, String message) {
+    private static void report(Context context, Issue issue, Handle handle, String message) {
         Location location = handle.resolve();
         Object clientData = handle.getClientData();
         if (clientData instanceof Node) {
@@ -275,7 +276,7 @@ public class WrongIdDetector extends LayoutDetector {
             String type = element.getAttribute(ATTR_TYPE);
             if (VALUE_ID.equals(type)) {
                 String name = element.getAttribute(ATTR_NAME);
-                if (name.length() > 0) {
+                if (!name.isEmpty()) {
                     if (mDeclaredIds == null) {
                         mDeclaredIds = Sets.newHashSet();
                     }
@@ -311,13 +312,13 @@ public class WrongIdDetector extends LayoutDetector {
         return definedLocally;
     }
 
-    private List<String> getSpellingSuggestions(String id, Collection<String> ids) {
+    private static List<String> getSpellingSuggestions(String id, Collection<String> ids) {
         int maxDistance = id.length() >= 4 ? 2 : 1;
 
         // Look for typos and try to match with custom views and android views
         Multimap<Integer, String> matches = ArrayListMultimap.create(2, 10);
         int count = 0;
-        if (ids.size() > 0) {
+        if (!ids.isEmpty()) {
             for (String matchWith : ids) {
                 matchWith = stripIdPrefix(matchWith);
                 if (Math.abs(id.length() - matchWith.length()) > maxDistance) {
@@ -339,9 +340,9 @@ public class WrongIdDetector extends LayoutDetector {
         }
 
         for (int i = 0; i < maxDistance; i++) {
-            Collection<String> s = matches.get(i);
-            if (s != null && s.size() > 0) {
-                List<String> suggestions = new ArrayList<String>(s);
+            Collection<String> strings = matches.get(i);
+            if (strings != null && !strings.isEmpty()) {
+                List<String> suggestions = new ArrayList<String>(strings);
                 Collections.sort(suggestions);
                 return suggestions;
             }

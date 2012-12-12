@@ -52,8 +52,9 @@ public class WrongLocationDetector extends LayoutDetector {
     public WrongLocationDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

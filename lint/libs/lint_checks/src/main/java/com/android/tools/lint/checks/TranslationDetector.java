@@ -64,7 +64,7 @@ import java.util.regex.Pattern;
  */
 public class TranslationDetector extends ResourceXmlDetector {
     @VisibleForTesting
-    static boolean COMPLETE_REGIONS =
+    static boolean sCompleteRegions =
             System.getenv("ANDROID_LINT_COMPLETE_REGIONS") != null; //$NON-NLS-1$
 
     private static final Pattern LANGUAGE_PATTERN = Pattern.compile("^[a-z]{2}$"); //$NON-NLS-1$
@@ -333,7 +333,7 @@ public class TranslationDetector extends ResourceXmlDetector {
 
         // Do we need to resolve fallback strings for regions that only define a subset
         // of the strings in the language and fall back on the main language for the rest?
-        if (!COMPLETE_REGIONS) {
+        if (!sCompleteRegions) {
             for (String l : languageToStrings.keySet()) {
                 if (l.indexOf('-') != -1) {
                     // Yes, we have regions. Merge all base language string names into each region.
@@ -372,7 +372,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             if (stringCount != strings.size()) {
                 if (reportMissing) {
                     Set<String> difference = Sets.difference(defaultStrings, strings);
-                    if (difference.size() > 0) {
+                    if (!difference.isEmpty()) {
                         if (mMissingLocations == null) {
                             mMissingLocations = new HashMap<String, Location>();
                         }
@@ -396,7 +396,7 @@ public class TranslationDetector extends ResourceXmlDetector {
 
                 if (reportExtra) {
                     Set<String> difference = Sets.difference(strings, defaultStrings);
-                    if (difference.size() > 0) {
+                    if (!difference.isEmpty()) {
                         if (mExtraLocations == null) {
                             mExtraLocations = new HashMap<String, Location>();
                         }
@@ -493,7 +493,7 @@ public class TranslationDetector extends ResourceXmlDetector {
         }
 
         assert context.getPhase() == 1;
-        if (attribute == null || attribute.getValue().length() == 0) {
+        if (attribute == null || attribute.getValue().isEmpty()) {
             context.report(MISSING, element, context.getLocation(element),
                     "Missing name attribute in <string> declaration", null);
         } else {
@@ -554,7 +554,7 @@ public class TranslationDetector extends ResourceXmlDetector {
         }
     }
 
-    private boolean allItemsAreReferences(Element element) {
+    private static boolean allItemsAreReferences(Element element) {
         assert element.getTagName().equals(TAG_STRING_ARRAY);
         NodeList childNodes = element.getChildNodes();
         for (int i = 0, n = childNodes.getLength(); i < n; i++) {

@@ -75,8 +75,9 @@ public class FragmentDetector extends Detector implements ClassScanner {
     public FragmentDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

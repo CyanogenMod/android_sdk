@@ -80,7 +80,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
      * Make sure you add the asm-debug or asm-util jars to the runtime classpath
      * as well since the opcode integer to string mapping display routine looks for
      * it via reflection. */
-    private static boolean DEBUG = false;
+    private static final boolean DEBUG = false;
 
     /** Constructs a new {@link WakelockDetector} */
     public WakelockDetector() {
@@ -185,7 +185,7 @@ public class WakelockDetector extends Detector implements ClassScanner {
                 // Requires util package
                 //ClassNode clazz = classNode;
                 //clazz.accept(new TraceClassVisitor(new PrintWriter(System.out)));
-                System.out.println(graph.toString(graph.getNode(acquire)));;
+                System.out.println(graph.toString(graph.getNode(acquire)));
             }
 
             int status = dfs(graph.getNode(acquire));
@@ -205,10 +205,10 @@ public class WakelockDetector extends Detector implements ClassScanner {
         }
     }
 
-    private static int SEEN_TARGET = 1;
-    private static int SEEN_BRANCH = 2;
-    private static int SEEN_EXCEPTION = 4;
-    private static int SEEN_RETURN = 8;
+    private static final int SEEN_TARGET = 1;
+    private static final int SEEN_BRANCH = 2;
+    private static final int SEEN_EXCEPTION = 4;
+    private static final int SEEN_RETURN = 8;
 
     /** TODO RENAME */
     private static class MyGraph extends ControlFlowGraph {

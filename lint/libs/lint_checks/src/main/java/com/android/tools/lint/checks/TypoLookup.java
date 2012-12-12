@@ -67,7 +67,7 @@ public class TypoLookup {
     private int[] mIndices;
     private int mWordCount;
 
-    private static WeakHashMap<String, TypoLookup> sInstanceMap =
+    private static final WeakHashMap<String, TypoLookup> sInstanceMap =
             new WeakHashMap<String, TypoLookup>();
 
     /**
@@ -166,7 +166,7 @@ public class TypoLookup {
         File binaryData = new File(cacheDir, name
                 // Incorporate version number in the filename to avoid upgrade filename
                 // conflicts on Windows (such as issue #26663)
-                + "-" + BINARY_FORMAT_VERSION + ".bin"); //$NON-NLS-1$ //$NON-NLS-2$
+                + '-' + BINARY_FORMAT_VERSION + ".bin"); //$NON-NLS-1$
 
         if (DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println("\nTemporarily regenerating binary data unconditionally \nfrom "
@@ -764,19 +764,19 @@ public class TypoLookup {
     // contain these. None of the currently included dictionaries do. However, it does
     // help us properly deal with punctuation and spacing characters.
 
-    static final boolean isUpperCase(byte b) {
+    static boolean isUpperCase(byte b) {
         return Character.isUpperCase((char) b);
     }
 
-    static final byte toLowerCase(byte b) {
+    static byte toLowerCase(byte b) {
         return (byte) Character.toLowerCase((char) b);
     }
 
-    static final boolean isSpace(byte b) {
+    static boolean isSpace(byte b) {
         return Character.isWhitespace((char) b);
     }
 
-    static final boolean isLetter(byte b) {
+    static boolean isLetter(byte b) {
         // Assume that multi byte characters represent letters in other languages.
         // Obviously, it could be unusual punctuation etc but letters are more likely
         // in this context.

@@ -119,14 +119,15 @@ public class InefficientWeightDetector extends LayoutDetector {
      * Map from element to whether that element has a non-zero linear layout
      * weight or has an ancestor which does
      */
-    private Map<Node, Boolean> mInsideWeight = new IdentityHashMap<Node, Boolean>();
+    private final Map<Node, Boolean> mInsideWeight = new IdentityHashMap<Node, Boolean>();
 
     /** Constructs a new {@link InefficientWeightDetector} */
     public InefficientWeightDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -173,7 +174,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                 && !VALUE_VERTICAL.equals(element.getAttributeNS(ANDROID_URI, ATTR_ORIENTATION))
                 && !element.hasAttributeNS(ANDROID_URI, ATTR_BASELINE_ALIGNED)) {
             // See if all the children are layouts
-            boolean allChildrenAreLayouts = children.size() > 0;
+            boolean allChildrenAreLayouts = !children.isEmpty();
             SdkInfo sdkInfo = context.getClient().getSdkInfo(context.getProject());
             for (Element child : children) {
                 String tagName = child.getTagName();
@@ -222,7 +223,8 @@ public class InefficientWeightDetector extends LayoutDetector {
         }
     }
 
-    private void checkWrong0Dp(XmlContext context, Element element, List<Element> children) {
+    private static void checkWrong0Dp(XmlContext context, Element element,
+                                      List<Element> children) {
         boolean isVertical = false;
         String orientation = element.getAttributeNS(ANDROID_URI, ATTR_ORIENTATION);
         if (VALUE_VERTICAL.equals(orientation)) {

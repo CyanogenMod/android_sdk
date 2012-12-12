@@ -145,8 +145,9 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
         return true;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -168,11 +169,11 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
 
     private static class PerformanceVisitor extends ForwardingAstVisitor {
         private final JavaContext mContext;
+        private final boolean mCheckMaps;
+        private final boolean mCheckAllocations;
+        private final boolean mCheckValueOf;
         /** Whether allocations should be "flagged" in the current method */
         private boolean mFlagAllocations;
-        private boolean mCheckMaps;
-        private boolean mCheckAllocations;
-        private boolean mCheckValueOf;
 
         public PerformanceVisitor(JavaContext context) {
             mContext = context;
@@ -307,7 +308,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
          *    }
          * </pre>
          */
-        private boolean isLazilyInitialized(Node node) {
+        private static boolean isLazilyInitialized(Node node) {
             Node curr = node.getParent();
             while (curr != null) {
                 if (curr instanceof MethodDeclaration) {
@@ -324,14 +325,14 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
                     List<String> assignments = new ArrayList<String>();
                     AssignmentTracker visitor = new AssignmentTracker(assignments);
                     ifNode.astStatement().accept(visitor);
-                    if (assignments.size() > 0) {
+                    if (!assignments.isEmpty()) {
                         List<String> references = new ArrayList<String>();
                         addReferencedVariables(references, ifNode.astCondition());
-                        if (references.size() > 0) {
+                        if (!references.isEmpty()) {
                             SetView<String> intersection = Sets.intersection(
                                     new HashSet<String>(assignments),
                                     new HashSet<String>(references));
-                            return intersection.size() > 0;
+                            return !intersection.isEmpty();
                         }
                     }
                     return false;
@@ -368,7 +369,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.JavaSc
          * Returns whether the given method declaration represents a method
          * where allocating objects is not allowed for performance reasons
          */
-        private boolean isBlockedAllocationMethod(MethodDeclaration node) {
+        private static boolean isBlockedAllocationMethod(MethodDeclaration node) {
             return isOnDrawMethod(node) || isOnMeasureMethod(node) || isOnLayoutMethod(node)
                     || isLayoutMethod(node);
         }

@@ -84,8 +84,9 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
         return true;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -93,7 +94,7 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
 
     @Override
     public List<Class<? extends Node>> getApplicableNodeTypes() {
-        return Collections.<Class<? extends Node>>singletonList(lombok.ast.Annotation.class);
+        return Collections.<Class<? extends Node>>singletonList(Annotation.class);
     }
 
     @Override
@@ -176,8 +177,8 @@ public class AnnotationDetector extends Detector implements Detector.JavaScanner
                 // This issue doesn't have AST access: annotations are not
                 // available for local variables or parameters
                 mContext.report(ISSUE,mContext.getLocation(node), String.format(
-                    "The @SuppresLint annotation cannot be used on a local" +
-                    " variable with the lint check '%1$s': move out to the " +
+                    "The @SuppressLint annotation cannot be used on a local " +
+                    "variable with the lint check '%1$s': move out to the " +
                     "surrounding method", id),
                     null);
                 return false;

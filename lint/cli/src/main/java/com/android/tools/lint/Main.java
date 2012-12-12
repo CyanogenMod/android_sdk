@@ -109,9 +109,9 @@ public class Main extends LintClient {
     private static final int ERRNO_HELP = 4;
     private static final int ERRNO_INVALIDARGS = 5;
 
-    protected List<Warning> mWarnings = new ArrayList<Warning>();
-    protected Set<String> mSuppress = new HashSet<String>();
-    protected Set<String> mEnabled = new HashSet<String>();
+    protected final List<Warning> mWarnings = new ArrayList<Warning>();
+    protected final Set<String> mSuppress = new HashSet<String>();
+    protected final Set<String> mEnabled = new HashSet<String>();
     /** If non-null, only run the specified checks (possibly modified by enable/disables) */
     protected Set<String> mCheck = null;
     protected boolean mHasErrors;
@@ -120,7 +120,7 @@ public class Main extends LintClient {
     protected int mErrorCount;
     protected int mWarningCount;
     protected boolean mShowLines = true;
-    protected List<Reporter> mReporters = Lists.newArrayList();
+    protected final List<Reporter> mReporters = Lists.newArrayList();
     protected boolean mQuiet;
     protected boolean mWarnAll;
     protected boolean mNoWarnings;
@@ -533,7 +533,7 @@ public class Main extends LintClient {
             }
         }
 
-        if (files.size() == 0) {
+        if (files.isEmpty()) {
             System.err.println("No files to analyze.");
             System.exit(ERRNO_INVALIDARGS);
         } else if (files.size() > 1
@@ -614,7 +614,7 @@ public class Main extends LintClient {
      * @param filename The filename given as a command-line argument.
      * @return A File matching filename, either absolute or relative to lint.workdir if defined.
      */
-    private File getInArgumentPath(String filename) {
+    private static File getInArgumentPath(String filename) {
         File file = new File(filename);
 
         if (!file.isAbsolute()) {
@@ -642,7 +642,7 @@ public class Main extends LintClient {
      * @param filename The filename given as a command-line argument.
      * @return A File matching filename, either absolute or relative to lint.workdir if defined.
      */
-    private File getOutArgumentPath(String filename) {
+    private static File getOutArgumentPath(String filename) {
         File file = new File(filename);
 
         if (!file.isAbsolute()) {
@@ -670,20 +670,20 @@ public class Main extends LintClient {
      * @return A new File corresponding to {@link #PROP_WORK_DIR} or null.
      */
     @Nullable
-    private File getLintWorkDir() {
+    private static File getLintWorkDir() {
         // First check the Java properties (e.g. set using "java -jar ... -Dname=value")
         String path = System.getProperty(PROP_WORK_DIR);
-        if (path == null || path.length() == 0) {
+        if (path == null || path.isEmpty()) {
             // If not found, check environment variables.
             path = System.getenv(PROP_WORK_DIR);
         }
-        if (path != null && path.length() > 0) {
+        if (path != null && !path.isEmpty()) {
             return new File(path);
         }
         return null;
     }
 
-    private void printHelpTopicSuppress() {
+    private static void printHelpTopicSuppress() {
         System.out.println(wrap(getSuppressHelp()));
     }
 
@@ -771,7 +771,7 @@ public class Main extends LintClient {
                 properties.load(input);
 
                 String revision = properties.getProperty("Pkg.Revision"); //$NON-NLS-1$
-                if (revision != null && revision.length() > 0) {
+                if (revision != null && !revision.isEmpty()) {
                     return revision;
                 }
             } catch (IOException e) {
@@ -784,7 +784,7 @@ public class Main extends LintClient {
         return null;
     }
 
-    private void displayValidIds(IssueRegistry registry, PrintStream out) {
+    private static void displayValidIds(IssueRegistry registry, PrintStream out) {
         List<Category> categories = registry.getCategories();
         out.println("Valid issue categories:");
         for (Category category : categories) {
@@ -798,11 +798,11 @@ public class Main extends LintClient {
         }
     }
 
-    private void listIssue(PrintStream out, Issue issue) {
+    private static void listIssue(PrintStream out, Issue issue) {
         out.print(wrapArg("\"" + issue.getId() + "\": " + issue.getDescription()));
     }
 
-    private void showIssues(IssueRegistry registry) {
+    private static void showIssues(IssueRegistry registry) {
         List<Issue> issues = registry.getIssues();
         List<Issue> sorted = new ArrayList<Issue>(issues);
         Collections.sort(sorted, new Comparator<Issue>() {
@@ -840,7 +840,7 @@ public class Main extends LintClient {
         }
     }
 
-    private void describeIssue(Issue issue) {
+    private static void describeIssue(Issue issue) {
         System.out.println(issue.getId());
         for (int i = 0; i < issue.getId().length(); i++) {
             System.out.print('-');
@@ -956,7 +956,7 @@ public class Main extends LintClient {
             argWidth = Math.max(argWidth, arg.length());
         }
         argWidth += 2;
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(20);
         for (int i = 0; i < argWidth; i++) {
             sb.append(' ');
         }
@@ -966,7 +966,7 @@ public class Main extends LintClient {
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
             String description = args[i + 1];
-            if (arg.length() == 0) {
+            if (arg.isEmpty()) {
                 out.println(description);
             } else {
                 out.print(wrap(String.format(formatString, arg, description),
@@ -1006,7 +1006,7 @@ public class Main extends LintClient {
     }
 
     /** File content cache */
-    private Map<File, String> mFileContents = new HashMap<File, String>(100);
+    private final Map<File, String> mFileContents = new HashMap<File, String>(100);
 
     /** Read the contents of the given file, possibly cached */
     private String getContents(File file) {
@@ -1085,7 +1085,7 @@ public class Main extends LintClient {
                                     }
                                 }
                             }
-                            StringBuilder sb = new StringBuilder();
+                            StringBuilder sb = new StringBuilder(100);
                             sb.append(warning.errorLine);
                             sb.append('\n');
                             for (int i = 0; i < column; i++) {
@@ -1099,7 +1099,7 @@ public class Main extends LintClient {
                                 int endColumn = endPosition.getColumn();
                                 if (endLine == line && endColumn > column) {
                                     for (int i = column; i < endColumn; i++) {
-                                        sb.append("~");
+                                        sb.append('~');
                                     }
                                     displayCaret = false;
                                 }
@@ -1150,8 +1150,9 @@ public class Main extends LintClient {
         return index;
     }
 
+    @NonNull
     @Override
-    public @NonNull String readFile(@NonNull File file) {
+    public String readFile(@NonNull File file) {
         try {
             return LintUtils.getEncodedString(this, file);
         } catch (IOException e) {
@@ -1222,8 +1223,9 @@ public class Main extends LintClient {
             super(Main.this, null /*project*/, null /*parent*/, lintFile);
         }
 
+        @NonNull
         @Override
-        public @NonNull Severity getSeverity(@NonNull Issue issue) {
+        public Severity getSeverity(@NonNull Issue issue) {
             Severity severity = computeSeverity(issue);
 
             if (mAllErrors && severity != Severity.IGNORE) {
@@ -1237,8 +1239,9 @@ public class Main extends LintClient {
             return severity;
         }
 
+        @NonNull
         @Override
-        protected @NonNull Severity getDefaultSeverity(@NonNull Issue issue) {
+        protected Severity getDefaultSeverity(@NonNull Issue issue) {
             if (mWarnAll) {
                 return issue.getDefaultSeverity();
             }
@@ -1277,7 +1280,7 @@ public class Main extends LintClient {
         }
     }
 
-    private class ProgressPrinter implements LintListener {
+    private static class ProgressPrinter implements LintListener {
         @Override
         public void update(
                 @NonNull LintDriver lint,
@@ -1314,6 +1317,9 @@ public class Main extends LintClient {
                 case CANCELED:
                 case COMPLETED:
                     System.out.println();
+                    break;
+                case STARTING:
+                    // Ignored for now
                     break;
             }
         }
@@ -1383,7 +1389,7 @@ public class Main extends LintClient {
                 chop++;
             }
             path = path.substring(chop);
-            if (path.length() == 0) {
+            if (path.isEmpty()) {
                 path = file.getName();
             }
         } else if (mFullPath) {

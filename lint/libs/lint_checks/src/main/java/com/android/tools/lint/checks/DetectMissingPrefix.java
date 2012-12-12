@@ -103,8 +103,9 @@ public class DetectMissingPrefix extends LayoutDetector {
                 || folderType == INTERPOLATOR;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -116,7 +117,7 @@ public class DetectMissingPrefix extends LayoutDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String uri = attribute.getNamespaceURI();
-        if (uri == null || uri.length() == 0) {
+        if (uri == null || uri.isEmpty()) {
             String name = attribute.getName();
             if (name == null) {
                 return;

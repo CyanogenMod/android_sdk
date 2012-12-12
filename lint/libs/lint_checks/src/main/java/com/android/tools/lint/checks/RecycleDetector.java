@@ -264,9 +264,9 @@ public class RecycleDetector extends Detector implements ClassScanner {
      * also consider the resource recycled.
      */
     private static class RecycleTracker extends Interpreter {
-        private final Value INSTANCE = BasicValue.INT_VALUE; // Only identity matters, not value
-        private final Value RECYCLED = BasicValue.FLOAT_VALUE;
-        private final Value UNKNOWN = BasicValue.UNINITIALIZED_VALUE;
+        private static final Value INSTANCE = BasicValue.INT_VALUE; // Only identity matters, not value
+        private static final Value RECYCLED = BasicValue.FLOAT_VALUE;
+        private static final Value UNKNOWN = BasicValue.UNINITIALIZED_VALUE;
 
         private final ClassContext mContext;
         private final MethodNode mMethod;

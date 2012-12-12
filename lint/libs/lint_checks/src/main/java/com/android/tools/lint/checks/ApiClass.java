@@ -77,7 +77,7 @@ public class ApiClass {
         // The field can come from this class or from a super class or an interface
         // The value can never be lower than this introduction of this class.
         // When looking at super classes and interfaces, it can never be lower than when the
-        // super class or interface was added as a super class or interface to this clas.
+        // super class or interface was added as a super class or interface to this class.
         // Look at all the values and take the lowest.
         // For instance:
         // This class A is introduced in 5 with super class B.

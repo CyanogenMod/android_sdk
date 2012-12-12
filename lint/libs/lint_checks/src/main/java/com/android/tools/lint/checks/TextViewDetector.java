@@ -114,8 +114,9 @@ public class TextViewDetector extends LayoutDetector {
     public TextViewDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

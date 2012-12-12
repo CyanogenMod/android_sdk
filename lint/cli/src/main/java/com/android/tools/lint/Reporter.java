@@ -50,8 +50,8 @@ public abstract class Reporter {
     protected boolean mBundleResources;
     protected Map<String, String> mUrlMap;
     protected File mResources;
-    protected Map<File, String> mResourceUrl = new HashMap<File, String>();
-    protected Map<String, File> mNameToFile = new HashMap<String, File>();
+    protected final Map<File, String> mResourceUrl = new HashMap<File, String>();
+    protected final Map<String, File> mNameToFile = new HashMap<String, File>();
 
     /**
      * Write the given warnings into the report

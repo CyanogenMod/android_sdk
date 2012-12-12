@@ -88,7 +88,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
     /** List of locations of MenuItem.SHOW_AS_ACTION_ALWAYS references in Java code */
     private List<Location> mAlwaysFields;
     /** True if references to MenuItem.SHOW_AS_ACTION_IF_ROOM were found */
-    public boolean mHasIfRoomRefs;
+    private boolean mHasIfRoomRefs;
 
     /** Constructs a new {@link AlwaysShowActionDetector} */
     public AlwaysShowActionDetector() {
@@ -99,8 +99,9 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
         return folderType == ResourceFolderType.MENU;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -121,7 +122,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
             return;
         }
         if (mFileAttributes != null) {
-            assert context instanceof XmlContext; // mAFilettributes is only set in XML files
+            assert context instanceof XmlContext; // mFileAttributes is only set in XML files
 
             List<Attr> always = new ArrayList<Attr>();
             List<Attr> ifRoom = new ArrayList<Attr>();
@@ -145,11 +146,11 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
                 }
             }
 
-            if (always.size() > 0 && mFileAttributes.size() > 1) {
+            if (!always.isEmpty() && mFileAttributes.size() > 1) {
                 // Complain if you're using more than one "always", or if you're
                 // using "always" and aren't using "ifRoom" at all (and provided you
                 // have more than a single item)
-                if (always.size() > 2 || ifRoom.size() == 0) {
+                if (always.size() > 2 || ifRoom.isEmpty()) {
                     XmlContext xmlContext = (XmlContext) context;
                     Location location = null;
                     for (int i = always.size() - 1; i >= 0; i--) {
@@ -196,7 +197,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Jav
 
     @Override
     public
-    List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes() {
+    List<Class<? extends Node>> getApplicableNodeTypes() {
         return Collections.<Class<? extends Node>>singletonList(Select.class);
     }
 

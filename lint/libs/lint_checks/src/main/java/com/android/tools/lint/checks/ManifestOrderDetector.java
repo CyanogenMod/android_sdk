@@ -126,7 +126,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
             "Checks that the <uses-sdk> element appears at most once",
 
             "The `<uses-sdk>` element should appear just once; the tools will *not* merge the " +
-            "contents of all the elements so if you split up the atttributes across multiple " +
+            "contents of all the elements so if you split up the attributes across multiple " +
             "elements, only one of them will take effect. To fix this, just merge all the " +
             "attributes from the various elements into a single <uses-sdk> element.",
 
@@ -236,7 +236,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
     private int mSeenUsesSdk;
 
     /** Activities we've encountered */
-    private Set<String> mActivities = new HashSet<String>();
+    private final Set<String> mActivities = new HashSet<String>();
 
     /** Permission basenames */
     private Map<String, String> mPermissionNames;
@@ -244,8 +244,9 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
     /** Package declared in the manifest */
     private String mPackage;
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

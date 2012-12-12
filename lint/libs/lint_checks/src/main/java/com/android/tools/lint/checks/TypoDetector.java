@@ -79,11 +79,11 @@ import java.util.List;
  * </ul>
  */
 public class TypoDetector extends ResourceXmlDetector {
-    private @Nullable TypoLookup mLookup;
-    private @Nullable String mLastLanguage;
-    private @Nullable String mLastRegion;
-    private @Nullable String mLanguage;
-    private @Nullable String mRegion;
+    @Nullable private TypoLookup mLookup;
+    @Nullable private String mLastLanguage;
+    @Nullable private String mLastRegion;
+    @Nullable private String mLanguage;
+    @Nullable private String mRegion;
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -164,8 +164,9 @@ public class TypoDetector extends ResourceXmlDetector {
         }
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.NORMAL;
     }
 
@@ -313,7 +314,7 @@ public class TypoDetector extends ResourceXmlDetector {
     }
 
     /** Report the typo found at the given offset and suggest the given replacements */
-    private void reportTypo(XmlContext context, Node node, String text, int begin,
+    private static void reportTypo(XmlContext context, Node node, String text, int begin,
             List<String> replacements) {
         if (replacements.size() < 2) {
             return;
@@ -326,7 +327,7 @@ public class TypoDetector extends ResourceXmlDetector {
         String message;
 
         boolean isCapitalized = Character.isUpperCase(word.charAt(0));
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(40);
         for (int i = 1, n = replacements.size(); i < n; i++) {
             String replacement = replacements.get(i);
             if (first == null) {
@@ -337,8 +338,8 @@ public class TypoDetector extends ResourceXmlDetector {
             }
             sb.append('"');
             if (isCapitalized) {
-                sb.append(Character.toUpperCase(replacement.charAt(0))
-                        + replacement.substring(1));
+                sb.append(Character.toUpperCase(replacement.charAt(0)));
+                sb.append(replacement.substring(1));
             } else {
                 sb.append(replacement);
             }

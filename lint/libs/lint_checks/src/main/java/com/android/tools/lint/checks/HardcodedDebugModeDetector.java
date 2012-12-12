@@ -65,8 +65,9 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
     public HardcodedDebugModeDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

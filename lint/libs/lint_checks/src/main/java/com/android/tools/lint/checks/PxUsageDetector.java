@@ -131,8 +131,9 @@ public class PxUsageDetector extends LayoutDetector {
     public PxUsageDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -234,7 +235,7 @@ public class PxUsageDetector extends LayoutDetector {
         }
     }
 
-    private void checkStyleItem(XmlContext context, Element item, Node textNode) {
+    private static void checkStyleItem(XmlContext context, Element item, Node textNode) {
         String text = textNode.getNodeValue();
         for (int j = text.length() - 1; j > 0; j--) {
             char c = text.charAt(j);

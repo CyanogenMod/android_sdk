@@ -82,8 +82,9 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
     public DuplicateResourceDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.NORMAL;
     }
 

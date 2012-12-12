@@ -85,7 +85,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
         "Ensures that classes registered in the manifest file are instantiatable",
 
         "Activities, services, broadcast receivers etc. registered in the manifest file " +
-        "must be \"instiantable\" by the system, which means that the class must be " +
+        "must be \"instantiatable\" by the system, which means that the class must be " +
         "public, it must have an empty public constructor, and if it's an inner class, " +
         "it must be a static inner class.",
 
@@ -120,8 +120,9 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
     public MissingClassDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

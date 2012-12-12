@@ -62,14 +62,13 @@ class AsmVisitor {
      * there isn't a max-constant there, so update this along with ASM library
      * updates.
      */
-    public final static int TYPE_COUNT = AbstractInsnNode.LINE + 1;
+    private static final int TYPE_COUNT = AbstractInsnNode.LINE + 1;
     private final Map<String, List<ClassScanner>> mMethodNameToChecks =
             new HashMap<String, List<ClassScanner>>();
     private final Map<String, List<ClassScanner>> mMethodOwnerToChecks =
             new HashMap<String, List<ClassScanner>>();
     private final List<Detector> mFullClassChecks = new ArrayList<Detector>();
 
-    private final LintClient mClient;
     private final List<? extends Detector> mAllDetectors;
     private List<ClassScanner>[] mNodeTypeDetectors;
 
@@ -78,7 +77,6 @@ class AsmVisitor {
     // but it makes client code tricky and ugly.
     @SuppressWarnings("unchecked")
     AsmVisitor(@NonNull LintClient client, @NonNull List<? extends Detector> classDetectors) {
-        mClient = client;
         mAllDetectors = classDetectors;
 
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
@@ -117,11 +115,10 @@ class AsmVisitor {
             int[] types = scanner.getApplicableAsmNodeTypes();
             if (types != null) {
                 checkFullClass = false;
-                for (int i = 0, n = types.length; i < n; i++) {
-                    int type = types[i];
+                for (int type : types) {
                     if (type < 0 || type >= TYPE_COUNT) {
                         // Can't support this node type: looks like ASM wasn't updated correctly.
-                        mClient.log(null, "Out of range node type %1$d from detector %2$s",
+                        client.log(null, "Out of range node type %1$d from detector %2$s",
                                 type, scanner);
                         continue;
                     }

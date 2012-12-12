@@ -72,8 +72,9 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
     public ViewConstructorDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -113,7 +114,7 @@ public class ViewConstructorDetector extends Detector implements Detector.ClassS
         return false;
     }
 
-    private void checkConstructors(ClassContext context, ClassNode classNode) {
+    private static void checkConstructors(ClassContext context, ClassNode classNode) {
         // Look through constructors
         @SuppressWarnings("rawtypes")
         List methods = classNode.methods;

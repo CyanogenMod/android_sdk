@@ -198,8 +198,9 @@ public class ButtonDetector extends ResourceXmlDetector {
     public ButtonDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -223,7 +224,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
     }
 
-    private String stripLabel(String text) {
+    private static String stripLabel(String text) {
         text = text.trim();
         if (text.length() > 2
                 && (text.charAt(0) == '"' || text.charAt(0) == '\'')
@@ -361,7 +362,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
     }
 
-    private boolean parentDefinesSelectableItem(Element element) {
+    private static boolean parentDefinesSelectableItem(Element element) {
         String background = element.getAttributeNS(ANDROID_URI, ATTR_BACKGROUND);
         if (VALUE_SELECTABLE_ITEM_BACKGROUND.equals(background)) {
             return true;
@@ -390,7 +391,7 @@ public class ButtonDetector extends ResourceXmlDetector {
       * TODO: Add in patterns for other languages. We can use the
      * @android:string/ok and @android:string/cancel localizations to look
      * up the canonical ones. */
-    private boolean isEnglishResource(XmlContext context) {
+    private static boolean isEnglishResource(XmlContext context) {
         String folder = context.file.getParentFile().getName();
         if (folder.indexOf('-') != -1) {
             String[] qualifiers = folder.split("-"); //$NON-NLS-1$
@@ -445,7 +446,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                 Node child = childNodes.item(i);
                 if (child.getNodeType() == Node.TEXT_NODE) {
                     String text = stripLabel(child.getNodeValue());
-                    if (text.length() > 0) {
+                    if (!text.isEmpty()) {
                         mKeyToLabel.put(itemName, text);
                         break;
                     }
@@ -548,7 +549,7 @@ public class ButtonDetector extends ResourceXmlDetector {
      * Sort a list of label buttons into the expected order (Cancel on the left,
      * OK on the right
      */
-    private void sortButtons(List<String> labelList) {
+    private static void sortButtons(List<String> labelList) {
         for (int i = 0, n = labelList.size(); i < n; i++) {
             String label = labelList.get(i);
             if (label.equalsIgnoreCase(CANCEL_LABEL) && i > 0) {
@@ -569,8 +570,8 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     /** Creates a display string for a list of button labels, such as "Cancel | OK" */
-    private String describeButtons(List<String> labelList) {
-        StringBuilder sb = new StringBuilder();
+    private static String describeButtons(List<String> labelList) {
+        StringBuilder sb = new StringBuilder(80);
         for (String label : labelList) {
             if (sb.length() > 0) {
                 sb.append(" | "); //$NON-NLS-1$
@@ -639,7 +640,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         return isWrongPosition(element, false /*isCancel*/);
     }
 
-    private boolean isInButtonBar(Element element) {
+    private static boolean isInButtonBar(Element element) {
         assert element.getTagName().equals(BUTTON) : element.getTagName();
         Node parentNode = element.getParentNode();
         if (parentNode.getNodeType() != Node.ELEMENT_NODE) {
@@ -682,7 +683,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     /** Is the given button in the wrong position? */
-    private boolean isWrongPosition(Element element, boolean isCancel) {
+    private static boolean isWrongPosition(Element element, boolean isCancel) {
         Node parentNode = element.getParentNode();
         if (parentNode.getNodeType() != Node.ELEMENT_NODE) {
             return false;
@@ -769,7 +770,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     /** Is the given target id the id of a {@code <Button>} within this RelativeLayout? */
-    private boolean isButtonId(Element parent, String targetId) {
+    private static boolean isButtonId(Element parent, String targetId) {
         for (Element child : LintUtils.getChildren(parent)) {
             String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (LintUtils.idReferencesMatch(id, targetId)) {

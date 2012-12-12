@@ -68,8 +68,9 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
     public UseCompoundDrawableDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

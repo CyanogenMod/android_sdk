@@ -108,8 +108,9 @@ public class DuplicateIdDetector extends LayoutDetector {
         return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.MENU;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -152,7 +153,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     public void afterCheckProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Look for duplicates
-            if (mIncludes.size() > 0) {
+            if (!mIncludes.isEmpty()) {
                 // Traverse all the include chains and ensure that there are no duplicates
                 // across.
                 if (context.isEnabled(CROSS_LAYOUT)
@@ -226,11 +227,11 @@ public class DuplicateIdDetector extends LayoutDetector {
                 assert context.getPhase() == 2;
 
                 Collection<Multimap<String, Occurrence>> maps = mLocations.get(context.file);
-                if (maps != null && maps.size() > 0) {
+                if (maps != null && !maps.isEmpty()) {
                     for (Multimap<String, Occurrence> map : maps) {
-                        if (maps.size() > 0) {
+                        if (!maps.isEmpty()) {
                             Collection<Occurrence> occurrences = map.get(layout);
-                            if (occurrences != null && occurrences.size() > 0) {
+                            if (occurrences != null && !occurrences.isEmpty()) {
                                 for (Occurrence occurrence : occurrences) {
                                     Location location = context.getLocation(element);
                                     location.setClientData(element);
@@ -274,11 +275,11 @@ public class DuplicateIdDetector extends LayoutDetector {
             }
         } else {
             Collection<Multimap<String, Occurrence>> maps = mLocations.get(context.file);
-            if (maps != null && maps.size() > 0) {
+            if (maps != null && !maps.isEmpty()) {
                 for (Multimap<String, Occurrence> map : maps) {
-                    if (maps.size() > 0) {
+                    if (!maps.isEmpty()) {
                         Collection<Occurrence> occurrences = map.get(id);
-                        if (occurrences != null && occurrences.size() > 0) {
+                        if (occurrences != null && !occurrences.isEmpty()) {
                             for (Occurrence occurrence : occurrences) {
                                 if (context.getDriver().isSuppressed(CROSS_LAYOUT, attribute)) {
                                     return;
@@ -297,7 +298,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     /** Find the first id attribute with the given value below the given node */
-    private Attr findIdAttribute(Node node, String targetValue) {
+    private static Attr findIdAttribute(Node node, String targetValue) {
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             Attr attribute = ((Element) node).getAttributeNodeNS(ANDROID_URI, ATTR_ID);
             if (attribute != null && attribute.getValue().equals(targetValue)) {
@@ -319,10 +320,10 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     /** Include Graph Node */
     private static class Layout {
-        private File mFile;
+        private final File mFile;
+        private final Set<String> mIds;
         private List<Layout> mIncludes;
         private List<Layout> mIncludedBy;
-        private Set<String> mIds;
 
         Layout(File file, Set<String> ids) {
             mFile = file;
@@ -354,7 +355,7 @@ public class DuplicateIdDetector extends LayoutDetector {
         }
 
         boolean isIncluded() {
-            return mIncludedBy != null && mIncludedBy.size() > 0;
+            return mIncludedBy != null && !mIncludedBy.isEmpty();
         }
 
         File getFile() {
@@ -390,7 +391,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             }
             for (File file : mFileToIds.keySet()) {
                 Set<String> ids = mFileToIds.get(file);
-                if (ids != null && ids.size() > 0) {
+                if (ids != null && !ids.isEmpty()) {
                     if (!mFileToLayout.containsKey(file)) {
                         mFileToLayout.put(file, new Layout(file, ids));
                     }
@@ -411,7 +412,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                 List<String> includedLayouts = mIncludes.get(file);
                 for (String name : includedLayouts) {
                     Collection<Layout> layouts = nameToLayout.get(name);
-                    if (layouts != null && layouts.size() > 0) {
+                    if (layouts != null && !layouts.isEmpty()) {
                         if (layouts.size() == 1) {
                             from.include(layouts.iterator().next());
                         } else {
@@ -609,7 +610,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
             Set<String> layoutIds = layout.getIds();
             if (layoutIds != null && layoutIds.contains(id)) {
-                StringBuilder path = new StringBuilder();
+                StringBuilder path = new StringBuilder(80);
 
                 if (!stack.isEmpty()) {
                     Iterator<Layout> iterator = stack.descendingIterator();
@@ -622,7 +623,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                 path.append(" defines ");
                 path.append(id);
 
-                assert occurrences.get(layout) == null : id + "," + layout;
+                assert occurrences.get(layout) == null : id + ',' + layout;
                 occurrences.put(layout, new Occurrence(layout.getFile(), null, path.toString()));
             }
 
@@ -641,11 +642,11 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     private static class Occurrence implements Comparable<Occurrence> {
+        public final File file;
+        public final String includePath;
         public Occurrence next;
-        public File file;
         public Location location;
         public String message;
-        public String includePath;
 
         public Occurrence(File file, String message, String includePath) {
             this.file = file;

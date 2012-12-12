@@ -172,7 +172,7 @@ public class Location {
     @Override
     public String toString() {
         return "Location [file=" + mFile + ", start=" + mStart + ", end=" + mEnd + ", message="
-                + mMessage + "]";
+                + mMessage + ']';
     }
 
     /**
@@ -256,7 +256,7 @@ public class Location {
             }
             prev = c;
         }
-        return Location.create(file);
+        return create(file);
     }
 
     /**
@@ -298,7 +298,7 @@ public class Location {
         while (currentLine < line) {
             offset = contents.indexOf('\n', offset);
             if (offset == -1) {
-                return Location.create(file);
+                return create(file);
             }
             currentLine++;
             offset++;
@@ -306,13 +306,12 @@ public class Location {
 
         if (line == currentLine) {
             if (patternStart != null) {
-                int index = offset;
-
                 SearchDirection direction = SearchDirection.NEAREST;
                 if (hints != null) {
                     direction = hints.mDirection;
                 }
 
+                int index;
                 if (direction == SearchDirection.BACKWARD) {
                     index = findPreviousMatch(contents, offset, patternStart, hints);
                     line = adjustLine(contents, line, offset, index);
@@ -379,7 +378,7 @@ public class Location {
             return new Location(file, position, position);
         }
 
-        return Location.create(file);
+        return create(file);
     }
 
     private static int findPreviousMatch(@NonNull String contents, int offset, String pattern,
@@ -526,7 +525,7 @@ public class Location {
      * actual locations later (if needed). This makes it possible to for example
      * delay looking up line numbers, for locations that are offset based.
      */
-    public static interface Handle {
+    public interface Handle {
         /**
          * Compute a full location for the given handle
          *
@@ -542,7 +541,7 @@ public class Location {
          *
          * @param clientData the data to store with this location
          */
-        public void setClientData(@Nullable Object clientData);
+        void setClientData(@Nullable Object clientData);
 
         /**
          * Returns the client data associated with this location - an optional field
@@ -552,15 +551,15 @@ public class Location {
          * @return the data associated with this location
          */
         @Nullable
-        public Object getClientData();
+        Object getClientData();
     }
 
     /** A default {@link Handle} implementation for simple file offsets */
     public static class DefaultLocationHandle implements Handle {
-        private File mFile;
-        private String mContents;
-        private int mStartOffset;
-        private int mEndOffset;
+        private final File mFile;
+        private final String mContents;
+        private final int mStartOffset;
+        private final int mEndOffset;
         private Object mClientData;
 
         /**
@@ -580,7 +579,7 @@ public class Location {
         @Override
         @NonNull
         public Location resolve() {
-            return Location.create(mFile, mContents, mStartOffset, mEndOffset);
+            return create(mFile, mContents, mStartOffset, mEndOffset);
         }
 
         @Override
@@ -632,7 +631,7 @@ public class Location {
          * {@code patternStart} is non null)
          */
         @NonNull
-        private SearchDirection mDirection;
+        private final SearchDirection mDirection;
 
         /** Whether the matched pattern should be a whole word */
         private boolean mWholeWord;

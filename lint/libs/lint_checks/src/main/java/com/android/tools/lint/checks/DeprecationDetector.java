@@ -66,8 +66,9 @@ public class DeprecationDetector extends LayoutDetector {
     public DeprecationDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 

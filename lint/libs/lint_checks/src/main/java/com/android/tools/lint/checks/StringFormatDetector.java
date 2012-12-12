@@ -159,7 +159,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      * Map of strings that contain percents that aren't formatting strings; these
      * should not be passed to String.format.
      */
-    private Map<String, Handle> mNotFormatStrings = new HashMap<String, Handle>();
+    private final Map<String, Handle> mNotFormatStrings = new HashMap<String, Handle>();
 
     /**
      * Set of strings that have an unknown format such as date formatting; we should not
@@ -255,7 +255,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
 
                 // Also make sure this String isn't an unformatted String
                 String formatted = element.getAttribute("formatted"); //$NON-NLS-1$
-                if (formatted.length() > 0 && !Boolean.parseBoolean(formatted)) {
+                if (!formatted.isEmpty() && !Boolean.parseBoolean(formatted)) {
                     if (!mNotFormatStrings.containsKey(name)) {
                         Handle handle = context.parser.createLocationHandle(context, element);
                         handle.setClientData(element);
@@ -350,7 +350,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         }
     }
 
-    private void checkTypes(Context context, Formatter formatter, boolean checkValid,
+    private static void checkTypes(Context context, Formatter formatter, boolean checkValid,
             boolean checkTypes, String name, List<Pair<Handle, String>> list) {
         Map<Integer, String> types = new HashMap<Integer, String>();
         Map<Integer, Handle> typeDefinition = new HashMap<Integer, Handle>();
@@ -511,7 +511,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      * others may work (e.g. float versus integer) but are probably not
      * intentional.
      */
-    private boolean isIncompatible(char conversion1, char conversion2) {
+    private static boolean isIncompatible(char conversion1, char conversion2) {
         int class1 = getConversionClass(conversion1);
         int class2 = getConversionClass(conversion2);
         return class1 != class2
@@ -570,8 +570,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         return CONVERSION_CLASS_UNKNOWN;
     }
 
-    private Location refineLocation(Context context, Location location, String formatString,
-            int substringStart, int substringEnd) {
+    private static Location refineLocation(Context context, Location location,
+            String formatString, int substringStart, int substringEnd) {
         Position startLocation = location.getStart();
         Position endLocation = location.getStart();
         if (startLocation != null && endLocation != null) {
@@ -597,7 +597,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
      * Check that the number of arguments in the format string is consistent
      * across translations, and that all arguments are used
      */
-    private void checkArity(Context context, String name, List<Pair<Handle, String>> list) {
+    private static void checkArity(Context context, String name, List<Pair<Handle, String>> list) {
         // Check to make sure that the argument counts and types are consistent
         int prevCount = -1;
         for (Pair<Handle, String> pair : list) {
@@ -899,7 +899,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
             MethodInvocation call) {
 
         StrictListAccessor<Expression, MethodInvocation> args = call.astArguments();
-        if (args.size() == 0) {
+        if (args.isEmpty()) {
             return;
         }
 
@@ -1089,7 +1089,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements Detecto
         /** Map from variable name to corresponding type */
         private final Map<String, Class<?>> mTypes = new HashMap<String, Class<?>>();
         /** The AST node for the String.format we're interested in */
-        private lombok.ast.Node mTargetNode;
+        private final lombok.ast.Node mTargetNode;
         private boolean mDone;
         /**
          * Result: the name of the string resource being passed to the

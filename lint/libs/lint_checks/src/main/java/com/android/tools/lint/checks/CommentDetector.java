@@ -86,8 +86,9 @@ public class CommentDetector extends Detector implements Detector.JavaScanner {
         return true;
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.NORMAL;
     }
 
@@ -164,7 +165,7 @@ public class CommentDetector extends Detector implements Detector.JavaScanner {
             int start,
             int end) {
         char prev = 0;
-        char c = 0;
+        char c;
         for (int i = start; i < end - 2; i++, prev = c) {
             c = source.charAt(i);
             if (prev == '\\') {

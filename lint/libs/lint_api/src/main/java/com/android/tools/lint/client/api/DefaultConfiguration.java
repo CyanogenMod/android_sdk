@@ -78,7 +78,7 @@ public class DefaultConfiguration extends Configuration {
     private static final String TAG_IGNORE = "ignore"; //$NON-NLS-1$
 
     private final Configuration mParent;
-    protected final Project mProject;
+    private final Project mProject;
     private final File mConfigFile;
     private boolean mBulkEditing;
 
@@ -237,7 +237,7 @@ public class DefaultConfiguration extends Configuration {
                 Node node = issues.item(i);
                 Element element = (Element) node;
                 String id = element.getAttribute(ATTR_ID);
-                if (id.length() == 0) {
+                if (id.isEmpty()) {
                     formatError("Invalid lint config file: Missing required issue id attribute");
                     continue;
                 }
@@ -269,7 +269,7 @@ public class DefaultConfiguration extends Configuration {
                         if (child.getNodeType() == Node.ELEMENT_NODE) {
                             Element ignore = (Element) child;
                             String path = ignore.getAttribute(ATTR_PATH);
-                            if (path.length() == 0) {
+                            if (path.isEmpty()) {
                                 formatError("Missing required %1$s attribute under %2$s",
                                     ATTR_PATH, id);
                             } else {
@@ -305,7 +305,7 @@ public class DefaultConfiguration extends Configuration {
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +     //$NON-NLS-1$
                     "<lint>\n");                                         //$NON-NLS-1$
 
-            if (mSuppressed.size() > 0 || mSeverity.size() > 0) {
+            if (!mSuppressed.isEmpty() || !mSeverity.isEmpty()) {
                 // Process the maps in a stable sorted order such that if the
                 // files are checked into version control with the project,
                 // there are no random diffs just because hashing algorithms
@@ -331,7 +331,7 @@ public class DefaultConfiguration extends Configuration {
                     }
 
                     List<String> paths = mSuppressed.get(id);
-                    if (paths != null && paths.size() > 0) {
+                    if (paths != null && !paths.isEmpty()) {
                         writer.write('>');
                         writer.write('\n');
                         // The paths are already kept in sorted order when they are modified
@@ -358,7 +358,7 @@ public class DefaultConfiguration extends Configuration {
             // Move file into place: move current version to lint.xml~ (removing the old ~ file
             // if it exists), then move the new version to lint.xml.
             File oldFile = new File(mConfigFile.getParentFile(),
-                    mConfigFile.getName() + "~"); //$NON-NLS-1$
+                    mConfigFile.getName() + '~'); //$NON-NLS-1$
             if (oldFile.exists()) {
                 oldFile.delete();
             }

@@ -58,7 +58,7 @@ import java.util.Set;
  */
 @Beta
 public class HtmlReporter extends Reporter {
-    private static boolean USE_HOLO_STYLE = true;
+    private static final boolean USE_HOLO_STYLE = true;
     private static final String CSS = USE_HOLO_STYLE
             ? "hololike.css" : "default.css"; //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -132,7 +132,7 @@ public class HtmlReporter extends Reporter {
         mWriter.write("<br/><br/>");                                  //$NON-NLS-1$
 
         Issue previousIssue = null;
-        if (issues.size() > 0) {
+        if (!issues.isEmpty()) {
             List<List<Warning>> related = new ArrayList<List<Warning>>();
             List<Warning> currentList = null;
             for (Warning warning : issues) {
@@ -229,7 +229,7 @@ public class HtmlReporter extends Reporter {
                         int otherLocations = 0;
                         while (l != null) {
                             String message = l.getMessage();
-                            if (message != null && message.length() > 0) {
+                            if (message != null && !message.isEmpty()) {
                                 Position start = l.getStart();
                                 int line = start != null ? start.getLine() : -1;
                                 String path = mClient.getDisplayPath(warning.project, l.getFile());
@@ -244,7 +244,7 @@ public class HtmlReporter extends Reporter {
                                 String name = l.getFile().getName();
                                 if (!(endsWith(name, DOT_PNG) || endsWith(name, DOT_JPG))) {
                                     String s = mClient.readFile(l.getFile());
-                                    if (s != null && s.length() > 0) {
+                                    if (s != null && !s.isEmpty()) {
                                         mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
                                         int offset = start != null ? start.getOffset() : -1;
                                         appendCodeBlock(s, line, offset);
@@ -362,7 +362,7 @@ public class HtmlReporter extends Reporter {
         mWriter.write("Explanation: ");
         String description = issue.getDescription();
         mWriter.write(description);
-        if (description.length() > 0
+        if (!description.isEmpty()
                 && Character.isLetter(description.charAt(description.length() - 1))) {
             mWriter.write('.');
         }
@@ -617,7 +617,7 @@ public class HtmlReporter extends Reporter {
                     }
                     location = location.getSecondary();
                 }
-                if (urls.size() > 0) {
+                if (!urls.isEmpty()) {
                     // Sort in order
                     Collections.sort(urls, new Comparator<String>() {
                         @Override

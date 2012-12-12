@@ -333,7 +333,7 @@ public class Context {
     }
 
     /** Pattern for version qualifiers */
-    private final static Pattern VERSION_PATTERN = Pattern.compile("^v(\\d+)$"); //$NON-NLS-1$
+    private static final Pattern VERSION_PATTERN = Pattern.compile("^v(\\d+)$"); //$NON-NLS-1$
 
     private static File sCachedFolder = null;
     private static int sCachedFolderVersion = -1;

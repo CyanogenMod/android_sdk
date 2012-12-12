@@ -72,8 +72,9 @@ public class ViewTagDetector extends Detector implements ClassScanner {
     public ViewTagDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -153,7 +154,7 @@ public class ViewTagDetector extends Detector implements ClassScanner {
                             internalName = className.replace('.', '/');
                         }
                         assert internalName != null;
-                        className = driver.getSuperClass(internalName);
+                        parent = driver.getSuperClass(internalName);
                     }
                     className = parent;
                     internalName = null;

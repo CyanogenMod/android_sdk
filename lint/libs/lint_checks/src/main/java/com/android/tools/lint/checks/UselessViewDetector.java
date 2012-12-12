@@ -85,8 +85,9 @@ public class UselessViewDetector extends LayoutDetector {
     public UselessViewDetector() {
     }
 
+    @NonNull
     @Override
-    public @NonNull Speed getSpeed() {
+    public Speed getSpeed() {
         return Speed.FAST;
     }
 
@@ -140,7 +141,7 @@ public class UselessViewDetector extends LayoutDetector {
     }
 
     // This is the old UselessLayoutCheck from layoutopt
-    private void checkUselessMiddleLayout(XmlContext context, Element element) {
+    private static void checkUselessMiddleLayout(XmlContext context, Element element) {
         // Conditions:
         // - The node has children
         // - The node does not have siblings
@@ -209,7 +210,7 @@ public class UselessViewDetector extends LayoutDetector {
     }
 
     // This is the old UselessView check from layoutopt
-    private void checkUselessLeaf(XmlContext context, Element element) {
+    private static void checkUselessLeaf(XmlContext context, Element element) {
         assert LintUtils.getChildCount(element) == 0;
 
         // Conditions:

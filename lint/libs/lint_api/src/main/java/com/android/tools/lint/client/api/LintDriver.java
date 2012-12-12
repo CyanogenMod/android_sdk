@@ -78,6 +78,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -120,8 +121,8 @@ public class LintDriver {
     private static final String SUPPRESS_LINT_VMSIG = '/' + SUPPRESS_LINT + ';';
 
     private final LintClient mClient;
+    private final IssueRegistry mRegistry;
     private volatile boolean mCanceled;
-    private IssueRegistry mRegistry;
     private EnumSet<Scope> mScope;
     private List<? extends Detector> mApplicableDetectors;
     private Map<Scope, List<Detector>> mScopeDetectors;
@@ -283,7 +284,7 @@ public class LintDriver {
         mScope = scope;
 
         Collection<Project> projects = computeProjects(files);
-        if (projects.size() == 0) {
+        if (projects.isEmpty()) {
             mClient.log(null, "No projects found for %1$s", files.toString());
             return;
         }
@@ -332,7 +333,7 @@ public class LintDriver {
             // The set of available detectors varies between projects
             computeDetectors(project);
 
-            if (mApplicableDetectors.size() == 0) {
+            if (mApplicableDetectors.isEmpty()) {
                 // No detectors enabled in this project: skip it
                 continue;
             }
@@ -382,7 +383,7 @@ public class LintDriver {
                 // those that apply for the configuration.
                 computeRepeatingDetectors(mRepeatingDetectors, project);
 
-                if (mApplicableDetectors.size() == 0) {
+                if (mApplicableDetectors.isEmpty()) {
                     // No detectors enabled in this project: skip it
                     continue;
                 }
@@ -415,7 +416,7 @@ public class LintDriver {
         Map<Class<? extends Detector>, EnumSet<Scope>> detectorToScope =
                 new HashMap<Class<? extends Detector>, EnumSet<Scope>>();
         Map<Scope, List<Detector>> scopeToDetectors =
-                new HashMap<Scope, List<Detector>>();
+                new EnumMap<Scope, List<Detector>>(Scope.class);
 
         List<Detector> detectorList = new ArrayList<Detector>();
         // Compute the list of detectors (narrowed down from mRepeatingDetectors),
@@ -426,7 +427,7 @@ public class LintDriver {
         for (Detector detector : detectors) {
             Class<? extends Detector> detectorClass = detector.getClass();
             Collection<Issue> detectorIssues = issueMap.get(detectorClass);
-            if (issues != null) {
+            if (detectorIssues != null) {
                 boolean add = false;
                 for (Issue issue : detectorIssues) {
                     // The reason we have to check whether the detector is enabled
@@ -480,7 +481,7 @@ public class LintDriver {
         mCurrentVisitor = null;
 
         Configuration configuration = project.getConfiguration();
-        mScopeDetectors = new HashMap<Scope, List<Detector>>();
+        mScopeDetectors = new EnumMap<Scope, List<Detector>>(Scope.class);
         mApplicableDetectors = mRegistry.createDetectors(mClient, configuration,
                 mScope, mScopeDetectors);
 
@@ -815,7 +816,7 @@ public class LintDriver {
         if (mScope.contains(Scope.ALL_RESOURCE_FILES) || mScope.contains(Scope.RESOURCE_FILE)) {
             List<Detector> checks = union(mScopeDetectors.get(Scope.RESOURCE_FILE),
                     mScopeDetectors.get(Scope.ALL_RESOURCE_FILES));
-            if (checks != null && checks.size() > 0) {
+            if (checks != null && !checks.isEmpty()) {
                 List<ResourceXmlDetector> xmlDetectors =
                         new ArrayList<ResourceXmlDetector>(checks.size());
                 for (Detector detector : checks) {
@@ -823,13 +824,13 @@ public class LintDriver {
                         xmlDetectors.add((ResourceXmlDetector) detector);
                     }
                 }
-                if (xmlDetectors.size() > 0) {
+                if (!xmlDetectors.isEmpty()) {
                     List<File> files = project.getSubset();
                     if (files != null) {
                         checkIndividualResources(project, main, xmlDetectors, files);
                     } else {
                         File res = project.getResourceFolder();
-                        if (res != null && xmlDetectors.size() > 0) {
+                        if (res != null && !xmlDetectors.isEmpty()) {
                             checkResFolder(project, main, res, xmlDetectors);
                         }
                     }
@@ -844,7 +845,7 @@ public class LintDriver {
         if (mScope.contains(Scope.JAVA_FILE) || mScope.contains(Scope.ALL_JAVA_FILES)) {
             List<Detector> checks = union(mScopeDetectors.get(Scope.JAVA_FILE),
                     mScopeDetectors.get(Scope.ALL_JAVA_FILES));
-            if (checks != null && checks.size() > 0) {
+            if (checks != null && !checks.isEmpty()) {
                 List<File> files = project.getSubset();
                 if (files != null) {
                     checkIndividualJavaFiles(project, main, checks, files);
@@ -1026,7 +1027,7 @@ public class LintDriver {
 
         List<File> libraries = project.getJavaLibraries();
         List<ClassEntry> libraryEntries;
-        if (libraries.size() > 0) {
+        if (!libraries.isEmpty()) {
             libraryEntries = new ArrayList<ClassEntry>(64);
             findClasses(libraryEntries, libraries);
             Collections.sort(libraryEntries);
@@ -1036,7 +1037,7 @@ public class LintDriver {
 
         List<File> classFolders = project.getJavaClassFolders();
         List<ClassEntry> classEntries;
-        if (classFolders.size() == 0) {
+        if (classFolders.isEmpty()) {
             String message = String.format("No .class files were found in project \"%1$s\", "
                     + "so none of the classfile based checks could be run. "
                     + "Does the project need to be built first?", project.getName());
@@ -1101,7 +1102,7 @@ public class LintDriver {
                 }
             }
 
-            if (entries.size() > 0) {
+            if (!entries.isEmpty()) {
                 Collections.sort(entries);
                 // No superclass info available on individual lint runs, unless
                 // the client can provide it
@@ -1123,7 +1124,7 @@ public class LintDriver {
             Project project, Project main) {
         if (mScope.contains(scope)) {
             List<Detector> classDetectors = mScopeDetectors.get(scope);
-            if (classDetectors != null && classDetectors.size() > 0 && entries.size() > 0) {
+            if (classDetectors != null && !classDetectors.isEmpty() && !entries.isEmpty()) {
                 AsmVisitor visitor = new AsmVisitor(mClient, classDetectors);
 
                 String sourceContents = null;
@@ -1333,7 +1334,7 @@ public class LintDriver {
         }
     }
 
-    private void addClassFiles(@NonNull File dir, @NonNull List<File> classFiles) {
+    private static void addClassFiles(@NonNull File dir, @NonNull List<File> classFiles) {
         // Process the resource folder
         File[] files = dir.listFiles();
         if (files != null && files.length > 0) {
@@ -1359,14 +1360,14 @@ public class LintDriver {
             return;
         }
 
-        assert checks.size() > 0;
+        assert !checks.isEmpty();
 
         // Gather all Java source files in a single pass; more efficient.
         List<File> sources = new ArrayList<File>(100);
         for (File folder : sourceFolders) {
             gatherJavaFiles(folder, sources);
         }
-        if (sources.size() > 0) {
+        if (!sources.isEmpty()) {
             JavaVisitor visitor = new JavaVisitor(javaParser, checks);
             for (File file : sources) {
                 JavaContext context = new JavaContext(this, project, main, file);
@@ -1405,7 +1406,7 @@ public class LintDriver {
         }
     }
 
-    private void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
+    private static void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -1443,7 +1444,7 @@ public class LintDriver {
                 return mCurrentVisitor;
             }
 
-            if (applicableChecks.size() == 0) {
+            if (applicableChecks.isEmpty()) {
                 mCurrentVisitor = null;
                 return null;
             }
@@ -1472,9 +1473,8 @@ public class LintDriver {
         // same time
 
         Arrays.sort(resourceDirs);
-        ResourceFolderType type = null;
         for (File dir : resourceDirs) {
-            type = ResourceFolderType.getFolderType(dir.getName());
+            ResourceFolderType type = ResourceFolderType.getFolderType(dir.getName());
             if (type != null) {
                 checkResourceFolder(project, main, dir, type, checks);
             }
@@ -1566,7 +1566,7 @@ public class LintDriver {
      */
     public void removeLintListener(@NonNull LintListener listener) {
         mListeners.remove(listener);
-        if (mListeners.size() == 0) {
+        if (mListeners.isEmpty()) {
             mListeners = null;
         }
     }
@@ -1574,8 +1574,7 @@ public class LintDriver {
     /** Notifies listeners, if any, that the given event has occurred */
     private void fireEvent(@NonNull LintListener.EventType type, @Nullable Context context) {
         if (mListeners != null) {
-            for (int i = 0, n = mListeners.size(); i < n; i++) {
-                LintListener listener = mListeners.get(i);
+            for (LintListener listener : mListeners) {
                 listener.update(this, type, context);
             }
         }
@@ -1583,8 +1582,7 @@ public class LintDriver {
 
     /**
      * Wrapper around the lint client. This sits in the middle between a
-     * detector calling for example
-     * {@link LintClient#report(Context, Issue, Location, String, Object)} and
+     * detector calling for example {@link LintClient#report} and
      * the actual embedding tool, and performs filtering etc such that detectors
      * and lint clients don't have to make sure they check for ignored issues or
      * filtered out warnings.
@@ -1669,8 +1667,9 @@ public class LintDriver {
             return mDelegate.getJavaClassFolders(project);
         }
 
+        @NonNull
         @Override
-        public @NonNull List<File> getJavaLibraries(@NonNull Project project) {
+        public List<File> getJavaLibraries(@NonNull Project project) {
             return mDelegate.getJavaLibraries(project);
         }
 
@@ -1900,7 +1899,7 @@ public class LintDriver {
         return false;
     }
 
-    private boolean isSuppressed(@Nullable Issue issue, List<AnnotationNode> annotations) {
+    private static boolean isSuppressed(@Nullable Issue issue, List<AnnotationNode> annotations) {
         for (AnnotationNode annotation : annotations) {
             String desc = annotation.desc;
 
