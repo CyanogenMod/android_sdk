@@ -703,7 +703,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 if (columnIndex == 0) {
                     return ((Category) element).getFullName();
                 } else {
-                    return ((Category) element).getExplanation();
+                    return null;
                 }
             }
 
