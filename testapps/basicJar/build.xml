@@ -3,7 +3,7 @@
     <target name="compile">
         <mkdir dir="${basedir}/bin" />
         <mkdir dir="${basedir}/bin/classes" />
-        <javac encoding="ascii" target="1.5" debug="true" extdirs=""
+        <javac encoding="ascii" target="1.5" source="1.5" debug="true" extdirs=""
                 srcdir="src" destdir="${basedir}/bin/classes" />
         <jar destfile="${basedir}/bin/${ant.project.name}.jar">
             <fileset dir="${basedir}/bin/classes" />
