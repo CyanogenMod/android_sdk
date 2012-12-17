@@ -25,12 +25,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.ValueResourceParser;
 import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -1088,8 +1088,8 @@ public class NewProjectCreator  {
     /** Reformats the given contents with the current formatting settings */
     private String reformat(XmlFormatStyle style, String contents) {
         if (AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
-            XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
-            return XmlPrettyPrinter.prettyPrint(contents, formatPrefs, style,
+            EclipseXmlFormatPreferences formatPrefs = EclipseXmlFormatPreferences.create();
+            return EclipseXmlPrettyPrinter.prettyPrint(contents, formatPrefs, style,
                     null /*lineSeparator*/);
         } else {
             return contents;
@@ -1404,7 +1404,8 @@ public class NewProjectCreator  {
 
         if (reformat) {
             // Guess the formatting style based on the file location
-            XmlFormatStyle style = XmlFormatStyle.getForFile(destFile.getProjectRelativePath());
+            XmlFormatStyle style = EclipseXmlPrettyPrinter
+                    .getForFile(destFile.getProjectRelativePath());
             if (style != null) {
                 template = reformat(style, template);
             }

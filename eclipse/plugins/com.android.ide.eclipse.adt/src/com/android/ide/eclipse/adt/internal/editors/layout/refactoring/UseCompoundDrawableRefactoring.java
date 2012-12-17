@@ -42,10 +42,10 @@ import static com.android.SdkConstants.VALUE_VERTICAL;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -353,8 +353,9 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
             }
         }
 
-        String xml = XmlPrettyPrinter.prettyPrint(tempDocument.getDocumentElement(),
-                XmlFormatPreferences.create(),
+        String xml = EclipseXmlPrettyPrinter.prettyPrint(
+                tempDocument.getDocumentElement(),
+                EclipseXmlFormatPreferences.create(),
                 XmlFormatStyle.LAYOUT, null);
 
         TextEdit replace = new ReplaceEdit(mSelectionStart, mSelectionEnd - mSelectionStart, xml);
