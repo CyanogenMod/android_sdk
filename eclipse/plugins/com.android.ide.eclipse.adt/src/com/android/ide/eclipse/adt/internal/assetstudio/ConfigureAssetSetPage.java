@@ -105,7 +105,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         ModifyListener {
     private final CreateAssetSetWizardState mValues;
 
-    private static final int PREVIEW_AREA_WIDTH = 120;
+    private static final int PREVIEW_AREA_WIDTH = 144;
 
     private boolean mShown;
 
@@ -1148,10 +1148,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             }
             case NOTIFICATION: {
                 generator = new NotificationIconGenerator();
-                NotificationIconGenerator.NotificationOptions notificationOptions =
-                        new NotificationIconGenerator.NotificationOptions();
-                notificationOptions.shape = mValues.shape;
-                options = notificationOptions;
+                options = new NotificationIconGenerator.NotificationOptions();
                 break;
             }
             case TAB:
