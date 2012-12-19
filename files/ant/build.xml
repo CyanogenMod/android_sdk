@@ -706,7 +706,7 @@
     <target name="-pre-compile"/>
 
     <!-- Compiles this project's .java files into .class files. -->
-    <target name="-compile" depends="-build-setup, -pre-build, -code-gen, -pre-compile">
+    <target name="-compile" depends="-pre-build, -build-setup, -code-gen, -pre-compile">
         <do-only-if-manifest-hasCode elseText="hasCode = false. Skipping...">
             <!-- merge the project's own classpath and the tested project's classpath -->
             <path id="project.javac.classpath">
