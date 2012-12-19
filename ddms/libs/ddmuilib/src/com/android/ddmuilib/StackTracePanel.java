@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Table;
  * <p/>This is not a panel in the regular sense. Instead this is just an object around the creation
  * and management of a Stack Trace display.
  * <p/>UI creation is done through
- * {@link #createPanel(Composite, String, String, String, String, String, IPreferenceStore)}.
+ * {@link #createPanel(Composite, String, IPreferenceStore)}.
  *
  */
 public final class StackTracePanel {
@@ -97,22 +97,10 @@ public final class StackTracePanel {
 
         @Override
         public String getColumnText(Object element, int columnIndex) {
-            if (element instanceof StackTraceElement) {
-                StackTraceElement traceElement = (StackTraceElement)element;
-                switch (columnIndex) {
-                    case 0:
-                        return traceElement.getClassName();
-                    case 1:
-                        return traceElement.getMethodName();
-                    case 2:
-                        return traceElement.getFileName();
-                    case 3:
-                        return Integer.toString(traceElement.getLineNumber());
-                    case 4:
-                        return Boolean.toString(traceElement.isNativeMethod());
-                }
+            if (element instanceof StackTraceElement && columnIndex == 0) {
+                StackTraceElement traceElement = (StackTraceElement) element;
+                return "  at " + traceElement.toString();
             }
-
             return null;
         }
 
@@ -166,55 +154,22 @@ public final class StackTracePanel {
      * <p/>This method will set the parent {@link Composite} to use a {@link GridLayout} with
      * 2 columns.
      * @param parent the parent composite.
-     * @param prefs_stack_col_class
-     * @param prefs_stack_col_method
-     * @param prefs_stack_col_file
-     * @param prefs_stack_col_line
-     * @param prefs_stack_col_native
+     * @param prefs_stack_column
      * @param store
      */
-    public Table createPanel(Composite parent, String prefs_stack_col_class,
-            String prefs_stack_col_method, String prefs_stack_col_file, String prefs_stack_col_line,
-            String prefs_stack_col_native, IPreferenceStore store) {
+    public Table createPanel(Composite parent, String prefs_stack_column,
+            IPreferenceStore store) {
 
         mStackTraceTable = new Table(parent, SWT.MULTI | SWT.FULL_SELECTION);
-        mStackTraceTable.setHeaderVisible(true);
-        mStackTraceTable.setLinesVisible(true);
+        mStackTraceTable.setHeaderVisible(false);
+        mStackTraceTable.setLinesVisible(false);
 
         TableHelper.createTableColumn(
                 mStackTraceTable,
-                "Class",
+                "Info",
                 SWT.LEFT,
-                "SomeLongClassName", //$NON-NLS-1$
-                prefs_stack_col_class, store);
-
-        TableHelper.createTableColumn(
-                mStackTraceTable,
-                "Method",
-                SWT.LEFT,
-                "someLongMethod", //$NON-NLS-1$
-                prefs_stack_col_method, store);
-
-        TableHelper.createTableColumn(
-                mStackTraceTable,
-                "File",
-                SWT.LEFT,
-                "android/somepackage/someotherpackage/somefile.class", //$NON-NLS-1$
-                prefs_stack_col_file, store);
-
-        TableHelper.createTableColumn(
-                mStackTraceTable,
-                "Line",
-                SWT.RIGHT,
-                "99999", //$NON-NLS-1$
-                prefs_stack_col_line, store);
-
-        TableHelper.createTableColumn(
-                mStackTraceTable,
-                "Native",
-                SWT.LEFT,
-                "Native", //$NON-NLS-1$
-                prefs_stack_col_native, store);
+                "SomeLongClassName.method(android/somepackage/someotherpackage/somefile.java:99999)", //$NON-NLS-1$
+                prefs_stack_column, store);
 
         mStackTraceViewer = new TableViewer(mStackTraceTable);
         mStackTraceViewer.setContentProvider(new StackTraceContentProvider());
