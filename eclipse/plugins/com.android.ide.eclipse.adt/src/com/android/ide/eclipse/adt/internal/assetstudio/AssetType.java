@@ -68,7 +68,7 @@ public enum AssetType {
 
     /** Whether this asset type needs a shape parameter */
     boolean needsShape() {
-        return this == LAUNCHER || this == NOTIFICATION;
+        return this == LAUNCHER;
     }
 
     /** Whether this asset type needs foreground and background color parameters */

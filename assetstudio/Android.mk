@@ -21,6 +21,7 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 
 # TODO: Replace common with the batik stuff
 LOCAL_JAVA_LIBRARIES := \
+	common \
 	guava-tools \
 	layoutlib_api
 
