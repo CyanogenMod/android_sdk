@@ -77,11 +77,7 @@ public class AllocationPanel extends TablePanel {
 
     private final static String PREFS_ALLOC_SASH = "allocPanel.sash"; //$NON-NLS-1$
 
-    private static final String PREFS_STACK_COL_CLASS = "allocPanel.stack.col0"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_METHOD = "allocPanel.stack.col1"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_FILE = "allocPanel.stack.col2"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_LINE = "allocPanel.stack.col3"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_NATIVE = "allocPanel.stack.col4"; //$NON-NLS-1$
+    private static final String PREFS_STACK_COLUMN = "allocPanel.stack.col0"; //$NON-NLS-1$
 
     private Composite mAllocationBase;
     private Table mAllocationTable;
@@ -387,13 +383,7 @@ public class AllocationPanel extends TablePanel {
 
         // the UI below the sash
         mStackTracePanel = new StackTracePanel();
-        mStackTraceTable = mStackTracePanel.createPanel(mAllocationBase,
-                PREFS_STACK_COL_CLASS,
-                PREFS_STACK_COL_METHOD,
-                PREFS_STACK_COL_FILE,
-                PREFS_STACK_COL_LINE,
-                PREFS_STACK_COL_NATIVE,
-                store);
+        mStackTraceTable = mStackTracePanel.createPanel(mAllocationBase, PREFS_STACK_COLUMN, store);
 
         // now setup the sash.
         // form layout data
@@ -659,4 +649,3 @@ public class AllocationPanel extends TablePanel {
     }
 
 }
-

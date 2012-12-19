@@ -71,11 +71,7 @@ public class ThreadPanel extends TablePanel {
 
     private final static String PREFS_THREAD_SASH = "threadPanel.sash"; //$NON-NLS-1$
 
-    private static final String PREFS_STACK_COL_CLASS = "threadPanel.stack.col0"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_METHOD = "threadPanel.stack.col1"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_FILE = "threadPanel.stack.col2"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_LINE = "threadPanel.stack.col3"; //$NON-NLS-1$
-    private static final String PREFS_STACK_COL_NATIVE = "threadPanel.stack.col4"; //$NON-NLS-1$
+    private static final String PREFS_STACK_COLUMN = "threadPanel.stack.col0"; //$NON-NLS-1$
 
     private Display mDisplay;
     private Composite mBase;
@@ -100,9 +96,9 @@ public class ThreadPanel extends TablePanel {
     private Object mLock = new Object();
 
     private static final String[] THREAD_STATUS = {
-        "zombie", "running", "timed-wait", "monitor",
-        "wait", "init", "start", "native", "vmwait",
-        "suspended"
+        "Zombie", "Runnable", "TimedWait", "Monitor",
+        "Wait", "Initializing", "Starting", "Native", "VmWait",
+        "Suspended"
     };
 
     /**
@@ -269,21 +265,13 @@ public class ThreadPanel extends TablePanel {
         mThreadViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             @Override
             public void selectionChanged(SelectionChangedEvent event) {
-                ThreadInfo selectedThread = getThreadSelection(event.getSelection());
-                updateThreadStackTrace(selectedThread);
+                requestThreadStackTrace(getThreadSelection(event.getSelection()));
             }
         });
         mThreadViewer.addDoubleClickListener(new IDoubleClickListener() {
             @Override
             public void doubleClick(DoubleClickEvent event) {
-                ThreadInfo selectedThread = getThreadSelection(event.getSelection());
-                if (selectedThread != null) {
-                    Client client = (Client)mThreadViewer.getInput();
-
-                    if (client != null) {
-                        client.requestThreadStackTrace(selectedThread.getThreadId());
-                    }
-                }
+                requestThreadStackTrace(getThreadSelection(event.getSelection()));
             }
         });
 
@@ -301,13 +289,7 @@ public class ThreadPanel extends TablePanel {
         mRefreshStackTraceButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                ThreadInfo selectedThread = getThreadSelection(null);
-                if (selectedThread != null) {
-                    Client currentClient = getCurrentClient();
-                    if (currentClient != null) {
-                        currentClient.requestThreadStackTrace(selectedThread.getThreadId());
-                    }
-                }
+                requestThreadStackTrace(getThreadSelection(null));
             }
         });
 
@@ -315,13 +297,7 @@ public class ThreadPanel extends TablePanel {
         mStackTraceTimeLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         mStackTracePanel = new StackTracePanel();
-        mStackTraceTable = mStackTracePanel.createPanel(mStackTraceBase,
-                PREFS_STACK_COL_CLASS,
-                PREFS_STACK_COL_METHOD,
-                PREFS_STACK_COL_FILE,
-                PREFS_STACK_COL_LINE,
-                PREFS_STACK_COL_NATIVE,
-                store);
+        mStackTraceTable = mStackTracePanel.createPanel(mStackTraceBase, PREFS_STACK_COLUMN, store);
 
         GridData gd;
         mStackTraceTable.setLayoutData(gd = new GridData(GridData.FILL_BOTH));
@@ -478,6 +454,15 @@ public class ThreadPanel extends TablePanel {
         mBase.layout();
     }
 
+    private void requestThreadStackTrace(ThreadInfo selectedThread) {
+        if (selectedThread != null) {
+            Client client = (Client) mThreadViewer.getInput();
+            if (client != null) {
+                client.requestThreadStackTrace(selectedThread.getThreadId());
+            }
+        }
+    }
+
     /**
      * Updates the stack call of the currently selected thread.
      * <p/>
@@ -586,4 +571,3 @@ public class ThreadPanel extends TablePanel {
     }
 
 }
-
