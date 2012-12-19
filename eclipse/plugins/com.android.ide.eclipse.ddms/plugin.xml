@@ -5,6 +5,7 @@
    <extension-point id="debuggerConnector" name="%extension-point.name.Debugger_Connector" schema="schema/debuggerConnector.exsd"/>
    <extension-point id="sourceRevealer" name="%extension-point.name.Source_Revealer" schema="schema/sourceRevealer.exsd"/>
    <extension-point id="traceviewLauncher" name="%extension-point.name.TreeView_Laucher" schema="schema/traceviewLauncher.exsd"/>
+   <extension-point id="clientAction" name="%extension-point.name.ClientAction" schema="schema/clientAction.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
