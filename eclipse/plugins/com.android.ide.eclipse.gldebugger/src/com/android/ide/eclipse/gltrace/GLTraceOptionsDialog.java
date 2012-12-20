@@ -71,6 +71,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private String mAppPackageToTrace = "";
     private String mActivityToTrace = "";
     private String mTraceFilePath = "";
+    private boolean mAllowAppSelection;
 
     private static boolean sCollectFbOnEglSwap = true;
     private static boolean sCollectFbOnGlDraw = false;
@@ -79,8 +80,23 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private IDevice[] mDevices;
 
     public GLTraceOptionsDialog(Shell parentShell) {
+        this(parentShell, true, null);
+    }
+
+    /**
+     * Constructs a dialog displaying options for the tracer.
+     * @param allowAppSelection true if user can change the application to trace
+     * @param appToTrace default application package to trace
+     */
+    public GLTraceOptionsDialog(Shell parentShell, boolean allowAppSelection,
+            String appToTrace) {
         super(parentShell);
         loadPreferences();
+
+        mAllowAppSelection = allowAppSelection;
+        if (appToTrace != null) {
+            mAppPackageToTrace = appToTrace;
+        }
     }
 
     @Override
@@ -108,6 +124,12 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         createLabel(c, "");
         createIsFullyQualifedActivityButton(c,
                 "Activity name is fully qualified, do not prefix with package name");
+
+        if (!mAllowAppSelection) {
+            mAppPackageToTraceText.setEnabled(false);
+            mActivityToTraceText.setEnabled(false);
+            mIsActivityFullyQualifiedButton.setEnabled(false);
+        }
 
         createSeparator(c);
 

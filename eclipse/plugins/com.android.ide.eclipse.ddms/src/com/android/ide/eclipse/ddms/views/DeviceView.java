@@ -38,6 +38,7 @@ import com.android.ddmuilib.SyncProgressHelper.SyncRunnable;
 import com.android.ddmuilib.handler.BaseFileHandler;
 import com.android.ddmuilib.handler.MethodProfilingHandler;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.IClientAction;
 import com.android.ide.eclipse.ddms.IDebuggerConnector;
 import com.android.ide.eclipse.ddms.editors.UiAutomatorViewer;
 import com.android.ide.eclipse.ddms.i18n.Messages;
@@ -767,6 +768,10 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
             mTracingAction.setToolTipText(Messages.DeviceView_Start_Method_Profiling_Tooltip);
             mTracingAction.setText(Messages.DeviceView_Start_Method_Profiling);
         }
+
+        for (IClientAction a : DdmsPlugin.getDefault().getClientSpecificActions()) {
+            a.selectedClientChanged(selectedClient);
+        }
     }
 
     private void doSelectionChanged(IDevice selectedDevice) {
@@ -804,6 +809,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         menuManager.add(mSystraceAction);
         menuManager.add(new Separator());
         menuManager.add(mResetAdbAction);
+        for (IClientAction a : DdmsPlugin.getDefault().getClientSpecificActions()) {
+            menuManager.add(a.getAction());
+        }
 
         // and then in the toolbar
         IToolBarManager toolBarManager = actionBars.getToolBarManager();
@@ -824,6 +832,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         toolBarManager.add(mViewUiAutomatorHierarchyAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mSystraceAction);
+        for (IClientAction a : DdmsPlugin.getDefault().getClientSpecificActions()) {
+            toolBarManager.add(a.getAction());
+        }
     }
 
     @Override
