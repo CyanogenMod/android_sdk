@@ -16,6 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
+import static com.android.SdkConstants.FN_BUILD_CONFIG_BASE;
+import static com.android.SdkConstants.FN_MANIFEST_BASE;
+import static com.android.SdkConstants.FN_RESOURCE_BASE;
+
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -74,7 +78,6 @@ import java.util.List;
  */
 @SuppressWarnings("restriction")
 class ApplicationPackageNameRefactoring extends Refactoring {
-
     private final IProject mProject;
     private final Name mOldPackageName;
     private final Name mNewPackageName;
@@ -146,18 +149,33 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         if (cu.getPackage().getName().getFullyQualifiedName()
                 .equals(mOldPackageName.getFullyQualifiedName())) {
 
-            ImportRewrite irw = ImportRewrite.create(cu, true);
-            irw.addImport(mNewPackageName.getFullyQualifiedName() + '.'
-                    + SdkConstants.FN_RESOURCE_BASE);
+            UsageVisitor usageVisitor = new UsageVisitor();
+            cu.accept(usageVisitor);
 
-            try {
-                rewrittenImports.addChild( irw.rewriteImports(null) );
-            } catch (MalformedTreeException e) {
-                Status s = new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, e.getMessage(), e);
-                AdtPlugin.getDefault().getLog().log(s);
-            } catch (CoreException e) {
-                Status s = new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, e.getMessage(), e);
-                AdtPlugin.getDefault().getLog().log(s);
+            if (usageVisitor.seenAny()) {
+                ImportRewrite irw = ImportRewrite.create(cu, true);
+                if (usageVisitor.hasSeenR()) {
+                    irw.addImport(mNewPackageName.getFullyQualifiedName() + '.'
+                            + FN_RESOURCE_BASE);
+                }
+                if (usageVisitor.hasSeenBuildConfig()) {
+                    irw.addImport(mNewPackageName.getFullyQualifiedName() + '.'
+                            + FN_BUILD_CONFIG_BASE);
+                }
+                if (usageVisitor.hasSeenManifest()) {
+                    irw.addImport(mNewPackageName.getFullyQualifiedName() + '.'
+                            + FN_MANIFEST_BASE);
+                }
+
+                try {
+                    rewrittenImports.addChild( irw.rewriteImports(null) );
+                } catch (MalformedTreeException e) {
+                    Status s = new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, e.getMessage(), e);
+                    AdtPlugin.getDefault().getLog().log(s);
+                } catch (CoreException e) {
+                    Status s = new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, e.getMessage(), e);
+                    AdtPlugin.getDefault().getLog().log(s);
+                }
             }
         }
 
@@ -478,7 +496,43 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         }
     }
 
-    class ImportVisitor extends ASTVisitor {
+    private static class UsageVisitor extends ASTVisitor {
+        private boolean mSeenManifest;
+        private boolean mSeenR;
+        private boolean mSeenBuildConfig;
+
+        @Override
+        public boolean visit(QualifiedName node) {
+            Name qualifier = node.getQualifier();
+            if (qualifier.isSimpleName()) {
+                String name = qualifier.toString();
+                if (name.equals(FN_RESOURCE_BASE)) {
+                    mSeenR = true;
+                } else if (name.equals(FN_BUILD_CONFIG_BASE)) {
+                    mSeenBuildConfig = true;
+                } else if (name.equals(FN_MANIFEST_BASE)) {
+                    mSeenManifest = true;
+                }
+            }
+            return super.visit(node);
+        };
+
+        public boolean seenAny() {
+            return mSeenR || mSeenBuildConfig || mSeenManifest;
+        }
+
+        public boolean hasSeenBuildConfig() {
+            return mSeenBuildConfig;
+        }
+        public boolean hasSeenManifest() {
+            return mSeenManifest;
+        }
+        public boolean hasSeenR() {
+            return mSeenR;
+        }
+    }
+
+    private class ImportVisitor extends ASTVisitor {
 
         final AST mAst;
         final ASTRewrite mRewriter;
@@ -508,8 +562,19 @@ class ApplicationPackageNameRefactoring extends Refactoring {
             if (importName.isQualifiedName()) {
                 QualifiedName qualifiedImportName = (QualifiedName) importName;
 
-                if (qualifiedImportName.getName().getIdentifier()
-                        .equals(SdkConstants.FN_RESOURCE_BASE)) {
+                String identifier = qualifiedImportName.getName().getIdentifier();
+                if (identifier.equals(FN_RESOURCE_BASE)) {
+                    mRewriter.replace(qualifiedImportName.getQualifier(), mNewPackageName,
+                            null);
+                } else if (identifier.equals(FN_BUILD_CONFIG_BASE)
+                        && mOldPackageName.toString().equals(
+                                qualifiedImportName.getQualifier().toString())) {
+                    mRewriter.replace(qualifiedImportName.getQualifier(), mNewPackageName,
+                            null);
+
+                } else if (identifier.equals(FN_MANIFEST_BASE)
+                        && mOldPackageName.toString().equals(
+                                qualifiedImportName.getQualifier().toString())) {
                     mRewriter.replace(qualifiedImportName.getQualifier(), mNewPackageName,
                             null);
                 }
