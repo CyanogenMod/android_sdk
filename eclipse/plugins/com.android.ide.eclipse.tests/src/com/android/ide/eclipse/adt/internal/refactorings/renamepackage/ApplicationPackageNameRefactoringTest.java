@@ -32,11 +32,6 @@ public class ApplicationPackageNameRefactoringTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "[x] MainActivity2.java - /testRefactor1/src/com/example/refactoringtest/MainActivity2.java\n" +
-                "  @@ -7 +7\n" +
-                "  + import my.pkg.name.R;\n" +
-                "\n" +
-                "\n" +
                 "[x] MainActivity.java - /testRefactor1/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -7 +7\n" +
                 "  + import my.pkg.name.R;\n" +
@@ -59,22 +54,44 @@ public class ApplicationPackageNameRefactoringTest extends RefactoringTestBase {
 
                 "CHANGES:\n" +
                 "-------\n" +
-                "[x] MyFragment.java - /testRefactor2/src/com/example/refactoringtest/MyFragment.java\n" +
-                "  @@ -3 +3\n" +
-                "  + import my.pkg.name.R;\n" +
-                "\n" +
-                "\n" +
                 "[x] MainActivity.java - /testRefactor2/src/com/example/refactoringtest/MainActivity.java\n" +
                 "  @@ -7 +7\n" +
                 "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "[x] CustomView1.java - /testRefactor2/src/com/example/refactoringtest/CustomView1.java\n" +
-                "  @@ -5 +5\n" +
+                "[x] Make Manifest edits - /testRefactor2/AndroidManifest.xml\n" +
+                "  @@ -3 +3\n" +
+                "  -     package=\"com.example.refactoringtest\"\n" +
+                "  +     package=\"my.pkg.name\"\n" +
+                "  @@ -25 +25\n" +
+                "  -             android:name=\".MainActivity2\"\n" +
+                "  +             android:name=\"com.example.refactoringtest.MainActivity2\"");
+    }
+
+    public void testRefactor3() throws Exception {
+        // Tests BuildConfig imports and updates
+        renamePackage(
+                TEST_PROJECT3,
+                "my.pkg.name",
+
+                "CHANGES:\n" +
+                "-------\n" +
+                "[x] MoreCode.java - /testRefactor3/src/com/example/refactoringtest/subpkg/MoreCode.java\n" +
+                "  @@ -7 +7\n" +
+                "  - import com.example.refactoringtest.BuildConfig;\n" +
+                "  - import com.example.refactoringtest.Manifest;\n" +
+                "  - import com.example.refactoringtest.R;\n" +
+                "  + import my.pkg.name.BuildConfig;\n" +
+                "  + import my.pkg.name.Manifest;\n" +
                 "  + import my.pkg.name.R;\n" +
                 "\n" +
                 "\n" +
-                "[x] Make Manifest edits - /testRefactor2/AndroidManifest.xml\n" +
+                "[x] MainActivity.java - /testRefactor3/src/com/example/refactoringtest/MainActivity.java\n" +
+                "  @@ -7 +7\n" +
+                "  + import my.pkg.name.R;\n" +
+                "\n" +
+                "\n" +
+                "[x] Make Manifest edits - /testRefactor3/AndroidManifest.xml\n" +
                 "  @@ -3 +3\n" +
                 "  -     package=\"com.example.refactoringtest\"\n" +
                 "  +     package=\"my.pkg.name\"\n" +
