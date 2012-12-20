@@ -731,7 +731,9 @@ public final class AaptExecTask extends SingleDependencyTask {
 
                     // simpler case of a single library
                     if (packages.length == 1) {
-                        createRClass(fullSymbols, rFiles[0], packages[0]);
+                        if (!mOriginalManifestPackage.equals(packages[0])) {
+                            createRClass(fullSymbols, rFiles[0], packages[0]);
+                        }
                     } else {
 
                         Map<String, String> libPackages = Maps.newHashMapWithExpectedSize(
