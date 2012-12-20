@@ -86,7 +86,7 @@ class TemplateMetadata {
         mParameterMap = new HashMap<String, Parameter>(parameters.getLength());
         for (int index = 0, max = parameters.getLength(); index < max; index++) {
             Element element = (Element) parameters.item(index);
-            Parameter parameter = new Parameter(element);
+            Parameter parameter = new Parameter(this, element);
             mParameters.add(parameter);
             if (parameter.id != null) {
                 mParameterMap.put(parameter.id, parameter);
@@ -221,7 +221,7 @@ class TemplateMetadata {
             if (mIconState.outputName != null) {
                 // Register parameter such that if it is referencing other values, it gets
                 // updated when other values are edited
-                Parameter outputParameter = new Parameter(
+                Parameter outputParameter = new Parameter(this,
                         Parameter.Type.STRING, "_iconname", mIconState.outputName); //$NON-NLS-1$
                 getParameters().add(outputParameter);
             }
