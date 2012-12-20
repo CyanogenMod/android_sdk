@@ -299,7 +299,7 @@
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" >
             <description>
-               Create an Android object such as a Service, an Activity, a Broadcast Receiver, etc.
+               Create an Android object such as a Service, an Activity, a Broadcast Receiver, a Notification, etc.
             </description>
         </wizard>
         <!-- Available through generic object list above
