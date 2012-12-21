@@ -143,7 +143,7 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
 
     @Override
     public String getAttributeValue(String namespace, String localName) {
-        if (localName.equals(ATTR_LAYOUT) && mFragmentLayout != null) {
+        if (ATTR_LAYOUT.equals(localName) && mFragmentLayout != null) {
             return mFragmentLayout;
         }
 
