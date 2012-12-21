@@ -215,6 +215,10 @@ public abstract class AbstractCheckTest extends SdkTestCase {
             return true;
         }
 
+        if (issue == IssueRegistry.LINT_ERROR || issue == IssueRegistry.PARSER_ERROR) {
+            return !ignoreSystemErrors();
+        }
+
         return false;
     }
 
@@ -230,10 +234,14 @@ public abstract class AbstractCheckTest extends SdkTestCase {
         return null;
     }
 
+    protected boolean ignoreSystemErrors() {
+        return true;
+    }
+
     public class TestLintClient extends Main {
         private StringWriter mWriter = new StringWriter();
 
-        TestLintClient() {
+        public TestLintClient() {
             mReporters.add(new TextReporter(this, mWriter, false));
         }
 
@@ -279,9 +287,14 @@ public abstract class AbstractCheckTest extends SdkTestCase {
         }
 
         @Override
-        public void report(Context context, Issue issue, Severity severity, Location location,
-                String message, Object data) {
-            if (issue == IssueRegistry.LINT_ERROR) {
+        public void report(
+                @NonNull Context context,
+                @NonNull Issue issue,
+                @NonNull Severity severity,
+                @Nullable Location location,
+                @NonNull String message,
+                @Nullable Object data) {
+            if (ignoreSystemErrors() && (issue == IssueRegistry.LINT_ERROR)) {
                 return;
             }
 
