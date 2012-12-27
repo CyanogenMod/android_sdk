@@ -136,7 +136,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestOrderDetector.ILLEGAL_REFERENCE);
         issues.add(SecurityDetector.EXPORTED_PROVIDER);
         issues.add(SecurityDetector.EXPORTED_SERVICE);
-        issues.add(SecurityDetector.EXPORTED_ACTIVITY);
         issues.add(SecurityDetector.EXPORTED_RECEIVER);
         issues.add(SecurityDetector.OPEN_PROVIDER);
         issues.add(SecurityDetector.WORLD_READABLE);
