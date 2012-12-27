@@ -336,7 +336,7 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
                     continue;
                 }
 
-                for (int targetSdk = minSdk; targetSdk < HIGHEST_KNOWN_API; targetSdk++) {
+                for (int targetSdk = minSdk; targetSdk <= HIGHEST_KNOWN_API; targetSdk++) {
                     if (!isInterestingApiLevel(targetSdk)) {
                         continue;
                     }
@@ -447,7 +447,7 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
                     continue;
                 }
 
-                for (int targetSdk = minSdk; targetSdk < HIGHEST_KNOWN_API; targetSdk++) {
+                for (int targetSdk = minSdk; targetSdk <= HIGHEST_KNOWN_API; targetSdk++) {
                     if (!isInterestingApiLevel(targetSdk)) {
                         continue;
                     }
