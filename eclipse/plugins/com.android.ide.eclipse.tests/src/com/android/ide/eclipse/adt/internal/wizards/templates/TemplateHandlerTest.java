@@ -787,7 +787,6 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
                         }
 
                         if (issue == SecurityDetector.EXPORTED_SERVICE
-                                || issue == SecurityDetector.EXPORTED_ACTIVITY
                                 || issue == SecurityDetector.EXPORTED_PROVIDER
                                 || issue == SecurityDetector.EXPORTED_RECEIVER) {
                             // Don't complain about missing permissions when exporting: the
