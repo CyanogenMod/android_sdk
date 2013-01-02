@@ -100,6 +100,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MissingClassDetector.INSTANTIATABLE);
         issues.add(MissingClassDetector.INNERCLASS);
         issues.add(MissingIdDetector.ISSUE);
+        issues.add(WrongCaseDetector.WRONGCASE);
         issues.add(HandlerDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
         issues.add(TranslationDetector.EXTRA);
