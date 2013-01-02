@@ -348,7 +348,7 @@ public abstract class AbstractCheckTest extends SdkTestCase {
         }
 
         @Override
-        public Configuration getConfiguration(Project project) {
+        public Configuration getConfiguration(@NonNull Project project) {
             return AbstractCheckTest.this.getConfiguration(this, project);
         }
 
@@ -434,18 +434,18 @@ public abstract class AbstractCheckTest extends SdkTestCase {
         }
 
         @Override
-        public boolean isEnabled(Issue issue) {
+        public boolean isEnabled(@NonNull Issue issue) {
             return AbstractCheckTest.this.isEnabled(issue);
         }
 
         @Override
-        public void ignore(Context context, Issue issue, Location location, String message,
-                Object data) {
+        public void ignore(@NonNull Context context, @NonNull Issue issue,
+                @Nullable Location location, @NonNull String message, @Nullable Object data) {
             fail("Not supported in tests.");
         }
 
         @Override
-        public void setSeverity(Issue issue, Severity severity) {
+        public void setSeverity(@NonNull Issue issue, @Nullable Severity severity) {
             fail("Not supported in tests.");
         }
     }
