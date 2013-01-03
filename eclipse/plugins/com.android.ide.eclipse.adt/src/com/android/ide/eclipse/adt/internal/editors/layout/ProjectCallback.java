@@ -51,14 +51,17 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectClassLoader
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -462,12 +465,15 @@ public final class ProjectCallback extends LegacyCallback {
             ContextPullParser parser = new ContextPullParser(this, xml);
             try {
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                parser.setInput(new FileInputStream(xml), "UTF-8"); //$NON-NLS-1$
+                String xmlText = Files.toString(xml, Charsets.UTF_8);
+                parser.setInput(new StringReader(xmlText));
                 return parser;
             } catch (XmlPullParserException e) {
                 AdtPlugin.log(e, null);
             } catch (FileNotFoundException e) {
                 // Shouldn't happen since we check isFile() above
+            } catch (IOException e) {
+                AdtPlugin.log(e, null);
             }
         }
 
