@@ -41,8 +41,9 @@ subdirs += \
 
 ifneq (,$(shell which javac 2>/dev/null))
 subdirs += \
-	external/eclipse-windowbuilder/propertysheet \
 	external/ant-glob \
+	external/eclipse-windowbuilder/propertysheet \
+	external/hamcrest \
 	external/junit \
 	sdk/archquery \
 	sdk/annotations \
