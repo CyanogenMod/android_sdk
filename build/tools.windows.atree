@@ -40,7 +40,7 @@ rm tools/lint
 sdk/lint/cli/etc/lint.bat                         tools/lint.bat
 
 rm tools/jobb
-sdk/jobb/etc/jobb.bat                             tools/jobb.bat
+prebuilts/devtools/jobb/etc/jobb.bat              tools/jobb.bat
 
 
 rm tools/emulator
