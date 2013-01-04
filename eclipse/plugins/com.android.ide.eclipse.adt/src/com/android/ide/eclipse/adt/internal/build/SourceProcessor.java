@@ -366,15 +366,16 @@ public abstract class SourceProcessor {
             for (IResource r : members) {
                 // get the type of the resource
                switch (r.getType()) {
-                   case IResource.FILE:
+                   case IResource.FILE: {
                        // if this a file, check that the file actually exist
                        // and that it's the type of of file that's used in this processor
-                       if (r.exists() &&
-                               getExtensions().contains(
-                                       r.getFileExtension().toLowerCase(Locale.US))) {
+                       String extension = r.exists() ? r.getFileExtension() : null;
+                       if (extension != null &&
+                               getExtensions().contains(extension.toLowerCase(Locale.US))) {
                            mFiles.put((IFile) r, new SourceFileData((IFile) r));
                        }
                        break;
+                   }
                    case IResource.FOLDER:
                        // recursively go through children
                        scanFolderForSourceFiles(sourceFolder, (IFolder)r);
