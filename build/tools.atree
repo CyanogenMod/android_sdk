@@ -63,15 +63,15 @@ lib/lib64GLES_V2_translator${DLL_EXTENSION} strip tools/lib/lib64GLES_V2_transla
 lib/lib64EGL_translator${DLL_EXTENSION}     strip tools/lib/lib64EGL_translator${DLL_EXTENSION}
 
 # Java-Based SDK Tools
-bin/ddms                            tools/ddms
-bin/hierarchyviewer                 tools/hierarchyviewer
-bin/draw9patch                      tools/draw9patch
-bin/traceview                       tools/traceview
-bin/android                         tools/android
-bin/monkeyrunner                    tools/monkeyrunner
-bin/lint                            tools/lint
-bin/uiautomatorviewer               tools/uiautomatorviewer
-prebuilts/devtools/jobb/etc/jobb    tools/jobb
+bin/ddms                tools/ddms
+bin/hierarchyviewer     tools/hierarchyviewer
+bin/draw9patch          tools/draw9patch
+bin/traceview           tools/traceview
+bin/android             tools/android
+bin/monkeyrunner        tools/monkeyrunner
+bin/lint                tools/lint
+bin/uiautomatorviewer   tools/uiautomatorviewer
+bin/jobb                tools/jobb
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
@@ -197,4 +197,6 @@ framework/sdklib-tests.jar        tests/libtests/sdklib-tests.jar
 framework/sdkuilib-tests.jar      tests/libtests/sdkuilib-tests.jar
 framework/layoutlib_api.jar       tests/libtests/layoutlib_api.jar
 framework/dvlib-tests.jar         tests/libtests/dvlib-tests.jar
+#FIXME breaks build, manifmerger jar files not properly built
+#framework/manifmerger-tests.jar   tests/libtests/manifmerger-tests.jar
 
