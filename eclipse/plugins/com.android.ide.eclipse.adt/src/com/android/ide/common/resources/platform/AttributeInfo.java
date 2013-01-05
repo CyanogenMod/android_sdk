@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.ide.common.api.IAttributeInfo.Format.BOOLEAN;
@@ -211,6 +212,11 @@ public class AttributeInfo implements IAttributeInfo {
 
         // All other formats require a nonempty string
         if (value.isEmpty()) {
+            // Except for flags
+            if (mFormats.contains(FLAG)) {
+                return true;
+            }
+
             return false;
         }
         char first = value.charAt(0);
@@ -262,6 +268,14 @@ public class AttributeInfo implements IAttributeInfo {
                     //String name = url.substring(nameBegin);
                     return true;
                 }
+            } else if (value.startsWith(PREFIX_THEME_REF)) {
+                if (projectResources != null) {
+                    return projectResources.hasResourceItem(ResourceType.ATTR,
+                            value.substring(PREFIX_THEME_REF.length()));
+                } else {
+                    // Until proven otherwise
+                    return true;
+                }
             }
         }
 
@@ -290,7 +304,7 @@ public class AttributeInfo implements IAttributeInfo {
         }
 
         if (mFormats.contains(BOOLEAN)) {
-            if (value.equals(VALUE_TRUE) || value.equals(VALUE_FALSE)) {
+            if (value.equalsIgnoreCase(VALUE_TRUE) || value.equalsIgnoreCase(VALUE_FALSE)) {
                 return true;
             }
         }

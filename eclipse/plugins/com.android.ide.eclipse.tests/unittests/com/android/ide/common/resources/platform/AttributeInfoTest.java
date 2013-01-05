@@ -35,6 +35,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
+import junit.framework.TestCase;
+
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -46,8 +48,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class AttributeInfoTest extends TestCase {
@@ -70,7 +70,10 @@ public class AttributeInfoTest extends TestCase {
         assertTrue(info.isValid("true", null, null));
         assertTrue(info.isValid("false", null, null));
         assertFalse(info.isValid("", null, null));
-        assertFalse(info.isValid("TRUE", null, null));
+        assertTrue(info.isValid("TRUE", null, null));
+        assertTrue(info.isValid("True", null, null));
+        assertTrue(info.isValid("FALSE", null, null));
+        assertTrue(info.isValid("False", null, null));
     }
 
     public void testIsValidInteger() throws Exception {
@@ -160,6 +163,7 @@ public class AttributeInfoTest extends TestCase {
         assertTrue(info.isValid("@animator/foo", null, null));
         assertTrue(info.isValid("@anim/foo", null, null));
         assertTrue(info.isValid("?android:attr/textAppearanceMedium", null, null));
+        assertTrue(info.isValid("?textAppearanceMedium", null, null));
 
         assertFalse(info.isValid("", null, null));
         assertFalse(info.isValid("foo", null, null));
@@ -182,8 +186,8 @@ public class AttributeInfoTest extends TestCase {
         assertTrue(info.isValid("left", null, null));
         assertTrue(info.isValid("top", null, null));
         assertTrue(info.isValid("left|top", null, null));
+        assertTrue(info.isValid("", null, null));
 
-        assertFalse(info.isValid("", null, null));
         assertFalse(info.isValid("other", null, null));
         assertFalse(info.isValid("50", null, null));
     }
