@@ -1,30 +1,29 @@
 # Copyright 2011 The Android Open Source Project
 #
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src/main/java)
-LOCAL_JAVA_RESOURCE_DIRS :=
+# The manifest-merger code has moved to tools/base/manifmerger.
+# The rule below uses the prebuilt manifmerger.jar if found.
 
-LOCAL_JAR_MANIFEST := etc/manifest.txt
-LOCAL_JAVA_LIBRARIES :=  \
-	common \
-	sdklib
 LOCAL_MODULE := manifmerger
 LOCAL_MODULE_TAGS := optional
+LOCAL_JAVA_LIBRARIES := common sdklib
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-# Build tests
-include $(CLEAR_VARS)
+include $(BUILD_HOST_PREBUILT)
 
-# Only compile source java files in this lib.
-LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/test/java
-
-LOCAL_MODULE := manifmerger-tests
-LOCAL_MODULE_TAGS := optional
-
-LOCAL_JAVA_LIBRARIES := manifmerger sdklib-tests junit
-
-include $(BUILD_HOST_JAVA_LIBRARY)
