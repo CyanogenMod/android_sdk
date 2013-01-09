@@ -15,17 +15,15 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_JAVA_RESOURCE_DIRS := src
+# The jobb code has moved to tools/base/jobb.
+# The rule below uses the prebuilt jobb.jar if found.
 
-LOCAL_JAR_MANIFEST := etc/manifest.txt
-
-LOCAL_JAVA_LIBRARIES := \
-    fat32lib
-
-LOCAL_MODULE := jobb 
+LOCAL_MODULE := jobb
 LOCAL_MODULE_TAGS := debug
+LOCAL_JAVA_LIBRARIES := fat32lib
 
-include $(BUILD_HOST_JAVA_LIBRARY)
-include $(LOCAL_PATH)/etc/Android.mk
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+
+include $(BUILD_HOST_PREBUILT)
 
