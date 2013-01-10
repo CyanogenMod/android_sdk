@@ -16,12 +16,12 @@
 
 package com.android.hierarchyviewerlib.actions;
 
-import com.android.ddmlib.IDevice;
 import com.android.ddmuilib.ImageLoader;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
-import com.android.hierarchyviewerlib.device.Window;
+import com.android.hierarchyviewerlib.device.IHvDevice;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel.IWindowChangeListener;
+import com.android.hierarchyviewerlib.models.Window;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -65,27 +65,27 @@ public class LoadViewHierarchyAction extends Action implements ImageAction, IWin
     }
 
     @Override
-    public void deviceChanged(IDevice device) {
+    public void deviceChanged(IHvDevice device) {
         // pass
     }
 
     @Override
-    public void deviceConnected(IDevice device) {
+    public void deviceConnected(IHvDevice device) {
         // pass
     }
 
     @Override
-    public void deviceDisconnected(IDevice device) {
+    public void deviceDisconnected(IHvDevice device) {
         // pass
     }
 
     @Override
-    public void focusChanged(IDevice device) {
+    public void focusChanged(IHvDevice device) {
         // pass
     }
 
     @Override
-    public void selectionChanged(final IDevice device, final Window window) {
+    public void selectionChanged(final IHvDevice device, final Window window) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {

@@ -17,7 +17,6 @@
 package com.android.hierarchyviewerlib.models;
 
 import com.android.ddmlib.IDevice;
-import com.android.hierarchyviewerlib.device.ViewNode;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;

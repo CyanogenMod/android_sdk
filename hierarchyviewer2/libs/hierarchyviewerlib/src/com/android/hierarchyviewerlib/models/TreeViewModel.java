@@ -16,8 +16,6 @@
 
 package com.android.hierarchyviewerlib.models;
 
-import com.android.hierarchyviewerlib.device.ViewNode;
-import com.android.hierarchyviewerlib.device.Window;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode.Point;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode.Rectangle;

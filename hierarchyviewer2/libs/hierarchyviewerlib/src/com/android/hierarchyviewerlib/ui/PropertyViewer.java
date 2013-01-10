@@ -16,10 +16,10 @@
 
 package com.android.hierarchyviewerlib.ui;
 
-import com.android.hierarchyviewerlib.device.ViewNode;
-import com.android.hierarchyviewerlib.device.ViewNode.Property;
 import com.android.hierarchyviewerlib.models.TreeViewModel;
+import com.android.hierarchyviewerlib.models.ViewNode;
 import com.android.hierarchyviewerlib.models.TreeViewModel.ITreeChangeListener;
+import com.android.hierarchyviewerlib.models.ViewNode.Property;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode;
 import com.android.hierarchyviewerlib.ui.util.TreeColumnResizer;
 

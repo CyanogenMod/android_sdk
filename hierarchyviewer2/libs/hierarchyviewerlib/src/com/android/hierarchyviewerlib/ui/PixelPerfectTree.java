@@ -17,8 +17,8 @@
 package com.android.hierarchyviewerlib.ui;
 
 import com.android.ddmuilib.ImageLoader;
-import com.android.hierarchyviewerlib.device.ViewNode;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel;
+import com.android.hierarchyviewerlib.models.ViewNode;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel.IImageChangeListener;
 
 import org.eclipse.jface.viewers.ILabelProvider;

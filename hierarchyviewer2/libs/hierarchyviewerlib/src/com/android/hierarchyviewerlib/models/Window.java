@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.hierarchyviewerlib.device;
+package com.android.hierarchyviewerlib.models;
 
 import com.android.ddmlib.IDevice;
+import com.android.hierarchyviewerlib.device.IHvDevice;
 
 /**
  * Used for storing a window from the window manager service on the device.
  * These are the windows that the device selector shows.
  */
 public class Window {
+    private final String mTitle;
+    private final int mHashCode;
+    private final IHvDevice mHvDevice;
 
-    private String mTitle;
-
-    private int mHashCode;
-
-    private IDevice mDevice;
-
-    public Window(IDevice device, String title, int hashCode) {
-        this.mDevice = device;
+    public Window(IHvDevice device, String title, int hashCode) {
+        this.mHvDevice = device;
         this.mTitle = title;
         this.mHashCode = hashCode;
     }
@@ -53,11 +51,15 @@ public class Window {
         return mTitle;
     }
 
-    public IDevice getDevice() {
-        return mDevice;
+    public IHvDevice getHvDevice() {
+        return mHvDevice;
     }
 
-    public static Window getFocusedWindow(IDevice device) {
+    public IDevice getDevice() {
+        return mHvDevice.getDevice();
+    }
+
+    public static Window getFocusedWindow(IHvDevice device) {
         return new Window(device, "<Focused Window>", -1);
     }
 
@@ -67,11 +69,35 @@ public class Window {
      * work in the device selector unless the equals method is defined here.
      */
     @Override
-    public boolean equals(Object other) {
-        if (other instanceof Window) {
-            return mHashCode == ((Window) other).mHashCode
-                    && mDevice.getSerialNumber().equals(((Window) other).mDevice.getSerialNumber());
-        }
-        return false;
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+
+        Window other = (Window) obj;
+        if (mHvDevice == null) {
+            if (other.mHvDevice != null)
+                return false;
+        } else if (!mHvDevice.getDevice().getSerialNumber().equals(
+                other.mHvDevice.getDevice().getSerialNumber()))
+            return false;
+
+        if (mHashCode != other.mHashCode)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result +
+                ((mHvDevice == null) ? 0 : mHvDevice.getDevice().getSerialNumber().hashCode());
+        result = prime * result + mHashCode;
+        return result;
     }
 }

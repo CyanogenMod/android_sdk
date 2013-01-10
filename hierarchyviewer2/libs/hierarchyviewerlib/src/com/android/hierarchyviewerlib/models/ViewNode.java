@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.hierarchyviewerlib.device;
+package com.android.hierarchyviewerlib.models;
 
 import org.eclipse.swt.graphics.Image;
 
