@@ -267,7 +267,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
                 }
             }
         }
-
     }
 
     /** Add the issues found in the given jar file into the given list of issues */
