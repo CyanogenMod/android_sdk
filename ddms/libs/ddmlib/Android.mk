@@ -13,32 +13,20 @@
 # limitations under the License.
 
 LOCAL_PATH := $(call my-dir)
-
 include $(CLEAR_VARS)
 
-# Only compile source java files in this lib.
-LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/main/java
-
-LOCAL_JAVA_LIBRARIES := kxml2-2.3.0
+# The ddmlib source has moved to tools/base/ddmlib.
+# The rule below uses the prebuilt ddmlib.jar if found.
+#
+# If you want to run the tests, cd to tools/base/ddmlib
+# and run ./gradlew :ddmlib:test
 
 LOCAL_MODULE := ddmlib
-
-include $(BUILD_HOST_JAVA_LIBRARY)
-
-# Build tests
-
-include $(CLEAR_VARS)
-
-# Only compile source java files in this lib.
-LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-
-LOCAL_MODULE := ddmlib-tests
 LOCAL_MODULE_TAGS := optional
+LOCAL_JAVA_LIBRARIES := kxml2-2.3.0
 
-LOCAL_JAVA_LIBRARIES := ddmlib junit easymock
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+include $(BUILD_HOST_PREBUILT)
 
-# Build all sub-directories
-include $(call all-makefiles-under,$(LOCAL_PATH))

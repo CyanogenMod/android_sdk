@@ -17,6 +17,9 @@ include $(CLEAR_VARS)
 
 # The manifest-merger code has moved to tools/base/manifmerger.
 # The rule below uses the prebuilt manifmerger.jar if found.
+#
+# If you want to run the tests, cd to tools/base/manifmerger
+# and run ./gradlew :manifmerger:test
 
 LOCAL_MODULE := manifmerger
 LOCAL_MODULE_TAGS := optional

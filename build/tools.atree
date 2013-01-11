@@ -190,7 +190,6 @@ sdk/files/typos                        tools/support
 ##############################################################################
 
 sdk/testapps                      tests/testapps
-framework/ddmlib-tests.jar        tests/libtests/ddmlib-tests.jar
 framework/ninepatch-tests.jar     tests/libtests/ninepatch-tests.jar
 framework/common-tests.jar        tests/libtests/common-tests.jar
 framework/sdklib-tests.jar        tests/libtests/sdklib-tests.jar
