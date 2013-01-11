@@ -35,7 +35,6 @@ PRODUCT_PACKAGES += \
 	assetstudio \
 	common-tests \
 	ddmlib \
-	ddmlib-tests \
 	ddms \
 	ddmuilib \
 	draw9patch \
