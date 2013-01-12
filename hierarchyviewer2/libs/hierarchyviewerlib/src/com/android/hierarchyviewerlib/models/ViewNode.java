@@ -132,7 +132,14 @@ public class ViewNode {
         data = data.substring(delimIndex + 1);
         delimIndex = data.indexOf(' ');
         hashCode = data.substring(0, delimIndex);
-        loadProperties(data.substring(delimIndex + 1).trim());
+
+        if (data.length() > delimIndex + 1) {
+            loadProperties(data.substring(delimIndex + 1).trim());
+        } else {
+            // defaults in case properties are not available
+            id = "unknown";
+            width = height = 10;
+        }
 
         measureTime = -1;
         layoutTime = -1;

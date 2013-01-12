@@ -16,10 +16,29 @@
 
 package com.android.hierarchyviewerlib.device;
 
+import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 
 public class HvDeviceFactory {
+    private static final boolean ALWAYS_USE_VIEWSERVER = false; // for debugging
+
     public static IHvDevice create(IDevice device) {
-        return new ViewServerDevice(device);
+        if (ALWAYS_USE_VIEWSERVER) {
+            return new ViewServerDevice(device);
+        }
+
+        boolean ddmViewHierarchy = false;
+
+        // see if any of the clients on the device support view hierarchy via DDMS
+        for (Client c : device.getClients()) {
+            ClientData cd = c.getClientData();
+            if (cd != null && cd.hasFeature(ClientData.FEATURE_VIEW_HIERARCHY)) {
+                ddmViewHierarchy = true;
+                break;
+            }
+        }
+
+        return ddmViewHierarchy ? new DdmViewDebugDevice(device) : new ViewServerDevice(device);
     }
 }

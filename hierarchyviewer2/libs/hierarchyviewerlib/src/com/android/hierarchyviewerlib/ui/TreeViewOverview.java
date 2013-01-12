@@ -234,8 +234,7 @@ public class TreeViewOverview extends Canvas implements ITreeChangeListener {
                                 .ceil(mViewport.width), (int) Math.ceil(mViewport.height));
 
                         e.gc.setAlpha(255);
-                        e.gc
-                                .setForeground(Display.getDefault().getSystemColor(
+                        e.gc.setForeground(Display.getDefault().getSystemColor(
                                         SWT.COLOR_DARK_GRAY));
                         e.gc.setLineWidth((int) Math.ceil(2 / mScale));
                         e.gc.drawRectangle((int) mViewport.x, (int) mViewport.y, (int) Math
