@@ -19,8 +19,9 @@ package com.android.chimpchat.hierarchyviewer;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.hierarchyviewerlib.device.DeviceBridge;
-import com.android.hierarchyviewerlib.device.ViewNode;
-import com.android.hierarchyviewerlib.device.Window;
+import com.android.hierarchyviewerlib.device.ViewServerDevice;
+import com.android.hierarchyviewerlib.models.ViewNode;
+import com.android.hierarchyviewerlib.models.Window;
 
 import org.eclipse.swt.graphics.Point;
 
@@ -70,7 +71,7 @@ public class HierarchyViewer {
 
     public ViewNode findViewById(String id) {
         ViewNode rootNode = DeviceBridge.loadWindowData(
-                new Window(mDevice, "", 0xffffffff));
+                new Window(new ViewServerDevice(mDevice), "", 0xffffffff));
         if (rootNode == null) {
             throw new RuntimeException("Could not dump view");
         }
@@ -105,7 +106,7 @@ public class HierarchyViewer {
      */
     public String getFocusedWindowName() {
         int id = DeviceBridge.getFocusedWindow(mDevice);
-        Window[] windows = DeviceBridge.loadWindows(mDevice);
+        Window[] windows = DeviceBridge.loadWindows(new ViewServerDevice(mDevice), mDevice);
         for (Window w : windows) {
             if (w.getHashCode() == id)
                 return w.getTitle();
