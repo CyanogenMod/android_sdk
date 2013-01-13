@@ -39,7 +39,7 @@ import com.android.hierarchyviewerlib.actions.RefreshWindowsAction;
 import com.android.hierarchyviewerlib.actions.RequestLayoutAction;
 import com.android.hierarchyviewerlib.actions.SavePixelPerfectAction;
 import com.android.hierarchyviewerlib.actions.SaveTreeViewAction;
-import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
+import com.android.hierarchyviewerlib.device.IHvDevice;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel.IImageChangeListener;
@@ -669,9 +669,9 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         treeViewMenu.add(new Separator());
         treeViewMenu.add(RefreshViewAction.getAction());
         treeViewMenu.add(DisplayViewAction.getAction(getShell()));
-        // Only make the DumpDisplayList action visible if the protocol supports it.
-        ViewServerInfo info = DeviceSelectionModel.getModel().getSelectedDeviceInfo();
-        if (info != null && info.protocolVersion >= 4) {
+
+        IHvDevice hvDevice = DeviceSelectionModel.getModel().getSelectedDevice();
+        if (hvDevice.supportsDisplayListDump()) {
             treeViewMenu.add(DumpDisplayListAction.getAction());
             dumpDisplayList.setVisible(true);
         } else {

@@ -18,9 +18,9 @@ package com.android.hierarchyviewerlib.ui;
 
 import com.android.ddmuilib.ImageLoader;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
-import com.android.hierarchyviewerlib.device.ViewNode.ProfileRating;
 import com.android.hierarchyviewerlib.models.TreeViewModel;
 import com.android.hierarchyviewerlib.models.TreeViewModel.ITreeChangeListener;
+import com.android.hierarchyviewerlib.models.ViewNode.ProfileRating;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode.Point;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode.Rectangle;

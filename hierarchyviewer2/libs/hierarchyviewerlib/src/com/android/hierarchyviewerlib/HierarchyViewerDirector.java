@@ -16,22 +16,20 @@
 
 package com.android.hierarchyviewerlib;
 
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.RawImage;
-import com.android.ddmlib.TimeoutException;
 import com.android.hierarchyviewerlib.device.DeviceBridge;
-import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
-import com.android.hierarchyviewerlib.device.ViewNode;
-import com.android.hierarchyviewerlib.device.Window;
+import com.android.hierarchyviewerlib.device.HvDeviceFactory;
+import com.android.hierarchyviewerlib.device.IHvDevice;
 import com.android.hierarchyviewerlib.device.WindowUpdater;
 import com.android.hierarchyviewerlib.device.WindowUpdater.IWindowChangeListener;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel;
 import com.android.hierarchyviewerlib.models.TreeViewModel;
+import com.android.hierarchyviewerlib.models.ViewNode;
+import com.android.hierarchyviewerlib.models.Window;
 import com.android.hierarchyviewerlib.ui.CaptureDisplay;
 import com.android.hierarchyviewerlib.ui.TreeView;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode;
@@ -42,15 +40,15 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
-import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -77,6 +75,9 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
     private PixelPerfectAutoRefreshTask mCurrentAutoRefreshTask;
 
     private String mFilterText = ""; //$NON-NLS-1$
+
+    private static final Object mDevicesLock = new Object();
+    private Map<IDevice, IHvDevice> mDevices = new HashMap<IDevice, IHvDevice>(10);
 
     public void terminate() {
         WindowUpdater.terminate();
@@ -134,46 +135,24 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         executeInBackground("Connecting device", new Runnable() {
             @Override
             public void run() {
-                if (DeviceSelectionModel.getModel().containsDevice(device)) {
-                    windowsChanged(device);
-                } else if (device.isOnline()) {
-                    DeviceBridge.setupDeviceForward(device);
-                    if (!DeviceBridge.isViewServerRunning(device)) {
-                        if (!DeviceBridge.startViewServer(device)) {
-                            // Let's do something interesting here... Try again
-                            // in 2 seconds.
-                            try {
-                                Thread.sleep(2000);
-                            } catch (InterruptedException e) {
-                            }
-                            if (!DeviceBridge.startViewServer(device)) {
-                                Log.e(TAG, "Unable to debug device " + device);
-                                DeviceBridge.removeDeviceForward(device);
-                            } else {
-                                loadViewServerInfoAndWindows(device);
-                            }
-                            return;
-                        }
+                IHvDevice hvDevice;
+                synchronized (mDevicesLock) {
+                    hvDevice = mDevices.get(device);
+                    if (hvDevice == null) {
+                        hvDevice = HvDeviceFactory.create(device);
+                        hvDevice.initializeViewDebug();
+                        hvDevice.addWindowChangeListener(getDirector());
+                        mDevices.put(device, hvDevice);
+                    } else {
+                        // attempt re-initializing view server if device state has changed
+                        hvDevice.initializeViewDebug();
                     }
-                    loadViewServerInfoAndWindows(device);
                 }
+
+                DeviceSelectionModel.getModel().addDevice(hvDevice);
+                focusChanged(device);
             }
         });
-    }
-
-    private void loadViewServerInfoAndWindows(final IDevice device) {
-
-        ViewServerInfo viewServerInfo = DeviceBridge.loadViewServerInfo(device);
-        if (viewServerInfo == null) {
-            return;
-        }
-        Window[] windows = DeviceBridge.loadWindows(device);
-        DeviceSelectionModel.getModel().addDevice(device, windows, viewServerInfo);
-        if (viewServerInfo.protocolVersion >= 3) {
-            WindowUpdater.startListenForWindowChanges(HierarchyViewerDirector.this, device);
-            focusChanged(device);
-        }
-
     }
 
     @Override
@@ -181,13 +160,21 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         executeInBackground("Disconnecting device", new Runnable() {
             @Override
             public void run() {
-                ViewServerInfo viewServerInfo = DeviceBridge.getViewServerInfo(device);
-                if (viewServerInfo != null && viewServerInfo.protocolVersion >= 3) {
-                    WindowUpdater.stopListenForWindowChanges(HierarchyViewerDirector.this, device);
+                IHvDevice hvDevice;
+                synchronized (mDevicesLock) {
+                    hvDevice = mDevices.get(device);
+                    if (hvDevice != null) {
+                        mDevices.remove(device);
+                    }
                 }
-                DeviceBridge.removeDeviceForward(device);
-                DeviceBridge.removeViewServerInfo(device);
-                DeviceSelectionModel.getModel().removeDevice(device);
+
+                if (hvDevice == null) {
+                    return;
+                }
+
+                hvDevice.terminateViewDebug();
+                hvDevice.removeWindowChangeListener(getDirector());
+                DeviceSelectionModel.getModel().removeDevice(hvDevice);
                 if (PixelPerfectModel.getModel().getDevice() == device) {
                     PixelPerfectModel.getModel().setData(null, null, null);
                 }
@@ -201,25 +188,13 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
     }
 
     @Override
-    public void deviceChanged(IDevice device, int changeMask) {
-        if ((changeMask & IDevice.CHANGE_STATE) != 0 && device.isOnline()) {
-            deviceConnected(device);
-        }
-    }
-
-    @Override
     public void windowsChanged(final IDevice device) {
         executeInBackground("Refreshing windows", new Runnable() {
             @Override
             public void run() {
-                if (!DeviceBridge.isViewServerRunning(device)) {
-                    if (!DeviceBridge.startViewServer(device)) {
-                        Log.e(TAG, "Unable to debug device " + device);
-                        return;
-                    }
-                }
-                Window[] windows = DeviceBridge.loadWindows(device);
-                DeviceSelectionModel.getModel().updateDevice(device, windows);
+                IHvDevice hvDevice = getHvDevice(device);
+                hvDevice.reloadWindows();
+                DeviceSelectionModel.getModel().updateDevice(hvDevice);
             }
         });
     }
@@ -229,10 +204,18 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         executeInBackground("Updating focus", new Runnable() {
             @Override
             public void run() {
-                int focusedWindow = DeviceBridge.getFocusedWindow(device);
-                DeviceSelectionModel.getModel().updateFocusedWindow(device, focusedWindow);
+                IHvDevice hvDevice = getHvDevice(device);
+                int focusedWindow = hvDevice.getFocusedWindow();
+                DeviceSelectionModel.getModel().updateFocusedWindow(hvDevice, focusedWindow);
             }
         });
+    }
+
+    @Override
+    public void deviceChanged(IDevice device, int changeMask) {
+        if ((changeMask & IDevice.CHANGE_STATE) != 0 && device.isOnline()) {
+            deviceConnected(device);
+        }
     }
 
     public void refreshPixelPerfect() {
@@ -253,7 +236,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                 executeInBackground("Refreshing pixel perfect screenshot", new Runnable() {
                     @Override
                     public void run() {
-                        Image screenshotImage = getScreenshotImage(device);
+                        Image screenshotImage = getScreenshotImage(getHvDevice(device));
                         if (screenshotImage != null) {
                             PixelPerfectModel.getModel().setImage(screenshotImage);
                         }
@@ -273,8 +256,9 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             executeInBackground("Refreshing pixel perfect tree", new Runnable() {
                 @Override
                 public void run() {
+                    IHvDevice hvDevice = getHvDevice(device);
                     ViewNode viewNode =
-                            DeviceBridge.loadWindowData(Window.getFocusedWindow(device));
+                            hvDevice.loadWindowData(Window.getFocusedWindow(hvDevice));
                     if (viewNode != null) {
                         PixelPerfectModel.getModel().setTree(viewNode);
                     }
@@ -284,64 +268,43 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         }
     }
 
-    public void loadPixelPerfectData(final IDevice device) {
+    public void loadPixelPerfectData(final IHvDevice hvDevice) {
         executeInBackground("Loading pixel perfect data", new Runnable() {
             @Override
             public void run() {
-                Image screenshotImage = getScreenshotImage(device);
+                Image screenshotImage = getScreenshotImage(hvDevice);
                 if (screenshotImage != null) {
                     ViewNode viewNode =
-                            DeviceBridge.loadWindowData(Window.getFocusedWindow(device));
+                            hvDevice.loadWindowData(Window.getFocusedWindow(hvDevice));
                     if (viewNode != null) {
-                        PixelPerfectModel.getModel().setData(device, screenshotImage, viewNode);
+                        PixelPerfectModel.getModel().setData(hvDevice.getDevice(),
+                                screenshotImage, viewNode);
                     }
                 }
             }
         });
     }
 
-    private Image getScreenshotImage(IDevice device) {
-        try {
-            final RawImage screenshot = device.getScreenshot();
-            if (screenshot == null) {
-                return null;
-            }
-            class ImageContainer {
-                public Image image;
-            }
-            final ImageContainer imageContainer = new ImageContainer();
-            Display.getDefault().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    ImageData imageData =
-                            new ImageData(screenshot.width, screenshot.height, screenshot.bpp,
-                                    new PaletteData(screenshot.getRedMask(), screenshot
-                                            .getGreenMask(), screenshot.getBlueMask()), 1,
-                                    screenshot.data);
-                    imageContainer.image = new Image(Display.getDefault(), imageData);
-                }
-            });
-            return imageContainer.image;
-        } catch (IOException e) {
-            Log.e(TAG, "Unable to load screenshot from device " + device);
-        } catch (TimeoutException e) {
-            Log.e(TAG, "Timeout loading screenshot from device " + device);
-        } catch (AdbCommandRejectedException e) {
-            Log.e(TAG, "Adb rejected command to load screenshot from device " + device);
+    private IHvDevice getHvDevice(IDevice device) {
+        synchronized (mDevicesLock) {
+            return mDevices.get(device);
         }
-        return null;
+    }
+
+    private Image getScreenshotImage(IHvDevice hvDevice) {
+        return (hvDevice == null) ? null : hvDevice.getScreenshotImage();
     }
 
     public void loadViewTreeData(final Window window) {
         executeInBackground("Loading view hierarchy", new Runnable() {
             @Override
             public void run() {
-
                 mFilterText = ""; //$NON-NLS-1$
 
-                ViewNode viewNode = DeviceBridge.loadWindowData(window);
+                IHvDevice hvDevice = window.getHvDevice();
+                ViewNode viewNode = hvDevice.loadWindowData(window);
                 if (viewNode != null) {
-                    DeviceBridge.loadProfileData(window, viewNode);
+                    hvDevice.loadProfileData(window, viewNode);
                     viewNode.setViewCount();
                     TreeViewModel.getModel().setData(window, viewNode);
                 }
@@ -393,7 +356,8 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
     }
 
     public Image loadCapture(ViewNode viewNode) {
-        final Image image = DeviceBridge.loadCapture(viewNode.window, viewNode);
+        IHvDevice hvDevice = viewNode.window.getHvDevice();
+        final Image image = hvDevice.loadCapture(viewNode.window, viewNode);
         if (image != null) {
             viewNode.image = image;
 
@@ -423,7 +387,11 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         executeInBackground("Refreshing windows", new Runnable() {
             @Override
             public void run() {
-                IDevice[] devicesA = DeviceSelectionModel.getModel().getDevices();
+                IHvDevice[] hvDevicesA = DeviceSelectionModel.getModel().getDevices();
+                IDevice[] devicesA = new IDevice[hvDevicesA.length];
+                for (int i = 0; i < hvDevicesA.length; i++) {
+                    devicesA[i] = hvDevicesA[i].getDevice();
+                }
                 IDevice[] devicesB = DeviceBridge.getDevices();
                 HashSet<IDevice> deviceSet = new HashSet<IDevice>();
                 for (int i = 0; i < devicesB.length; i++) {
@@ -452,7 +420,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
     }
 
     public void inspectScreenshot() {
-        IDevice device = DeviceSelectionModel.getModel().getSelectedDevice();
+        IHvDevice device = DeviceSelectionModel.getModel().getSelectedDevice();
         if (device != null) {
             loadPixelPerfectData(device);
         }
@@ -562,7 +530,8 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                         executeInBackground("Saving window layers", new Runnable() {
                             @Override
                             public void run() {
-                                PsdFile psdFile = DeviceBridge.captureLayers(window);
+                                IHvDevice hvDevice = getHvDevice(window.getDevice());
+                                PsdFile psdFile = hvDevice.captureLayers(window);
                                 if (psdFile != null) {
                                     String extensionedFileName = fileName;
                                     if (!extensionedFileName.toLowerCase().endsWith(".psd")) { //$NON-NLS-1$
@@ -595,7 +564,8 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             executeInBackground("Invalidating view", new Runnable() {
                 @Override
                 public void run() {
-                    DeviceBridge.invalidateView(selectedNode.viewNode);
+                    IHvDevice hvDevice = getHvDevice(selectedNode.viewNode.window.getDevice());
+                    hvDevice.invalidateView(selectedNode.viewNode);
                 }
             });
         }
@@ -607,7 +577,8 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             executeInBackground("Request layout", new Runnable() {
                 @Override
                 public void run() {
-                    DeviceBridge.requestLayout(selectedNode.viewNode);
+                    IHvDevice hvDevice = getHvDevice(selectedNode.viewNode.window.getDevice());
+                    hvDevice.requestLayout(selectedNode.viewNode);
                 }
             });
         }
@@ -619,7 +590,8 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             executeInBackground("Dump displaylist", new Runnable() {
                 @Override
                 public void run() {
-                    DeviceBridge.outputDisplayList(selectedNode.viewNode);
+                    IHvDevice hvDevice = getHvDevice(selectedNode.viewNode.window.getDevice());
+                    hvDevice.outputDisplayList(selectedNode.viewNode);
                 }
             });
         }
@@ -640,7 +612,8 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
     }
 
     private void loadViewRecursive(ViewNode viewNode) {
-        Image image = DeviceBridge.loadCapture(viewNode.window, viewNode);
+        IHvDevice hvDevice = getHvDevice(viewNode.window.getDevice());
+        Image image = hvDevice.loadCapture(viewNode.window, viewNode);
         if (image == null) {
             return;
         }

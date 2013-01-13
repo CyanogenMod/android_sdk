@@ -18,7 +18,7 @@ package com.android.hierarchyviewerlib.ui;
 
 import com.android.ddmuilib.ImageLoader;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
-import com.android.hierarchyviewerlib.device.ViewNode;
+import com.android.hierarchyviewerlib.models.ViewNode;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;

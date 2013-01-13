@@ -16,7 +16,7 @@
 
 package com.android.hierarchyviewerlib.ui.util;
 
-import com.android.hierarchyviewerlib.device.ViewNode;
+import com.android.hierarchyviewerlib.models.ViewNode;
 
 import java.util.ArrayList;
 

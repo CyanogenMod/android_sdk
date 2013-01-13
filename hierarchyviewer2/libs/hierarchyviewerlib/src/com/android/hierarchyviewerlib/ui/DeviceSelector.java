@@ -16,12 +16,12 @@
 
 package com.android.hierarchyviewerlib.ui;
 
-import com.android.ddmlib.IDevice;
 import com.android.ddmuilib.ImageLoader;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
-import com.android.hierarchyviewerlib.device.Window;
+import com.android.hierarchyviewerlib.device.IHvDevice;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.DeviceSelectionModel.IWindowChangeListener;
+import com.android.hierarchyviewerlib.models.Window;
 
 import org.eclipse.jface.viewers.IFontProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -69,8 +69,8 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     private class ContentProvider implements ITreeContentProvider, ILabelProvider, IFontProvider {
         @Override
         public Object[] getChildren(Object parentElement) {
-            if (parentElement instanceof IDevice && mDoTreeViewStuff) {
-                Window[] list = mModel.getWindows((IDevice) parentElement);
+            if (parentElement instanceof IHvDevice && mDoTreeViewStuff) {
+                Window[] list = mModel.getWindows((IHvDevice) parentElement);
                 if (list != null) {
                     return list;
                 }
@@ -88,8 +88,8 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
 
         @Override
         public boolean hasChildren(Object element) {
-            if (element instanceof IDevice && mDoTreeViewStuff) {
-                Window[] list = mModel.getWindows((IDevice) element);
+            if (element instanceof IHvDevice && mDoTreeViewStuff) {
+                Window[] list = mModel.getWindows((IHvDevice) element);
                 if (list != null) {
                     return list.length != 0;
                 }
@@ -117,8 +117,8 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
 
         @Override
         public Image getImage(Object element) {
-            if (element instanceof IDevice) {
-                if (((IDevice) element).isEmulator()) {
+            if (element instanceof IHvDevice) {
+                if (((IHvDevice) element).getDevice().isEmulator()) {
                     return mEmulatorImage;
                 }
                 return mDeviceImage;
@@ -128,8 +128,8 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
 
         @Override
         public String getText(Object element) {
-            if (element instanceof IDevice) {
-                return ((IDevice) element).toString();
+            if (element instanceof IHvDevice) {
+                return ((IHvDevice) element).getDevice().getName();
             } else if (element instanceof Window) {
                 return ((Window) element).getTitle();
             }
@@ -139,7 +139,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
         @Override
         public Font getFont(Object element) {
             if (element instanceof Window) {
-                int focusedWindow = mModel.getFocusedWindow(((Window) element).getDevice());
+                int focusedWindow = mModel.getFocusedWindow(((Window) element).getHvDevice());
                 if (focusedWindow == ((Window) element).getHashCode()) {
                     return mBoldFont;
                 }
@@ -263,7 +263,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     }
 
     @Override
-    public void deviceConnected(final IDevice device) {
+    public void deviceConnected(final IHvDevice device) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
@@ -274,7 +274,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     }
 
     @Override
-    public void deviceChanged(final IDevice device) {
+    public void deviceChanged(final IHvDevice device) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
@@ -289,7 +289,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     }
 
     @Override
-    public void deviceDisconnected(final IDevice device) {
+    public void deviceDisconnected(final IHvDevice device) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
@@ -299,7 +299,7 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     }
 
     @Override
-    public void focusChanged(final IDevice device) {
+    public void focusChanged(final IHvDevice device) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
@@ -314,15 +314,15 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     }
 
     @Override
-    public void selectionChanged(IDevice device, Window window) {
+    public void selectionChanged(IHvDevice device, Window window) {
         // pass
     }
 
     @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         Object selection = ((TreeItem) e.item).getData();
-        if (selection instanceof IDevice && mDoPixelPerfectStuff) {
-            HierarchyViewerDirector.getDirector().loadPixelPerfectData((IDevice) selection);
+        if (selection instanceof IHvDevice && mDoPixelPerfectStuff) {
+            HierarchyViewerDirector.getDirector().loadPixelPerfectData((IHvDevice) selection);
         } else if (selection instanceof Window && mDoTreeViewStuff) {
             HierarchyViewerDirector.getDirector().loadViewTreeData((Window) selection);
         }
@@ -331,10 +331,10 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
     @Override
     public void widgetSelected(SelectionEvent e) {
         Object selection = ((TreeItem) e.item).getData();
-        if (selection instanceof IDevice) {
-            mModel.setSelection((IDevice) selection, null);
+        if (selection instanceof IHvDevice) {
+            mModel.setSelection((IHvDevice) selection, null);
         } else if (selection instanceof Window) {
-            mModel.setSelection(((Window) selection).getDevice(), (Window) selection);
+            mModel.setSelection(((Window) selection).getHvDevice(), (Window) selection);
         }
     }
 }

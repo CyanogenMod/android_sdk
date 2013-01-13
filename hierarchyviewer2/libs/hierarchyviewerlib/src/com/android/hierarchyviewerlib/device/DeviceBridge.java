@@ -23,6 +23,8 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.hierarchyviewerlib.models.ViewNode;
+import com.android.hierarchyviewerlib.models.Window;
 import com.android.hierarchyviewerlib.ui.util.PsdFile;
 
 import org.eclipse.swt.graphics.Image;
@@ -353,7 +355,7 @@ public class DeviceBridge {
      * This loads the list of windows from the specified device. The format is:
      * hashCode1 title1 hashCode2 title2 ... hashCodeN titleN DONE.
      */
-    public static Window[] loadWindows(IDevice device) {
+    public static Window[] loadWindows(IHvDevice hvDevice, IDevice device) {
         ArrayList<Window> windows = new ArrayList<Window>();
         DeviceConnection connection = null;
         ViewServerInfo serverInfo = getViewServerInfo(device);
@@ -378,7 +380,7 @@ public class DeviceBridge {
                         id = Integer.parseInt(windowId, 16);
                     }
 
-                    Window w = new Window(device, line.substring(index + 1), id);
+                    Window w = new Window(hvDevice, line.substring(index + 1), id);
                     windows.add(w);
                 }
             }
@@ -387,7 +389,7 @@ public class DeviceBridge {
             // get the focused window, which was done using a special type of
             // window with hash code -1.
             if (serverInfo.protocolVersion < 3) {
-                windows.add(Window.getFocusedWindow(device));
+                windows.add(Window.getFocusedWindow(hvDevice));
             }
         } catch (Exception e) {
             Log.e(TAG, "Unable to load the window list from device " + device);
@@ -448,7 +450,9 @@ public class DeviceBridge {
                     depth++;
                 }
                 while (depth <= currentDepth) {
-                    currentNode = currentNode.parent;
+                    if (currentNode != null) {
+                        currentNode = currentNode.parent;
+                    }
                     currentDepth--;
                 }
                 currentNode = new ViewNode(window, currentNode, line.substring(depth));
@@ -557,7 +561,6 @@ public class DeviceBridge {
 
         try {
             connection = new DeviceConnection(window.getDevice());
-
             connection.sendCommand("CAPTURE_LAYERS " + window.encode()); //$NON-NLS-1$
 
             in =
@@ -583,7 +586,10 @@ public class DeviceBridge {
                 } catch (Exception ex) {
                 }
             }
-            connection.close();
+
+            if (connection != null) {
+                connection.close();
+            }
         }
 
         return null;
@@ -634,7 +640,9 @@ public class DeviceBridge {
             Log.e(TAG, "Unable to invalidate view " + viewNode + " in window " + viewNode.window
                     + " on device " + viewNode.window.getDevice());
         } finally {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
     }
 
@@ -647,7 +655,9 @@ public class DeviceBridge {
             Log.e(TAG, "Unable to request layout for node " + viewNode + " in window "
                     + viewNode.window + " on device " + viewNode.window.getDevice());
         } finally {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
     }
 
@@ -661,7 +671,9 @@ public class DeviceBridge {
             Log.e(TAG, "Unable to dump displaylist for node " + viewNode + " in window "
                     + viewNode.window + " on device " + viewNode.window.getDevice());
         } finally {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
     }
 
