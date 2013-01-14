@@ -19,7 +19,7 @@ package com.android.monkeyrunner.easy;
 import com.google.common.base.Preconditions;
 
 import com.android.chimpchat.hierarchyviewer.HierarchyViewer;
-import com.android.hierarchyviewerlib.device.ViewNode;
+import com.android.hierarchyviewerlib.models.ViewNode;
 import com.android.monkeyrunner.JythonUtils;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
