@@ -23,6 +23,7 @@ import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.ValueResourceParser;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -34,7 +35,6 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
@@ -1058,7 +1058,7 @@ public class NewProjectCreator  {
                 String value = strings.get(key);
 
                 // Escape values if necessary
-                value = ExtractStringRefactoring.escapeString(value);
+                value = ValueResourceParser.escapeResourceString(value);
 
                 // place them in the template
                 String stringDef = stringTemplate.replace(PARAM_STRING_NAME, key);
