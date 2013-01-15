@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
-import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
+import com.android.ide.common.resources.ValueResourceParser;
 
 import freemarker.template.SimpleScalar;
 import freemarker.template.TemplateMethodModel;
@@ -38,6 +38,6 @@ public class FmEscapeXmlStringMethod implements TemplateMethodModel {
             throw new TemplateModelException("Wrong arguments");
         }
         String string = args.get(0).toString();
-        return new SimpleScalar(ExtractStringRefactoring.escapeString(string));
+        return new SimpleScalar(ValueResourceParser.escapeResourceString(string));
     }
 }

@@ -34,7 +34,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
-import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.common.resources.ValueResourceParser;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
 import com.google.common.collect.Maps;
 
@@ -158,10 +158,8 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
             return VALUE_FILL_PARENT;
         }
 
-        // Handle unicode escapes
-        if (value != null && value.indexOf('\\') != -1) {
-            value = AdtUtils.replaceUnicodeEscapes(value);
-        }
+        // Handle unicode escapes etc
+        value = ValueResourceParser.unescapeResourceString(value, false, false);
 
         return value;
     }

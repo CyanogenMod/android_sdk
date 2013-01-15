@@ -16,12 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
-import static com.android.SdkConstants.AMP_ENTITY;
-import static com.android.SdkConstants.LT_ENTITY;
 import static com.android.SdkConstants.QUOT_ENTITY;
 import static com.android.SdkConstants.STRING_PREFIX;
 
 import com.android.SdkConstants;
+import com.android.ide.common.resources.ValueResourceParser;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -1218,7 +1217,7 @@ public class ExtractStringRefactoring extends Refactoring {
         IStructuredModel smodel = null;
 
         // Single and double quotes must be escaped in the <string>value</string> declaration
-        tokenString = escapeString(tokenString);
+        tokenString = ValueResourceParser.escapeResourceString(tokenString);
 
         try {
             IStructuredDocument sdoc = null;
@@ -1447,79 +1446,6 @@ public class ExtractStringRefactoring extends Refactoring {
         }
 
         return null;
-    }
-
-    /**
-     * Escape a string value to be placed in a string resource file such that it complies with
-     * the escaping rules described here:
-     *   http://developer.android.com/guide/topics/resources/string-resource.html
-     * More examples of the escaping rules can be found here:
-     *   http://androidcookbook.com/Recipe.seam?recipeId=2219&recipeFrom=ViewTOC
-     * This method assumes that the String is not escaped already.
-     *
-     * Rules:
-     * <ul>
-     * <li>Double quotes are needed if string starts or ends with at least one space.
-     * <li>{@code @, ?} at beginning of string have to be escaped with a backslash.
-     * <li>{@code ', ", \} have to be escaped with a backslash.
-     * <li>{@code <, >, &} have to be replaced by their predefined xml entity.
-     * <li>{@code \n, \t} have to be replaced by a backslash and the appropriate character.
-     * </ul>
-     * @param s the string to be escaped
-     * @return the escaped string as it would appear in the XML text in a values file
-     */
-    public static String escapeString(String s) {
-        int n = s.length();
-        if (n == 0) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder(s.length() * 2);
-        boolean hasSpace = s.charAt(0) == ' ' || s.charAt(n - 1) == ' ';
-
-        if (hasSpace) {
-            sb.append('"');
-        } else if (s.charAt(0) == '@' || s.charAt(0) == '?') {
-            sb.append('\\');
-        }
-
-        for (int i = 0; i < n; ++i) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '\'':
-                    if (!hasSpace) {
-                        sb.append('\\');
-                    }
-                    sb.append(c);
-                    break;
-                case '"':
-                case '\\':
-                    sb.append('\\');
-                    sb.append(c);
-                    break;
-                case '<':
-                    sb.append(LT_ENTITY);
-                    break;
-                case '&':
-                    sb.append(AMP_ENTITY);
-                    break;
-                case '\n':
-                    sb.append("\\n"); //$NON-NLS-1$
-                    break;
-                case '\t':
-                    sb.append("\\t"); //$NON-NLS-1$
-                    break;
-                default:
-                    sb.append(c);
-                    break;
-            }
-        }
-
-        if (hasSpace) {
-            sb.append('"');
-        }
-
-        return sb.toString();
     }
 
     /**

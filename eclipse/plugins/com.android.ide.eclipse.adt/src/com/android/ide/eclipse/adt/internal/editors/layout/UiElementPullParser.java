@@ -36,7 +36,7 @@ import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;
-import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.common.resources.ValueResourceParser;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.FragmentMenu;
@@ -398,10 +398,8 @@ public class UiElementPullParser extends BasePullParser {
                     return VALUE_FILL_PARENT;
                 }
 
-                // Handle unicode escapes
-                if (value.indexOf('\\') != -1) {
-                    value = AdtUtils.replaceUnicodeEscapes(value);
-                }
+                // Handle unicode escapes etc
+                value = ValueResourceParser.unescapeResourceString(value, false, false);
 
                 return value;
             }
