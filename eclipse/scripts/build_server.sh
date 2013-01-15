@@ -63,6 +63,8 @@ function check_params() {
   DATE=`date +v%Y%m%d%H%M`
   QUALIFIER="$DATE"
   [ -n "$BUILD_NUMBER" ] && QUALIFIER="${QUALIFIER}-${BUILD_NUMBER}"
+
+  return 0
 }
 
 function build_plugin() {
