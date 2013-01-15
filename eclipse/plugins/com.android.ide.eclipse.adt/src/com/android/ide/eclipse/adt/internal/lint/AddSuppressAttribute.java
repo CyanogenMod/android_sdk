@@ -177,7 +177,8 @@ class AddSuppressAttribute implements ICompletionProposal {
         fixes.add(new AddSuppressAttribute(editor, id, marker, element, desc, null));
 
         int api = -1;
-        if (id.equals(ApiDetector.UNSUPPORTED.getId())) {
+        if (id.equals(ApiDetector.UNSUPPORTED.getId())
+                || id.equals(ApiDetector.INLINED.getId())) {
             String message = marker.getAttribute(IMarker.MESSAGE, null);
             if (message != null) {
                 Pattern pattern = Pattern.compile("\\s(\\d+)\\s"); //$NON-NLS-1$

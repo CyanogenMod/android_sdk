@@ -332,7 +332,8 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         }
 
         int api = -1;
-        if (id.equals(ApiDetector.UNSUPPORTED.getId())) {
+        if (id.equals(ApiDetector.UNSUPPORTED.getId()) ||
+                id.equals(ApiDetector.INLINED.getId())) {
             String message = marker.getAttribute(IMarker.MESSAGE, null);
             if (message != null) {
                 Pattern pattern = Pattern.compile("\\s(\\d+)\\s"); //$NON-NLS-1$
