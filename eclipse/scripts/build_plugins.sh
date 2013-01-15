@@ -141,7 +141,7 @@ fi
 # The "configuration directory" will hold the workspace for this build.
 # If it contains old data the build may fail so we need to clean it first
 # and create it if it doesn't exist.
-CONFIG_DIR="../../../out/eclipse-configuration-$BUILD_VERSION"
+CONFIG_DIR="../../out/eclipse-configuration-$BUILD_VERSION"
 [ -d "$CONFIG_DIR" ] && rm -rfv "$CONFIG_DIR"
 mkdir -p "$CONFIG_DIR"
 
