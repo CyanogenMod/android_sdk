@@ -3,7 +3,7 @@
 	<classpathentry excluding="**/Android.mk" kind="src" path="src"/>
 	<classpathentry excluding="**/Android.mk" kind="src" path="tests"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SdkLib"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/sdklib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SdkUiLib"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
