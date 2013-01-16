@@ -51,7 +51,6 @@ PRODUCT_PACKAGES += \
 	ninepatch-tests \
 	rule_api \
 	sdklib \
-	sdklib-tests \
 	sdkmanager \
 	sdkstats \
 	sdkuilib \

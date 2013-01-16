@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+
+/*
+  Note: this file is duplicated from tools/base/sdklib/src/tests.
+  The version of sdkmanager-tests in sdk.git does no longer have
+  access to sdklib-tests.
+  FIXME: if this generic enough, move it to test-utils.
+*/
+
 package com.android.sdklib;
 
 

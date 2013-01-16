@@ -23,6 +23,12 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_MODULE := sdkmanager-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := sdkmanager sdklib-tests junit
+LOCAL_JAVA_LIBRARIES := \
+        httpclient-4.1.1 \
+        httpcore-4.1 \
+        httpmime-4.1.1 \
+        junit \
+        sdkmanager \
+        sdklib
 
 include $(BUILD_HOST_JAVA_LIBRARY)
