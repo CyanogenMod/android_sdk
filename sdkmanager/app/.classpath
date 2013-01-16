@@ -4,7 +4,7 @@
 	<classpathentry excluding="**/Android.mk" kind="src" path="tests"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/sdklib"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SdkUiLib"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/sdkuilib"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
 	<classpathentry kind="var" path="ANDROID_OUT_FRAMEWORK/swt.jar"/>
