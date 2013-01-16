@@ -12,15 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/main/java
+# The sdklib code has moved to tools/base/sdklib.
+# The rule below uses the prebuilt sdklib.jar if found.
+#
+# If you want to run the tests, cd to tools/base
+# and run ./gradlew :sdklib:test
 
-LOCAL_JAR_MANIFEST := manifest.txt
-
+LOCAL_MODULE := sdklib
+LOCAL_MODULE_TAGS := optional
 # IMPORTANT: if you add a new dependency here, please make sure
 # to also check the following files:
 #   sdkmanager/sdklib/manifest.txt
@@ -38,21 +41,8 @@ LOCAL_JAVA_LIBRARIES := \
         mkidentity-prebuilt \
         layoutlib_api
 
-LOCAL_MODULE := sdklib
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+include $(BUILD_HOST_PREBUILT)
 
-
-# Build tests
-include $(CLEAR_VARS)
-
-# Only compile source java files in this lib.
-LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/test/java
-
-LOCAL_MODULE := sdklib-tests
-LOCAL_MODULE_TAGS := optional
-
-LOCAL_JAVA_LIBRARIES := sdklib junit dvlib-tests
-
-include $(BUILD_HOST_JAVA_LIBRARY)
