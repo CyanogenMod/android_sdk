@@ -12,25 +12,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_JAVA_RESOURCE_DIRS := src
-
-ifeq ($(HOST_OS),darwin)
-LOCAL_SRC_FILES += $(call all-java-files-under, src-$(HOST_OS))
-LOCAL_JAVA_RESOURCE_DIRS += src-$(HOST_OS)
-endif
+# The swtmenubar code has moved to tools/swt/swtmenubar.
+# The rule below uses the prebuilt swtmenubar.jar if found.
 
 LOCAL_MODULE := swtmenubar
 LOCAL_MODULE_TAGS := optional
-
 LOCAL_JAVA_LIBRARIES := \
 	swt \
 	org.eclipse.jface_3.6.2.M20110210-1200
 
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+include $(BUILD_HOST_PREBUILT)
 
