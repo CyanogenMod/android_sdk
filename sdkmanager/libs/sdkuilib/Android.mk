@@ -12,13 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-LOCAL_JAVA_RESOURCE_DIRS := src
+# The sdkuilib code has moved to tools/swt/sdkuilib.
+# The rule below uses the prebuilt sdkuilib.jar if found.
+#
+# If you want to run the tests, cd to tools/swt
+# and run ./gradlew :sdkuilib:test
 
+LOCAL_MODULE := sdkuilib
+LOCAL_MODULE_TAGS := optional
 # IMPORTANT: if you add a new dependency here, please make sure
 # to also check the following file:
 #   sdkmanager/app/etc/android.bat
@@ -39,13 +44,8 @@ LOCAL_JAVA_LIBRARIES := \
 	swt \
 	swtmenubar
 
-LOCAL_MODULE := sdkuilib
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-LOCAL_JAR_MANIFEST := etc/manifest.txt
+include $(BUILD_HOST_PREBUILT)
 
-include $(BUILD_HOST_JAVA_LIBRARY)
-
-
-
-# Build all sub-directories
-include $(call all-makefiles-under,$(LOCAL_PATH))

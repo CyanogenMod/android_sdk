@@ -193,7 +193,6 @@ sdk/testapps                      tests/testapps
 framework/ninepatch-tests.jar     tests/libtests/ninepatch-tests.jar
 framework/common-tests.jar        tests/libtests/common-tests.jar
 framework/sdklib-tests.jar        tests/libtests/sdklib-tests.jar
-framework/sdkuilib-tests.jar      tests/libtests/sdkuilib-tests.jar
 framework/layoutlib_api.jar       tests/libtests/layoutlib_api.jar
 framework/dvlib-tests.jar         tests/libtests/dvlib-tests.jar
 
