@@ -55,7 +55,6 @@ PRODUCT_PACKAGES += \
 	sdkmanager \
 	sdkstats \
 	sdkuilib \
-	sdkuilib-tests \
 	swtmenubar \
 	traceview \
 	uiautomatorviewer \
