@@ -16,6 +16,7 @@
 
 package com.android.hierarchyviewerlib.models;
 
+import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
 import com.android.hierarchyviewerlib.device.IHvDevice;
 
@@ -27,11 +28,20 @@ public class Window {
     private final String mTitle;
     private final int mHashCode;
     private final IHvDevice mHvDevice;
+    private final Client mClient;
 
     public Window(IHvDevice device, String title, int hashCode) {
-        this.mHvDevice = device;
-        this.mTitle = title;
-        this.mHashCode = hashCode;
+        mHvDevice = device;
+        mTitle = title;
+        mHashCode = hashCode;
+        mClient = null;
+    }
+
+    public Window(IHvDevice device, String title, Client c) {
+        mHvDevice = device;
+        mTitle = title;
+        mClient = c;
+        mHashCode = c.hashCode();
     }
 
     public String getTitle() {
@@ -57,6 +67,10 @@ public class Window {
 
     public IDevice getDevice() {
         return mHvDevice.getDevice();
+    }
+
+    public Client getClient() {
+        return mClient;
     }
 
     public static Window getFocusedWindow(IHvDevice device) {

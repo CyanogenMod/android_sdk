@@ -32,6 +32,7 @@ import com.android.hierarchyviewerlib.actions.InvalidateAction;
 import com.android.hierarchyviewerlib.actions.LoadOverlayAction;
 import com.android.hierarchyviewerlib.actions.LoadViewHierarchyAction;
 import com.android.hierarchyviewerlib.actions.PixelPerfectAutoRefreshAction;
+import com.android.hierarchyviewerlib.actions.ProfileNodesAction;
 import com.android.hierarchyviewerlib.actions.RefreshPixelPerfectAction;
 import com.android.hierarchyviewerlib.actions.RefreshPixelPerfectTreeAction;
 import com.android.hierarchyviewerlib.actions.RefreshViewAction;
@@ -128,6 +129,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     private Composite mTreeViewControls;
 
     private ActionButton dumpDisplayList;
+    private ActionButton mProfileNodes;
 
     private HierarchyViewerDirector mDirector;
 
@@ -372,7 +374,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
 
         Composite innerButtonPanel = new Composite(buttonPanel, SWT.NONE);
         innerButtonPanel.setLayoutData(new GridData(GridData.FILL_VERTICAL));
-        GridLayout innerButtonPanelLayout = new GridLayout(7, true);
+        GridLayout innerButtonPanelLayout = new GridLayout(8, true);
         innerButtonPanelLayout.marginWidth = innerButtonPanelLayout.marginHeight = 2;
         innerButtonPanelLayout.horizontalSpacing = innerButtonPanelLayout.verticalSpacing = 2;
         innerButtonPanel.setLayout(innerButtonPanelLayout);
@@ -403,6 +405,10 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         dumpDisplayList =
                 new ActionButton(innerButtonPanel, DumpDisplayListAction.getAction());
         dumpDisplayList.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+        ActionButton profileNodes =
+                new ActionButton(innerButtonPanel, ProfileNodesAction.getAction());
+        profileNodes.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         SashForm mainSash = new SashForm(mTreeViewPanel, SWT.HORIZONTAL | SWT.SMOOTH);
         mainSash.setLayoutData(new GridData(GridData.FILL_BOTH));

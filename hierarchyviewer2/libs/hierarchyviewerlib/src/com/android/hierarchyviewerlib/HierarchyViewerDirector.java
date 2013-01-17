@@ -135,6 +135,10 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
         executeInBackground("Connecting device", new Runnable() {
             @Override
             public void run() {
+                if (!device.isOnline()) {
+                    return;
+                }
+
                 IHvDevice hvDevice;
                 synchronized (mDevicesLock) {
                     hvDevice = mDevices.get(device);
@@ -304,7 +308,6 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                 IHvDevice hvDevice = window.getHvDevice();
                 ViewNode viewNode = hvDevice.loadWindowData(window);
                 if (viewNode != null) {
-                    hvDevice.loadProfileData(window, viewNode);
                     viewNode.setViewCount();
                     TreeViewModel.getModel().setData(window, viewNode);
                 }
@@ -592,6 +595,21 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                 public void run() {
                     IHvDevice hvDevice = getHvDevice(selectedNode.viewNode.window.getDevice());
                     hvDevice.outputDisplayList(selectedNode.viewNode);
+                }
+            });
+        }
+    }
+
+    public void profileCurrentNode() {
+        final DrawableViewNode selectedNode = TreeViewModel.getModel().getSelection();
+        if (selectedNode != null) {
+            executeInBackground("Profile Node", new Runnable() {
+                @Override
+                public void run() {
+                    IHvDevice hvDevice = getHvDevice(selectedNode.viewNode.window.getDevice());
+                    hvDevice.loadProfileData(selectedNode.viewNode.window, selectedNode.viewNode);
+                    // Force the layout viewer to redraw.
+                    TreeViewModel.getModel().notifySelectionChanged();
                 }
             });
         }

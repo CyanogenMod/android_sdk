@@ -99,7 +99,7 @@ public class DeviceBridge {
      */
     public static void initDebugBridge(String adbLocation) {
         if (sBridge == null) {
-            AndroidDebugBridge.init(false /* debugger support */);
+            AndroidDebugBridge.init(true /* debugger support */);
         }
         if (sBridge == null || !sBridge.isConnected()) {
             sBridge = AndroidDebugBridge.createBridge(adbLocation, true);
@@ -438,9 +438,29 @@ public class DeviceBridge {
             connection = new DeviceConnection(window.getDevice());
             connection.sendCommand("DUMP " + window.encode()); //$NON-NLS-1$
             BufferedReader in = connection.getInputStream();
-            ViewNode currentNode = null;
-            int currentDepth = -1;
-            String line;
+            ViewNode currentNode = parseViewHierarchy(in, window);
+            ViewServerInfo serverInfo = getViewServerInfo(window.getDevice());
+            if (serverInfo != null) {
+                currentNode.protocolVersion = serverInfo.protocolVersion;
+            }
+            return currentNode;
+        } catch (Exception e) {
+            Log.e(TAG, "Unable to load window data for window " + window.getTitle() + " on device "
+                    + window.getDevice());
+            Log.e(TAG, e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
+        return null;
+    }
+
+    public static ViewNode parseViewHierarchy(BufferedReader in, Window window) {
+        ViewNode currentNode = null;
+        int currentDepth = -1;
+        String line;
+        try {
             while ((line = in.readLine()) != null) {
                 if ("DONE.".equalsIgnoreCase(line)) {
                     break;
@@ -458,27 +478,18 @@ public class DeviceBridge {
                 currentNode = new ViewNode(window, currentNode, line.substring(depth));
                 currentDepth = depth;
             }
-            if (currentNode == null) {
-                return null;
-            }
-            while (currentNode.parent != null) {
-                currentNode = currentNode.parent;
-            }
-            ViewServerInfo serverInfo = getViewServerInfo(window.getDevice());
-            if (serverInfo != null) {
-                currentNode.protocolVersion = serverInfo.protocolVersion;
-            }
-            return currentNode;
-        } catch (Exception e) {
-            Log.e(TAG, "Unable to load window data for window " + window.getTitle() + " on device "
-                    + window.getDevice());
-            Log.e(TAG, e.getMessage());
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
+        } catch (IOException e) {
+            Log.e(TAG, "Error reading view hierarchy stream: " + e.getMessage());
+            return null;
         }
-        return null;
+        if (currentNode == null) {
+            return null;
+        }
+        while (currentNode.parent != null) {
+            currentNode = currentNode.parent;
+        }
+
+        return currentNode;
     }
 
     public static boolean loadProfileData(Window window, ViewNode viewNode) {
@@ -524,7 +535,7 @@ public class DeviceBridge {
         return true;
     }
 
-    private static boolean loadProfileDataRecursive(ViewNode node, BufferedReader in)
+    public static boolean loadProfileDataRecursive(ViewNode node, BufferedReader in)
             throws IOException {
         if (!loadProfileData(node, in)) {
             return false;
@@ -567,16 +578,8 @@ public class DeviceBridge {
                     new DataInputStream(new BufferedInputStream(connection.getSocket()
                             .getInputStream()));
 
-            int width = in.readInt();
-            int height = in.readInt();
-
-            PsdFile psd = new PsdFile(width, height);
-
-            while (readLayer(in, psd)) {
-            }
-
-            return psd;
-        } catch (Exception e) {
+            return parsePsd(in);
+        } catch (IOException e) {
             Log.e(TAG, "Unable to capture layers for window " + window.getTitle() + " on device "
                     + window.getDevice());
         } finally {
@@ -593,6 +596,18 @@ public class DeviceBridge {
         }
 
         return null;
+    }
+
+    public static PsdFile parsePsd(DataInputStream in) throws IOException {
+        int width = in.readInt();
+        int height = in.readInt();
+
+        PsdFile psd = new PsdFile(width, height);
+
+        while (readLayer(in, psd)) {
+        }
+
+        return psd;
     }
 
     private static boolean readLayer(DataInputStream in, PsdFile psd) {
