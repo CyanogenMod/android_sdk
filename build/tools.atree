@@ -127,28 +127,28 @@ framework/jobb.jar               tools/lib/jobb.jar
 framework/fat32lib.jar           tools/lib/fat32lib.jar
 
 # 3rd Party java libraries
-framework/commons-compress-1.0.jar                            tools/lib/commons-compress-1.0.jar
-framework/httpclient-4.1.1.jar                                tools/lib/httpclient-4.1.1.jar
-framework/httpcore-4.1.jar                                    tools/lib/httpcore-4.1.jar
-framework/httpmime-4.1.1.jar                                  tools/lib/httpmime-4.1.1.jar
-framework/commons-logging-1.1.1.jar                           tools/lib/commons-logging-1.1.1.jar
-framework/commons-codec-1.4.jar                               tools/lib/commons-codec-1.4.jar
-framework/emmalib.jar                                         tools/lib/emma_device.jar
-external/emma/lib/emma.jar                                    tools/lib/emma.jar
-external/emma/lib/emma_ant.jar                                tools/lib/emma_ant.jar
-framework/jcommon-1.0.12.jar                                  tools/lib/jcommon-1.0.12.jar
-framework/jfreechart-1.0.9.jar                                tools/lib/jfreechart-1.0.9.jar
-framework/jfreechart-1.0.9-swt.jar                            tools/lib/jfreechart-1.0.9-swt.jar
-framework/org.eclipse.core.commands_3.6.0.I20100512-1500.jar  tools/lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar
-framework/org.eclipse.equinox.common_3.6.0.v20100503.jar      tools/lib/org.eclipse.equinox.common_3.6.0.v20100503.jar
-framework/org.eclipse.jface_3.6.2.M20110210-1200.jar          tools/lib/org.eclipse.jface_3.6.2.M20110210-1200.jar
-framework/osgi.jar                                            tools/lib/osgi.jar
-framework/swing-worker-1.1.jar                                tools/lib/swing-worker-1.1.jar
-prebuilts/tools/common/asm-tools/asm-4.0.jar                  tools/lib/asm-4.0.jar
-prebuilts/tools/common/asm-tools/asm-tree-4.0.jar             tools/lib/asm-tree-4.0.jar
-prebuilts/tools/common/asm-tools/asm-analysis-4.0.jar         tools/lib/asm-analysis-4.0.jar
-prebuilts/tools/common/guava-tools/guava-13.0.1.jar           tools/lib/guava-13.0.1.jar
-prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar          tools/lib/lombok-ast-0.2.jar
+prebuilts/tools/common/commons-compress/commons-compress-1.0.jar                    tools/lib/commons-compress-1.0.jar
+prebuilts/tools/common/http-client/httpclient-4.1.1.jar                             tools/lib/httpclient-4.1.1.jar
+prebuilts/tools/common/http-client/httpcore-4.1.jar                                 tools/lib/httpcore-4.1.jar
+prebuilts/tools/common/http-client/httpmime-4.1.1.jar                               tools/lib/httpmime-4.1.1.jar
+prebuilts/tools/common/http-client/commons-logging-1.1.1.jar                        tools/lib/commons-logging-1.1.1.jar
+prebuilts/tools/common/http-client/commons-codec-1.4.jar                            tools/lib/commons-codec-1.4.jar
+framework/emmalib.jar                                                               tools/lib/emma_device.jar
+external/emma/lib/emma.jar                                                          tools/lib/emma.jar
+external/emma/lib/emma_ant.jar                                                     tools/lib/emma_ant.jar
+prebuilts/tools/common/jfreechart/jcommon-1.0.12.jar                                tools/lib/jcommon-1.0.12.jar
+prebuilts/tools/common/jfreechart/jfreechart-1.0.9.jar                              tools/lib/jfreechart-1.0.9.jar
+prebuilts/tools/common/jfreechart/jfreechart-1.0.9-swt.jar                          tools/lib/jfreechart-1.0.9-swt.jar
+prebuilts/tools/common/eclipse/org.eclipse.core.commands_3.6.0.I20100512-1500.jar   tools/lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar
+prebuilts/tools/common/eclipse/org.eclipse.equinox.common_3.6.0.v20100503.jar       tools/lib/org.eclipse.equinox.common_3.6.0.v20100503.jar
+prebuilts/tools/common/eclipse/org.eclipse.jface_3.6.2.M20110210-1200.jar           tools/lib/org.eclipse.jface_3.6.2.M20110210-1200.jar
+prebuilts/tools/common/osgi/osgi.jar                                                tools/lib/osgi.jar
+prebuilts/tools/common/swing-worker/swing-worker-1.1.jar                            tools/lib/swing-worker-1.1.jar
+prebuilts/tools/common/asm-tools/asm-4.0.jar                                        tools/lib/asm-4.0.jar
+prebuilts/tools/common/asm-tools/asm-tree-4.0.jar                                   tools/lib/asm-tree-4.0.jar
+prebuilts/tools/common/asm-tools/asm-analysis-4.0.jar                               tools/lib/asm-analysis-4.0.jar
+prebuilts/tools/common/guava-tools/guava-13.0.1.jar                                 tools/lib/guava-13.0.1.jar
+prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar                                tools/lib/lombok-ast-0.2.jar
 
 # Proguard
 # We're skipping the build and src/ trees (except for src/proguard/ant/task.properties)
