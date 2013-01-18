@@ -47,6 +47,7 @@ import com.android.hierarchyviewerlib.models.PixelPerfectModel.IImageChangeListe
 import com.android.hierarchyviewerlib.models.TreeViewModel;
 import com.android.hierarchyviewerlib.models.TreeViewModel.ITreeChangeListener;
 import com.android.hierarchyviewerlib.ui.DeviceSelector;
+import com.android.hierarchyviewerlib.ui.InvokeMethodPrompt;
 import com.android.hierarchyviewerlib.ui.LayoutViewer;
 import com.android.hierarchyviewerlib.ui.PixelPerfect;
 import com.android.hierarchyviewerlib.ui.PixelPerfectControls;
@@ -127,9 +128,9 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     private LayoutViewer mLayoutViewer;
     private PixelPerfectLoupe mPixelPerfectLoupe;
     private Composite mTreeViewControls;
+    private InvokeMethodPrompt mInvokeMethodPrompt;
 
     private ActionButton dumpDisplayList;
-    private ActionButton mProfileNodes;
 
     private HierarchyViewerDirector mDirector;
 
@@ -428,8 +429,13 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         new TreeViewOverview(treeViewOverviewContainer);
 
         Composite propertyViewerContainer = new Composite(sideSash, SWT.BORDER);
-        propertyViewerContainer.setLayout(new FillLayout());
-        new PropertyViewer(propertyViewerContainer);
+        propertyViewerContainer.setLayout(new GridLayout());
+
+        PropertyViewer pv = new PropertyViewer(propertyViewerContainer);
+        pv.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+        mInvokeMethodPrompt = new InvokeMethodPrompt(propertyViewerContainer);
+        mInvokeMethodPrompt.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         Composite layoutViewerContainer = new Composite(sideSash, SWT.NONE);
         GridLayout layoutViewerLayout = new GridLayout();
@@ -694,6 +700,8 @@ public class HierarchyViewerApplication extends ApplicationWindow {
 
         mTreeViewButton.setSelection(true);
         mTreeViewButton.setImage(mTreeViewSelectedImage);
+
+        mInvokeMethodPrompt.setEnabled(hvDevice.isViewUpdateEnabled());
 
         mPixelPerfectButton.setSelection(false);
         mPixelPerfectButton.setImage(mPixelPerfectImage);

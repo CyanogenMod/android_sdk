@@ -144,7 +144,7 @@ public class DdmViewDebugDevice extends AbstractHvDevice implements IDeviceChang
                 try {
                     HandleViewDebug.listViewRoots(c, handler);
                 } catch (IOException e) {
-                    Log.e(TAG, e);
+                    Log.i(TAG, "No connection to client: " + cd.getClientDescription());
                     continue;
                 }
 
@@ -215,7 +215,11 @@ public class DdmViewDebugDevice extends AbstractHvDevice implements IDeviceChang
             return null;
         }
 
-        byte[] data = handler.getData(10, TimeUnit.SECONDS);
+        byte[] data = handler.getData(20, TimeUnit.SECONDS);
+        if (data == null) {
+            return null;
+        }
+
         String viewHierarchy = new String(data, Charset.forName("UTF-8"));
         return DeviceBridge.parseViewHierarchy(new BufferedReader(new StringReader(viewHierarchy)),
                 window);
@@ -369,5 +373,45 @@ public class DdmViewDebugDevice extends AbstractHvDevice implements IDeviceChang
         if ((changeMask & IDevice.CHANGE_CLIENT_LIST) != 0) {
             reloadWindows();
         }
+    }
+
+    @Override
+    public boolean isViewUpdateEnabled() {
+        return true;
+    }
+
+    @Override
+    public void invokeViewMethod(Window window, ViewNode viewNode, String method,
+            List<?> args) {
+        Client c = window.getClient();
+        if (c == null) {
+            return;
+        }
+
+        String viewRoot = window.getTitle();
+        try {
+            HandleViewDebug.invokeMethod(c, viewRoot, viewNode.toString(), method, args.toArray());
+        } catch (IOException e) {
+            Log.e(TAG, e);
+        }
+    }
+
+    @Override
+    public boolean setLayoutParameter(Window window, ViewNode viewNode, String property,
+            int value) {
+        Client c = window.getClient();
+        if (c == null) {
+            return false;
+        }
+
+        String viewRoot = window.getTitle();
+        try {
+            HandleViewDebug.setLayoutParameter(c, viewRoot, viewNode.toString(), property, value);
+        } catch (IOException e) {
+            Log.e(TAG, e);
+            return false;
+        }
+
+        return true;
     }
 }
