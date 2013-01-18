@@ -115,7 +115,6 @@ framework/chimpchat.jar          tools/lib/chimpchat.jar
 framework/guava-tools.jar        tools/lib/guava-tools.jar
 framework/jsilver.jar            tools/lib/jsilver.jar
 framework/jython.jar             tools/lib/jython.jar
-framework/mkidentity-prebuilt.jar tools/lib/mkidentity.jar
 framework/lint.jar               tools/lib/lint.jar
 framework/lint_api.jar           tools/lib/lint_api.jar
 framework/lint_checks.jar        tools/lib/lint_checks.jar
@@ -125,6 +124,7 @@ framework/layoutlib_api.jar      tools/lib/layoutlib_api.jar
 framework/uiautomatorviewer.jar  tools/lib/uiautomatorviewer.jar
 framework/jobb.jar               tools/lib/jobb.jar
 framework/fat32lib.jar           tools/lib/fat32lib.jar
+prebuilts/tools/common/mkidentity/mkidentity-prebuilt.jar tools/lib/mkidentity.jar
 
 # 3rd Party java libraries
 prebuilts/tools/common/commons-compress/commons-compress-1.0.jar                    tools/lib/commons-compress-1.0.jar
