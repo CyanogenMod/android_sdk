@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.preferences;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
+import com.android.ide.eclipse.adt.internal.utils.FingerprintUtils;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
@@ -25,6 +26,7 @@ import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -36,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
@@ -46,9 +49,22 @@ import java.util.Date;
 public class BuildPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
 
+    private IPreferenceStore mPrefStore = null;
+
+    // default key store
+    private ReadOnlyFieldEditor mDefaultKeyStore = null;
+    private LabelField mDefaultFingerprintMd5 = null;
+    private LabelField mDefaultFingerprintSha1 = null;
+
+    // custom key store
+    private KeystoreFieldEditor mCustomKeyStore = null;
+    private LabelField mCustomFingerprintMd5 = null;
+    private LabelField mCustomFingerprintSha1 = null;
+
     public BuildPreferencePage() {
         super(GRID);
-        setPreferenceStore(AdtPlugin.getDefault().getPreferenceStore());
+        mPrefStore = AdtPlugin.getDefault().getPreferenceStore();
+        setPreferenceStore(mPrefStore);
         setDescription(Messages.BuildPreferencePage_Title);
     }
 
@@ -76,12 +92,90 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
                 getFieldEditorParent(), true);
         addField(rgfe);
 
-        addField(new ReadOnlyFieldEditor(AdtPrefs.PREFS_DEFAULT_DEBUG_KEYSTORE,
-                Messages.BuildPreferencePage_Default_KeyStore, getFieldEditorParent()));
+        // default debug keystore fingerprints
+        Fingerprints defaultFingerprints = getFingerprints(
+                mPrefStore.getString(AdtPrefs.PREFS_DEFAULT_DEBUG_KEYSTORE));
 
-        addField(new KeystoreFieldEditor(AdtPrefs.PREFS_CUSTOM_DEBUG_KEYSTORE,
-                Messages.BuildPreferencePage_Custom_Keystore, getFieldEditorParent()));
+        // default debug key store fields
+        mDefaultKeyStore = new ReadOnlyFieldEditor(AdtPrefs.PREFS_DEFAULT_DEBUG_KEYSTORE,
+                Messages.BuildPreferencePage_Default_KeyStore, getFieldEditorParent());
+        mDefaultFingerprintMd5 = new LabelField(
+                Messages.BuildPreferencePage_Default_Certificate_Fingerprint_MD5,
+                defaultFingerprints != null ? defaultFingerprints.md5 : "",
+                getFieldEditorParent());
+        mDefaultFingerprintSha1 = new LabelField(
+                Messages.BuildPreferencePage_Default_Certificate_Fingerprint_SHA1,
+                defaultFingerprints != null ? defaultFingerprints.sha1 : "",
+                getFieldEditorParent());
 
+        addField(mDefaultKeyStore);
+        addField(mDefaultFingerprintMd5);
+        addField(mDefaultFingerprintSha1);
+
+        // custom debug keystore fingerprints
+        Fingerprints customFingerprints = null;
+
+        String customDebugKeystorePath = mPrefStore.getString(AdtPrefs.PREFS_CUSTOM_DEBUG_KEYSTORE);
+        if (new File(customDebugKeystorePath).isFile()) {
+            customFingerprints = getFingerprints(customDebugKeystorePath);
+        } else {
+            // file does not exist.
+            setErrorMessage("Not a valid keystore path.");
+        }
+
+        // custom debug key store fields
+        mCustomKeyStore = new KeystoreFieldEditor(AdtPrefs.PREFS_CUSTOM_DEBUG_KEYSTORE,
+                Messages.BuildPreferencePage_Custom_Keystore, getFieldEditorParent());
+        mCustomFingerprintMd5 = new LabelField(
+                Messages.BuildPreferencePage_Default_Certificate_Fingerprint_MD5,
+                customFingerprints != null ? customFingerprints.md5 : "",
+                getFieldEditorParent());
+        mCustomFingerprintSha1 = new LabelField(
+                Messages.BuildPreferencePage_Default_Certificate_Fingerprint_SHA1,
+                customFingerprints != null ? customFingerprints.sha1 : "",
+                getFieldEditorParent());
+
+        // set fingerprint fields
+        mCustomKeyStore.setFingerprintMd5Field(mCustomFingerprintMd5);
+        mCustomKeyStore.setFingerprintSha1Field(mCustomFingerprintSha1);
+
+        addField(mCustomKeyStore);
+        addField(mCustomFingerprintMd5);
+        addField(mCustomFingerprintSha1);
+    }
+
+    /**
+     * MD5 & SHA1 fingerprints.
+     */
+    private static class Fingerprints {
+        final String md5;
+        final String sha1;
+
+        Fingerprints(String md5Val, String sha1Val) {
+            md5 = md5Val;
+            sha1 = sha1Val;
+        }
+    }
+
+    private Fingerprints getFingerprints(String keystorePath) {
+        // attempt to load the debug key.
+        try {
+            DebugKeyProvider keyProvider = new DebugKeyProvider(keystorePath,
+                    null /* storeType */, null /* key gen output */);
+
+            return new Fingerprints(
+                    FingerprintUtils.getFingerprint(keyProvider.getCertificate(), "MD5"),
+                    FingerprintUtils.getFingerprint(keyProvider.getCertificate(), "SHA1"));
+        } catch (GeneralSecurityException e) {
+            setErrorMessage(e.getMessage());
+        } catch (IOException e) {
+            setErrorMessage(e.getMessage());
+        } catch (KeytoolException e) {
+            setErrorMessage(e.getMessage());
+        } catch (AndroidLocationException e) {
+            setErrorMessage(e.getMessage());
+        }
+        return null;
     }
 
     /*
@@ -91,6 +185,27 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
      */
     @Override
     public void init(IWorkbench workbench) {
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#performDefaults
+     * (org.eclipse.jface.preference.PreferencePage#performDefaults)
+     */
+    @Override
+    protected void performDefaults() {
+        super.performDefaults();
+
+        // restore the default key store fingerprints
+        Fingerprints defaultFingerprints = getFingerprints(mPrefStore
+                .getString(AdtPrefs.PREFS_DEFAULT_DEBUG_KEYSTORE));
+        mDefaultFingerprintMd5.setStringValue(defaultFingerprints.md5);
+        mDefaultFingerprintSha1.setStringValue(defaultFingerprints.sha1);
+
+        // set custom fingerprint fields to blank
+        mCustomFingerprintMd5.setStringValue("");
+        mCustomFingerprintSha1.setStringValue("");
     }
 
     /**
@@ -112,9 +227,50 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
     }
 
     /**
+     * A read-only string field.
+     */
+    private static class LabelField extends StringFieldEditor {
+        private String text;
+
+        public LabelField(String labelText, String value, Composite parent) {
+            super("", labelText, parent);
+            text = value;
+        }
+
+        @Override
+        protected void createControl(Composite parent) {
+            super.createControl(parent);
+
+            Text control = getTextControl();
+            control.setEditable(false);
+        }
+
+        @Override
+        protected void doLoad() {
+            setStringValue(text);
+        }
+
+        @Override
+        protected void doStore() {
+            // Do nothing
+        }
+    }
+
+    /**
      * Custom {@link FileFieldEditor} that checks that the keystore is valid.
      */
     private static class KeystoreFieldEditor extends FileFieldEditor {
+        private StringFieldEditor fingerprintMd5 = null;
+        private StringFieldEditor fingerprintSha1 = null;
+
+        public void setFingerprintMd5Field(StringFieldEditor field) {
+            fingerprintMd5 = field;
+        }
+
+        public void setFingerprintSha1Field(StringFieldEditor field) {
+            fingerprintSha1 = field;
+        }
+
         public KeystoreFieldEditor(String name, String label, Composite parent) {
             super(name, label, parent);
             setValidateStrategy(VALIDATE_ON_KEY_STROKE);
@@ -124,6 +280,14 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
         protected boolean checkState() {
             String fileName = getTextControl().getText();
             fileName = fileName.trim();
+
+            if (fingerprintMd5 != null) {
+                fingerprintMd5.setStringValue("");
+            }
+
+            if (fingerprintSha1 != null) {
+                fingerprintSha1.setStringValue("");
+            }
 
             // empty values are considered ok.
             if (fileName.length() > 0) {
@@ -139,6 +303,16 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
                         if (key == null || certificate == null) {
                             showErrorMessage("Unable to find debug key in keystore!");
                             return false;
+                        }
+
+                        if (fingerprintMd5 != null) {
+                            fingerprintMd5.setStringValue(
+                                    FingerprintUtils.getFingerprint(certificate, "MD5"));
+                        }
+
+                        if (fingerprintSha1 != null) {
+                            fingerprintSha1.setStringValue(
+                                    FingerprintUtils.getFingerprint(certificate, "SHA1"));
                         }
 
                         Date today = new Date();
