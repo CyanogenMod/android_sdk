@@ -90,6 +90,7 @@
         <unzip src="${targetSrcDir}/wtp/wtp-repo-R-3.3.2-20120210195245.zip" dest="${targetDir}/repos/wtp" overwrite="false" />
         <unzip src="${targetSrcDir}/gef/GEF-SDK-3.7.2.zip" dest="${targetDir}/repos/gef" overwrite="false" />
         <unzip src="${targetSrcDir}/pde/org.eclipse.pde-3.8.zip" dest="${targetDir}/repos/pde" overwrite="false" />
+        <unzip src="${targetSrcDir}/egit/org.eclipse.egit.repository-2.2.0.201212191850-r.zip" dest="${targetDir}/repos/egit" overwrite="false" />
     </target>
 
     <!-- Launch pde build to build the adtpackage product -->
