@@ -72,6 +72,7 @@
       <import plugin="org.eclipse.cdt.dsf.gdb"/>
       <import plugin="org.eclipse.cdt.dsf.gdb.ui"/>
       <import plugin="org.eclipse.cdt.launch"/>
+      <import feature="org.eclipse.egit" />
       <import feature="com.android.ide.eclipse.ddms"            version="22.0.0" match="greaterOrEqual" />
       <import feature="com.android.ide.eclipse.adt"             version="22.0.0" match="greaterOrEqual" />
       <import feature="com.android.ide.eclipse.gldebugger"      version="22.0.0" match="greaterOrEqual" />
