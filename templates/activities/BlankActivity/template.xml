@@ -57,9 +57,9 @@
         default="none"
         help="The type of navigation to use for the activity" >
         <option id="none" default="true">None</option>
-        <option id="tabs" minApi="11">Tabs</option>
-        <option id="tabs_pager" minApi="11">Tabs + Swipe</option>
-        <option id="pager_strip" minApi="11">Swipe Views + Title Strip</option>
+        <!--<option id="tabs" minApi="11">Fixed Tabs</option>-->
+        <option id="tabs_pager" minApi="11">Fixed Tabs + Swipe</option>
+        <option id="pager_strip" minApi="11">Scrollable Tabs + Swipe</option>
         <option id="dropdown" minApi="11">Dropdown</option>
     </parameter>
 

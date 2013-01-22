@@ -10,7 +10,7 @@
     <string name="action_sign_in_register"><b>Sign in</b> or register</string>
     <string name="action_sign_in_short">Sign in</string>
 
-    <string name="menu_forgot_password">Recover lost password</string>
+    <string name="action_forgot_password">Recover lost password</string>
 
     <string name="login_progress_signing_in">Signing in&#8230;</string>
 

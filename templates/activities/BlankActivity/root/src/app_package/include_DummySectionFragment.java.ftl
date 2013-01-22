@@ -15,11 +15,9 @@
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            // Create a new TextView and set its text to the fragment's section
-            // number argument value.
-            TextView textView = new TextView(getActivity());
-            textView.setGravity(Gravity.CENTER);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
-            return textView;
+            View rootView = inflater.inflate(R.layout.fragment_${classToResource(activityClass)}_dummy, container, false);
+            TextView dummyTextView = (TextView) rootView.findViewById(R.id.section_label);
+            dummyTextView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
+            return rootView;
         }
     }

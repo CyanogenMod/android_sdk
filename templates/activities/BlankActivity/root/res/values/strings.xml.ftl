@@ -3,7 +3,7 @@
     <string name="title_${activityToLayout(activityClass)}">${escapeXmlString(activityTitle)}</string>
     </#if>
 
-    <string name="menu_settings">Settings</string>
+    <string name="action_settings">Settings</string>
 
     <#if navType != "none">
     <string name="title_section1">Section 1</string>

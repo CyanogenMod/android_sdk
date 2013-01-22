@@ -6,11 +6,11 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context=".${activityClass}">
+    tools:context=".${activityClass}$DummySectionFragment">
 
     <TextView
+        android:id="@+id/section_label"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:layout_height="wrap_content" />
 
 </RelativeLayout>
