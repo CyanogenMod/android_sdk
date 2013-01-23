@@ -72,6 +72,9 @@ public class WindowUpdater {
     public static void stopListenForWindowChanges(IWindowChangeListener listener, IDevice device) {
         synchronized (sWindowChangeListeners) {
             ArrayList<IWindowChangeListener> listeners = sWindowChangeListeners.get(device);
+            if (listeners == null) {
+                return;
+            }
             listeners.remove(listener);
             // There are more listeners, so don't stop the listening thread.
             if (listeners.size() != 0) {

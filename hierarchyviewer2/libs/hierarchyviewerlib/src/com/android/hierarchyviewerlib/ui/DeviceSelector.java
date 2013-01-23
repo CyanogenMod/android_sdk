@@ -330,7 +330,9 @@ public class DeviceSelector extends Composite implements IWindowChangeListener, 
 
     @Override
     public void widgetSelected(SelectionEvent e) {
-        Object selection = ((TreeItem) e.item).getData();
+        TreeItem item = (TreeItem) e.item;
+        if (item == null) return;
+        Object selection = item.getData();
         if (selection instanceof IHvDevice) {
             mModel.setSelection((IHvDevice) selection, null);
         } else if (selection instanceof Window) {

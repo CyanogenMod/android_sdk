@@ -135,14 +135,14 @@ public class ViewServerDevice extends AbstractHvDevice {
 
     @Override
     public void addWindowChangeListener(IWindowChangeListener l) {
-        if (mViewServerInfo.protocolVersion >= 3) {
+        if (mViewServerInfo != null && mViewServerInfo.protocolVersion >= 3) {
             WindowUpdater.startListenForWindowChanges(l, mDevice);
         }
     }
 
     @Override
     public void removeWindowChangeListener(IWindowChangeListener l) {
-        if (mViewServerInfo.protocolVersion >= 3) {
+        if (mViewServerInfo != null && mViewServerInfo.protocolVersion >= 3) {
             WindowUpdater.stopListenForWindowChanges(l, mDevice);
         }
     }
