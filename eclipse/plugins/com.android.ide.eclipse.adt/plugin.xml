@@ -732,6 +732,14 @@
             <contentTypeBinding contentTypeId="com.android.ide.eclipse.adt.binaryXml">
             </contentTypeBinding>
         </editor>
+        <editor
+            class="com.android.ide.eclipse.adt.internal.editors.draw9patch.Draw9PatchEditor"
+            contributorClass="com.android.ide.eclipse.adt.internal.editors.common.CommonActionContributor"
+            icon="icons/android_file.png"
+            id="draw9patchplugin.editors.Draw9PatchEditor"
+            name="Android Draw 9-patch Editor"
+            extensions="9.png">
+        </editor>
     </extension>
     <extension point="org.eclipse.ui.views">
         <view
