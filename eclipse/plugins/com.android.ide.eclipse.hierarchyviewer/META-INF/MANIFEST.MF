@@ -10,7 +10,8 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.console,
- com.android.ide.eclipse.ddms
+ com.android.ide.eclipse.ddms,
+ com.android.ide.eclipse.base
 Bundle-ClassPath: .,
  libs/hierarchyviewerlib.jar
 Export-Package: com.android.ide.eclipse.hierarchyviewer
