@@ -21,11 +21,24 @@ import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 
 public class HvDeviceFactory {
-    private static final boolean ALWAYS_USE_VIEWSERVER = false; // for debugging
+    private static final String sHvProtoEnvVar =
+            System.getenv("android.hvproto"); //$NON-NLS-1$
 
     public static IHvDevice create(IDevice device) {
-        if (ALWAYS_USE_VIEWSERVER) {
+        // default to old mechanism until the new one is fully tested
+        if (sHvProtoEnvVar == null ||
+                !"ddm".equalsIgnoreCase(sHvProtoEnvVar)) { //$NON-NLS-1$
             return new ViewServerDevice(device);
+        }
+
+        // Wait for a few seconds after the device has been connected to
+        // allow all the clients to be initialized. Specifically, we need to wait
+        // until the client data is filled with the list of features supported
+        // by the client.
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // ignore
         }
 
         boolean ddmViewHierarchy = false;

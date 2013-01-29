@@ -16,17 +16,27 @@
 
 package com.android.hierarchyviewerlib.ui;
 
+import com.android.ddmuilib.ImageLoader;
+import com.android.hierarchyviewerlib.HierarchyViewerDirector;
+import com.android.hierarchyviewerlib.device.IHvDevice;
 import com.android.hierarchyviewerlib.models.TreeViewModel;
-import com.android.hierarchyviewerlib.models.ViewNode;
 import com.android.hierarchyviewerlib.models.TreeViewModel.ITreeChangeListener;
+import com.android.hierarchyviewerlib.models.ViewNode;
 import com.android.hierarchyviewerlib.models.ViewNode.Property;
+import com.android.hierarchyviewerlib.ui.DevicePropertyEditingSupport.PropertyType;
 import com.android.hierarchyviewerlib.ui.util.DrawableViewNode;
 import com.android.hierarchyviewerlib.ui.util.TreeColumnResizer;
 
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
+import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -42,13 +52,17 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class PropertyViewer extends Composite implements ITreeChangeListener {
     private TreeViewModel mModel;
 
     private TreeViewer mTreeViewer;
-
     private Tree mTree;
+    private TreeViewerColumn mValueColumn;
+    private PropertyValueEditingSupport mPropertyValueEditingSupport;
+
+    private Image mImage;
 
     private DrawableViewNode mSelectedNode;
 
@@ -144,6 +158,13 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
 
         @Override
         public Image getColumnImage(Object element, int column) {
+            if (mSelectedNode == null) {
+                return null;
+            }
+            if (column == 1 && mPropertyValueEditingSupport.canEdit(element)) {
+                return mImage;
+            }
+
             return null;
         }
 
@@ -188,6 +209,79 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         }
     }
 
+    private class PropertyValueEditingSupport extends EditingSupport {
+        private DevicePropertyEditingSupport mDevicePropertyEditingSupport =
+                new DevicePropertyEditingSupport();
+
+        public PropertyValueEditingSupport(ColumnViewer viewer) {
+            super(viewer);
+        }
+
+        @Override
+        protected boolean canEdit(Object element) {
+            if (mSelectedNode == null) {
+                return false;
+            }
+
+            return element instanceof Property
+                    && mSelectedNode.viewNode.window.getHvDevice().isViewUpdateEnabled()
+                    && mDevicePropertyEditingSupport.canEdit((Property) element);
+        }
+
+        @Override
+        protected CellEditor getCellEditor(Object element) {
+            Property p = (Property) element;
+            PropertyType type = mDevicePropertyEditingSupport.getPropertyType(p);
+            Composite parent = (Composite) getViewer().getControl();
+
+            switch (type) {
+                case INTEGER:
+                case INTEGER_OR_CONSTANT:
+                    return new TextCellEditor(parent);
+                case ENUM:
+                    String[] items = mDevicePropertyEditingSupport.getPropertyRange(p);
+                    return new ComboBoxCellEditor(parent, items, SWT.READ_ONLY);
+            }
+
+            return null;
+        }
+
+        @Override
+        protected Object getValue(Object element) {
+            Property p = (Property) element;
+            PropertyType type = mDevicePropertyEditingSupport.getPropertyType(p);
+
+            if (type == PropertyType.ENUM) {
+                // for enums, return the index of the current value in the list of possible values
+                String[] items = mDevicePropertyEditingSupport.getPropertyRange(p);
+                return Integer.valueOf(indexOf(p.value, items));
+            }
+
+            return ((Property) element).value;
+        }
+
+        private int indexOf(String item, String[] items) {
+            for (int i = 0; i < items.length; i++) {
+                if (items[i].equals(item)) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        @Override
+        protected void setValue(Object element, Object newValue) {
+            Property p = (Property) element;
+            IHvDevice device = mSelectedNode.viewNode.window.getHvDevice();
+            Collection<Property> properties = mSelectedNode.viewNode.namedProperties.values();
+            if (mDevicePropertyEditingSupport.setValue(properties, p, newValue,
+                    mSelectedNode.viewNode, device)) {
+                doRefresh();
+            }
+        }
+    }
+
     public PropertyViewer(Composite parent) {
         super(parent, SWT.NONE);
         setLayout(new FillLayout());
@@ -202,6 +296,10 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
         TreeColumn valueColumn = new TreeColumn(mTree, SWT.NONE);
         valueColumn.setText("Value");
 
+        mValueColumn = new TreeViewerColumn(mTreeViewer, valueColumn);
+        mPropertyValueEditingSupport = new PropertyValueEditingSupport(mTreeViewer);
+        mValueColumn.setEditingSupport(mPropertyValueEditingSupport);
+
         mModel = TreeViewModel.getModel();
         ContentProvider contentProvider = new ContentProvider();
         mTreeViewer.setContentProvider(contentProvider);
@@ -211,9 +309,13 @@ public class PropertyViewer extends Composite implements ITreeChangeListener {
 
         addDisposeListener(mDisposeListener);
 
-        new TreeColumnResizer(this, propertyColumn, valueColumn);
+        @SuppressWarnings("unused")
+        TreeColumnResizer resizer = new TreeColumnResizer(this, propertyColumn, valueColumn);
 
         addControlListener(mControlListener);
+
+        ImageLoader imageLoader = ImageLoader.getLoader(HierarchyViewerDirector.class);
+        mImage = imageLoader.loadImage("picker.png", Display.getDefault()); //$NON-NLS-1$
 
         treeChanged();
     }

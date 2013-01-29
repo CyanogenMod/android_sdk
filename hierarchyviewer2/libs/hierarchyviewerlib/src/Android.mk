@@ -20,8 +20,10 @@ LOCAL_JAVA_RESOURCE_DIRS := ../src
 
 LOCAL_JAR_MANIFEST := ../manifest.txt
 
-LOCAL_JAVA_LIBRARIES := ddmlib \
+LOCAL_JAVA_LIBRARIES := common \
+    ddmlib \
     ddmuilib \
+    guava-tools \
     swt \
     org.eclipse.jface_3.6.2.M20110210-1200 \
     org.eclipse.core.commands_3.6.0.I20100512-1500

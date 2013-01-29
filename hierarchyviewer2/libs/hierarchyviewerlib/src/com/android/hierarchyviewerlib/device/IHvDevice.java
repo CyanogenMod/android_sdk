@@ -24,6 +24,8 @@ import com.android.hierarchyviewerlib.ui.util.PsdFile;
 
 import org.eclipse.swt.graphics.Image;
 
+import java.util.List;
+
 /** Represents a device that can perform view debug operations. */
 public interface IHvDevice {
     /**
@@ -50,6 +52,10 @@ public interface IHvDevice {
     void invalidateView(ViewNode viewNode);
     void requestLayout(ViewNode viewNode);
     void outputDisplayList(ViewNode viewNode);
+
+    boolean isViewUpdateEnabled();
+    void invokeViewMethod(Window window, ViewNode viewNode, String method, List<?> args);
+    boolean setLayoutParameter(Window window, ViewNode viewNode, String property, int value);
 
     void addWindowChangeListener(IWindowChangeListener l);
     void removeWindowChangeListener(IWindowChangeListener l);

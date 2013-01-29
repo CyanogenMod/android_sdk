@@ -26,6 +26,8 @@ import com.android.hierarchyviewerlib.ui.util.PsdFile;
 
 import org.eclipse.swt.graphics.Image;
 
+import java.util.List;
+
 public class ViewServerDevice extends AbstractHvDevice {
     static final String TAG = "ViewServerDevice";
 
@@ -145,5 +147,23 @@ public class ViewServerDevice extends AbstractHvDevice {
         if (mViewServerInfo != null && mViewServerInfo.protocolVersion >= 3) {
             WindowUpdater.stopListenForWindowChanges(l, mDevice);
         }
+    }
+
+    @Override
+    public boolean isViewUpdateEnabled() {
+        return false;
+    }
+
+    @Override
+    public void invokeViewMethod(Window window, ViewNode viewNode, String method,
+            List<?> args) {
+        // not supported
+    }
+
+    @Override
+    public boolean setLayoutParameter(Window window, ViewNode viewNode, String property,
+            int value) {
+        // not supported
+        return false;
     }
 }

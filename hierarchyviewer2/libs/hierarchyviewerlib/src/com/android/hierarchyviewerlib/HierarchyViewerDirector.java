@@ -48,6 +48,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -610,6 +611,20 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
                     hvDevice.loadProfileData(selectedNode.viewNode.window, selectedNode.viewNode);
                     // Force the layout viewer to redraw.
                     TreeViewModel.getModel().notifySelectionChanged();
+                }
+            });
+        }
+    }
+
+    public void invokeMethodOnSelectedView(final String method, final List<Object> args) {
+        final DrawableViewNode selectedNode = TreeViewModel.getModel().getSelection();
+        if (selectedNode != null) {
+            executeInBackground("Invoke View Method", new Runnable() {
+                @Override
+                public void run() {
+                    IHvDevice hvDevice = getHvDevice(selectedNode.viewNode.window.getDevice());
+                    hvDevice.invokeViewMethod(selectedNode.viewNode.window, selectedNode.viewNode,
+                            method, args);
                 }
             });
         }
