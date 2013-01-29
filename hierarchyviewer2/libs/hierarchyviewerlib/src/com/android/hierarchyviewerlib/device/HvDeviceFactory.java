@@ -22,7 +22,7 @@ import com.android.ddmlib.IDevice;
 
 public class HvDeviceFactory {
     private static final String sHvProtoEnvVar =
-            System.getenv("android.hvproto"); //$NON-NLS-1$
+            System.getenv("ANDROID_HVPROTO"); //$NON-NLS-1$
 
     public static IHvDevice create(IDevice device) {
         // default to old mechanism until the new one is fully tested
