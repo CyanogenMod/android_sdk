@@ -146,7 +146,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         TextEdit rewrittenImports = importVisitor.getTextEdit();
 
         // If the import of R was potentially implicit, insert an import statement
-        if (cu.getPackage().getName().getFullyQualifiedName()
+        if (rewrittenImports != null && cu.getPackage().getName().getFullyQualifiedName()
                 .equals(mOldPackageName.getFullyQualifiedName())) {
 
             UsageVisitor usageVisitor = new UsageVisitor();
@@ -438,10 +438,10 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                     mParser.setSource(icu);
                     CompilationUnit cu = (CompilationUnit) mParser.createAST(null);
 
-                    TextEdit text_edit = updateJavaFileImports(cu);
-                    if (text_edit.hasChildren()) {
+                    TextEdit textEdit = updateJavaFileImports(cu);
+                    if (textEdit != null && textEdit.hasChildren()) {
                         MultiTextEdit edit = new MultiTextEdit();
-                        edit.addChild(text_edit);
+                        edit.addChild(textEdit);
 
                         TextFileChange text_file_change = new TextFileChange(file.getName(), file);
                         text_file_change.setTextType(SdkConstants.EXT_JAVA);
