@@ -377,6 +377,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             AvdInfo preferredAvd = null;
             if (config.mAvdName != null) {
                 preferredAvd = avdManager.getAvd(config.mAvdName, true /*validAvdOnly*/);
+            }
+
+            if (preferredAvd != null) {
                 IAndroidTarget preferredAvdTarget = preferredAvd.getTarget();
                 if (preferredAvdTarget != null
                         && !preferredAvdTarget.getVersion().canRun(minApiVersion)) {
