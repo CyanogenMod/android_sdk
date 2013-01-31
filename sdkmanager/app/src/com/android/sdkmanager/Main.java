@@ -40,9 +40,9 @@ import com.android.sdklib.internal.repository.DownloadCache;
 import com.android.sdklib.internal.repository.DownloadCache.Strategy;
 import com.android.sdklib.internal.repository.packages.PlatformToolPackage;
 import com.android.sdklib.internal.repository.packages.ToolPackage;
+import com.android.sdklib.internal.repository.updater.SdkUpdaterNoWindow;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.sdkuilib.internal.repository.SdkUpdaterNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.AvdManagerWindow;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
@@ -1512,6 +1512,7 @@ public class Main {
     /**
      * Reads a line from the input stream, masking it as much as possible.
      */
+    @SuppressWarnings("unused")
     private String promptPassword(String prompt) throws IOException {
 
         // Setup a thread that tries to overwrite any input by
