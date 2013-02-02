@@ -360,6 +360,9 @@ public class AdbChimpDevice implements IChimpDevice {
                 case DOWN_AND_UP:
                     manager.tap(x, y);
                     break;
+                case MOVE:
+                    manager.touchMove(x, y);
+                    break;
             }
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error sending touch event: " + x + " " + y + " " + type, e);
