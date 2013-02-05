@@ -20,8 +20,8 @@ import com.android.SdkConstants;
 import com.android.sdklib.internal.build.SymbolLoader;
 import com.android.sdklib.internal.build.SymbolWriter;
 import com.android.xml.AndroidXPathFactory;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -32,12 +32,10 @@ import org.xml.sax.InputSource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.xml.xpath.XPath;
@@ -401,6 +399,7 @@ public final class AaptExecTask extends SingleDependencyTask {
      *
      * @see org.apache.tools.ant.Task#execute()
      */
+    @SuppressWarnings("deprecation")
     @Override
     public void execute() throws BuildException {
         if (mLibraryResFolderPathRefid == null) {
@@ -706,8 +705,8 @@ public final class AaptExecTask extends SingleDependencyTask {
                 File rFile = new File(mBinFolder, SdkConstants.FN_RESOURCE_TEXT);
                 if (rFile.isFile()) {
                     // Load the full symbols from the full R.txt file.
-                    SymbolLoader fullSymbols = new SymbolLoader(rFile);
-                    fullSymbols.load();
+                    SymbolLoader fullSymbolValues = new SymbolLoader(rFile);
+                    fullSymbolValues.load();
 
                     // we have two props which contains list of items. Both items represent
                     // 2 data of a single property.
@@ -729,66 +728,41 @@ public final class AaptExecTask extends SingleDependencyTask {
                         mOriginalManifestPackage = getPackageName(mManifestFile);
                     }
 
-                    // simpler case of a single library
-                    if (packages.length == 1) {
-                        if (!mOriginalManifestPackage.equals(packages[0])) {
-                            createRClass(fullSymbols, rFiles[0], packages[0]);
-                        }
-                    } else {
+                    Multimap<String, SymbolLoader> libMap = ArrayListMultimap.create();
 
-                        Map<String, String> libPackages = Maps.newHashMapWithExpectedSize(
-                                packages.length);
-                        Set<String> duplicatePackages = Sets.newHashSet();
+                    // First pass processing the libraries, collecting them by packageName,
+                    // and ignoring the ones that have the same package name as the application
+                    // (since that R class was already created).
+                    for (int i = 0 ; i < packages.length ; i++) {
+                        String libPackage = packages[i];
 
-                        // preprocessing to figure out if there are dups in the package names of
-                        // the libraries
-                        for (int i = 0 ; i < packages.length ; i++) {
-                            String libPackage = packages[i];
-                            if (mOriginalManifestPackage.equals(libPackage)) {
-                                // skip libraries that have the same package name as the application.
-                                continue;
-                            }
-
-                            String existingPkg = libPackages.get(libPackage);
-                            if (existingPkg != null) {
-                                // record the dup package and keep going, in case there are all the same
-                                duplicatePackages.add(libPackage);
-                                continue;
-                            }
-
-                            libPackages.put(libPackage, rFiles[i]);
+                        // skip libraries that have the same package name as the application.
+                        if (mOriginalManifestPackage.equals(libPackage)) {
+                            continue;
                         }
 
-                        // check if we have duplicate but all files are the same.
-                        if (duplicatePackages.size() > 0) {
-                            // possible conflict!
-                            // detect case of all libraries == same package.
-                            if (duplicatePackages.size() == 1 && libPackages.size() == 1 &&
-                                    duplicatePackages.iterator().next().equals(libPackages.keySet().iterator().next())) {
-                                // this is ok, all libraries have the same package.
-                                // Make a copy of the full R class.
-                                SymbolWriter writer = new SymbolWriter(mRFolder,
-                                        duplicatePackages.iterator().next(),
-                                        fullSymbols, fullSymbols);
-                                writer.write();
-                            } else {
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("The following packages have been found to be used by two or more libraries:");
-                                for (String pkg : duplicatePackages) {
-                                    sb.append("\n\t").append(pkg);
-                                }
-                                sb.append("\nNo libraries must share the same package, unless all libraries share the same packages.");
-                                throw new BuildException(sb.toString());
-                            }
-                        } else {
-                            // no dups, all libraries have different packages.
-                            // Conflicts with the main package have been removed already.
-                            // Just process all the libraries from the list where we removed
-                            // libs that had the same package as the app.
-                            for (Entry<String, String> lib : libPackages.entrySet()) {
-                                createRClass(fullSymbols, lib.getValue(), lib.getKey());
-                            }
+                        File rText = new File(rFiles[i]);
+                        if (rText.isFile()) {
+                            // load the lib symbols
+                            SymbolLoader libSymbols = new SymbolLoader(rText);
+                            libSymbols.load();
+
+                            // store these symbols by associating them with the package name.
+                            libMap.put(libPackage, libSymbols);
                         }
+                    }
+
+                    // now loop on all the package names, merge all the symbols to write,
+                    // and write them
+                    for (String packageName : libMap.keySet()) {
+                        Collection<SymbolLoader> symbols = libMap.get(packageName);
+
+                        SymbolWriter writer = new SymbolWriter(mRFolder, packageName,
+                                fullSymbolValues);
+                        for (SymbolLoader symbolLoader : symbols) {
+                            writer.addSymbolsToWrite(symbolLoader);
+                        }
+                        writer.write();
                     }
                 }
             }
@@ -800,18 +774,6 @@ public final class AaptExecTask extends SingleDependencyTask {
             f.delete();
 
             throw (e instanceof BuildException) ? (BuildException)e : new BuildException(e);
-        }
-    }
-
-    private void createRClass(SymbolLoader fullSymbols, String libRTxtFile, String libPackage)
-            throws IOException {
-        File libSymbolFile = new File(libRTxtFile);
-        if (libSymbolFile.isFile()) {
-            SymbolLoader libSymbols = new SymbolLoader(libSymbolFile);
-            libSymbols.load();
-
-            SymbolWriter writer = new SymbolWriter(mRFolder, libPackage, libSymbols, fullSymbols);
-            writer.write();
         }
     }
 
