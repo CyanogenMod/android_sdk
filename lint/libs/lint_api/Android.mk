@@ -13,12 +13,14 @@
 # limitations under the License.
 
 LOCAL_PATH := $(call my-dir)
-
 include $(CLEAR_VARS)
 
-# Only compile source java files in this lib.
-LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/main/java
+# The lint_api code has moved to tools/base/lint_api.
+# The rule below uses the prebuilt lint_api.jar.
+#
+# If you want to run the tests, cd to tools/base/lint_api
+# and run ./gradlew :lint_api:test
+
 LOCAL_JAVA_LIBRARIES := \
 	lombok-ast-0.2 \
 	common \
@@ -31,7 +33,8 @@ LOCAL_JAVA_LIBRARIES := \
 LOCAL_MODULE := lint_api
 LOCAL_MODULE_TAGS := optional
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-# Build all sub-directories
-include $(call all-makefiles-under,$(LOCAL_PATH))
+include $(BUILD_HOST_PREBUILT)
+

@@ -16,8 +16,14 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src)
-LOCAL_JAVA_RESOURCE_DIRS := src
+# The assetstudio code has moved to tools/base/assetstudio.
+# The rule below uses the prebuilt assetstudio.jar.
+#
+# If you want to run the tests, cd to tools/base/assetstudio
+# and run ./gradlew :assetstudio:test
+
+LOCAL_MODULE := assetstudio
+LOCAL_MODULE_TAGS := optional
 
 # TODO: Replace common with the batik stuff
 LOCAL_JAVA_LIBRARIES := \
@@ -27,8 +33,8 @@ LOCAL_JAVA_LIBRARIES := \
 
 LOCAL_JAR_MANIFEST := etc/manifest.txt
 
-LOCAL_MODULE := assetstudio
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-LOCAL_MODULE_TAGS := optional
+include $(BUILD_HOST_PREBUILT)
 
-include $(BUILD_HOST_JAVA_LIBRARY)

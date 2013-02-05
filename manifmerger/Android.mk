@@ -16,7 +16,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 # The manifest-merger code has moved to tools/base/manifmerger.
-# The rule below uses the prebuilt manifmerger.jar if found.
+# The rule below uses the prebuilt manifmerger.jar.
 #
 # If you want to run the tests, cd to tools/base/manifmerger
 # and run ./gradlew :manifmerger:test
@@ -26,7 +26,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_JAVA_LIBRARIES := common sdklib
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-	../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+	../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_HOST_PREBUILT)
 

@@ -15,27 +15,20 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
+# The dvlib code has moved to tools/base/dvlib.
+# The rule below uses the prebuilt dvlib.jar.
+#
+# If you want to run the tests, cd to tools/base/dvlib
+# and run ./gradlew :dvlib:test
+
 LOCAL_JAVA_RESOURCE_DIRS := src/main/resources
 
 LOCAL_MODULE := dvlib
 LOCAL_MODULE_TAGS := optional
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+
+include $(BUILD_HOST_PREBUILT)
 
 
-# Build tests
-
-include $(CLEAR_VARS)
-
-LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-LOCAL_JAVA_RESOURCE_DIRS := src/test/resources
-
-LOCAL_MODULE := dvlib-tests
-LOCAL_MODULE_TAGS := optional
-
-LOCAL_JAVA_LIBRARIES := \
-	dvlib \
-	junit
-
-include $(BUILD_HOST_JAVA_LIBRARY)

@@ -69,9 +69,9 @@ bin/draw9patch                      tools/draw9patch
 bin/traceview                       tools/traceview
 bin/android                         tools/android
 bin/monkeyrunner                    tools/monkeyrunner
-bin/lint                            tools/lint
 bin/uiautomatorviewer               tools/uiautomatorviewer
-prebuilts/devtools/jobb/etc/jobb    tools/jobb
+prebuilts/devtools/etc/jobb         tools/jobb
+prebuilts/devtools/etc/lint         tools/lint
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
@@ -135,7 +135,7 @@ prebuilts/tools/common/http-client/commons-logging-1.1.1.jar                    
 prebuilts/tools/common/http-client/commons-codec-1.4.jar                            tools/lib/commons-codec-1.4.jar
 framework/emmalib.jar                                                               tools/lib/emma_device.jar
 external/emma/lib/emma.jar                                                          tools/lib/emma.jar
-external/emma/lib/emma_ant.jar                                                     tools/lib/emma_ant.jar
+external/emma/lib/emma_ant.jar                                                      tools/lib/emma_ant.jar
 prebuilts/tools/common/jfreechart/jcommon-1.0.12.jar                                tools/lib/jcommon-1.0.12.jar
 prebuilts/tools/common/jfreechart/jfreechart-1.0.9.jar                              tools/lib/jfreechart-1.0.9.jar
 prebuilts/tools/common/jfreechart/jfreechart-1.0.9-swt.jar                          tools/lib/jfreechart-1.0.9-swt.jar
@@ -191,7 +191,4 @@ sdk/files/typos                        tools/support
 
 sdk/testapps                      tests/testapps
 framework/ninepatch-tests.jar     tests/libtests/ninepatch-tests.jar
-framework/common-tests.jar        tests/libtests/common-tests.jar
-framework/layoutlib_api.jar       tests/libtests/layoutlib_api.jar
-framework/dvlib-tests.jar         tests/libtests/dvlib-tests.jar
 
