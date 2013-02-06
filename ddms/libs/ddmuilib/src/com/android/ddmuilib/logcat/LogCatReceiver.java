@@ -45,7 +45,6 @@ public final class LogCatReceiver {
     private LogCatOutputReceiver mCurrentLogCatOutputReceiver;
     private Set<ILogCatBufferChangeListener> mLogCatMessageListeners;
     private LogCatMessageParser mLogCatMessageParser;
-    private LogCatPidToNameMapper mPidToNameMapper;
     private IPreferenceStore mPrefStore;
 
     /**
@@ -62,8 +61,6 @@ public final class LogCatReceiver {
 
         mLogCatMessageListeners = new HashSet<ILogCatBufferChangeListener>();
         mLogCatMessageParser = new LogCatMessageParser();
-        mPidToNameMapper = new LogCatPidToNameMapper(mCurrentDevice);
-
         mLogMessages = new LogCatMessageList(getFifoSize());
 
         startReceiverThread();
@@ -157,7 +154,7 @@ public final class LogCatReceiver {
 
     private void processLogLines(String[] lines) {
         List<LogCatMessage> newMessages = mLogCatMessageParser.processLogLines(lines,
-                mPidToNameMapper);
+                mCurrentDevice);
         processLogMessages(newMessages);
     }
 
