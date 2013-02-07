@@ -16,6 +16,8 @@
 
 package com.android.ddmuilib.logcat;
 
+import com.android.ddmlib.logcat.LogCatMessage;
+
 import java.util.List;
 
 /**

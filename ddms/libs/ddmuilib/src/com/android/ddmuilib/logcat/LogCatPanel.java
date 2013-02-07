@@ -19,6 +19,7 @@ package com.android.ddmuilib.logcat;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.ddmuilib.AbstractBufferFindTarget;
 import com.android.ddmuilib.FindDialog;
 import com.android.ddmuilib.ITableFocusListener;

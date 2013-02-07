@@ -15,6 +15,8 @@
  */
 package com.android.ddmuilib.logcat;
 
+import com.android.ddmlib.logcat.LogCatMessage;
+
 /**
  * Classes interested in listening to user selection of logcat
  * messages should implement this interface.
