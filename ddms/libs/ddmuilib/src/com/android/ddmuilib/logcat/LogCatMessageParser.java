@@ -16,7 +16,9 @@
 
 package com.android.ddmuilib.logcat;
 
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
+import com.google.common.primitives.Ints;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +62,7 @@ public final class LogCatMessageParser {
      * @return list of LogMessage objects parsed from the input
      */
     public List<LogCatMessage> processLogLines(String[] lines,
-            LogCatPidToNameMapper pidToNameMapper) {
+            IDevice device) {
         List<LogCatMessage> messages = new ArrayList<LogCatMessage>(lines.length);
 
         for (String line : lines) {
@@ -82,9 +84,13 @@ public final class LogCatMessageParser {
                     mCurLogLevel = LogLevel.ASSERT;
                 }
             } else {
+                String pkgName = ""; //$NON-NLS-1$
+                if (device != null) {
+                    Integer pid = Ints.tryParse(mCurPid);
+                    pkgName = device.getClientName(pid == null ? 0 : pid.intValue());
+                }
                 LogCatMessage m = new LogCatMessage(mCurLogLevel, mCurPid, mCurTid,
-                        pidToNameMapper.getName(mCurPid),
-                        mCurTag, mCurTime, line);
+                        pkgName, mCurTag, mCurTime, line);
                 messages.add(m);
             }
         }
