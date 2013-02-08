@@ -15,6 +15,8 @@
  */
 package com.android.ddmuilib.logcat;
 
+import com.android.ddmlib.logcat.LogCatFilter;
+
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
