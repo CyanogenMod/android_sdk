@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.ddms.views;
 
+import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.ddmuilib.logcat.ILogCatMessageSelectionListener;
-import com.android.ddmuilib.logcat.LogCatMessage;
 import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.ddmuilib.logcat.LogCatStackTraceParser;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
