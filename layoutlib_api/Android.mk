@@ -16,7 +16,11 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src/main/java)
+# The layoutlib_api code has moved to tools/base/layoutlib_api.
+# The rule below uses the prebuilt layoutlib_api.jar.
+#
+# If you want to run the tests, cd to tools/base/layoutlib_api
+# and run ./gradlew :layoutlib_api:test
 
 LOCAL_JAVA_LIBRARIES := \
 	common \
@@ -24,17 +28,8 @@ LOCAL_JAVA_LIBRARIES := \
 
 LOCAL_MODULE := layoutlib_api
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-# build tests
-include $(CLEAR_VARS)
+include $(BUILD_HOST_PREBUILT)
 
-# Only compile source java files in this lib.
-LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-
-LOCAL_MODULE := layoutlib_api-tests
-LOCAL_MODULE_TAGS := optional
-
-LOCAL_JAVA_LIBRARIES := layoutlib_api junit
-
-include $(BUILD_HOST_JAVA_LIBRARY)

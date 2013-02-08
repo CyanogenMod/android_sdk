@@ -33,13 +33,11 @@ PRODUCT_PACKAGES += \
 	anttasks \
 	archquery \
 	assetstudio \
-	common-tests \
 	ddmlib \
 	ddms \
 	ddmuilib \
 	draw9patch \
 	dvlib \
-	dvlib-tests \
 	hierarchyviewer \
 	sdk_common \
 	layoutlib_api \

@@ -16,13 +16,12 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src/main/java)
+# The common code has moved to tools/base/common.
+# The rule below uses the prebuilt common.jar.
+#
+# If you want to run the tests, cd to tools/base/common
+# and run ./gradlew :common:test
 
-LOCAL_JAR_MANIFEST := manifest.txt
-
-# IMPORTANT: if you add a new dependency here, please make sure
-# to also check the following files:
-#   common/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	guava-tools
 
@@ -30,16 +29,8 @@ LOCAL_MODULE := common
 
 LOCAL_MODULE_TAGS := optional
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-# build the tests
-include $(CLEAR_VARS)
+include $(BUILD_HOST_PREBUILT)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src/test/java)
-
-LOCAL_MODULE := common-tests
-LOCAL_MODULE_TAGS := optional
-
-LOCAL_JAVA_LIBRARIES := common junit
-
-include $(BUILD_HOST_JAVA_LIBRARY)

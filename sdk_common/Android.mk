@@ -16,7 +16,11 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under,src)
+# The sdk_common code has moved to tools/base/sdk_common.
+# The rule below uses the prebuilt sdk_common.jar.
+#
+# If you want to run the tests, cd to tools/base/sdk_common
+# and run ./gradlew :sdk_common:test
 
 LOCAL_JAVA_LIBRARIES := \
 	layoutlib_api \
@@ -26,7 +30,10 @@ LOCAL_JAVA_LIBRARIES := \
 	sdklib
 
 LOCAL_MODULE := sdk_common
-
 LOCAL_MODULE_TAGS := optional
 
-include $(BUILD_HOST_JAVA_LIBRARY)
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
+	../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+
+include $(BUILD_HOST_PREBUILT)
+

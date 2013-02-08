@@ -25,7 +25,8 @@ LOCAL_JAVA_LIBRARIES := \
         common \
         sdklib \
         manifmerger \
-        ant
+        ant \
+        guava-tools
 
 LOCAL_MODULE := anttasks
 

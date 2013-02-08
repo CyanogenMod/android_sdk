@@ -24,10 +24,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := sdklib
 LOCAL_MODULE_TAGS := optional
-# IMPORTANT: if you add a new dependency here, please make sure
-# to also check the following files:
-#   sdkmanager/sdklib/manifest.txt
-#   sdkmanager/app/etc/android.bat
+
 LOCAL_JAVA_LIBRARIES := \
         common \
         commons-codec-1.4 \
@@ -42,7 +39,7 @@ LOCAL_JAVA_LIBRARIES := \
         layoutlib_api
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-	../../../../prebuilts/devtools/$(LOCAL_MODULE)/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+	../../../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_HOST_PREBUILT)
 
