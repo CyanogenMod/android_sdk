@@ -16,6 +16,7 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.logcat.LogCatMessage;
 
 import java.util.ArrayList;
 import java.util.List;

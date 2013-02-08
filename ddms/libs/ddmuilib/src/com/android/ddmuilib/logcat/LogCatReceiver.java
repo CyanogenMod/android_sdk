@@ -17,10 +17,10 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.IShellOutputReceiver;
-import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.logcat.LogCatListener;
+import com.android.ddmlib.logcat.LogCatMessage;
+import com.android.ddmlib.logcat.LogCatReceiverTask;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -33,18 +33,15 @@ import java.util.Set;
  * A class to monitor a device for logcat messages. It stores the received
  * log messages in a circular buffer.
  */
-public final class LogCatReceiver {
-    private static final String LOGCAT_COMMAND = "logcat -v long";
-    private static final int DEVICE_POLL_INTERVAL_MSEC = 1000;
+public final class LogCatReceiver implements LogCatListener {
     private static LogCatMessage DEVICE_DISCONNECTED_MESSAGE =
             new LogCatMessage(LogLevel.ERROR, "", "", "",
                     "", "", "Device disconnected");
 
     private LogCatMessageList mLogMessages;
     private IDevice mCurrentDevice;
-    private LogCatOutputReceiver mCurrentLogCatOutputReceiver;
+    private LogCatReceiverTask mLogCatReceiverTask;
     private Set<ILogCatBufferChangeListener> mLogCatMessageListeners;
-    private LogCatMessageParser mLogCatMessageParser;
     private IPreferenceStore mPrefStore;
 
     /**
@@ -60,7 +57,6 @@ public final class LogCatReceiver {
         mPrefStore = prefStore;
 
         mLogCatMessageListeners = new HashSet<ILogCatBufferChangeListener>();
-        mLogCatMessageParser = new LogCatMessageParser();
         mLogMessages = new LogCatMessageList(getFifoSize());
 
         startReceiverThread();
@@ -70,13 +66,14 @@ public final class LogCatReceiver {
      * Stop receiving messages from currently active device.
      */
     public void stop() {
-        if (mCurrentLogCatOutputReceiver != null) {
+        if (mLogCatReceiverTask != null) {
             /* stop the current logcat command */
-            mCurrentLogCatOutputReceiver.mIsCancelled = true;
-            mCurrentLogCatOutputReceiver = null;
+            mLogCatReceiverTask.removeLogCatListener(this);
+            mLogCatReceiverTask.stop();
+            mLogCatReceiverTask = null;
 
             // add a message to the log indicating that the device has been disconnected.
-            processLogMessages(Collections.singletonList(DEVICE_DISCONNECTED_MESSAGE));
+            log(Collections.singletonList(DEVICE_DISCONNECTED_MESSAGE));
         }
 
         mCurrentDevice = null;
@@ -88,85 +85,26 @@ public final class LogCatReceiver {
     }
 
     private void startReceiverThread() {
-        mCurrentLogCatOutputReceiver = new LogCatOutputReceiver();
+        if (mCurrentDevice == null) {
+            return;
+        }
 
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                /* wait while the device comes online */
-                while (mCurrentDevice != null && !mCurrentDevice.isOnline()) {
-                    try {
-                        Thread.sleep(DEVICE_POLL_INTERVAL_MSEC);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                }
+        mLogCatReceiverTask = new LogCatReceiverTask(mCurrentDevice);
+        mLogCatReceiverTask.addLogCatListener(this);
 
-                try {
-                    if (mCurrentDevice != null) {
-                        mCurrentDevice.executeShellCommand(LOGCAT_COMMAND,
-                            mCurrentLogCatOutputReceiver, 0);
-                    }
-                } catch (Exception e) {
-                    /* There are 4 possible exceptions: TimeoutException,
-                     * AdbCommandRejectedException, ShellCommandUnresponsiveException and
-                     * IOException. In case of any of them, the only recourse is to just
-                     * log this unexpected situation and move on.
-                     */
-                    Log.e("Unexpected error while launching logcat. Try reselecting the device.",
-                            e);
-                }
-            }
-        });
+        Thread t = new Thread(mLogCatReceiverTask);
         t.setName("LogCat output receiver for " + mCurrentDevice.getSerialNumber());
         t.start();
     }
 
-    /**
-     * LogCatOutputReceiver implements {@link MultiLineReceiver#processNewLines(String[])},
-     * which is called whenever there is output from logcat. It simply redirects this output
-     * to {@link LogCatReceiver#processLogLines(String[])}. This class is expected to be
-     * used from a different thread, and the only way to stop that thread is by using the
-     * {@link LogCatOutputReceiver#mIsCancelled} variable.
-     * See {@link IDevice#executeShellCommand(String, IShellOutputReceiver, int)} for more
-     * details.
-     */
-    private class LogCatOutputReceiver extends MultiLineReceiver {
-        private boolean mIsCancelled;
-
-        public LogCatOutputReceiver() {
-            setTrimLine(false);
+    @Override
+    public void log(List<LogCatMessage> newMessages) {
+        List<LogCatMessage> deletedMessages;
+        synchronized (mLogMessages) {
+            deletedMessages = mLogMessages.ensureSpace(newMessages.size());
+            mLogMessages.appendMessages(newMessages);
         }
-
-        /** Implements {@link IShellOutputReceiver#isCancelled() }. */
-        @Override
-        public boolean isCancelled() {
-            return mIsCancelled;
-        }
-
-        @Override
-        public void processNewLines(String[] lines) {
-            if (!mIsCancelled) {
-                processLogLines(lines);
-            }
-        }
-    }
-
-    private void processLogLines(String[] lines) {
-        List<LogCatMessage> newMessages = mLogCatMessageParser.processLogLines(lines,
-                mCurrentDevice);
-        processLogMessages(newMessages);
-    }
-
-    private void processLogMessages(List<LogCatMessage> newMessages) {
-        if (newMessages.size() > 0) {
-            List<LogCatMessage> deletedMessages;
-            synchronized (mLogMessages) {
-                deletedMessages = mLogMessages.ensureSpace(newMessages.size());
-                mLogMessages.appendMessages(newMessages);
-            }
-            sendLogChangedEvent(newMessages, deletedMessages);
-        }
+        sendLogChangedEvent(newMessages, deletedMessages);
     }
 
     /**
