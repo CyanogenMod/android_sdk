@@ -27,6 +27,7 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Issue.OutputFormat;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
@@ -488,11 +489,12 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             sb.append('\n').append('\n');
             sb.append("Issue Explanation:");
             sb.append('\n');
-            if (issue.getExplanation() != null) {
+            String explanation = issue.getExplanation(Issue.OutputFormat.TEXT);
+            if (explanation != null && !explanation.isEmpty()) {
                 sb.append('\n');
-                sb.append(issue.getExplanationAsSimpleText());
+                sb.append(explanation);
             } else {
-                sb.append(issue.getDescription());
+                sb.append(issue.getDescription(Issue.OutputFormat.TEXT));
             }
 
             if (issue.getMoreInfo() != null) {
@@ -543,7 +545,8 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         public String getAdditionalProposalInfo() {
             return "Provides more information about this issue."
                     + "<br><br>" //$NON-NLS-1$
-                    + EclipseLintClient.getRegistry().getIssue(mId).getExplanationAsHtml();
+                    + EclipseLintClient.getRegistry().getIssue(mId).getExplanation(
+                            OutputFormat.HTML);
         }
 
         @Override

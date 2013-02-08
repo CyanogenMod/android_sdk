@@ -105,6 +105,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import lombok.ast.TypeReference;
 import lombok.ast.ecj.EcjTreeConverter;
 import lombok.ast.grammar.ParseProblem;
 import lombok.ast.grammar.Source;
@@ -614,8 +615,8 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             return "";
         }
 
-        String summary = issue.getDescription();
-        String explanation = issue.getExplanationAsSimpleText();
+        String summary = issue.getDescription(Issue.OutputFormat.TEXT);
+        String explanation = issue.getExplanation(Issue.OutputFormat.TEXT);
 
         StringBuilder sb = new StringBuilder(summary.length() + explanation.length() + 20);
         try {
@@ -1211,6 +1212,19 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         @Override
         public void dispose(@NonNull JavaContext context,
                 @NonNull lombok.ast.Node compilationUnit) {
+        }
+
+        @Override
+        @Nullable
+        public lombok.ast.Node resolve(@NonNull JavaContext context,
+                @NonNull lombok.ast.Node node) {
+            return null;
+        }
+
+        @Override
+        @Nullable
+        public TypeReference getType(@NonNull JavaContext context, @NonNull lombok.ast.Node node) {
+            return null;
         }
 
         /* Handle for creating positions cheaply and returning full fledged locations later */
