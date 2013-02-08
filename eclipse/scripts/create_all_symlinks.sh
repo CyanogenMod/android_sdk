@@ -211,13 +211,29 @@ LIBS="$LIBS $SDKMAN_LIBS"
 
 if [[ $PLATFORM != "windows-x86" ]]; then
   # liblzf doesn't build under cygwin. If necessary, this should be fixed first.
-  
+
   GLD_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.gldebugger/libs"
   GLD_LIBS="host-libprotobuf-java-2.3.0-lite liblzf"
 
   LIBS="$LIBS $GLD_LIBS"
   CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS"
 fi
+
+# If some of the libs are available in prebuilts/devtools, use link to them directly
+# instead of trying to rebuild them so remove them from the libs to build. Note that
+# they are already listed in CP_FILES so we'll adjust the source to copy later.
+
+LIBS2=""
+for LIB in $LIBS; do
+  J="prebuilts/devtools/$LIB.jar"
+  if [[ -f $J ]]; then
+    warn "## Using existing $J"
+  else
+    LIBS2="$LIBS2 $LIB"
+  fi
+done
+LIBS="$LIBS2"
+unset LIBS2
 
 # In the mode to only echo dependencies, output them and we're done
 if [[ -n $ONLY_SHOW_DEPS ]]; then
@@ -254,7 +270,11 @@ for SRC in $CP_FILES; do
   fi
   if [[ ! -f "$SRC" ]]; then
     ORIG_SRC="$SRC"
-    SRC="out/host/$PLATFORM/framework/$SRC.jar"
+    # Take a prebuilts/devtools instead of a framework one if possible.
+    SRC="prebuilts/devtools/$SRC.jar"
+    if [[ ! -f "$SRC" ]]; then
+      SRC="out/host/$PLATFORM/framework/$ORIG_SRC.jar"
+    fi
   fi
   if [[ -f "$SRC" ]]; then
     if [[ ! -d "$DEST" ]]; then
