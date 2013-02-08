@@ -1884,7 +1884,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     // --------- ILogger methods -----------
 
     @Override
-    public void error(Throwable t, String format, Object... args) {
+    public void error(@Nullable Throwable t, @Nullable String format, Object... args) {
         if (t != null) {
             log(t, format, args);
         } else {
