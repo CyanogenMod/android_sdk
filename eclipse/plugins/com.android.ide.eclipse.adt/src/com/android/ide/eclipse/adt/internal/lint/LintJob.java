@@ -140,7 +140,7 @@ final class LintJob extends Job {
                     if (issue == null) {
                         continue;
                     }
-                    if (issue.isAdequate(scope)) {
+                    if (issue.getImplementation().isAdequate(scope)) {
                         marker.delete();
                     }
                 }

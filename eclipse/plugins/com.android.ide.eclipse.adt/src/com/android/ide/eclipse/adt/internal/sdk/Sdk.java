@@ -235,7 +235,8 @@ public final class Sdk  {
             final ArrayList<String> logMessages = new ArrayList<String>();
             ILogger log = new ILogger() {
                 @Override
-                public void error(Throwable throwable, String errorFormat, Object... arg) {
+                public void error(@Nullable Throwable throwable, @Nullable String errorFormat,
+                        Object... arg) {
                     if (errorFormat != null) {
                         logMessages.add(String.format("Error: " + errorFormat, arg));
                     }

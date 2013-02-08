@@ -29,7 +29,6 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.tools.lint.checks.ApiDetector;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IMarker;

@@ -32,7 +32,6 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.tools.lint.checks.AnnotationDetector;
 import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 
 import org.eclipse.core.resources.IMarker;
@@ -346,7 +345,8 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         }
 
         Issue issue = EclipseLintClient.getRegistry().getIssue(id);
-        boolean isClassDetector = issue != null && issue.getScope().contains(Scope.CLASS_FILE);
+        boolean isClassDetector = issue != null && issue.getImplementation().getScope().contains(
+                Scope.CLASS_FILE);
 
         // Don't offer to suppress (with an annotation) the annotation checks
         if (issue == AnnotationDetector.ISSUE) {
