@@ -23,6 +23,7 @@ import static org.eclipse.ui.IWorkbenchPage.MATCH_INPUT;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -989,7 +990,7 @@ public class AdtUtils {
      * @return the highest known API number
      */
     public static int getHighestKnownApiLevel() {
-        return SdkConstants.HIGHEST_KNOWN_API;
+        return SdkVersionInfo.HIGHEST_KNOWN_API;
     }
 
     /**

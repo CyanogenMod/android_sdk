@@ -22,6 +22,7 @@ import static com.android.SdkConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -186,7 +187,7 @@ class AddSuppressAttribute implements ICompletionProposal {
                 if (matcher.find()) {
                     api = Integer.parseInt(matcher.group(1));
                     String targetApi;
-                    String buildCode = LintUtils.getBuildCode(api);
+                    String buildCode = SdkVersionInfo.getBuildCode(api);
                     if (buildCode != null) {
                         targetApi = buildCode.toLowerCase(Locale.US);
                         fixes.add(new AddSuppressAttribute(editor, id, marker, element,

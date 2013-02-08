@@ -17,7 +17,6 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.FD_TOOLS;
-import static com.android.SdkConstants.HIGHEST_KNOWN_API;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_BUILD_API;
@@ -25,6 +24,7 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHan
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
@@ -329,14 +329,16 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
             }
 
             for (int minSdk = 1;
-                    minSdk <= HIGHEST_KNOWN_API;
-                    minSdk++) {
+                     minSdk <= SdkVersionInfo.HIGHEST_KNOWN_API;
+                     minSdk++) {
                 // Don't bother checking *every* single minSdk, just pick some interesting ones
                 if (!isInterestingApiLevel(minSdk)) {
                     continue;
                 }
 
-                for (int targetSdk = minSdk; targetSdk <= HIGHEST_KNOWN_API; targetSdk++) {
+                for (int targetSdk = minSdk;
+                         targetSdk <= SdkVersionInfo.HIGHEST_KNOWN_API;
+                         targetSdk++) {
                     if (!isInterestingApiLevel(targetSdk)) {
                         continue;
                     }
@@ -440,14 +442,16 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
             }
 
             for (int minSdk = 1;
-                    minSdk <= HIGHEST_KNOWN_API;
-                    minSdk++) {
+                     minSdk <= SdkVersionInfo.HIGHEST_KNOWN_API;
+                     minSdk++) {
                 // Don't bother checking *every* single minSdk, just pick some interesting ones
                 if (!isInterestingApiLevel(minSdk)) {
                     continue;
                 }
 
-                for (int targetSdk = minSdk; targetSdk <= HIGHEST_KNOWN_API; targetSdk++) {
+                for (int targetSdk = minSdk;
+                         targetSdk <= SdkVersionInfo.HIGHEST_KNOWN_API;
+                         targetSdk++) {
                     if (!isInterestingApiLevel(targetSdk)) {
                         continue;
                     }
