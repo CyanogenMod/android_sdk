@@ -16,9 +16,11 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.logcat.LogCatFilter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class to help save/restore user created filters.
@@ -49,14 +51,17 @@ public final class LogCatFilterSettingsSerializer {
      * {@link LogCatFilterSettingsSerializer#decodeFromPreferenceString(String)} for the
      * reverse operation.
      * @param filters list of filters to save.
+     * @param filterData mapping from filter to per filter UI data
      * @return an encoded string that can be saved in Eclipse preference store. The encoded string
      * is of a list of key:'value' pairs.
      */
-    public String encodeToPreferenceString(List<LogCatFilter> filters) {
+    public String encodeToPreferenceString(List<LogCatFilter> filters,
+            Map<LogCatFilter, LogCatFilterData> filterData) {
         StringBuffer sb = new StringBuffer();
 
         for (LogCatFilter f : filters) {
-            if (f.isTransient()) {
+            LogCatFilterData fd = filterData.get(f);
+            if (fd != null && fd.isTransient()) {
                 // do not persist transient filters
                 continue;
             }

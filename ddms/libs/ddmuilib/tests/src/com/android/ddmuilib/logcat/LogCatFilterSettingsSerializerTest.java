@@ -16,8 +16,10 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.logcat.LogCatFilter;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -34,7 +36,8 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
                 LogLevel.ERROR);
 
         LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
-        String s = serializer.encodeToPreferenceString(Arrays.asList(fs));
+        String s = serializer.encodeToPreferenceString(Arrays.asList(fs),
+                new HashMap<LogCatFilter, LogCatFilterData>());
         List<LogCatFilter> decodedFiltersList = serializer.decodeFromPreferenceString(s);
 
         assertEquals(1, decodedFiltersList.size());
@@ -57,10 +60,14 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
                 "123",                      //$NON-NLS-1$
                 "TestAppName.*",            //$NON-NLS-1$
                 LogLevel.ERROR);
-        fs.setTransient();
+        LogCatFilterData fd = new LogCatFilterData(fs);
+        fd.setTransient();
+        HashMap<LogCatFilter, LogCatFilterData> fdMap =
+                new HashMap<LogCatFilter, LogCatFilterData>();
+        fdMap.put(fs, fd);
 
         LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
-        String s = serializer.encodeToPreferenceString(Arrays.asList(fs));
+        String s = serializer.encodeToPreferenceString(Arrays.asList(fs), fdMap);
         List<LogCatFilter> decodedFiltersList = serializer.decodeFromPreferenceString(s);
 
         assertEquals(0, decodedFiltersList.size());

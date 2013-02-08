@@ -19,6 +19,7 @@ package com.android.ddmuilib.logcat;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.logcat.LogCatFilter;
 import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.ddmuilib.AbstractBufferFindTarget;
 import com.android.ddmuilib.FindDialog;
@@ -86,6 +87,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -161,6 +164,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private IPreferenceStore mPrefStore;
 
     private List<LogCatFilter> mLogCatFilters;
+    private Map<LogCatFilter, LogCatFilterData> mLogCatFilterData;
     private int mCurrentSelectedFilterIndex;
 
     private ToolItem mNewFilterToolItem;
@@ -237,18 +241,25 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private void initializeFilters() {
         mLogCatFilters = new ArrayList<LogCatFilter>();
+        mLogCatFilterData = new ConcurrentHashMap<LogCatFilter, LogCatFilterData>();
 
         /* add default filter matching all messages */
         String tag = "";
         String text = "";
         String pid = "";
         String app = "";
-        mLogCatFilters.add(new LogCatFilter("All messages (no filters)",
-                tag, text, pid, app, LogLevel.VERBOSE));
+        LogCatFilter defaultFilter = new LogCatFilter("All messages (no filters)",
+                tag, text, pid, app, LogLevel.VERBOSE);
+
+        mLogCatFilters.add(defaultFilter);
+        mLogCatFilterData.put(defaultFilter, new LogCatFilterData(defaultFilter));
 
         /* restore saved filters from prefStore */
         List<LogCatFilter> savedFilters = getSavedFilters();
-        mLogCatFilters.addAll(savedFilters);
+        for (LogCatFilter f: savedFilters) {
+            mLogCatFilters.add(f);
+            mLogCatFilterData.put(f, new LogCatFilterData(f));
+        }
     }
 
     private void setupDefaultPreferences() {
@@ -324,7 +335,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         /* save all filter settings except the first one which is the default */
         String e = serializer.encodeToPreferenceString(
-                mLogCatFilters.subList(1, mLogCatFilters.size()));
+                mLogCatFilters.subList(1, mLogCatFilters.size()), mLogCatFilterData);
         mPrefStore.setValue(LOGCAT_FILTERS_LIST, e);
     }
 
@@ -349,7 +360,8 @@ public final class LogCatPanel extends SelectionDependentPanel
 
             // When switching between devices, existing filter match count should be reset.
             for (LogCatFilter f : mLogCatFilters) {
-                f.resetUnreadCount();
+                LogCatFilterData fd = mLogCatFilterData.get(f);
+                fd.resetUnreadCount();
             }
         }
 
@@ -479,6 +491,7 @@ public final class LogCatPanel extends SelectionDependentPanel
                 LogLevel.getByString(d.getLogLevel()));
 
         mLogCatFilters.add(f);
+        mLogCatFilterData.put(f, new LogCatFilterData(f));
         mFiltersTableViewer.refresh();
 
         /* select the newly added entry */
@@ -490,8 +503,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private void addNewFilter() {
-        addNewFilter("", "", "",
-                "", LogLevel.VERBOSE);
+        addNewFilter("", "", "", "", LogLevel.VERBOSE);
     }
 
     private void deleteSelectedFilter() {
@@ -501,7 +513,10 @@ public final class LogCatPanel extends SelectionDependentPanel
             return;
         }
 
+        LogCatFilter f = mLogCatFilters.get(selectedIndex);
         mLogCatFilters.remove(selectedIndex);
+        mLogCatFilterData.remove(f);
+
         mFiltersTableViewer.refresh();
         mFiltersTableViewer.getTable().setSelection(selectedIndex - 1);
 
@@ -552,6 +567,10 @@ public final class LogCatPanel extends SelectionDependentPanel
         if (f == null) {
             f = createTransientAppFilter(appName);
             mLogCatFilters.add(f);
+
+            LogCatFilterData fd = new LogCatFilterData(f);
+            fd.setTransient();
+            mLogCatFilterData.put(f, fd);
         }
 
         selectFilterAt(mLogCatFilters.indexOf(f));
@@ -559,7 +578,8 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private LogCatFilter findTransientAppFilter(String appName) {
         for (LogCatFilter f : mLogCatFilters) {
-            if (f.isTransient() && f.getAppName().equals(appName)) {
+            LogCatFilterData fd = mLogCatFilterData.get(f);
+            if (fd != null && fd.isTransient() && f.getAppName().equals(appName)) {
                 return f;
             }
         }
@@ -573,7 +593,6 @@ public final class LogCatPanel extends SelectionDependentPanel
                 "",
                 appName,
                 LogLevel.VERBOSE);
-        f.setTransient();
         return f;
     }
 
@@ -595,7 +614,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         mFiltersTableViewer = new TableViewer(table);
         mFiltersTableViewer.setContentProvider(new LogCatFilterContentProvider());
-        mFiltersTableViewer.setLabelProvider(new LogCatFilterLabelProvider());
+        mFiltersTableViewer.setLabelProvider(new LogCatFilterLabelProvider(mLogCatFilterData));
         mFiltersTableViewer.setInput(mLogCatFilters);
 
         mFiltersTableViewer.getTable().addSelectionListener(new SelectionAdapter() {
@@ -672,6 +691,7 @@ public final class LogCatPanel extends SelectionDependentPanel
                 if (mReceiver != null) {
                     mReceiver.clearMessages();
                     refreshLogCatTable();
+                    resetUnreadCountForAllFilters();
 
                     // the filters view is not cleared unless the filters are re-applied.
                     updateAppliedFilters();
@@ -1092,13 +1112,15 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         mCurrentSelectedFilterIndex = idx;
 
-        resetUnreadCountForSelectedFilter();
+        resetUnreadCountForAllFilters();
         updateFiltersToolBar();
         updateAppliedFilters();
     }
 
-    private void resetUnreadCountForSelectedFilter() {
-        mLogCatFilters.get(mCurrentSelectedFilterIndex).resetUnreadCount();
+    private void resetUnreadCountForAllFilters() {
+        for (LogCatFilterData fd: mLogCatFilterData.values()) {
+            fd.resetUnreadCount();
+        }
         refreshFiltersTable();
     }
 
@@ -1143,6 +1165,8 @@ public final class LogCatPanel extends SelectionDependentPanel
     @Override
     public void bufferChanged(List<LogCatMessage> addedMessages,
             List<LogCatMessage> deletedMessages) {
+        updateUnreadCount(addedMessages);
+        refreshFiltersTable();
 
         synchronized (mLogBuffer) {
             addedMessages = applyCurrentFilters(addedMessages);
@@ -1153,8 +1177,6 @@ public final class LogCatPanel extends SelectionDependentPanel
         }
 
         refreshLogCatTable();
-        updateUnreadCount(addedMessages);
-        refreshFiltersTable();
     }
 
     private void reloadLogBuffer() {
@@ -1185,7 +1207,9 @@ public final class LogCatPanel extends SelectionDependentPanel
                 /* no need to update unread count for currently selected filter */
                 continue;
             }
-            mLogCatFilters.get(i).updateUnreadCount(receivedMessages);
+            LogCatFilter f = mLogCatFilters.get(i);
+            LogCatFilterData fd = mLogCatFilterData.get(f);
+            fd.updateUnreadCount(receivedMessages);
         }
     }
 
@@ -1329,7 +1353,9 @@ public final class LogCatPanel extends SelectionDependentPanel
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    startScrollBarMonitor(mTable.getVerticalBar());
+                    if (!mTable.isDisposed()) {
+                        startScrollBarMonitor(mTable.getVerticalBar());
+                    }
                 }
             });
         }
@@ -1373,7 +1399,9 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     /** Scroll to the last line. */
     private void scrollToLatestLog() {
-        mTable.setTopIndex(mTable.getItemCount() - 1);
+        if (!mTable.isDisposed()) {
+            mTable.setTopIndex(mTable.getItemCount() - 1);
+        }
     }
 
     /**
