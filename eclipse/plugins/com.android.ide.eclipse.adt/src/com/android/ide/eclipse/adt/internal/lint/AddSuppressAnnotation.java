@@ -25,6 +25,7 @@ import static org.eclipse.jdt.core.dom.SingleMemberAnnotation.VALUE_PROPERTY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -409,7 +410,7 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
                         // @TargetApi is only valid on methods and classes, not fields etc
                         && (body instanceof MethodDeclaration
                                 || body instanceof TypeDeclaration)) {
-                    String apiString = LintUtils.getBuildCode(api);
+                    String apiString = SdkVersionInfo.getBuildCode(api);
                     if (apiString == null) {
                         apiString = Integer.toString(api);
                     }
