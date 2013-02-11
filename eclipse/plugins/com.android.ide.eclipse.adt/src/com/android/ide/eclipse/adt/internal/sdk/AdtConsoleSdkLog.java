@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.utils.ILogger;
 
@@ -28,7 +29,7 @@ public class AdtConsoleSdkLog implements ILogger {
     private static final String TAG = "SDK Manager"; //$NON-NLS-1$
 
     @Override
-    public void error(Throwable t, String errorFormat, Object... args) {
+    public void error(@Nullable Throwable t, @Nullable String errorFormat, Object... args) {
         if (t != null) {
             AdtPlugin.logAndPrintError(t, TAG, "Error: " + errorFormat, args);
         } else {

@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -897,7 +898,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     }
 
                     @Override
-                    public void error(Throwable t, String errorFormat, Object... args) {
+                    public void error(@Nullable Throwable t, @Nullable String errorFormat,
+                            Object... args) {
                         errors.add(String.format(errorFormat, args));
                     }
                 }),
