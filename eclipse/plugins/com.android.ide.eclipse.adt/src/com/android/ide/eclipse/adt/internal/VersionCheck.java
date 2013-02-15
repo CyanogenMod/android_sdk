@@ -21,7 +21,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.Messages;
-import com.android.sdklib.internal.repository.packages.FullRevision;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 
 import org.osgi.framework.Constants;
