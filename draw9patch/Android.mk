@@ -20,9 +20,6 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 
 LOCAL_JAR_MANIFEST := etc/manifest.txt
 
-LOCAL_JAVA_LIBRARIES := \
-	swing-worker-1.1
-
 LOCAL_MODULE := draw9patch
 LOCAL_MODULE_TAGS := debug
 
