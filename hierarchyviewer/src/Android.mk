@@ -21,7 +21,6 @@ LOCAL_JAVA_RESOURCE_DIRS := resources
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	ddmlib \
-	swing-worker-1.1 \
 	org-openide-util \
 	org-netbeans-api-visual
 LOCAL_MODULE := hierarchyviewer

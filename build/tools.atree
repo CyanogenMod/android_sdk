@@ -143,7 +143,6 @@ prebuilts/tools/common/eclipse/org.eclipse.core.commands_3.6.0.I20100512-1500.ja
 prebuilts/tools/common/eclipse/org.eclipse.equinox.common_3.6.0.v20100503.jar       tools/lib/org.eclipse.equinox.common_3.6.0.v20100503.jar
 prebuilts/tools/common/eclipse/org.eclipse.jface_3.6.2.M20110210-1200.jar           tools/lib/org.eclipse.jface_3.6.2.M20110210-1200.jar
 prebuilts/tools/common/osgi/osgi.jar                                                tools/lib/osgi.jar
-prebuilts/tools/common/swing-worker/swing-worker-1.1.jar                            tools/lib/swing-worker-1.1.jar
 prebuilts/tools/common/asm-tools/asm-4.0.jar                                        tools/lib/asm-4.0.jar
 prebuilts/tools/common/asm-tools/asm-tree-4.0.jar                                   tools/lib/asm-tree-4.0.jar
 prebuilts/tools/common/asm-tools/asm-analysis-4.0.jar                               tools/lib/asm-analysis-4.0.jar
