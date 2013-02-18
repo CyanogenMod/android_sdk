@@ -23,7 +23,7 @@ import java.util.Map;
  * When passed as a string, the "identifier" value is used.
  */
 public enum TouchPressType {
-    DOWN("down"), UP("up"), DOWN_AND_UP("downAndUp");
+    DOWN("down"), UP("up"), DOWN_AND_UP("downAndUp"), MOVE("move");
 
     private static final Map<String,TouchPressType> identifierToEnum =
         new HashMap<String,TouchPressType>();

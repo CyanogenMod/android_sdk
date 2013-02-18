@@ -66,6 +66,9 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
     @MonkeyRunnerExported(doc = "Sends a DOWN event, immediately followed by an UP event when used with touch() or press()")
     public static final String DOWN_AND_UP = TouchPressType.DOWN_AND_UP.getIdentifier();
 
+    @MonkeyRunnerExported(doc = "Sends a MOVE event when used with touch().")
+    public static final String MOVE = TouchPressType.MOVE.getIdentifier();
+
     private IChimpDevice impl;
 
     public MonkeyDevice(IChimpDevice impl) {
