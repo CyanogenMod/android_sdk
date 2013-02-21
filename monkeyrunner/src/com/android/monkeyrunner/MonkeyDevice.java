@@ -209,15 +209,22 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
     }
 
     @MonkeyRunnerExported(doc = "Executes an adb shell command and returns the result, if any.",
-            args = { "cmd"},
-            argDocs = { "The adb shell command to execute." },
+            args = { "cmd", "timeout"},
+            argDocs = { "The adb shell command to execute.",
+            "This arg is optional. It specifies the maximum amount of time during which the" +
+            "command can go without any output. A value of 0 means the method" +
+            "will wait forever. The unit of the timeout is millisecond"},
             returns = "The output from the command.")
     public String shell(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
-
         String cmd = ap.getString(0);
-        return impl.shell(cmd);
+
+        if (args.length == 2) {
+            return impl.shell(cmd, ap.getInt(1));
+        } else {
+            return impl.shell(cmd);
+        }
     }
 
     @MonkeyRunnerExported(doc = "Reboots the specified device into a specified bootloader.",

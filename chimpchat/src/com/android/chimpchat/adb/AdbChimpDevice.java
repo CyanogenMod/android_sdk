@@ -264,9 +264,16 @@ public class AdbChimpDevice implements IChimpDevice {
 
     @Override
     public String shell(String cmd) {
+        // 5000 is the default timeout from the ddmlib.
+        // This timeout arg is needed to the backwards compatibility.
+        return shell(cmd, 5000);
+    }
+
+    @Override
+    public String shell(String cmd, int timeout) {
         CommandOutputCapture capture = new CommandOutputCapture();
         try {
-            device.executeShellCommand(cmd, capture);
+            device.executeShellCommand(cmd, capture, timeout);
         } catch (TimeoutException e) {
             LOG.log(Level.SEVERE, "Error executing command: " + cmd, e);
             return null;

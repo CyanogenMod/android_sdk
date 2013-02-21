@@ -131,10 +131,21 @@ public interface IChimpDevice {
     /**
      * Execute a shell command.
      *
+     * Will timeout if there is no ouput for 5 secounds.
+     *
      * @param cmd the command to execute
      * @return the output of the command
      */
     String shell(String cmd);
+
+    /**
+     * Execute a shell command.
+     *
+     * @param cmd the command to execute
+     * @param timeout maximum time to output response
+     * @return the output of the command
+     */
+    String shell(String cmd, int timeout);
 
     /**
      * Install a given package.
