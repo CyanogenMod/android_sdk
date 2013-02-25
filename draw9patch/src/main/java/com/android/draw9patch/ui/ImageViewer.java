@@ -82,7 +82,7 @@ public class ImageViewer extends JComponent {
     /** Current 9patch zoom level, {@link #MIN_ZOOM} <= zoom <= {@link #MAX_ZOOM} */
     private int zoom = DEFAULT_ZOOM;
     private boolean showPatches;
-    private boolean showLock = true;
+    private boolean showLock = false;
 
     private final TexturePaint texture;
     private final Container container;
