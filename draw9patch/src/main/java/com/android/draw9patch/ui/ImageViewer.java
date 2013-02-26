@@ -39,6 +39,8 @@ import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -68,6 +70,7 @@ public class ImageViewer extends JComponent {
     private final Color HELP_COLOR = new Color(0xffffe1);
     private final Color PATCH_COLOR = new Color(1.0f, 0.37f, 0.99f, 0.5f);
     private final Color PATCH_ONEWAY_COLOR = new Color(0.37f, 1.0f, 0.37f, 0.5f);
+    private final Color HIGHLIGHT_REGION_COLOR = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
     private static final float STRIPES_WIDTH = 4.0f;
     private static final double STRIPES_SPACING = 6.0;
@@ -97,7 +100,6 @@ public class ImageViewer extends JComponent {
 
     private int lastPositionX;
     private int lastPositionY;
-    private int currentButton;
     private boolean showCursor;
 
     private JLabel helpLabel;
@@ -115,8 +117,46 @@ public class ImageViewer extends JComponent {
     private int lineToY;
     private boolean showDrawingLine;
 
+    private final List<Rectangle> hoverHighlightRegions = new ArrayList<Rectangle>();
+    private String toolTipText;
+
+    /**
+     * Indicates whether we are currently in edit mode.
+     * All fields with the prefix 'edit' are valid only when in edit mode.
+     */
+    private boolean isEditMode;
+
+    /** Region being edited. */
+    private UpdateRegion editRegion;
+
+    /**
+     * The start and end points corresponding to the region being edited.
+     * During an edit sequence, the start point is constant and the end varies based on the
+     * mouse location.
+     */
+    private final Pair<Integer> editSegment = new Pair<Integer>(0, 0);
+
+    /** Regions to highlight based on the current edit. */
+    private final List<Rectangle> editHighlightRegions = new ArrayList<Rectangle>();
+
+    /** The actual patch location in the image being edited. */
+    private Rectangle editPatchRegion = new Rectangle();
+
     private BufferedImage image;
     private PatchInfo patchInfo;
+
+    /** The types of edit actions that can be performed on the image. */
+    private enum DrawMode {
+        PATCH,          // drawing a patch or a padding
+        LAYOUT_BOUND,   // drawing layout bounds
+        ERASE,          // erasing whatever has been drawn
+    }
+
+    /**
+     * Current drawing mode. The mode is changed by using either the Shift or Ctrl keys while
+     * drawing.
+     */
+    private DrawMode currentMode = DrawMode.PATCH;
 
     ImageViewer(Container container, TexturePaint texture, BufferedImage image,
                 StatusBar statusBar) {
@@ -167,37 +207,73 @@ public class ImageViewer extends JComponent {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent event) {
-                // Store the button here instead of retrieving it again in MouseDragged
+                // Update the drawing mode looking at the current state of modifier (shift/ctrl)
+                // keys. This is done here instead of retrieving it again in MouseDragged
                 // below, because on linux, calling MouseEvent.getButton() for the drag
                 // event returns 0, which appears to be technically correct (no button
                 // changed state).
-                currentButton = event.isShiftDown() ? MouseEvent.BUTTON3 : event.getButton();
-                currentButton = event.isControlDown() ? MouseEvent.BUTTON2 : currentButton;
-                startDrawingLine(event.getX(), event.getY());
+                updateDrawMode(event);
+
+                int x = imageXCoordinate(event.getX());
+                int y = imageYCoordinate(event.getY());
+
+                startDrawingLine(x, y);
+
+                if (currentMode == DrawMode.PATCH) {
+                    startEditingRegion(x, y);
+                } else {
+                    hoverHighlightRegions.clear();
+                    setCursor(Cursor.getDefaultCursor());
+                    repaint();
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent event) {
+                int x = imageXCoordinate(event.getX());
+                int y = imageYCoordinate(event.getY());
+
                 endDrawingLine();
+                endEditingRegion(x, y);
+
+                resetDrawMode();
             }
         });
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent event) {
-                if (!checkLockedRegion(event.getX(), event.getY())) {
-                    // use the stored button, see note above
+                int x = imageXCoordinate(event.getX());
+                int y = imageYCoordinate(event.getY());
 
-                    moveLine(event.getX(), event.getY());
+                if (!checkLockedRegion(x, y)) {
+                    // use the stored button, see note above
+                    moveLine(x, y);
                 }
+
+                updateEditRegion(x, y);
             }
 
             @Override
             public void mouseMoved(MouseEvent event) {
-                checkLockedRegion(event.getX(), event.getY());
-                updateHoverRegion(event.getX(), event.getY());
+                int x = imageXCoordinate(event.getX());
+                int y = imageYCoordinate(event.getY());
+
+                checkLockedRegion(x, y);
+
+                updateHoverRegion(x, y);
                 repaint();
             }
         });
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                hoverHighlightRegions.clear();
+                updateSize();
+                repaint();
+            }
+        });
+
         Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
             public void eventDispatched(AWTEvent event) {
                 enableEraseMode((KeyEvent) event);
@@ -220,14 +296,26 @@ public class ImageViewer extends JComponent {
         });
     }
 
-    private List<Rectangle> highlightRegions = new ArrayList<Rectangle>();
+    private void updateDrawMode(MouseEvent event) {
+        if (event.isShiftDown()) {
+            currentMode = DrawMode.ERASE;
+        } else if (event.isControlDown()) {
+            currentMode = DrawMode.LAYOUT_BOUND;
+        } else {
+            currentMode = DrawMode.PATCH;
+        }
+    }
+
+    private void resetDrawMode() {
+        currentMode = DrawMode.PATCH;
+    }
 
     private enum UpdateRegion {
         LEFT_PATCH,
         TOP_PATCH,
         RIGHT_PADDING,
         BOTTOM_PADDING,
-    };
+    }
 
     private static class UpdateRegionInfo {
         public final UpdateRegion region;
@@ -240,31 +328,37 @@ public class ImageViewer extends JComponent {
     }
 
     private UpdateRegionInfo findVerticalPatch(int x, int y) {
+        List<Pair<Integer>> markers;
+        UpdateRegion region;
+
         // Given the mouse x location, we need to determine if we need to map this edit to
         // the patch info at the left, or the padding info at the right. We make this decision
         // based on whichever is closer, so if the mouse x is in the left half of the image,
         // we are editing the left patch, else the right padding.
         if (x < image.getWidth() / 2) {
-            return getVerticalPatchLeft(y);
+            markers = patchInfo.verticalPatchMarkers;
+            region = UpdateRegion.LEFT_PATCH;
         } else {
-            return getVerticalPaddingRight(y);
+            markers = patchInfo.verticalPaddingMarkers;
+            region = UpdateRegion.RIGHT_PADDING;
         }
+
+        return getContainingPatch(markers, y, region);
     }
 
     private UpdateRegionInfo findHorizontalPatch(int x, int y) {
+        List<Pair<Integer>> markers;
+        UpdateRegion region;
+
         if (y < image.getHeight() / 2) {
-            return getHorizontalPatchTop(x);
+            markers = patchInfo.horizontalPatchMarkers;
+            region = UpdateRegion.TOP_PATCH;
         } else {
-            return getHorizontalPaddingBottom(x);
+            markers = patchInfo.horizontalPaddingMarkers;
+            region = UpdateRegion.BOTTOM_PADDING;
         }
-    }
 
-    private UpdateRegionInfo getVerticalPatchLeft(int y) {
-        return getContainingPatch(patchInfo.verticalPatchMarkers, y, UpdateRegion.LEFT_PATCH);
-    }
-
-    private UpdateRegionInfo getHorizontalPatchTop(int x) {
-        return getContainingPatch(patchInfo.horizontalPatchMarkers, x, UpdateRegion.TOP_PATCH);
+        return getContainingPatch(markers, x, region);
     }
 
     private UpdateRegionInfo getContainingPatch(List<Pair<Integer>> patches, int a,
@@ -282,92 +376,337 @@ public class ImageViewer extends JComponent {
         return new UpdateRegionInfo(region, null);
     }
 
-    private UpdateRegionInfo getVerticalPaddingRight(int y) {
-        int top = patchInfo.verticalPadding.first + 1; // add 1 to offset for the 1 additional 9patch info pixel at top
-        int bottom = image.getHeight() - patchInfo.verticalPadding.second - 1; // similarly, remove 1 pixel from the bottom
-        return getContainingPadding(top, bottom, y, UpdateRegion.RIGHT_PADDING);
-    }
-
-    private UpdateRegionInfo getHorizontalPaddingBottom(int x) {
-        int left = patchInfo.horizontalPadding.first + 1; // add 1 to offset for the 1 additional pixel on the left
-        int right = image.getWidth() - patchInfo.horizontalPadding.second - 1; // similarly, remove 1 pixel from the right
-        return getContainingPadding(left, right, x, UpdateRegion.BOTTOM_PADDING);
-    }
-
-    private UpdateRegionInfo getContainingPadding(int start, int end, int x, UpdateRegion region) {
-        Pair<Integer> p = null;
-        if (x >= start && x <= end) {
-            p = new Pair<Integer>(start, end);
-        }
-
-        return new UpdateRegionInfo(region, p);
-    }
-
     private void updateHoverRegion(int x, int y) {
-        x = imageXCoordinate(x);
-        y = imageYCoordinate(y);
+        // find regions to highlight based on the horizontal and vertical patches that
+        // cover this (x, y)
+        UpdateRegionInfo vertical = findVerticalPatch(x, y);
+        UpdateRegionInfo horizontal = findHorizontalPatch(x, y);
+        computeHoverHighlightRegions(vertical, horizontal);
+        computeHoverRegionTooltip(vertical, horizontal);
 
-        UpdateRegionInfo verticalUpdateRegion = findVerticalPatch(x, y);
-        UpdateRegionInfo horizontalUpdateRegion = findHorizontalPatch(x, y);
-
-        // find regions to highlight
-        computeHighlightRegions(verticalUpdateRegion, horizontalUpdateRegion);
-
-        // change cursor if necessary
-        Cursor c = getCursor(x, y, verticalUpdateRegion, horizontalUpdateRegion);
-        setCursor(c);
+        // change cursor if (x,y) is at the edge of either of the regions
+        UpdateRegionInfo updateRegion = pickUpdateRegion(x, y, vertical, horizontal);
+        setCursorForRegion(x, y, updateRegion);
     }
 
-    private void computeHighlightRegions(UpdateRegionInfo verticalUpdateRegion,
-                                         UpdateRegionInfo horizontalUpdateRegion) {
-        highlightRegions.clear();
-        if (verticalUpdateRegion != null && verticalUpdateRegion.segment != null) {
-            Rectangle r = displayCoordinates(new Rectangle(0,
-                    verticalUpdateRegion.segment.first,
-                    image.getWidth(),
-                    verticalUpdateRegion.segment.second - verticalUpdateRegion.segment.first));
-            // highlight the region within the image
-            highlightRegions.add(r);
+    private void startEditingRegion(int x, int y) {
+        hoverHighlightRegions.clear();
+        isEditMode = false;
+        editRegion = null;
 
-            // add a 1 pixel line at the top and bottom that extends outside the image
-            highlightRegions.add(new Rectangle(0, r.y, getWidth(), 1));
-            highlightRegions.add(new Rectangle(0, r.y + r.height, getWidth(), 1));
+        UpdateRegionInfo vertical = findVerticalPatch(x, y);
+        UpdateRegionInfo horizontal = findHorizontalPatch(x, y);
+        UpdateRegionInfo updateRegion = pickUpdateRegion(x, y, vertical, horizontal);
+        setCursorForRegion(x, y, updateRegion);
+
+        if (updateRegion != null) { // edit an existing patch
+            editRegion = updateRegion.region;
+            isEditMode = true;
+
+            Edge e = null;
+            switch (this.editRegion) {
+                case LEFT_PATCH:
+                case RIGHT_PADDING:
+                    e = getClosestEdge(y, updateRegion.segment);
+                    break;
+                case TOP_PATCH:
+                case BOTTOM_PADDING:
+                    e = getClosestEdge(x, updateRegion.segment);
+                    break;
+                default:
+                    assert false : this.editRegion;
+            }
+
+            int first = updateRegion.segment.first;
+            int second = updateRegion.segment.second;
+
+            // The edge being edited should always be the end point in editSegment.
+            boolean start = e == Edge.START;
+            editSegment.first = start ? second : first;
+            editSegment.second = start ? first : second;
+
+            // clear the current patch data
+            flushEditPatchData(0);
+        } else if ((editRegion = findNewPatchRegion(x, y)) != null) { // create a new patch
+            isEditMode = true;
+
+            boolean verticalPatch = editRegion == UpdateRegion.LEFT_PATCH
+                    || editRegion == UpdateRegion.RIGHT_PADDING;
+
+            x = clamp(x, 1, image.getWidth() - 1);
+            y = clamp(y, 1, image.getHeight() - 1);
+
+            editSegment.first = editSegment.second = verticalPatch ? y : x;
         }
-        if (horizontalUpdateRegion != null && horizontalUpdateRegion.segment != null) {
-            Rectangle r = displayCoordinates(new Rectangle(horizontalUpdateRegion.segment.first,
-                    0,
-                    horizontalUpdateRegion.segment.second - horizontalUpdateRegion.segment.first,
-                    image.getHeight()));
-            // highlight the region within the image
-            highlightRegions.add(r);
 
-            // add a 1 pixel line at the top and bottom that extends outside the image
-            highlightRegions.add(new Rectangle(r.x, 0, 1, getHeight()));
-            highlightRegions.add(new Rectangle(r.x + r.width, 0, 1, getHeight()));
+        if (isEditMode) {
+            computeEditHighlightRegions();
+        }
+
+        repaint();
+    }
+
+    private void endEditingRegion(int x, int y) {
+        if (!isEditMode) {
+            return;
+        }
+
+        x = clamp(x, 1, image.getWidth() - 1);
+        y = clamp(y, 1, image.getHeight() - 1);
+
+        switch (editRegion) {
+            case LEFT_PATCH:
+            case RIGHT_PADDING:
+                editSegment.second = y;
+                break;
+            case TOP_PATCH:
+            case BOTTOM_PADDING:
+                editSegment.second = x;
+                break;
+            default:
+                assert false : editRegion;
+        }
+
+        flushEditPatchData(PatchInfo.BLACK_TICK);
+
+        hoverHighlightRegions.clear();
+        setCursor(Cursor.getDefaultCursor());
+        patchesChanged();
+        repaint();
+
+
+        isEditMode = false;
+        editRegion = null;
+    }
+
+    private void updateEditRegion(int x, int y) {
+        if (!isEditMode) {
+            return;
+        }
+
+        x = clamp(x, 1, image.getWidth() - 1);
+        y = clamp(y, 1, image.getHeight() - 1);
+
+        switch (editRegion) {
+            case LEFT_PATCH:
+            case RIGHT_PADDING:
+                editSegment.second = y;
+                break;
+            case TOP_PATCH:
+            case BOTTOM_PADDING:
+                editSegment.second = x;
+                break;
+        }
+
+        computeEditHighlightRegions();
+        repaint();
+    }
+
+    private int clamp(int i, int min, int max) {
+        if (i < min) {
+            return min;
+        }
+
+        if (i > max) {
+            return max;
+        }
+
+        return i;
+    }
+
+    /** Returns the type of patch that should be created given the initial mouse location. */
+    private UpdateRegion findNewPatchRegion(int x, int y) {
+        boolean verticalPatch = y >= 0 && y <= image.getHeight();
+        boolean horizontalPatch = x >= 0 && x <= image.getWidth();
+
+        // Heuristic: If the pointer is within the vertical bounds of the image,
+        // then we create a patch on the left or right depending on which side of the image
+        // the pointer is on
+        if (verticalPatch) {
+            if (x < 0) {
+                return UpdateRegion.LEFT_PATCH;
+            } else if (x > image.getWidth()) {
+                return UpdateRegion.RIGHT_PADDING;
+            }
+        }
+
+        // Similarly, if it is within the horizontal bounds of the image,
+        // then create a patch at the top or bottom depending on its location relative to the image
+        if (horizontalPatch) {
+            if (y < 0) {
+                return UpdateRegion.TOP_PATCH;
+            } else if (y > image.getHeight()) {
+                return UpdateRegion.BOTTOM_PADDING;
+            }
+        }
+
+        return null;
+    }
+
+    private void computeHoverHighlightRegions(UpdateRegionInfo vertical,
+                                              UpdateRegionInfo horizontal) {
+        hoverHighlightRegions.clear();
+        if (vertical != null && vertical.segment != null) {
+            hoverHighlightRegions.addAll(
+                    getHorizontalHighlightRegions(0,
+                            vertical.segment.first,
+                            image.getWidth(),
+                            vertical.segment.second - vertical.segment.first));
+        }
+        if (horizontal != null && horizontal.segment != null) {
+            hoverHighlightRegions.addAll(
+                    getVerticalHighlightRegions(horizontal.segment.first,
+                            0,
+                            horizontal.segment.second - horizontal.segment.first,
+                            image.getHeight()));
         }
     }
 
-    private Cursor getCursor(int x, int y, UpdateRegionInfo verticalUpdateRegion,
-                             UpdateRegionInfo horizontalUpdateRegion) {
-        Cursor c = null;
+    private void computeHoverRegionTooltip(UpdateRegionInfo vertical, UpdateRegionInfo horizontal) {
+        StringBuilder sb = new StringBuilder(50);
 
-        if (verticalUpdateRegion != null && verticalUpdateRegion.segment != null) {
-            Edge e = getClosestEdge(y, verticalUpdateRegion.segment);
-            if (e == Edge.START) {
-                c = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR);
-            } else if (e == Edge.END) {
-                c = Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
+        if (vertical != null && vertical.segment != null) {
+            if (vertical.region == UpdateRegion.LEFT_PATCH) {
+                sb.append("Vertical Patch: ");
+            } else {
+                sb.append("Vertical Padding: ");
+            }
+            sb.append(String.format("%d - %d px",
+                    vertical.segment.first, vertical.segment.second));
+        }
+
+        if (horizontal != null && horizontal.segment != null) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            if (horizontal.region == UpdateRegion.TOP_PATCH) {
+                sb.append("Horizontal Patch: ");
+            } else {
+                sb.append("Horizontal Padding: ");
+            }
+            sb.append(String.format("%d - %d px",
+                    horizontal.segment.first, horizontal.segment.second));
+        }
+
+        toolTipText = sb.length() > 0 ? sb.toString() : null;
+    }
+
+    private void computeEditHighlightRegions() {
+        editHighlightRegions.clear();
+
+        int f = editSegment.first;
+        int s = editSegment.second;
+        int min = Math.min(f, s);
+        int diff = Math.abs(f - s);
+
+        int imageWidth = image.getWidth();
+        int imageHeight = image.getHeight();
+
+        switch (editRegion) {
+            case LEFT_PATCH:
+                editPatchRegion = displayCoordinates(new Rectangle(0, min, 1, diff));
+                editHighlightRegions.addAll(
+                        getHorizontalHighlightRegions(0, min, imageWidth, diff));
+                break;
+            case RIGHT_PADDING:
+                editPatchRegion = displayCoordinates(new Rectangle(imageWidth - 1, min, 1, diff));
+                editHighlightRegions.addAll(
+                        getHorizontalHighlightRegions(0, min, imageWidth, diff));
+                break;
+            case TOP_PATCH:
+                editPatchRegion = displayCoordinates(new Rectangle(min, 0, diff, 1));
+                editHighlightRegions.addAll(
+                        getVerticalHighlightRegions(min, 0, diff, imageHeight));
+                break;
+            case BOTTOM_PADDING:
+                editPatchRegion = displayCoordinates(new Rectangle(min, imageHeight - 1, diff, 1));
+                editHighlightRegions.addAll(
+                        getVerticalHighlightRegions(min, 0, diff, imageHeight));
+            default:
+                assert false : editRegion;
+        }
+    }
+
+    private List<Rectangle> getHorizontalHighlightRegions(int x, int y, int w, int h) {
+        List<Rectangle> l = new ArrayList<Rectangle>(3);
+
+        // highlight the region within the image
+        Rectangle r = displayCoordinates(new Rectangle(x, y, w, h));
+        l.add(r);
+
+        // add a 1 pixel line at the top and bottom that extends outside the image
+        l.add(new Rectangle(0, r.y, getWidth(), 1));
+        l.add(new Rectangle(0, r.y + r.height, getWidth(), 1));
+        return l;
+    }
+
+    private List<Rectangle> getVerticalHighlightRegions(int x, int y, int w, int h) {
+        List<Rectangle> l = new ArrayList<Rectangle>(3);
+
+
+        // highlight the region within the image
+        Rectangle r = displayCoordinates(new Rectangle(x, y, w, h));
+        l.add(r);
+
+        // add a 1 pixel line at the top and bottom that extends outside the image
+        l.add(new Rectangle(r.x, 0, 1, getHeight()));
+        l.add(new Rectangle(r.x + r.width, 0, 1, getHeight()));
+
+        return l;
+    }
+
+    private void setCursorForRegion(int x, int y, UpdateRegionInfo region) {
+        if (region != null) {
+            Cursor c = getCursor(x, y, region);
+            setCursor(c);
+        } else {
+            setCursor(Cursor.getDefaultCursor());
+        }
+    }
+
+    private Cursor getCursor(int x, int y, UpdateRegionInfo editRegion) {
+        Edge e;
+        int cursor = Cursor.DEFAULT_CURSOR;
+        switch (editRegion.region) {
+            case LEFT_PATCH:
+            case RIGHT_PADDING:
+                e = getClosestEdge(y, editRegion.segment);
+                cursor = (e == Edge.START) ? Cursor.N_RESIZE_CURSOR : Cursor.S_RESIZE_CURSOR;
+                break;
+            case TOP_PATCH:
+            case BOTTOM_PADDING:
+                e = getClosestEdge(x, editRegion.segment);
+                cursor = (e == Edge.START) ? Cursor.W_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR;
+                break;
+            default:
+                assert false : this.editRegion;
+        }
+
+        return Cursor.getPredefinedCursor(cursor);
+    }
+
+    /**
+     * Returns whether the horizontal or the vertical region should be updated based on the
+     * mouse pointer's location relative to the edges of either region. If no edge is close to
+     * the mouse pointer, then it returns null.
+     */
+    private UpdateRegionInfo pickUpdateRegion(int x, int y, UpdateRegionInfo vertical,
+                                              UpdateRegionInfo horizontal) {
+        if (vertical != null && vertical.segment != null) {
+            Edge e = getClosestEdge(y, vertical.segment);
+            if (e != Edge.NONE) {
+                return vertical;
             }
         }
-        if (c == null && horizontalUpdateRegion != null && horizontalUpdateRegion.segment != null) {
-            Edge e = getClosestEdge(x, horizontalUpdateRegion.segment);
-            if (e == Edge.START) {
-                c = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR);
-            } else if (e == Edge.END) {
-                c = Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR);
+
+        if (horizontal != null && horizontal.segment != null) {
+            Edge e = getClosestEdge(x, horizontal.segment);
+            if (e != Edge.NONE) {
+                return horizontal;
             }
         }
-        return c == null ? Cursor.getDefaultCursor() : c;
+
+        return null;
     }
 
     private enum Edge {
@@ -378,9 +717,9 @@ public class ImageViewer extends JComponent {
 
     private static final int EDGE_DELTA = 1;
     private Edge getClosestEdge(int x, Pair<Integer> range) {
-        if (x - range.first <= EDGE_DELTA) {
+        if (Math.abs(x - range.first) <= EDGE_DELTA) {
             return Edge.START;
-        } else if (range.second - x <= EDGE_DELTA) {
+        } else if (Math.abs(range.second - x) <= EDGE_DELTA) {
             return Edge.END;
         } else {
             return Edge.NONE;
@@ -432,12 +771,6 @@ public class ImageViewer extends JComponent {
     }
 
     private void startDrawingLine(int x, int y) {
-        int left = (getWidth() - size.width) / 2;
-        int top = helpPanel.getHeight() + (getHeight() - size.height) / 2;
-
-        x = (x - left) / zoom;
-        y = (y - top) / zoom;
-
         int width = image.getWidth();
         int height = image.getHeight();
         if (((x == 0 || x == width - 1) && (y > 0 && y < height - 1))
@@ -460,12 +793,6 @@ public class ImageViewer extends JComponent {
         if (!drawingLine) {
             return;
         }
-
-        int left = (getWidth() - size.width) / 2;
-        int top = helpPanel.getHeight() + (getHeight() - size.height) / 2;
-
-        x = (x - left) / zoom;
-        y = (y - top) / zoom;
 
         int width = image.getWidth();
         int height = image.getHeight();
@@ -495,48 +822,95 @@ public class ImageViewer extends JComponent {
         }
 
         int color;
-        switch (currentButton) {
-            case MouseEvent.BUTTON1:
+        switch (currentMode) {
+            case PATCH:
                 color = PatchInfo.BLACK_TICK;
                 break;
-            case MouseEvent.BUTTON2:
+            case LAYOUT_BOUND:
                 color = PatchInfo.RED_TICK;
                 break;
-            case MouseEvent.BUTTON3:
+            case ERASE:
                 color = 0;
                 break;
             default:
                 return;
         }
 
-        int x = lineFromX;
-        int y = lineFromY;
+        setPatchData(color, lineFromX, lineFromY, lineToX, lineToY, true);
+
+        patchesChanged();
+        repaint();
+    }
+
+    /**
+     * Set the color of pixels on the line from (x1, y1) to (x2, y2) to given color.
+     * @param inclusive indicates whether the range is inclusive. If true, the last pixel (x2, y2)
+     *                  will be set to the given color as well.
+     */
+    private void setPatchData(int color, int x1, int y1, int x2, int y2, boolean inclusive) {
+        int x = x1;
+        int y = y1;
 
         int dx = 0;
         int dy = 0;
 
-        if (lineToX != lineFromX)
-            dx = lineToX > lineFromX ? 1 : -1;
-        else if (lineToY != lineFromY)
-            dy = lineToY > lineFromY ? 1 : -1;
+        if (x2 != x1) {
+            dx = x2 > x1 ? 1 : -1;
+        } else if (y2 != y1) {
+            dy = y2 > y1 ? 1 : -1;
+        }
 
-        do {
+        while (x != x2 || y != y2) {
             image.setRGB(x, y, color);
-
-            if (x == lineToX && y == lineToY)
-                break;
-
             x += dx;
             y += dy;
-        } while (true);
+        }
 
+        if (inclusive) {
+            image.setRGB(x, y, color);
+        }
+    }
+
+    /** Flushes current edit data to the image. */
+    private void flushEditPatchData(int color) {
+        int x1, y1, x2, y2;
+        x1 = x2 = y1 = y2 = 0;
+        int min = Math.min(editSegment.first, editSegment.second);
+        int max = Math.max(editSegment.first, editSegment.second);
+        switch (editRegion) {
+            case LEFT_PATCH:
+                x1 = x2 = 0;
+                y1 = min;
+                y2 = max;
+                break;
+            case RIGHT_PADDING:
+                x1 = x2 = image.getWidth() - 1;
+                y1 = min;
+                y2 = max;
+                break;
+            case TOP_PATCH:
+                x1 = min;
+                x2 = max;
+                y1 = y2 = 0;
+                break;
+            case BOTTOM_PADDING:
+                x1 = min;
+                x2 = max;
+                y1 = y2 = image.getHeight() - 1;
+                break;
+            default:
+                assert false : editRegion;
+        }
+
+        setPatchData(color, x1, y1, x2, y2, false);
+    }
+
+    private void patchesChanged() {
         updatePatchInfo();
         notifyPatchesUpdated();
         if (showBadPatches) {
             corruptedPatches = CorruptPatch.findBadPatches(image, patchInfo);
         }
-
-        repaint();
     }
 
     private boolean checkLockedRegion(int x, int y) {
@@ -544,12 +918,6 @@ public class ImageViewer extends JComponent {
         int oldY = lastPositionY;
         lastPositionX = x;
         lastPositionY = y;
-
-        int left = (getWidth() - size.width) / 2;
-        int top = helpPanel.getHeight() + (getHeight() - size.height) / 2;
-
-        x = (x - left) / zoom;
-        y = (y - top) / zoom;
 
         int width = image.getWidth();
         int height = image.getHeight();
@@ -672,11 +1040,27 @@ public class ImageViewer extends JComponent {
         }
 
         g2 = (Graphics2D) g.create();
-        Color c = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        g2.setColor(c);
-        for (Rectangle r: highlightRegions) {
+        g2.setColor(HIGHLIGHT_REGION_COLOR);
+        for (Rectangle r: hoverHighlightRegions) {
             g2.fillRect(r.x, r.y, r.width, r.height);
         }
+
+        if (!hoverHighlightRegions.isEmpty()) {
+            setToolTipText(toolTipText);
+        } else {
+            setToolTipText(null);
+        }
+
+        if (isEditMode && editRegion != null) {
+            g2.setColor(HIGHLIGHT_REGION_COLOR);
+            for (Rectangle r: editHighlightRegions) {
+                g2.fillRect(r.x, r.y, r.width, r.height);
+            }
+            g2.setColor(Color.BLACK);
+            g2.fillRect(editPatchRegion.x, editPatchRegion.y,
+                    editPatchRegion.width, editPatchRegion.height);
+        }
+
         g2.dispose();
     }
 
@@ -717,20 +1101,23 @@ public class ImageViewer extends JComponent {
     }
 
     void setZoom(int value) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-
         zoom = value;
-        if (size.height == 0 || (getHeight() - size.height) == 0) {
-            size.setSize(width * zoom, height * zoom + helpPanel.getHeight());
-        } else {
-            size.setSize(width * zoom, height * zoom);
-        }
-
+        updateSize();
         if (!size.equals(getSize())) {
             setSize(size);
             container.validate();
             repaint();
+        }
+    }
+
+    private void updateSize() {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        if (size.height == 0 || (getHeight() - size.height) == 0) {
+            size.setSize(width * zoom, height * zoom + helpPanel.getHeight());
+        } else {
+            size.setSize(width * zoom, height * zoom);
         }
     }
 

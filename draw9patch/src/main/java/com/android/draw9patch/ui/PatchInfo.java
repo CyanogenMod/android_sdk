@@ -45,8 +45,14 @@ public class PatchInfo {
     /** Bounds of horizontal patch markers. */
     public final List<Pair<Integer>> horizontalPatchMarkers;
 
+    /** Bounds of horizontal padding markers. */
+    public final List<Pair<Integer>> horizontalPaddingMarkers;
+
     /** Bounds of vertical patch markers. */
     public final List<Pair<Integer>> verticalPatchMarkers;
+
+    /** Bounds of vertical padding markers. */
+    public final List<Pair<Integer>> verticalPaddingMarkers;
 
     public final boolean verticalStartWithPatch;
     public final boolean horizontalStartWithPatch;
@@ -98,9 +104,11 @@ public class PatchInfo {
         column = GraphicsUtilities.getPixels(image, width - 1, 0, 1, height, column);
 
         top = PatchInfo.getPatches(row);
+        horizontalPaddingMarkers = top.patches;
         horizontalPadding = getPadding(top.fixed);
 
         left = PatchInfo.getPatches(column);
+        verticalPaddingMarkers = left.patches;
         verticalPadding = getPadding(left.fixed);
     }
 

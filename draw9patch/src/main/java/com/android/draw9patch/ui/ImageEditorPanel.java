@@ -46,7 +46,7 @@ import javax.swing.JSplitPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-class ImageEditorPanel extends JPanel {
+public class ImageEditorPanel extends JPanel {
     private static final String EXTENSION_9PATCH = ".9.png";
 
     private String name;
@@ -60,11 +60,13 @@ class ImageEditorPanel extends JPanel {
 
     private TexturePaint texture;
 
-    ImageEditorPanel(MainFrame mainFrame, BufferedImage image, String name) {
+    public ImageEditorPanel(MainFrame mainFrame, BufferedImage image, String name) {
         this.image = image;
         this.name = name;
 
-        setTransferHandler(new ImageTransferHandler(mainFrame));
+        if (mainFrame != null) {
+            setTransferHandler(new ImageTransferHandler(mainFrame));
+        }
 
         setOpaque(false);
         setLayout(new BorderLayout());
