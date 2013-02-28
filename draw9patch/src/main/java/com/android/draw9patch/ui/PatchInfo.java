@@ -42,6 +42,12 @@ public class PatchInfo {
     /** Areas of image stretchable vertically. */
     public final List<Rectangle> verticalPatches;
 
+    /** Bounds of horizontal patch markers. */
+    public final List<Pair<Integer>> horizontalPatchMarkers;
+
+    /** Bounds of vertical patch markers. */
+    public final List<Pair<Integer>> verticalPatchMarkers;
+
     public final boolean verticalStartWithPatch;
     public final boolean horizontalStartWithPatch;
 
@@ -64,9 +70,11 @@ public class PatchInfo {
 
         P left = getPatches(column);
         verticalStartWithPatch = left.startsWithPatch;
+        verticalPatchMarkers = left.patches;
 
         P top = getPatches(row);
         horizontalStartWithPatch = top.startsWithPatch;
+        horizontalPatchMarkers = top.patches;
 
         fixed = getRectangles(left.fixed, top.fixed);
         patches = getRectangles(left.patches, top.patches);
