@@ -172,15 +172,20 @@ public class PatchInfo {
 
     private static P getPatches(int[] pixels) {
         int lastIndex = 1;
-        int lastPixel = pixels[1];
+        int lastPixel;
         boolean first = true;
         boolean startWithPatch = false;
 
         List<Pair<Integer>> fixed = new ArrayList<Pair<Integer>>();
         List<Pair<Integer>> patches = new ArrayList<Pair<Integer>>();
 
+        // ignore layout bound markers for the purpose of patch calculation
+        lastPixel = pixels[1] != PatchInfo.RED_TICK ? pixels[1] : 0;
+
         for (int i = 1; i < pixels.length - 1; i++) {
-            int pixel = pixels[i];
+            // ignore layout bound markers for the purpose of patch calculation
+            int pixel = pixels[i] != PatchInfo.RED_TICK ? pixels[i] : 0;
+
             if (pixel != lastPixel) {
                 if (lastPixel == BLACK_TICK) {
                     if (first) startWithPatch = true;

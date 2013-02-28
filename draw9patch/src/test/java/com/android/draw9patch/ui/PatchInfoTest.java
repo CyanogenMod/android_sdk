@@ -32,7 +32,13 @@ public class PatchInfoTest extends TestCase {
         for (int row = 0; row < h; row++) {
             for (int col = 0; col < w; col++) {
                 char c = data[row].charAt(col);
-                image.setRGB(col, row, c == '*' ? PatchInfo.BLACK_TICK : 0);
+                int color = 0;
+                if (c == '*') {
+                    color = PatchInfo.BLACK_TICK;
+                } else if (c == 'R') {
+                    color = PatchInfo.RED_TICK;
+                }
+                image.setRGB(col, row, color);
             }
         }
         return image;
@@ -100,5 +106,24 @@ public class PatchInfoTest extends TestCase {
         // 2 pixel padding at the start and 0 at the end
         assertEquals(2, pi.verticalPadding.first.intValue());
         assertEquals(0, pi.verticalPadding.second.intValue());
+    }
+
+    // make sure that the presence of layout bound markers doesn't affect patch/padding info
+    public void testIgnoreLayoutBoundMarkers() {
+        BufferedImage image = createImage(new String[] {
+                "0RR3**6789",
+                "R........R",
+                "*.........",
+                "*........*",
+                "4........*",
+                "5***456R89",
+        });
+        PatchInfo pi = new PatchInfo(image);
+
+        assertFalse(pi.horizontalStartWithPatch);
+
+        assertEquals(1, pi.patches.size());
+        assertEquals(2, pi.verticalPatches.size());
+        assertEquals(2, pi.horizontalPatches.size());
     }
 }
