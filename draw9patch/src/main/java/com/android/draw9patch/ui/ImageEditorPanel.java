@@ -203,7 +203,7 @@ class ImageEditorPanel extends JPanel {
         JCheckBox showLock = new JCheckBox("Show lock");
         showLock.setOpaque(false);
         showLock.setForeground(Color.WHITE);
-        showLock.setSelected(true);
+        showLock.setSelected(false);
         showLock.putClientProperty("JComponent.sizeVariant", "small");
         showLock.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
