@@ -76,6 +76,9 @@ public class ImageViewer extends JComponent {
     private static final double STRIPES_SPACING = 6.0;
     private static final int STRIPES_ANGLE = 45;
 
+    /** The fraction of the window size that the 9patch should occupy. */
+    private static final float IDEAL_IMAGE_FRACTION_OF_WINDOW = 0.7f;
+
     /** Default zoom level for the 9patch image. */
     public static final int DEFAULT_ZOOM = 8;
 
@@ -193,9 +196,8 @@ public class ImageViewer extends JComponent {
             }
             @Override
             public void ancestorMoved(AncestorEvent event) {
-                // Set exactly size.
-                setZoom(DEFAULT_ZOOM);
                 removeAncestorListener(this);
+                setDefaultZoom();
             }
             @Override
             public void ancestorAdded(AncestorEvent event) {
@@ -473,7 +475,6 @@ public class ImageViewer extends JComponent {
         setCursor(Cursor.getDefaultCursor());
         patchesChanged();
         repaint();
-
 
         isEditMode = false;
         editRegion = null;
@@ -1100,6 +1101,21 @@ public class ImageViewer extends JComponent {
         return size;
     }
 
+    private void setDefaultZoom() {
+        int frameWidth = getWidth(), frameHeight = getHeight();
+        int z = DEFAULT_ZOOM;
+        if (frameWidth > 0 && frameHeight > 0) {
+            float w = (float) image.getWidth() / frameWidth;
+            float h = (float) image.getHeight() / frameHeight;
+
+            float current = Math.max(w, h);
+            float ideal = IDEAL_IMAGE_FRACTION_OF_WINDOW;
+
+            z = clamp(Math.round(ideal / current), 1, MAX_ZOOM);
+        }
+        setZoom(z);
+    }
+
     void setZoom(int value) {
         zoom = value;
         updateSize();
@@ -1108,6 +1124,10 @@ public class ImageViewer extends JComponent {
             container.validate();
             repaint();
         }
+    }
+
+    int getZoom() {
+        return zoom;
     }
 
     private void updateSize() {
@@ -1156,6 +1176,10 @@ public class ImageViewer extends JComponent {
 
     public void addPatchUpdateListener(PatchUpdateListener p) {
         listeners.add(p);
+    }
+
+    public void removePatchUpdateListener(PatchUpdateListener p) {
+        listeners.remove(p);
     }
 
     private void notifyPatchesUpdated() {
