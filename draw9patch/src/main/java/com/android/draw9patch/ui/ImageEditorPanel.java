@@ -43,6 +43,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -59,6 +61,7 @@ public class ImageEditorPanel extends JPanel {
     private JLabel yLabel;
 
     private TexturePaint texture;
+    private JSlider zoomSlider;
 
     public ImageEditorPanel(MainFrame mainFrame, BufferedImage image, String name) {
         this.image = image;
@@ -76,6 +79,32 @@ public class ImageEditorPanel extends JPanel {
         buildStatusPanel();
 
         checkImage();
+
+        addAncestorListener(new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
+                // allow the image viewer to set the optimal zoom level and ensure that the
+                // zoom slider's setting is in sync with the image viewer's zoom
+                removeAncestorListener(this);
+                synchronizeImageViewerZoomLevel();
+            }
+        });
+    }
+
+    private void synchronizeImageViewerZoomLevel() {
+        zoomSlider.setValue(viewer.getZoom());
+    }
+
+    public ImageViewer getViewer() {
+        return viewer;
     }
 
     private void loadSupport() {
@@ -145,7 +174,7 @@ public class ImageEditorPanel extends JPanel {
                 GridBagConstraints.LINE_END, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 0), 0, 0));
 
-        JSlider zoomSlider = new JSlider(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM,
+        zoomSlider = new JSlider(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM,
                 ImageViewer.DEFAULT_ZOOM);
         zoomSlider.setSnapToTicks(true);
         zoomSlider.putClientProperty("JComponent.sizeVariant", "small");
@@ -182,15 +211,15 @@ public class ImageEditorPanel extends JPanel {
                 GridBagConstraints.LINE_END, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 0), 0, 0));
 
-        zoomSlider = new JSlider(200, 600, (int) (StretchesViewer.DEFAULT_SCALE * 100.0f));
-        zoomSlider.setSnapToTicks(true);
-        zoomSlider.putClientProperty("JComponent.sizeVariant", "small");
-        zoomSlider.addChangeListener(new ChangeListener() {
+        JSlider jSlider = new JSlider(200, 600, (int) (StretchesViewer.DEFAULT_SCALE * 100.0f));
+        jSlider.setSnapToTicks(true);
+        jSlider.putClientProperty("JComponent.sizeVariant", "small");
+        jSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent evt) {
                 stretchesViewer.setScale(((JSlider) evt.getSource()).getValue() / 100.0f);
             }
         });
-        status.add(zoomSlider, new GridBagConstraints(2, 1, 1, 1, 0.0f, 0.0f,
+        status.add(jSlider, new GridBagConstraints(2, 1, 1, 1, 0.0f, 0.0f,
                 GridBagConstraints.LINE_START, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 0), 0, 0));
 
