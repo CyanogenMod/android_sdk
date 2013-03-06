@@ -82,11 +82,11 @@
         <mkdir dir="${targetDir}/deltapack" />
         <mkdir dir="${targetDir}/repos" />
 
-        <unzip src="${deltaPackTargetSrcDir}/deltapack/eclipse-4.2.2-delta-pack.zip" dest="${targetDir}/deltapack" overwrite="false" />
-        <unzip src="${targetSrcDir}/platform/org.eclipse.platform-4.2.2.zip" dest="${targetDir}/repos/platform" overwrite="false" />
+        <unzip src="${deltaPackTargetSrcDir}/deltapack/eclipse-3.7.2-delta-pack.zip" dest="${targetDir}/deltapack" overwrite="false" />
+        <unzip src="${targetSrcDir}/platform/org.eclipse.platform-3.8.zip" dest="${targetDir}/repos/platform" overwrite="false" />
         <unzip src="${targetSrcDir}/cdt/cdt-master-8.0.2.zip" dest="${targetDir}/repos/cdt" overwrite="false" />
         <unzip src="${targetSrcDir}/emf/emf-xsd-SDK-M201201231045.zip" dest="${targetDir}/repos/emf" overwrite="false" />
-        <unzip src="${targetSrcDir}/jdt/org.eclipse.jdt.source-4.2.2.zip" dest="${targetDir}/repos/jdt" overwrite="false" />
+        <unzip src="${targetSrcDir}/jdt/org.eclipse.jdt.source-3.7.2.zip" dest="${targetDir}/repos/jdt" overwrite="false" />
         <unzip src="${targetSrcDir}/wtp/wtp-repo-R-3.3.2-20120210195245.zip" dest="${targetDir}/repos/wtp" overwrite="false" />
         <unzip src="${targetSrcDir}/gef/GEF-SDK-3.7.2.zip" dest="${targetDir}/repos/gef" overwrite="false" />
         <unzip src="${targetSrcDir}/pde/org.eclipse.pde-3.8.zip" dest="${targetDir}/repos/pde" overwrite="false" />
