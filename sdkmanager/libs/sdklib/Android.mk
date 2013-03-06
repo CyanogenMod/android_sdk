@@ -39,7 +39,7 @@ LOCAL_JAVA_LIBRARIES := \
         layoutlib_api
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-	../../../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+	../../../../prebuilts/devtools/tools/lib/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_HOST_PREBUILT)
 

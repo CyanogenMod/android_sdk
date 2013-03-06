@@ -225,7 +225,7 @@ fi
 
 LIBS2=""
 for LIB in $LIBS; do
-  J="prebuilts/devtools/$LIB.jar"
+  J="prebuilts/devtools/tools/lib/$LIB.jar"
   if [[ -f $J ]]; then
     warn "## Using existing $J"
   else
@@ -271,7 +271,7 @@ for SRC in $CP_FILES; do
   if [[ ! -f "$SRC" ]]; then
     ORIG_SRC="$SRC"
     # Take a prebuilts/devtools instead of a framework one if possible.
-    SRC="prebuilts/devtools/$SRC.jar"
+    SRC="prebuilts/devtools/tools/lib/$SRC.jar"
     if [[ ! -f "$SRC" ]]; then
       SRC="out/host/$PLATFORM/framework/$ORIG_SRC.jar"
     fi
