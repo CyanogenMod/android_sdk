@@ -938,4 +938,20 @@ public class EclipseXmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</resources>");
     }
+
+    public void test52887() throws Exception {
+        // https://code.google.com/p/android/issues/detail?id=52887
+        checkFormat(
+                "res/layout/relative.xml",
+
+                "<!--Comment-->\n" +
+                "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "  android:layout_width=\"match_parent\"\n" +
+                "  android:layout_height=\"match_parent\"/>\n",
+
+                "<!-- Comment -->\n" +
+                "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"match_parent\" />\n");
+    }
 }
