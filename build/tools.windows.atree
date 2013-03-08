@@ -37,10 +37,10 @@ rm tools/draw9patch
 sdk/draw9patch/etc/draw9patch.bat                 tools/draw9patch.bat
 
 rm tools/lint
-prebuilts/devtools/etc/lint.bat                   tools/lint.bat
+prebuilts/devtools/tools/lint.bat                 tools/lint.bat
 
 rm tools/jobb
-prebuilts/devtools/etc/jobb.bat                   tools/jobb.bat
+prebuilts/devtools/tools/jobb.bat                 tools/jobb.bat
 
 
 rm tools/emulator
@@ -56,10 +56,10 @@ rm tools/lib/libOpenglRender.so
 rm tools/lib/libGLES_CM_translator.so
 rm tools/lib/libGLES_V2_translator.so
 rm tools/lib/libEGL_translator.so
-lib/libOpenglRender.dll          tools/lib/libOpenglRender.dll
-lib/libGLES_CM_translator.dll    tools/lib/libGLES_CM_translator.dll
-lib/libGLES_V2_translator.dll    tools/lib/libGLES_V2_translator.dll
-lib/libEGL_translator.dll        tools/lib/libEGL_translator.dll
+lib/libOpenglRender.dll                           tools/lib/libOpenglRender.dll
+lib/libGLES_CM_translator.dll                     tools/lib/libGLES_CM_translator.dll
+lib/libGLES_V2_translator.dll                     tools/lib/libGLES_V2_translator.dll
+lib/libEGL_translator.dll                         tools/lib/libEGL_translator.dll
 # Copy the emulator NOTICE in the tools dir
 external/qemu/NOTICE                              tools/emulator_NOTICE.txt
 

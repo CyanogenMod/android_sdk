@@ -37,7 +37,7 @@ LOCAL_MODULE := lint_checks
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-	../../../../prebuilts/devtools/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
+	../../../../prebuilts/devtools/tools/lib/$(LOCAL_MODULE)$(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_HOST_PREBUILT)
 
