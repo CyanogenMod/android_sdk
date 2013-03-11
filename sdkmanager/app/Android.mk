@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-LOCAL_PATH := $(call my-dir)
+ORIG_LOCAL_PATH := $(call my-dir)
+LOCAL_PATH := $(ORIG_LOCAL_PATH)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src/main/java)
@@ -49,6 +50,7 @@ include $(call all-makefiles-under,$(LOCAL_PATH))
 # ----- TESTS ------
 # Copyright (C) 2011 The Android Open Source Project
 
+LOCAL_PATH := $(ORIG_LOCAL_PATH)
 include $(CLEAR_VARS)
 
 # Only compile source java files in this lib.
