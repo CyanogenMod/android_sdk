@@ -176,7 +176,7 @@ fi
 ### HIERARCHYVIEWER ###
 
 HV_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.hierarchyviewer/libs"
-HV_LIBS="hierarchyviewerlib swtmenubar"
+HV_LIBS="hierarchyviewer2lib swtmenubar"
 
 LIBS="$LIBS $HV_LIBS"
 CP_FILES="$CP_FILES @:$HV_DEST $HV_LIBS"
@@ -226,6 +226,9 @@ fi
 LIBS2=""
 for LIB in $LIBS; do
   J="prebuilts/devtools/tools/lib/$LIB.jar"
+  if [[ ! -f $J ]]; then
+    J="prebuilts/devtools/adt/lib/$LIB.jar"
+  fi
   if [[ -f $J ]]; then
     warn "## Using existing $J"
   else
@@ -272,6 +275,9 @@ for SRC in $CP_FILES; do
     ORIG_SRC="$SRC"
     # Take a prebuilts/devtools instead of a framework one if possible.
     SRC="prebuilts/devtools/tools/lib/$SRC.jar"
+    if [[ ! -f "$SRC" ]]; then
+      SRC="prebuilts/devtools/adt/lib/$ORIG_SRC.jar"
+    fi
     if [[ ! -f "$SRC" ]]; then
       SRC="out/host/$PLATFORM/framework/$ORIG_SRC.jar"
     fi
