@@ -18,9 +18,9 @@ package com.android.ide.eclipse.adt.internal.preferences;
 
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.xml.XmlAttributeSortOrder;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
@@ -104,7 +104,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mFormatOnSave;
     private boolean mLintOnSave;
     private boolean mLintOnExport;
-    private AttributeSortOrder mAttributeSort;
+    private XmlAttributeSortOrder mAttributeSort;
     private boolean mSharedLayoutEditor;
     private boolean mAutoPickTarget;
     private RenderPreviewMode mPreviewMode = RenderPreviewMode.NONE;
@@ -236,11 +236,11 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
         if (property == null || PREFS_ATTRIBUTE_SORT.equals(property)) {
             String order = mStore.getString(PREFS_ATTRIBUTE_SORT);
-            mAttributeSort = AttributeSortOrder.LOGICAL;
-            if (AttributeSortOrder.ALPHABETICAL.key.equals(order)) {
-                mAttributeSort = AttributeSortOrder.ALPHABETICAL;
-            } else if (AttributeSortOrder.NO_SORTING.key.equals(order)) {
-                mAttributeSort = AttributeSortOrder.NO_SORTING;
+            mAttributeSort = XmlAttributeSortOrder.LOGICAL;
+            if (XmlAttributeSortOrder.ALPHABETICAL.key.equals(order)) {
+                mAttributeSort = XmlAttributeSortOrder.ALPHABETICAL;
+            } else if (XmlAttributeSortOrder.NO_SORTING.key.equals(order)) {
+                mAttributeSort = XmlAttributeSortOrder.NO_SORTING;
             }
         }
 
@@ -359,13 +359,13 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
     /**
      * Returns the sort order to be applied to the attributes (one of which can
-     * be {@link AttributeSortOrder#NO_SORTING}).
+     * be {@link com.android.ide.common.xml.XmlAttributeSortOrder#NO_SORTING}).
      *
      * @return the sort order to apply to the attributes
      */
-    public AttributeSortOrder getAttributeSort() {
+    public XmlAttributeSortOrder getAttributeSort() {
         if (mAttributeSort == null) {
-            return AttributeSortOrder.LOGICAL;
+            return XmlAttributeSortOrder.LOGICAL;
         }
         return mAttributeSort;
     }
@@ -373,7 +373,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     /**
      * Returns whether a space should be inserted before the closing {@code >}
      * character in open tags and before the closing {@code />} characters in
-     * empty tag. Note that the {@link XmlFormatStyle#RESOURCE} style overrides
+     * empty tag. Note that the {@link com.android.ide.common.xml.XmlFormatStyle#RESOURCE} style overrides
      * this setting to make it more compact for the {@code <item>} elements.
      *
      * @return true if an empty space should be inserted before {@code >} or
@@ -517,7 +517,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setDefault(PREFS_AUTO_PICK_TARGET, true);
 
         // Defaults already handled; no need to write into map:
-        //store.setDefault(PREFS_ATTRIBUTE_SORT, AttributeSortOrder.LOGICAL.key);
+        //store.setDefault(PREFS_ATTRIBUTE_SORT, XmlAttributeSortOrder.LOGICAL.key);
         //store.setDefault(PREFS_USE_ECLIPSE_INDENT, false);
         //store.setDefault(PREVS_REMOVE_EMPTY_LINES, false);
         //store.setDefault(PREFS_FORMAT_ON_SAVE, false);

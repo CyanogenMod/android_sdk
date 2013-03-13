@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
@@ -107,7 +107,7 @@ class RenderPreviewList {
             for (ConfigurationDescription description : mList) {
                 description.toXml(document);
             }
-            String xml = XmlPrettyPrinter.prettyPrint(document);
+            String xml = EclipseXmlPrettyPrinter.prettyPrint(document);
             Files.write(xml, file, Charsets.UTF_8);
         }
     }

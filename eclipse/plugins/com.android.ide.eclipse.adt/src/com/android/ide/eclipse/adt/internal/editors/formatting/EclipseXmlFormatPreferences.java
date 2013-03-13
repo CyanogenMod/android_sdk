@@ -16,61 +16,40 @@
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder;
+import com.android.ide.common.xml.XmlAttributeSortOrder;
 
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.internal.editors.text.EditorsPlugin;
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.xml.core.internal.XMLCorePlugin;
 import org.eclipse.wst.xml.core.internal.preferences.XMLCorePreferenceNames;
+import org.w3c.dom.Attr;
+
+import java.util.Comparator;
 
 /**
  * Formatting preferences used by the Android XML formatter.
  */
-public class XmlFormatPreferences {
-    /** Use the Eclipse indent (tab/space, indent size) settings? */
-    public boolean useEclipseIndent = false;
-
-    /** Remove empty lines in all cases? */
-    public boolean removeEmptyLines = false;
-
-    /** Reformat the text and comment blocks? */
-    public boolean reflowText = false;
-
-    /** Join lines when reformatting text and comment blocks? */
-    public boolean joinLines = false;
-
-    /** Can attributes appear on the same line as the opening line if there is just one of them? */
-    public boolean oneAttributeOnFirstLine = true;
-
-    /** The sorting order to use when formatting */
-    public AttributeSortOrder sortAttributes = AttributeSortOrder.LOGICAL;
-
-    /** Should there be a space before the closing > or /> ? */
-    public boolean spaceBeforeClose = true;
-
-    /** The string to insert for each indentation level */
-    private String mOneIndentUnit = "    "; //$NON-NLS-1$
-
-    /** Tab width (number of spaces to display for a tab) */
-    private int mTabWidth = -1; // -1: uninitialized
-
+public class EclipseXmlFormatPreferences extends XmlFormatPreferences {
     @VisibleForTesting
-    protected XmlFormatPreferences() {
+    protected EclipseXmlFormatPreferences() {
     }
 
     /**
-     * Creates a new {@link XmlFormatPreferences} based on the current settings
+     * Creates a new {@link EclipseXmlFormatPreferences} based on the current settings
      * in {@link AdtPrefs}
      *
-     * @return an {@link XmlFormatPreferences} object
+     * @return an {@link EclipseXmlFormatPreferences} object
      */
     @NonNull
-    public static XmlFormatPreferences create() {
-        XmlFormatPreferences p = new XmlFormatPreferences();
+    public static EclipseXmlFormatPreferences create() {
+        EclipseXmlFormatPreferences p = new EclipseXmlFormatPreferences();
         AdtPrefs prefs = AdtPrefs.getPrefs();
 
         p.useEclipseIndent = prefs.isUseEclipseIndent();
@@ -82,24 +61,37 @@ public class XmlFormatPreferences {
         return p;
     }
 
-    /**
-     * Returns a new preferences object initialized with the defaults
-     *
-     * @return an {@link XmlFormatPreferences} object
-     */
-    @NonNull
-    static XmlFormatPreferences defaults() {
-        return new XmlFormatPreferences();
+    @Override
+    @Nullable
+    public Comparator<Attr> getAttributeComparator() {
+        // Can't just skip sorting; the attribute table moves attributes out of order
+        // due to hashing, so sort by node positions
+        if (sortAttributes == XmlAttributeSortOrder.NO_SORTING) {
+            return EXISTING_ORDER_COMPARATOR;
+        }
+        return sortAttributes.getAttributeComparator();
     }
+
+    private static final Comparator<Attr> EXISTING_ORDER_COMPARATOR = new Comparator<Attr>() {
+        @Override
+        public int compare(Attr attr1, Attr attr2) {
+            IndexedRegion region1 = (IndexedRegion) attr1;
+            IndexedRegion region2 = (IndexedRegion) attr2;
+
+            return region1.getStartOffset() - region2.getStartOffset();
+        }
+    };
 
     // The XML module settings do not have a public API. We should replace this with JDT
     // settings anyway since that's more likely what users have configured and want applied
     // to their XML files
+
     /**
      * Returns the string to use to indent one indentation level
      *
      * @return the string used to indent one indentation level
      */
+    @Override
     @SuppressWarnings({
             "restriction", "deprecation"
     })
@@ -131,6 +123,7 @@ public class XmlFormatPreferences {
      *
      * @return the number of spaces used to display a single tab character
      */
+    @Override
     @SuppressWarnings("restriction") // Editor settings
     public int getTabWidth() {
         if (mTabWidth == -1) {

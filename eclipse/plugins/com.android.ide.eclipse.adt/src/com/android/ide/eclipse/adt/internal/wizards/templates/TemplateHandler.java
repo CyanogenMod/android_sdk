@@ -33,12 +33,12 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtManifestMergeCallback;
@@ -692,7 +692,7 @@ class TemplateHandler {
             String parentFolderName = to.getParent().getName();
             ResourceFolderType folderType = ResourceFolderType.getFolderType(parentFolderName);
             if (folderType != null) {
-                formatStyle = XmlFormatStyle.getForFile(toPath);
+                formatStyle = EclipseXmlPrettyPrinter.getForFile(toPath);
             } else {
                 formatStyle = XmlFormatStyle.FILE;
             }
@@ -705,8 +705,8 @@ class TemplateHandler {
         String contents = null;
         if (ok) {
             if (modified) {
-                contents = XmlPrettyPrinter.prettyPrint(currentDocument,
-                        XmlFormatPreferences.create(), formatStyle, null);
+                contents = EclipseXmlPrettyPrinter.prettyPrint(currentDocument,
+                        EclipseXmlFormatPreferences.create(), formatStyle, null);
             }
         } else {
             // Just insert into file along with comment, using the "standard" conflict
@@ -914,9 +914,9 @@ class TemplateHandler {
     private static String format(IProject project, String contents, IPath to) {
         String name = to.lastSegment();
         if (name.endsWith(DOT_XML)) {
-            XmlFormatStyle formatStyle = XmlFormatStyle.getForFile(to);
-            XmlFormatPreferences prefs = XmlFormatPreferences.create();
-            return XmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
+            XmlFormatStyle formatStyle = EclipseXmlPrettyPrinter.getForFile(to);
+            EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
+            return EclipseXmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
         } else if (name.endsWith(DOT_JAVA)) {
             Map<?, ?> options = null;
             if (project != null && project.isAccessible()) {

@@ -26,6 +26,7 @@ import com.android.SdkConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
+import com.android.ide.common.xml.XmlAttributeSortOrder;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -1663,7 +1664,7 @@ public class UiElementNode implements IPropertySource {
             List<Attr> move = new ArrayList<Attr>();
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attribute = (Attr) attributes.item(i);
-                if (UiAttributeNode.compareAttributes(
+                if (XmlAttributeSortOrder.compareAttributes(
                         attribute.getPrefix(), attribute.getLocalName(),
                         firstNamePrefix, firstName) > 0) {
                     move.add(attribute);
@@ -1699,7 +1700,7 @@ public class UiElementNode implements IPropertySource {
 
                         String domAttributeName = domAttribute.getLocalName();
                         String uiAttributeName = uiAttribute.getDescriptor().getXmlLocalName();
-                        compare = UiAttributeNode.compareAttributes(domAttributeName,
+                        compare = XmlAttributeSortOrder.compareAttributes(domAttributeName,
                                 uiAttributeName);
                     } else {
                         compare = 1;

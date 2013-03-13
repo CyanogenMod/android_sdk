@@ -37,10 +37,10 @@ import static com.android.resources.ResourceType.LAYOUT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -330,8 +330,9 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
 
         String newFile = sb.toString();
         if (AdtPrefs.getPrefs().getFormatGuiXml()) {
-            newFile = XmlPrettyPrinter.prettyPrint(newFile,
-                    XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT, null /*lineSeparator*/);
+            newFile = EclipseXmlPrettyPrinter.prettyPrint(newFile,
+                    EclipseXmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                    null /*lineSeparator*/);
         }
         addFile.setEdit(new InsertEdit(0, newFile));
 

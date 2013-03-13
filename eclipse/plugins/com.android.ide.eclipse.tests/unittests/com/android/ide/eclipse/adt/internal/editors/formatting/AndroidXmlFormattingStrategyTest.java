@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.ide.common.xml.XmlFormatPreferences;
+
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -61,7 +63,9 @@ public class AndroidXmlFormattingStrategyTest extends TestCase {
 
     // In the given before document, replace the range indicated by [ and ] with the given
     // formatted string, and assert that it's identical to the given after string
-    private void check(String before, String insert, String expected, XmlFormatPreferences prefs)
+    private void check(
+            String before, String insert, String expected,
+            XmlFormatPreferences prefs)
             throws MalformedTreeException, BadLocationException {
         int replaceStart = before.indexOf('[');
         assertTrue(replaceStart != -1);

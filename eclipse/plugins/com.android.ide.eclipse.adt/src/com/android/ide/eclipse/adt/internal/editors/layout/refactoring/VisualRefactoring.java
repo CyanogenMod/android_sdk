@@ -29,11 +29,11 @@ import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -1312,8 +1312,8 @@ public abstract class VisualRefactoring extends Refactoring {
         //int end = actual.length() - distanceFromEnd;
         //int length = end - start;
         //TextEdit format = AndroidXmlFormattingStrategy.format(model, start, length);
-        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
-        String formatted = XmlPrettyPrinter.prettyPrint(actual, formatPrefs, style,
+        EclipseXmlFormatPreferences formatPrefs = EclipseXmlFormatPreferences.create();
+        String formatted = EclipseXmlPrettyPrinter.prettyPrint(actual, formatPrefs, style,
                 null /*lineSeparator*/);
 
 

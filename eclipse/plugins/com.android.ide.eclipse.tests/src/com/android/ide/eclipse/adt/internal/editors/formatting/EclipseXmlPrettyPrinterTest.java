@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
@@ -28,9 +29,9 @@ import org.w3c.dom.NodeList;
 import junit.framework.TestCase;
 
 @SuppressWarnings({
-    "javadoc", "restriction"
+        "javadoc", "restriction"
 })
-public class XmlPrettyPrinterTest extends TestCase {
+public class EclipseXmlPrettyPrinterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -39,11 +40,11 @@ public class XmlPrettyPrinterTest extends TestCase {
         AdtPrefs prefs = AdtPrefs.getPrefs();
         prefs.initializeStoreWithDefaults(store);
         prefs.loadValues(null);
-        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences formatPrefs = EclipseXmlFormatPreferences.create();
         assertTrue(formatPrefs.oneAttributeOnFirstLine);
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, String baseLocation,
+    private void checkFormat(EclipseXmlFormatPreferences prefs, String baseLocation,
             String xml,
             String expected, String delimiter, String startNodeName,
             boolean openTagOnly, String endNodeName) throws Exception {
@@ -61,7 +62,7 @@ public class XmlPrettyPrinterTest extends TestCase {
         }
         XmlFormatStyle style = AndroidXmlFormattingStrategy.guessStyle(model, document);
 
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
+        EclipseXmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(prefs, style, delimiter);
 
         StringBuilder sb = new StringBuilder(1000);
         Node startNode = document;
@@ -110,18 +111,18 @@ public class XmlPrettyPrinterTest extends TestCase {
         return caretContextIndex + caretDelta;
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, String baseLocation, String xml,
+    private void checkFormat(EclipseXmlFormatPreferences prefs, String baseLocation, String xml,
             String expected, String delimiter) throws Exception {
         checkFormat(prefs, baseLocation, xml, expected, delimiter, null, false, null);
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, String baseLocation, String xml,
+    private void checkFormat(EclipseXmlFormatPreferences prefs, String baseLocation, String xml,
             String expected) throws Exception {
         checkFormat(prefs, baseLocation, xml, expected, "\n"); //$NON-NLS-1$
     }
     private void checkFormat(String baseLocation, String xml, String expected)
             throws Exception {
-        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         checkFormat(prefs, baseLocation, xml, expected);
     }
 
@@ -152,7 +153,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testLayout3() throws Exception {
-        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         prefs.oneAttributeOnFirstLine = true;
         checkFormat(
                 prefs, "res/layout-land/layout3.xml",
@@ -252,7 +253,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testWindowsDelimiters() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
+                EclipseXmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
 
                 "<LinearLayout>\r\n" +
@@ -265,7 +266,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testRemoveBlanklines() throws Exception {
-        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         prefs.removeEmptyLines = true;
         checkFormat(
                 prefs, "res/layout-xlarge/layout.xml",
@@ -289,7 +290,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testRange() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
+                EclipseXmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button><CheckBox/></LinearLayout>",
                 "\n" +
                 "    <Button foo=\"bar\" >\n" +
@@ -302,7 +303,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testOpenTagOnly() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
+                EclipseXmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button><CheckBox/></LinearLayout>",
                 "\n" +
                 "    <Button foo=\"bar\" >\n" +
@@ -313,7 +314,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testRange2() throws Exception {
-        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         prefs.removeEmptyLines = true;
         checkFormat(
                 prefs, "res/layout-xlarge/layout.xml",
@@ -329,7 +330,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <bar3>\n" +
                 "        <baz12>\n" +
                 "        </baz12>\n",
-
                 "\n",
                 "baz1", false, "baz12");
     }
@@ -480,6 +480,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <dimen name=\"text_size_large\">22sp</dimen>\n" +
                 "\n" +
                 "</resources>",
+
                 "<resources>\n" +
                 "\n" +
                 "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
@@ -499,7 +500,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testCommentHandling() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/layout/layout1.xml",
+                EclipseXmlFormatPreferences.create(), "res/layout/layout1.xml",
                 "<foo >\n" +
                 "\n" +
                 "    <!-- abc\n" +
@@ -543,7 +544,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testCommentHandling2() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
+                EclipseXmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<foo >\n" +
                 "    <!-- multi -->\n" +
                 "\n" +
@@ -561,7 +562,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testMenus1() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/menu/menu1.xml",
+                EclipseXmlFormatPreferences.create(), "res/menu/menu1.xml",
                 // http://code.google.com/p/android/issues/detail?id=21383
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
@@ -614,7 +615,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testMenus2() throws Exception {
-        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         prefs.removeEmptyLines = true;
         checkFormat(
                 prefs, "res/drawable-hdpi/layerlist.xml",
@@ -640,6 +641,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    </shape>\n" +
                 "  </item>\n" +
                 "</layer-list>",
+
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<layer-list xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
                 "    <item>\n" +
@@ -665,7 +667,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testMenus3() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/menu/menu1.xml",
+                EclipseXmlFormatPreferences.create(), "res/menu/menu1.xml",
                 // http://code.google.com/p/android/issues/detail?id=21227
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
@@ -703,7 +705,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testColors1() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), "res/values/colors.xml",
+                EclipseXmlFormatPreferences.create(), "res/values/colors.xml",
                 "<resources>\n" +
                 "  <color name=\"enrollment_error\">#99e21f14</color>\n" +
                 "\n" +
@@ -719,7 +721,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testEclipseFormatStyle1() throws Exception {
-        XmlFormatPreferences prefs = new XmlFormatPreferences() {
+        EclipseXmlFormatPreferences prefs = new EclipseXmlFormatPreferences() {
             @Override
             public String getOneIndentUnit() {
                 return "\t";
@@ -747,7 +749,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     }
 
     public void testEclipseFormatStyle2() throws Exception {
-        XmlFormatPreferences prefs = new XmlFormatPreferences() {
+        EclipseXmlFormatPreferences prefs = new EclipseXmlFormatPreferences() {
             @Override
             public String getOneIndentUnit() {
                 return "  ";
@@ -936,5 +938,4 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</resources>");
     }
-
 }
