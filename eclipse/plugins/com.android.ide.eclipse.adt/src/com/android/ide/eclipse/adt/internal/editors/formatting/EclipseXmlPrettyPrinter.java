@@ -28,6 +28,7 @@ import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMElement;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMNode;
 import org.w3c.dom.Document;
@@ -56,7 +57,7 @@ public class EclipseXmlPrettyPrinter extends XmlPrettyPrinter {
             XmlFormatPreferences prefs,
             XmlFormatStyle style,
             String lineSeparator) {
-        super(prefs, style, lineSeparator);
+        super(prefs, style, lineSeparator == null ? getDefaultLineSeparator() : lineSeparator);
     }
 
     /**
@@ -93,7 +94,17 @@ public class EclipseXmlPrettyPrinter extends XmlPrettyPrinter {
     @NonNull
     public static String prettyPrint(@NonNull Node node) {
         return prettyPrint(node, EclipseXmlFormatPreferences.create(), XmlFormatStyle.get(node),
-                SdkUtils.getLineSeparator());
+                null);
+    }
+
+    private static String getDefaultLineSeparator() {
+        org.eclipse.jface.text.Document blank = new org.eclipse.jface.text.Document();
+        String lineSeparator = TextUtilities.getDefaultLineDelimiter(blank);
+        if (lineSeparator == null) {
+            lineSeparator = SdkUtils.getLineSeparator();
+        }
+
+        return lineSeparator;
     }
 
     /**
