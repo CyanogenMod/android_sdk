@@ -329,7 +329,7 @@ public final class Sdk  {
      * @param log The logger for the {@link SdkManager}.
      * @return A new {@link SdkManager} parsing the same location.
      */
-    public @NonNull SdkManager getNewSdkManager(@NonNull ILogger log) {
+    public @Nullable SdkManager getNewSdkManager(@NonNull ILogger log) {
         return SdkManager.createManager(getSdkLocation(), log);
     }
 
