@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-HIERARCHYVIEWER_LOCAL_DIR := $(call my-dir)
-include $(HIERARCHYVIEWER_LOCAL_DIR)/etc/Android.mk
-include $(HIERARCHYVIEWER_LOCAL_DIR)/src/Android.mk
+#HIERARCHYVIEWER_LOCAL_DIR := $(call my-dir)
+#include $(HIERARCHYVIEWER_LOCAL_DIR)/etc/Android.mk
+#include $(HIERARCHYVIEWER_LOCAL_DIR)/src/Android.mk
