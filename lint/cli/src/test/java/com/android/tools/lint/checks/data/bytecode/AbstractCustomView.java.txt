@@ -1,9 +1,0 @@
-package test.pkg;
-
-import android.view.View;
-
-public abstract class AbstractCustomView extends View {
-    public AbstractCustomView() {
-        super(null);
-    }
-}

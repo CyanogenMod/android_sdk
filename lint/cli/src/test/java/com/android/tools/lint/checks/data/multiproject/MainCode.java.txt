@@ -1,7 +1,0 @@
-package foo.main;
-
-public class MainCode {
-    static {
-        System.out.println(R.string.string2);
-    }
-}

@@ -1,9 +1,0 @@
-package test.pkg;
-
-import android.view.MenuItem;
-
-public class ActionTest2 {
-    public void foo() {
-        System.out.println(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-    }
-}
