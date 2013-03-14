@@ -30,6 +30,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("javadoc")
@@ -395,6 +397,11 @@ public class ManifestInfoTest extends AdtProjectTest {
         @Override
         public String getShortClasspathName() {
             return null;
+        }
+
+        @Override
+        public List<String> getBootClasspath() {
+            return new ArrayList<String>();
         }
     }
 }
