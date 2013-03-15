@@ -11,6 +11,6 @@ Bundle-ClassPath: kxml2-2.3.0.jar,
  .,
  sdktestutils.jar,
  layoutlib.jar,
- lint_api.jar,
- lint_checks.jar,
+ lint-api.jar,
+ lint-checks.jar,
  easymock.jar

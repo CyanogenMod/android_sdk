@@ -7,10 +7,10 @@ Bundle-ClassPath: .,
  libs/sdkuilib.jar,
  libs/ninepatch.jar,
  libs/freemarker-2.3.19.jar,
- libs/rule_api.jar,
- libs/assetstudio.jar,
- libs/lint_api.jar,
- libs/lint_checks.jar,
+ libs/rule-api.jar,
+ libs/asset-studio.jar,
+ libs/lint-api.jar,
+ libs/lint-checks.jar,
  libs/lombok-ast-0.2.jar,
  libs/asm-4.0.jar,
  libs/asm-tree-4.0.jar,
@@ -18,7 +18,7 @@ Bundle-ClassPath: .,
  libs/propertysheet.jar,
  libs/ant-glob.jar,
  libs/swtmenubar.jar,
- libs/manifmerger.jar
+ libs/manifest-merger.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
 Bundle-Vendor: The Android Open Source Project
 Require-Bundle: com.android.ide.eclipse.base,
