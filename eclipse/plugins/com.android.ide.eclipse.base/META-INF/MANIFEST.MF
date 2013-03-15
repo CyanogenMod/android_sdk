@@ -17,11 +17,11 @@ Bundle-ClassPath: .,
  libs/httpcore-4.1.jar,
  libs/httpmime-4.1.1.jar,
  libs/kxml2-2.3.0.jar,
- libs/layoutlib_api.jar,
+ libs/layoutlib-api.jar,
  libs/sdklib.jar,
  libs/sdkstats.jar,
  libs/dvlib.jar,
- libs/sdk_common.jar
+ libs/sdk-common.jar
 Export-Package: com.android,
  com.android.annotations,
  com.android.dvlib,
