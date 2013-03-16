@@ -118,7 +118,9 @@ BASE_PLUGIN_PREBUILTS="\
     prebuilts/tools/common/http-client/commons-codec-1.4.jar \
     prebuilts/tools/common/http-client/httpclient-4.1.1.jar \
     prebuilts/tools/common/http-client/httpcore-4.1.jar \
-    prebuilts/tools/common/http-client/httpmime-4.1.1.jar"
+    prebuilts/tools/common/http-client/httpmime-4.1.1.jar \
+    prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.48/bcpkix-jdk15on-1.48.jar \
+    prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.48/bcprov-jdk15on-1.48.jar"
 
 LIBS="$LIBS $BASE_PLUGIN_LIBS"
 CP_FILES="$CP_FILES @:$BASE_PLUGIN_DEST $BASE_PLUGIN_LIBS $BASE_PLUGIN_PREBUILTS"
