@@ -21,7 +21,9 @@ Bundle-ClassPath: .,
  libs/sdklib.jar,
  libs/sdkstats.jar,
  libs/dvlib.jar,
- libs/sdk-common.jar
+ libs/sdk-common.jar,
+ libs/bcpkix-jdk15on-1.48.jar,
+ libs/bcprov-jdk15on-1.48.jar
 Export-Package: com.android,
  com.android.annotations,
  com.android.dvlib,
