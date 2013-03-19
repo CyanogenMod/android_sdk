@@ -101,7 +101,6 @@ fi
 DEST="sdk/eclipse/scripts"
 
 set -e # fail early
-
 LIBS=""
 CP_FILES=""
 
@@ -111,14 +110,14 @@ CP_FILES=""
 BASE_PLUGIN_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.base/libs"
 BASE_PLUGIN_LIBS="common sdkstats sdklib dvlib layoutlib-api sdk-common"
 BASE_PLUGIN_PREBUILTS="\
-    prebuilts/misc/common/kxml2/kxml2-2.3.0.jar \
-    prebuilts/tools/common/commons-compress/commons-compress-1.0.jar \
-    prebuilts/tools/common/guava-tools/guava-13.0.1.jar \
-    prebuilts/tools/common/http-client/commons-logging-1.1.1.jar \
-    prebuilts/tools/common/http-client/commons-codec-1.4.jar \
-    prebuilts/tools/common/http-client/httpclient-4.1.1.jar \
-    prebuilts/tools/common/http-client/httpcore-4.1.jar \
-    prebuilts/tools/common/http-client/httpmime-4.1.1.jar \
+    prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar \
+    prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.0/commons-compress-1.0.jar \
+    prebuilts/tools/common/m2/repository/com/google/guava/guava/13.0.1/guava-13.0.1.jar \
+    prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar \
+    prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4/commons-codec-1.4.jar \
+    prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1/httpclient-4.1.1.jar \
+    prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.1/httpcore-4.1.jar \
+    prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpmime/4.1/httpmime-4.1.jar \
     prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.48/bcpkix-jdk15on-1.48.jar \
     prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.48/bcprov-jdk15on-1.48.jar"
 
@@ -132,9 +131,9 @@ ADT_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs"
 ADT_LIBS="ant-glob asset-studio lint-api lint-checks ninepatch propertysheet rule-api sdkuilib swtmenubar manifest-merger"
 ADT_PREBUILTS="\
     prebuilts/tools/common/freemarker/freemarker-2.3.19.jar \
-    prebuilts/tools/common/asm-tools/asm-4.0.jar \
-    prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
-    prebuilts/tools/common/asm-tools/asm-analysis-4.0.jar \
+    prebuilts/tools/common/m2/repository/org/ow2/asm/asm/4.0/asm-4.0.jar \
+    prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/4.0/asm-tree-4.0.jar \
+    prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/4.0/asm-analysis-4.0.jar \
     prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar"
 
 LIBS="$LIBS $ADT_LIBS"
@@ -147,9 +146,9 @@ DDMS_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.ddms/libs"
 DDMS_LIBS="ddmlib ddmuilib swtmenubar uiautomatorviewer"
 
 DDMS_PREBUILTS="\
-    prebuilts/tools/common/jfreechart/jcommon-1.0.12.jar \
-    prebuilts/tools/common/jfreechart/jfreechart-1.0.9.jar \
-    prebuilts/tools/common/jfreechart/jfreechart-1.0.9-swt.jar"
+    prebuilts/tools/common/m2/repository/jfree/jcommon/1.0.12/jcommon-1.0.12.jar \
+    prebuilts/tools/common/m2/repository/jfree/jfreechart/1.0.9/jfreechart-1.0.9.jar \
+    prebuilts/tools/common/m2/repository/jfree/jfreechart-swt/1.0.9/jfreechart-swt-1.0.9.jar"
 
 LIBS="$LIBS $DDMS_LIBS"
 CP_FILES="$CP_FILES @:$DDMS_DEST $DDMS_LIBS $DDMS_PREBUILTS"
@@ -159,7 +158,7 @@ CP_FILES="$CP_FILES @:$DDMS_DEST $DDMS_LIBS $DDMS_PREBUILTS"
 
 TEST_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.tests"
 TEST_LIBS="easymock sdktestutils"
-TEST_PREBUILTS="prebuilts/misc/common/kxml2/kxml2-2.3.0.jar"
+TEST_PREBUILTS="prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar"
 
 LIBS="$LIBS $TEST_LIBS"
 CP_FILES="$CP_FILES @:$TEST_DEST $TEST_LIBS $TEST_PREBUILTS"

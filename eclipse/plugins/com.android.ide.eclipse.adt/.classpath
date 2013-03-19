@@ -12,10 +12,11 @@
 	<classpathentry exported="true" kind="lib" path="libs/ant-glob.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/freemarker-2.3.19.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/manifest-merger.jar" sourcepath="/ManifestMerger"/>
-	<classpathentry kind="var" path="ANDROID_SRC/sdk/eclipse/plugins/com.android.ide.eclipse.adt/libs/propertysheet.jar" sourcepath="/ANDROID_SRC/external/eclipse-windowbuilder/propertysheet/src"/>
-	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/asm-tools/asm-4.0.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/asm-tools/src.zip"/>
-	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/asm-tools/asm-tree-4.0.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/asm-tools/src.zip"/>
-	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/asm-tools/asm-analysis-4.0.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/asm-tools/src.zip"/>
-	<classpathentry kind="var" path="ANDROID_SRC/prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar" sourcepath="/ANDROID_SRC/prebuilts/tools/common/lombok-ast/src.zip"/>
+	<classpathentry exported="true" kind="lib" path="libs/lombok-ast-0.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/propertysheet.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/asm-4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/asm-analysis-4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/asm-tree-4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/swtmenubar.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
