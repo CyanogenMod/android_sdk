@@ -18,6 +18,8 @@
 
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
+PROG_DIR=$(dirname "$0")
+
 DEST_DIR=""
 BUILD_NUMBER=""
 CREATE_ZIP="1"
@@ -48,7 +50,7 @@ function die() {
 function check_params() {
   # This needs to run from the top android directory
   # Automatically CD to the top android directory, whatever its name
-  D=`dirname "$0"`
+  D="$PROG_DIR"
   cd "$D/../../../" && echo "Switched to directory $PWD"
 
   # The current Eclipse build has some Linux dependency in its config files
@@ -112,10 +114,17 @@ function build_adt_ide() {
   # Build the ADT IDE if this runs on Linux.
   # Qualifier for the zip files is just the build number if available.
   if [[ -z $INTERNAL_BUILD && "Linux" == $(uname) ]]; then
-    ADT_IDE_DEST_DIR="$DEST_DIR" \
-    ADT_IDE_QUALIFIER="$QUALIFIER" \
-    ADT_IDE_ZIP_QUALIFIER="${BUILD_NUMBER:-$QUALIFIER}" \
-    make PRODUCT-sdk-adt_eclipse_ide
+    # This needs to run from the top android directory
+    D="$PROG_DIR"
+    cd "$D/../../../" && echo "Switched to directory $PWD"
+    for sc in */*/*/build_ide*.sh; do
+      if [[ -x $sc ]]; then
+        echo "RUNNING $sc from $PWD"
+        $sc "$DEST_DIR" "$QUALIFIER" "${BUILD_NUMBER:-$QUALIFIER}"
+      else
+        echo "WARNING: skipping non-exec $sc script"
+      fi
+    done
   fi
 }
 
