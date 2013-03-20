@@ -4,6 +4,11 @@
 # $2 = ide qualifier
 # $3 = zip qualifier
 
+if [[ "Linux" != $(uname) ]]; then
+    echo "$0: ADT IDE build script runs only on Linux"
+    exit 0
+fi
+
 PROG_DIR=$(dirname "$0")
 
 DEST_DIR="$1"
