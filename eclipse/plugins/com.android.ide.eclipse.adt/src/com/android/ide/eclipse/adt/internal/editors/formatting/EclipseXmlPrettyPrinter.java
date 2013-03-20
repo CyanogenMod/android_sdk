@@ -82,6 +82,10 @@ public class EclipseXmlPrettyPrinter extends XmlPrettyPrinter {
         if (document != null) {
             EclipseXmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(prefs, style,
                     lineSeparator);
+            if (xml.endsWith("\n")) { //$NON-NLS-1$
+                printer.setEndWithNewline(true);
+            }
+
             StringBuilder sb = new StringBuilder(3 * xml.length() / 2);
             printer.prettyPrint(-1, document, null, null, sb, false /*openTagOnly*/);
             return sb.toString();
@@ -92,9 +96,9 @@ public class EclipseXmlPrettyPrinter extends XmlPrettyPrinter {
     }
 
     @NonNull
-    public static String prettyPrint(@NonNull Node node) {
+    public static String prettyPrint(@NonNull Node node, boolean endWithNewline) {
         return prettyPrint(node, EclipseXmlFormatPreferences.create(), XmlFormatStyle.get(node),
-                null);
+                null, endWithNewline);
     }
 
     private static String getDefaultLineSeparator() {
@@ -122,8 +126,10 @@ public class EclipseXmlPrettyPrinter extends XmlPrettyPrinter {
             @NonNull Node node,
             @NonNull XmlFormatPreferences prefs,
             @NonNull XmlFormatStyle style,
-            @Nullable String lineSeparator) {
+            @Nullable String lineSeparator,
+            boolean endWithNewline) {
         XmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(prefs, style, lineSeparator);
+        printer.setEndWithNewline(endWithNewline);
         StringBuilder sb = new StringBuilder(1000);
         printer.prettyPrint(-1, node, null, null, sb, false /*openTagOnly*/);
         String xml = sb.toString();

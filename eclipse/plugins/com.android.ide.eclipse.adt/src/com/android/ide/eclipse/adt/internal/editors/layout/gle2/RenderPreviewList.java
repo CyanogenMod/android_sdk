@@ -107,7 +107,7 @@ class RenderPreviewList {
             for (ConfigurationDescription description : mList) {
                 description.toXml(document);
             }
-            String xml = EclipseXmlPrettyPrinter.prettyPrint(document);
+            String xml = EclipseXmlPrettyPrinter.prettyPrint(document, true);
             Files.write(xml, file, Charsets.UTF_8);
         }
     }

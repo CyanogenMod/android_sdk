@@ -63,6 +63,7 @@ public class EclipseXmlPrettyPrinterTest extends TestCase {
         XmlFormatStyle style = AndroidXmlFormattingStrategy.guessStyle(model, document);
 
         EclipseXmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(prefs, style, delimiter);
+        printer.setEndWithNewline(xml.endsWith("\n"));
 
         StringBuilder sb = new StringBuilder(1000);
         Node startNode = document;
@@ -180,7 +181,7 @@ public class EclipseXmlPrettyPrinterTest extends TestCase {
                 "    <item name=\"title_container\" type=\"id\"/>\n" +
                 "    <item name=\"title_logo\" type=\"id\"/>\n" +
                 "\n" +
-                "</resources>");
+                "</resources>\n");
     }
 
     public void testResources() throws Exception {
@@ -876,7 +877,7 @@ public class EclipseXmlPrettyPrinterTest extends TestCase {
                 "    <string name=\"untitled2\">&lt;untitled2&gt;</string>\n" +
                 "    <string name=\"untitled3\">&apos;untitled3&quot;</string>\n" +
                 "\n" +
-                "</resources>");
+                "</resources>\n");
     }
 
     public void testCData1() throws Exception {
@@ -953,5 +954,25 @@ public class EclipseXmlPrettyPrinterTest extends TestCase {
                 "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                 "    android:layout_width=\"match_parent\"\n" +
                 "    android:layout_height=\"match_parent\" />\n");
+    }
+
+    public void testPreserveLastNewline() throws Exception {
+        checkFormat(
+                "res/values/strings.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "<string name=\"progress_completed_export_all\">The database has " +
+                "<b>successfully</b> been exported into: <br /><br /><font size=\"14\">" +
+                "\\\"<i>%s</i>\\\"</font></string>" +
+                "</resources>\n",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"progress_completed_export_all\">The database has " +
+                "<b>successfully</b> been exported into: <br /><br /><font size=\"14\">" +
+                "\\\"<i>%s</i>\\\"</font></string>\n" +
+                "\n" +
+                "</resources>\n");
     }
 }

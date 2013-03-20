@@ -272,6 +272,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         int initialDepth = 0;
         int replaceStart;
         int replaceEnd;
+        boolean endWithNewline = false;
         if (startNode == null || endNode == null) {
             // Process the entire document
             root = domDocument;
@@ -281,6 +282,11 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             endNode = root;
             replaceStart = 0;
             replaceEnd = document.getLength();
+            try {
+                endWithNewline = replaceEnd > 0 && document.getChar(replaceEnd - 1) == '\n';
+            } catch (BadLocationException e) {
+                // Can't happen
+            }
         } else {
             root = DomUtilities.getCommonAncestor(startNode, endNode);
             initialDepth = root != null ? DomUtilities.getDepth(root) - 1 : 0;
@@ -337,7 +343,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         XmlFormatStyle style = guessStyle(model, domDocument);
         XmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         String delimiter = TextUtilities.getDefaultLineDelimiter(document);
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
+        XmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(prefs, style, delimiter);
+        printer.setEndWithNewline(endWithNewline);
 
         if (indentationLevels != null) {
             printer.setIndentationLevels(indentationLevels);
