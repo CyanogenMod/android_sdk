@@ -356,7 +356,7 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
         String xml = EclipseXmlPrettyPrinter.prettyPrint(
                 tempDocument.getDocumentElement(),
                 EclipseXmlFormatPreferences.create(),
-                XmlFormatStyle.LAYOUT, null);
+                XmlFormatStyle.LAYOUT, null, false);
 
         TextEdit replace = new ReplaceEdit(mSelectionStart, mSelectionEnd - mSelectionStart, xml);
         rootEdit.addChild(replace);

@@ -706,7 +706,8 @@ class TemplateHandler {
         if (ok) {
             if (modified) {
                 contents = EclipseXmlPrettyPrinter.prettyPrint(currentDocument,
-                        EclipseXmlFormatPreferences.create(), formatStyle, null);
+                        EclipseXmlFormatPreferences.create(), formatStyle, null,
+                        currentXml.endsWith("\n")); //$NON-NLS-1$
             }
         } else {
             // Just insert into file along with comment, using the "standard" conflict

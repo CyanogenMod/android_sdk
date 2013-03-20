@@ -590,8 +590,13 @@ public class ConfigurationChooser extends Composite
         if (resFolder != null) {
             mConfiguration.setEditedConfig(resFolder.getConfiguration());
         } else {
-            mConfiguration.setEditedConfig(FolderConfiguration.getConfig(
-                    parent.getName().split(RES_QUALIFIER_SEP)));
+            FolderConfiguration config = FolderConfiguration.getConfig(
+                    parent.getName().split(RES_QUALIFIER_SEP));
+            if (config != null) {
+                mConfiguration.setEditedConfig(config);
+            } else {
+                mConfiguration.setEditedConfig(new FolderConfiguration());
+            }
         }
 
         onXmlModelLoaded();
@@ -745,8 +750,13 @@ public class ConfigurationChooser extends Composite
                         if (resFolder != null) {
                             mConfiguration.setEditedConfig(resFolder.getConfiguration());
                         } else {
-                            mConfiguration.setEditedConfig(FolderConfiguration.getConfig(
-                                    parent.getName().split(RES_QUALIFIER_SEP)));
+                            FolderConfiguration config = FolderConfiguration.getConfig(
+                                    parent.getName().split(RES_QUALIFIER_SEP));
+                            if (config != null) {
+                                mConfiguration.setEditedConfig(config);
+                            } else {
+                                mConfiguration.setEditedConfig(new FolderConfiguration());
+                            }
                         }
                     }
 
