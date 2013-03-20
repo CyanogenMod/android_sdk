@@ -47,6 +47,7 @@ import com.android.io.StreamException;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
 import com.android.sdklib.internal.build.SymbolLoader;
@@ -95,7 +96,6 @@ import javax.xml.parsers.ParserConfigurationException;
  * </ul>
  *
  */
-@SuppressWarnings("deprecation")
 public class PreCompilerBuilder extends BaseBuilder {
 
     /** This ID is used in plugin.xml and in each project's .project file.
@@ -144,6 +144,7 @@ public class PreCompilerBuilder extends BaseBuilder {
      */
     private DerivedProgressMonitor mDerivedProgressMonitor;
 
+    private AidlProcessor mAidlProcessor;
     private RenderScriptProcessor mRenderScriptProcessor;
 
     /**
@@ -276,7 +277,9 @@ public class PreCompilerBuilder extends BaseBuilder {
             IJavaProject javaProject = JavaCore.create(project);
 
             // Top level check to make sure the build can move forward.
-            abortOnBadSetup(javaProject);
+            abortOnBadSetup(javaProject, projectState);
+
+            setupSourceProcessors(javaProject, projectState);
 
             // now we need to get the classpath list
             List<IPath> sourceFolderPathList = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -707,8 +710,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     proguardFile = androidOutputFolder.getFile(AdtConstants.FN_AAPT_PROGUARD);
                 }
 
-                handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
-                        isLibrary, proguardFile);
+                handleResources(project, javaPackage, projectTarget, manifestFile,
+                        libProjects, isLibrary, proguardFile);
             }
 
             if (processorStatus == SourceProcessor.COMPILE_STATUS_NONE &&
@@ -796,15 +799,22 @@ public class PreCompilerBuilder extends BaseBuilder {
                 mLastBuildConfigMode = v;
             }
 
-            IJavaProject javaProject = JavaCore.create(project);
-
-            // load the source processors
-            SourceProcessor aidlProcessor = new AidlProcessor(javaProject, mGenFolder);
-            mRenderScriptProcessor = new RenderScriptProcessor(javaProject, mGenFolder);
-            mProcessors.add(aidlProcessor);
-            mProcessors.add(mRenderScriptProcessor);
         } catch (Throwable throwable) {
             AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
+        }
+    }
+
+    private void setupSourceProcessors(@NonNull IJavaProject javaProject,
+            @NonNull ProjectState projectState) {
+        if (mAidlProcessor == null) {
+            mAidlProcessor = new AidlProcessor(javaProject, mBuildToolInfo, mGenFolder);
+            mRenderScriptProcessor = new RenderScriptProcessor(javaProject, mBuildToolInfo,
+                    mGenFolder);
+            mProcessors.add(mAidlProcessor);
+            mProcessors.add(mRenderScriptProcessor);
+        } else {
+            mAidlProcessor.setBuildToolInfo(mBuildToolInfo);
+            mRenderScriptProcessor.setBuildToolInfo(mBuildToolInfo);
         }
     }
 
@@ -916,7 +926,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     outFile.getLocation().toFile(),
                     manifest.getLocation().toFile(),
                     libManifests,
-                    null /*injectAttributes*/) == false) {
+                    null /*injectAttributes*/, null /*packageOverride*/) == false) {
                 if (errors.size() > 1) {
                     StringBuilder sb = new StringBuilder();
                     for (String s : errors) {
@@ -1054,7 +1064,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         // launch aapt: create the command line
         ArrayList<String> array = new ArrayList<String>();
 
-        String aaptPath = projectTarget.getPath(IAndroidTarget.AAPT);
+        String aaptPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
 
         array.add(aaptPath);
         array.add("package"); //$NON-NLS-1$

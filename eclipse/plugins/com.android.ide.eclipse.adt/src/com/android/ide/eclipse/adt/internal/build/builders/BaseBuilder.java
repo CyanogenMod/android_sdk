@@ -16,19 +16,24 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.Messages;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.XmlErrorListener;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IContainer;
@@ -62,6 +67,13 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
 
     /** SAX Parser factory. */
     private SAXParserFactory mParserFactory;
+
+    /**
+     * The build tool to use to build. This is guaranteed to be non null after a call to
+     * {@link #abortOnBadSetup(IJavaProject, ProjectState)} since this will throw if it can't be
+     * queried.
+     */
+    protected BuildToolInfo mBuildToolInfo;
 
     /**
      * Base Resource Delta Visitor to handle XML error
@@ -293,9 +305,11 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
      * display any errors.
      *
      * @param javaProject The {@link IJavaProject} being compiled.
+     * @param projectState the project state, optional. will be queried if null.
      * @throws CoreException
      */
-    protected void abortOnBadSetup(IJavaProject javaProject) throws AbortBuildException {
+    protected void abortOnBadSetup(@NonNull IJavaProject javaProject,
+            @Nullable ProjectState projectState) throws AbortBuildException, CoreException {
         IProject iProject = javaProject.getProject();
         // check if we have finished loading the project target.
         Sdk sdk = Sdk.getCurrent();
@@ -303,8 +317,12 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
             throw new AbortBuildException();
         }
 
+        if (projectState == null) {
+            projectState = Sdk.getProjectState(javaProject.getProject());
+        }
+
         // get the target for the project
-        IAndroidTarget target = sdk.getTarget(javaProject.getProject());
+        IAndroidTarget target = projectState.getTarget();
 
         if (target == null) {
             throw new AbortBuildException();
@@ -314,6 +332,20 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
         if (sdk.checkAndLoadTargetData(target, javaProject) != LoadStatus.LOADED) {
             throw new AbortBuildException();
        }
+
+        mBuildToolInfo = projectState.getBuildToolInfo();
+        if (mBuildToolInfo == null) {
+            mBuildToolInfo = sdk.getLatestBuildTool();
+
+            if (mBuildToolInfo == null) {
+                throw new AbortBuildException();
+            } else {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, iProject,
+                        String.format("Using default Build Tools revision %s",
+                                mBuildToolInfo.getRevision())
+                        );
+            }
+        }
 
         // abort if there are TARGET or ADT type markers
         stopOnMarker(iProject, AdtConstants.MARKER_TARGET, IResource.DEPTH_ZERO,

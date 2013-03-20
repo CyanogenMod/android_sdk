@@ -341,7 +341,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // Top level check to make sure the build can move forward. Only do this after recording
             // delta changes.
-            abortOnBadSetup(javaProject);
+            abortOnBadSetup(javaProject, projectState);
 
             // Get the output stream. Since the builder is created for the life of the
             // project, they can be kept around.
@@ -369,7 +369,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 if (DEBUG_LOG) {
                     AdtPlugin.log(IStatus.INFO, "%s running crunch!", project.getName());
                 }
-                BuildHelper helper = new BuildHelper(project,
+                BuildHelper helper = new BuildHelper(project, mBuildToolInfo,
                         mOutStream, mErrStream,
                         false /*jumbo mode doesn't matter here*/,
                         false /*dex merger doesn't matter here*/,
@@ -484,7 +484,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                         AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
                 Boolean dexMerger = Boolean.valueOf(dexMergerStr);
 
-                BuildHelper helper = new BuildHelper(project,
+                BuildHelper helper = new BuildHelper(project, mBuildToolInfo,
                         mOutStream, mErrStream,
                         jumbo.booleanValue(),
                         dexMerger.booleanValue(),
@@ -913,8 +913,9 @@ public class PostCompilerBuilder extends BaseBuilder {
     }
 
     @Override
-    protected void abortOnBadSetup(IJavaProject javaProject) throws AbortBuildException {
-        super.abortOnBadSetup(javaProject);
+    protected void abortOnBadSetup(IJavaProject javaProject, ProjectState projectState)
+            throws AbortBuildException, CoreException {
+        super.abortOnBadSetup(javaProject, projectState);
 
         IProject iProject = getProject();
 
