@@ -586,7 +586,8 @@ public class AndroidClasspathContainerInitializer extends BaseClasspathContainer
             // project that have been resolved before the sdk was loaded
             // will have a ProjectState where the IAndroidTarget is null
             // so we load the target now that the SDK is loaded.
-            IAndroidTarget target = currentSdk.loadTarget(Sdk.getProjectState(iProject));
+            IAndroidTarget target = currentSdk.loadTargetAndBuildTools(
+                    Sdk.getProjectState(iProject));
             if (target == null) {
                 // this is really not supposed to happen. This would mean there are cached paths,
                 // but project.properties was deleted. Keep the project in the list to force

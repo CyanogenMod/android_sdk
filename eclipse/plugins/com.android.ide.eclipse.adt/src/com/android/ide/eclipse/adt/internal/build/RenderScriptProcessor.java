@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
@@ -25,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.Sets;
 
@@ -145,8 +147,9 @@ public class RenderScriptProcessor extends SourceProcessor {
 
     private int mTargetApi = 11;
 
-    public RenderScriptProcessor(IJavaProject javaProject, IFolder genFolder) {
-        super(javaProject, genFolder, new RsChangeHandler());
+    public RenderScriptProcessor(@NonNull IJavaProject javaProject,
+            @NonNull BuildToolInfo buildToolInfo, @NonNull IFolder genFolder) {
+        super(javaProject, buildToolInfo, genFolder, new RsChangeHandler());
     }
 
     public void setTargetApi(int targetApi) {
@@ -164,7 +167,6 @@ public class RenderScriptProcessor extends SourceProcessor {
         return PROPERTY_COMPILE_RS;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
             IProject project, IAndroidTarget projectTarget,
@@ -186,9 +188,9 @@ public class RenderScriptProcessor extends SourceProcessor {
         command[index++] = quote(sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER
                 + SdkConstants.FN_RENDERSCRIPT);
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(projectTarget.getPath(IAndroidTarget.ANDROID_RS_CLANG));
+        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG));
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(projectTarget.getPath(IAndroidTarget.ANDROID_RS));
+        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS));
         command[index++] = "-p";   //$NON-NLS-1$
         command[index++] = quote(genFolder.getLocation().toOSString());
         command[index++] = "-o";   //$NON-NLS-1$
