@@ -20,15 +20,14 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.ISdkChangeListener;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
-import com.android.sdklib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 
@@ -313,9 +312,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
 
                 if (sdk != null) {
                     sdk.unloadTargetData(true /*preventReload*/);
-
-                    DexWrapper dx = sdk.getDexWrapper();
-                    dx.unload();
+                    sdk.unloadDexWrappers();
                 }
             }
 

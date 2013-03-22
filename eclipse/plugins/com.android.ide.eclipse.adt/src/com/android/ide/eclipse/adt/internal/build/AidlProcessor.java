@@ -17,12 +17,14 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.io.FileOp;
 
@@ -81,8 +83,9 @@ public class AidlProcessor extends SourceProcessor {
 //          "^\\s*interface\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?:\\{.*)?$");
 
 
-    public AidlProcessor(IJavaProject javaProject, IFolder genFolder) {
-        super(javaProject, genFolder);
+    public AidlProcessor(@NonNull IJavaProject javaProject, @NonNull BuildToolInfo buildToolInfo,
+            @NonNull IFolder genFolder) {
+        super(javaProject, buildToolInfo, genFolder);
     }
 
     @Override
@@ -95,7 +98,6 @@ public class AidlProcessor extends SourceProcessor {
         return PROPERTY_COMPILE_AIDL;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
             IProject project, IAndroidTarget projectTarget,
@@ -104,7 +106,7 @@ public class AidlProcessor extends SourceProcessor {
         // create the command line
         List<String> commandList = new ArrayList<String>(
                 4 + sourceFolders.size() + libraryProjectsOut.size());
-        commandList.add(projectTarget.getPath(IAndroidTarget.AIDL));
+        commandList.add(getBuildToolInfo().getPath(BuildToolInfo.PathId.AIDL));
         commandList.add(quote("-p" + projectTarget.getPath(IAndroidTarget.ANDROID_AIDL))); //$NON-NLS-1$
 
         // since the path are relative to the workspace and not the project itself, we need

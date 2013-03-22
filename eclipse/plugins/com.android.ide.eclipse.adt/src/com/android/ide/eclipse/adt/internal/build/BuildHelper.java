@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.build.ApkBuilder;
@@ -105,8 +106,13 @@ public class BuildHelper {
     private static final String COMMAND_CRUNCH = "crunch";  //$NON-NLS-1$
     private static final String COMMAND_PACKAGE = "package"; //$NON-NLS-1$
 
+    @NonNull
     private final IProject mProject;
+    @NonNull
+    private final BuildToolInfo mBuildToolInfo;
+    @NonNull
     private final AndroidPrintStream mOutStream;
+    @NonNull
     private final AndroidPrintStream mErrStream;
     private final boolean mForceJumbo;
     private final boolean mDisableDexMerger;
@@ -139,11 +145,13 @@ public class BuildHelper {
      * @throws CoreException
      */
     public BuildHelper(@NonNull IProject project,
+            @NonNull BuildToolInfo buildToolInfo,
             @NonNull AndroidPrintStream outStream,
             @NonNull AndroidPrintStream errStream,
             boolean forceJumbo, boolean disableDexMerger, boolean debugMode,
             boolean verbose, ResourceMarker resMarker) throws CoreException {
         mProject = project;
+        mBuildToolInfo = buildToolInfo;
         mOutStream = outStream;
         mErrStream = errStream;
         mDebugMode = debugMode;
@@ -693,7 +701,7 @@ public class BuildHelper {
 
         // get the dex wrapper
         Sdk sdk = Sdk.getCurrent();
-        DexWrapper wrapper = sdk.getDexWrapper();
+        DexWrapper wrapper = sdk.getDexWrapper(mBuildToolInfo);
 
         if (wrapper == null) {
             throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
@@ -833,7 +841,7 @@ public class BuildHelper {
             String configFilter, int versionCode) throws AaptExecException, AaptResultException {
         IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
 
-        @SuppressWarnings("deprecation") String aapt = target.getPath(IAndroidTarget.AAPT);
+        String aapt = mBuildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
 
         // Create the command line.
         ArrayList<String> commandArray = new ArrayList<String>();

@@ -24,8 +24,6 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFolder;
@@ -87,7 +85,7 @@ public class ResourceManagerBuilder extends BaseBuilder {
         // check for existing target marker, in which case we abort.
         // (this means: no SDK, no target, or unresolvable target.)
         try {
-            abortOnBadSetup(javaProject);
+            abortOnBadSetup(javaProject, null);
         } catch (AbortBuildException e) {
             return null;
         }
@@ -126,13 +124,6 @@ public class ResourceManagerBuilder extends BaseBuilder {
             markProject(AdtConstants.MARKER_ADT, Messages.No_SDK_Setup_Error,
                     IMarker.SEVERITY_ERROR);
 
-            return null;
-        }
-
-        // check the project has a target
-        IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
-        if (projectTarget == null) {
-            // no target. marker has been set by the container initializer: exit silently.
             return null;
         }
 

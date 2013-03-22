@@ -151,6 +151,10 @@ public class AdtConstants {
      * when an AndroidClasspathContainerInitializer has succeeded in creating an
      * AndroidClasspathContainer */
     public final static String MARKER_TARGET = AdtPlugin.PLUGIN_ID + ".targetProblem"; //$NON-NLS-1$
+    /** Marker for Android Build Tools errors.
+     * This is not cleared on each build like other markers. Instead, it's cleared
+     * when the build tools are setup in the projectState. */
+    public final static String MARKER_BUILD_TOOLS = AdtPlugin.PLUGIN_ID + ".buildToolsProblem"; //$NON-NLS-1$
     /** Marker for Android Dependency errors.
      * This is not cleared on each build like other markers. Instead, it's cleared
      * when a LibraryClasspathContainerInitializer has succeeded in creating a
