@@ -202,6 +202,8 @@ class DeviceMenuListener extends SelectionAdapter {
         String name = d.getName();
         Screen screen = d.getDefaultHardware().getScreen();
         float length = (float) screen.getDiagonalLength();
+        // Round dimensions to the nearest tenth
+        length = Math.round(10 * length) / 10.0f;
         return String.format(java.util.Locale.US, "%1$s (%3$s\", %2$s)",
                 name, getResolutionString(d), Float.toString(length));
     }
