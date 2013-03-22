@@ -17,9 +17,11 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFile;
@@ -59,6 +61,7 @@ public abstract class SourceProcessor {
     private final Map<IFile, SourceFileData> mFiles = new HashMap<IFile, SourceFileData>();
 
     private final IJavaProject mJavaProject;
+    private BuildToolInfo mBuildToolInfo;
     private final IFolder mGenFolder;
     private final SourceChangeHandler mDeltaVisitor;
 
@@ -83,9 +86,11 @@ public abstract class SourceProcessor {
         return path;
     }
 
-    protected SourceProcessor(IJavaProject javaProject, IFolder genFolder,
-            SourceChangeHandler deltaVisitor) {
+    protected SourceProcessor(@NonNull IJavaProject javaProject,
+            @NonNull BuildToolInfo buildToolInfo, @NonNull IFolder genFolder,
+            @NonNull SourceChangeHandler deltaVisitor) {
         mJavaProject = javaProject;
+        mBuildToolInfo = buildToolInfo;
         mGenFolder = genFolder;
         mDeltaVisitor = deltaVisitor;
 
@@ -109,8 +114,13 @@ public abstract class SourceProcessor {
         }
     }
 
-    protected SourceProcessor(IJavaProject javaProject, IFolder genFolder) {
-        this(javaProject, genFolder, new SourceChangeHandler());
+    protected SourceProcessor(@NonNull IJavaProject javaProject,
+            @NonNull BuildToolInfo buildToolInfo, @NonNull IFolder genFolder) {
+        this(javaProject, buildToolInfo, genFolder, new SourceChangeHandler());
+    }
+
+    public void setBuildToolInfo(BuildToolInfo buildToolInfo) {
+        mBuildToolInfo = buildToolInfo;
     }
 
 
@@ -166,6 +176,10 @@ public abstract class SourceProcessor {
 
     final IJavaProject getJavaProject() {
         return mJavaProject;
+    }
+
+    final BuildToolInfo getBuildToolInfo() {
+        return mBuildToolInfo;
     }
 
     final IFolder getGenFolder() {

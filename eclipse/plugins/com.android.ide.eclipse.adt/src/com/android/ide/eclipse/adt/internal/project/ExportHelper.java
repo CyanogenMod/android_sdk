@@ -31,6 +31,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -132,7 +133,17 @@ public final class ExportHelper {
             String dexMergerStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
             Boolean dexMerger = Boolean.valueOf(dexMergerStr);
 
-            BuildHelper helper = new BuildHelper(project,
+            BuildToolInfo buildToolInfo = projectState.getBuildToolInfo();
+            if (buildToolInfo == null) {
+                buildToolInfo = Sdk.getCurrent().getLatestBuildTool();
+            }
+
+            if (buildToolInfo == null) {
+                throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        "No Build Tools installed in the SDK."));
+            }
+
+            BuildHelper helper = new BuildHelper(project, buildToolInfo,
                     fakeStream, fakeStream,
                     jumbo.booleanValue(),
                     dexMerger.booleanValue(),

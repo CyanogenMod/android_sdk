@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.sdk;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
@@ -160,6 +161,7 @@ public final class ProjectState {
     private final IProject mProject;
     private final ProjectProperties mProperties;
     private IAndroidTarget mTarget;
+    private BuildToolInfo mBuildToolInfo;
 
     /**
      * list of libraries. Access to this list must be protected by
@@ -238,6 +240,23 @@ public final class ProjectState {
 
     public IAndroidTarget getTarget() {
         return mTarget;
+    }
+
+    public void setBuildToolInfo(BuildToolInfo buildToolInfo) {
+        mBuildToolInfo = buildToolInfo;
+    }
+
+    public BuildToolInfo getBuildToolInfo() {
+        return mBuildToolInfo;
+    }
+
+    /**
+     * Returns the build tools version from the project's properties.
+     * @return the value or null
+     */
+    @Nullable
+    public String getBuildToolInfoVersion() {
+        return mProperties.getProperty(ProjectProperties.PROPERTY_BUILD_TOOLS);
     }
 
     public static class LibraryDifference {
