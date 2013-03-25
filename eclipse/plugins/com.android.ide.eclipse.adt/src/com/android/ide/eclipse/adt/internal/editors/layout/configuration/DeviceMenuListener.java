@@ -16,12 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
+import static com.android.ide.common.rendering.HardwareConfigHelper.MANUFACTURER_GENERIC;
+import static com.android.ide.common.rendering.HardwareConfigHelper.getGenericLabel;
+import static com.android.ide.common.rendering.HardwareConfigHelper.getNexusLabel;
+import static com.android.ide.common.rendering.HardwareConfigHelper.isGeneric;
+import static com.android.ide.common.rendering.HardwareConfigHelper.isNexus;
+import static com.android.ide.common.rendering.HardwareConfigHelper.sortNexusList;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.devices.Device;
-import com.android.sdklib.devices.Screen;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 
@@ -36,23 +42,15 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The {@linkplain DeviceMenuListener} class is responsible for generating the device
  * menu in the {@link ConfigurationChooser}.
  */
 class DeviceMenuListener extends SelectionAdapter {
-    private static final String NEXUS = "Nexus";       //$NON-NLS-1$
-    private static final String GENERIC = "Generic";   //$NON-NLS-1$
-    private static Pattern PATTERN = Pattern.compile(
-            "(\\d+\\.?\\d*)in (.+?)( \\(.*Nexus.*\\))?"); //$NON-NLS-1$
-
     private final ConfigurationChooser mConfigChooser;
     private final Device mDevice;
 
@@ -148,7 +146,7 @@ class DeviceMenuListener extends SelectionAdapter {
                     for (List<Device> devices : manufacturers.values()) {
                         for (Device device : devices) {
                             if (isNexus(device)) {
-                                if (device.getManufacturer().equals(GENERIC)) {
+                                if (device.getManufacturer().equals(MANUFACTURER_GENERIC)) {
                                     generic.add(device);
                                 } else {
                                     nexus.add(device);
@@ -196,97 +194,5 @@ class DeviceMenuListener extends SelectionAdapter {
         location = combo.getParent().toDisplay(location);
         menu.setLocation(location.x, location.y);
         menu.setVisible(true);
-    }
-
-    private static String getNexusLabel(Device d) {
-        String name = d.getName();
-        Screen screen = d.getDefaultHardware().getScreen();
-        float length = (float) screen.getDiagonalLength();
-        // Round dimensions to the nearest tenth
-        length = Math.round(10 * length) / 10.0f;
-        return String.format(java.util.Locale.US, "%1$s (%3$s\", %2$s)",
-                name, getResolutionString(d), Float.toString(length));
-    }
-
-    private static String getGenericLabel(Device d) {
-        // * Replace "'in'" with '"' (e.g. 2.7" QVGA instead of 2.7in QVGA)
-        // * Use the same precision for all devices (all but one specify decimals)
-        // * Add some leading space such that the dot ends up roughly in the
-        //   same space
-        // * Add in screen resolution and density
-        String name = d.getName();
-        if (name.equals("3.7 FWVGA slider")) {                        //$NON-NLS-1$
-            // Fix metadata: this one entry doesn't have "in" like the rest of them
-            name = "3.7in FWVGA slider";                              //$NON-NLS-1$
-        }
-
-        Matcher matcher = PATTERN.matcher(name);
-        if (matcher.matches()) {
-            String size = matcher.group(1);
-            String n = matcher.group(2);
-            int dot = size.indexOf('.');
-            if (dot == -1) {
-                size = size + ".0";
-                dot = size.length() - 2;
-            }
-            for (int i = 0; i < 2 - dot; i++) {
-                size = ' ' + size;
-            }
-            name = size + "\" " + n;
-        }
-
-        return String.format(java.util.Locale.US, "%1$s (%2$s)", name,
-                getResolutionString(d));
-    }
-
-    @Nullable
-    private static String getResolutionString(Device device) {
-        Screen screen = device.getDefaultHardware().getScreen();
-        return String.format(java.util.Locale.US,
-                "%1$d \u00D7 %2$d: %3$s", // U+00D7: Unicode multiplication sign
-                screen.getXDimension(),
-                screen.getYDimension(),
-                screen.getPixelDensity().getResourceValue());
-    }
-
-    private static boolean isGeneric(Device device) {
-        return device.getManufacturer().equals(GENERIC);
-    }
-
-    private static boolean isNexus(Device device) {
-        return device.getName().contains(NEXUS);
-    }
-
-    private static void sortNexusList(List<Device> list) {
-        Collections.sort(list, new Comparator<Device>() {
-            @Override
-            public int compare(Device device1, Device device2) {
-                // Descending order of age
-                return nexusRank(device2) - nexusRank(device1);
-            }
-            private int nexusRank(Device device) {
-                String name = device.getName();
-                if (name.endsWith(" One")) {     //$NON-NLS-1$
-                    return 1;
-                }
-                if (name.endsWith(" S")) {       //$NON-NLS-1$
-                    return 2;
-                }
-                if (name.startsWith("Galaxy")) { //$NON-NLS-1$
-                    return 3;
-                }
-                if (name.endsWith(" 7")) {       //$NON-NLS-1$
-                    return 4;
-                }
-                if (name.endsWith(" 10")) {       //$NON-NLS-1$
-                    return 5;
-                }
-                if (name.endsWith(" 4")) {       //$NON-NLS-1$
-                    return 6;
-                }
-
-                return 7;
-            }
-        });
     }
 }
