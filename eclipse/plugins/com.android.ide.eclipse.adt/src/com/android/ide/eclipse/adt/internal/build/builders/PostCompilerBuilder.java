@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
@@ -913,8 +915,9 @@ public class PostCompilerBuilder extends BaseBuilder {
     }
 
     @Override
-    protected void abortOnBadSetup(IJavaProject javaProject, ProjectState projectState)
-            throws AbortBuildException, CoreException {
+    protected void abortOnBadSetup(
+            @NonNull IJavaProject javaProject,
+            @Nullable ProjectState projectState) throws AbortBuildException, CoreException {
         super.abortOnBadSetup(javaProject, projectState);
 
         IProject iProject = getProject();
