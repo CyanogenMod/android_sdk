@@ -81,6 +81,7 @@ diffs
 dir
 dirs
 discoverable
+displayable
 ditto
 div
 docs
