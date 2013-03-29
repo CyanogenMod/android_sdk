@@ -66,7 +66,6 @@ ErrorHandler::~ErrorHandler(){
 }
 
 int ErrorHandler::errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event){
-    android::Mutex::Autolock mutex(s_lock);
     s_lastErrorCode = event->error_code;
     return 0;
 }
