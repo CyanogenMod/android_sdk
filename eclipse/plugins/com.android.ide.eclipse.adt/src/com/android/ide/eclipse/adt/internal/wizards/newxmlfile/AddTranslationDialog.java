@@ -21,6 +21,7 @@ import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ValueResourceParser;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -384,7 +385,7 @@ public class AddTranslationDialog extends Dialog implements ControlListener, Sel
             sb.append("    <string name=\"");  //$NON-NLS-1$
             sb.append(key);
             sb.append("\">");                  //$NON-NLS-1$
-            sb.append(value);
+            sb.append(ValueResourceParser.escapeResourceString(value));
             sb.append("</string>\n");          //$NON-NLS-1$
         }
         sb.append("\n</resources>");           //$NON-NLS-1$

@@ -225,9 +225,9 @@ public class ManifestInfo {
                 String theme = activity.getAttributeNS(NS_RESOURCES, ATTRIBUTE_THEME);
                 if (theme != null && theme.length() > 0) {
                     String name = activity.getAttributeNS(NS_RESOURCES, ATTRIBUTE_NAME);
-                    if (name.startsWith(".")  //$NON-NLS-1$
-                            && mPackage != null && mPackage.length() > 0) {
-                        name = mPackage + name;
+                    int index = name.indexOf('.');
+                    if (index <= 0 && mPackage != null && !mPackage.isEmpty()) {
+                      name =  mPackage + (index == -1 ? "." : "") + name;
                     }
                     mActivityThemes.put(name, theme);
                 }
