@@ -65,7 +65,7 @@ public class ProjectResources extends ResourceRepository {
     private Map<IntArrayWrapper, String> mStyleableValueToNameMap;
 
     private final DynamicIdMap mDynamicIdMap = new DynamicIdMap(DYNAMIC_ID_SEED_START);
-
+    private final IntArrayWrapper mWrapper = new IntArrayWrapper(null);
     private final IProject mProject;
 
     public static ProjectResources create(IProject project) {
