@@ -14,8 +14,15 @@
 * limitations under the License.
 */
 
+#include <stdio.h>
 #include "ThreadInfo.h"
 
+//#define TRACE_THREADINFO
+#ifdef TRACE_THREADINFO
+#define LOG_THREADINFO(x...) fprintf(stderr, x)
+#else
+#define LOG_THREADINFO(x...)
+#endif
 
 void ThreadInfo::updateInfo(ContextPtr eglCtx,
                             EglDisplay* dpy,
@@ -30,24 +37,13 @@ void ThreadInfo::updateInfo(ContextPtr eglCtx,
     objManager  = manager;
 }
 
-#ifdef __linux__
-
-__thread ThreadInfo* thread  = NULL;
-
-ThreadInfo* getThreadInfo(){
-    if(!thread) {
-        thread = new ThreadInfo();
-    }
-    return thread;
-}
-
-#else
-
 #include <cutils/threads.h>
 static thread_store_t s_tls = THREAD_STORE_INITIALIZER;
-
+static int active_instance = 0;
 static void tlsDestruct(void *ptr)
 {
+    active_instance--;
+    LOG_THREADINFO("tlsDestruct EGL %lx %d\n", (long)ptr, active_instance);
     if (ptr) {
         ThreadInfo *ti = (ThreadInfo *)ptr;
         delete ti;
@@ -60,8 +56,8 @@ ThreadInfo *getThreadInfo()
     if (!ti) {
         ti = new ThreadInfo();
         thread_store_set(&s_tls, ti, tlsDestruct);
+        active_instance++;
+        LOG_THREADINFO("getThreadInfo EGL %lx %d\n", (long)ti, active_instance);
     }
     return ti;
 }
-
-#endif
