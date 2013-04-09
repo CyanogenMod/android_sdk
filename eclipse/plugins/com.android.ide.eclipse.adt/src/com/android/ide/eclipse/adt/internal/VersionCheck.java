@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.Messages;
 import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.FullRevision.PreviewComparison;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -164,7 +165,7 @@ public final class VersionCheck {
             }
         }
 
-        if (toolsRevision.compareTo(MIN_TOOLS_REV) < 0) {
+        if (toolsRevision.compareTo(MIN_TOOLS_REV, PreviewComparison.IGNORE) < 0) {
             // this is a warning only as we need to parse the SDK to allow updating
             // of the tools!
             return errorHandler.handleWarning(
