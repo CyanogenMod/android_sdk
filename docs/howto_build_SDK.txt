@@ -15,7 +15,7 @@ limitations under the License.
 
 Subject: How to build an Android SDK & ADT Eclipse plugin.
 Date:    2009/03/27
-Updated: 2010/03/30
+Updated: 2013/04/09
 
 
 Table of content:
@@ -74,7 +74,7 @@ For example for the cupcake branch:
 
   $ mkdir ~/my-android-git
   $ cd ~/my-android-git
-  $ repo init -u https://android.googlesource.com/platform/manifest -b master
+  $ repo init -u https://android.googlesource.com/platform/manifest -b master -g all,-notdefault,tools
   $ repo sync
 
 Then once you have all the source, simply build the SDK using:
@@ -110,14 +110,15 @@ Some options:
 3- Building an SDK for Windows
 ------------------------------
 
-Full Windows SDK builds are now only supported on Linux -- most of the framework is
-not designed to be built on Windows so technically the Windows SDK is build on top
-of a Linux SDK where a few binaries are replaced. So it cannot be built on Windows,
-and it cannot be built on Mac, only on Linux.
+Full Windows SDK builds are now only supported on Linux -- most of the
+framework is not designed to be built on Windows so technically the Windows
+SDK is build on top of a Linux SDK where a few binaries are replaced. So it
+cannot be built on Windows, and it cannot be built on Mac, only on Linux.
 
 I'll repeat this again because it's important:
 
   To build the Android SDK for Windows, you need to use a *Linux* box.
+
 
 A- Pre-requisites
 -----------------
@@ -126,7 +127,7 @@ Before you can even think of building the Android SDK for Windows, you need to
 perform the steps from section "2- Building an SDK for MacOS and Linux" above:
 setup and build a regular Linux SDK. Once this working, please continue here.
 
-Under Ubuntu, you will need the following extra packages: 
+Under Ubuntu, you will need the following extra packages:
 
 $ sudo apt-get install mingw32 tofrodos
 
@@ -142,7 +143,8 @@ $ . build/envsetup.sh
 $ lunch sdk-eng
 $ make win_sdk
 
-Note that this will build both a Linux SDK then a Windows SDK. The result is located at
+Note that this will build both a Linux SDK then a Windows SDK.
+The result is located at
    out/host/windows/sdk/android-sdk_eng.${USER}_windows/
 
 
@@ -156,7 +158,7 @@ However sometimes you need to develop one specific tools, e.g. adb.exe or
 aapt.exe, and it's just more convenient to do it on the same platform where
 you can actually test it. This is what this section explains.
 
-   
+
 A- Cygwin pre-requisite & code checkout
 ---------------------------------------
 
@@ -219,7 +221,7 @@ Again, it requires a checkout of the full android code and the usual
 setup like described above to build an SDK.
 
 Then to build an isolated Windows binary, you'd do something like this:
-  
+
   $ cd ~/my-android-git
   $ . build/envsetup.sh
   $ lunch sdk-eng
@@ -235,80 +237,21 @@ Linux.
 4- Building an ADT plugin for Eclipse
 -------------------------------------
 
-Requirements:
-- You can currently only build an ADT plugin for Eclipse under Linux.
-- You must have a working version of Eclipse 3.6 "helios" RCP installed.
-- You need X11 to run Eclipse at least once.
-- You need a lot of patience. The trick is to do the initial setup correctly
-  once, after it's a piece of cake.
+We've simplified the steps here.
+It used to be that you'd have to download a specific version of
+Eclipse and install it at a special location. That's not needed
+anymore.
 
-
-
-A- Pre-requisites
------------------
-
-Note for Ubuntu or Debian users: your apt repository probably only has Eclipse
-3.2 available and it's probably not suitable to build plugins in the first
-place. Forget that and install a working 3.6 manually as described below.
-
-- Visit http://www.eclipse.org/downloads/ to grab the
-  "Eclipse for RCP/Plug-in Developers (176 MB)" download for Linux.
-  32-bit and 64-bit versions are available, depending on your Linux installation.
-
-  Note: Eclipse comes in various editions. Do yourself a favor and just stick
-  to the RCP for building this plugin. For example the J2EE contains too many
-  useless features that will get in the way, and the "Java" version lacks some
-  plugins you need to build other plugins. Please just use the RCP one.
-
-  Note: You will need the CDT plugin but don't take a "CDT" flavor build as it
-  will lack the RCP tools. Instead take an RCP and then add CDT.
-  
-- Unpack "eclipse-rcp-*-linux-gtk.tar.gz" in the directory of
-  your choice, e.g.:
-
-  $ mkdir ~/eclipse-3.6
-  $ cd ~/eclipse-3.6
-  $ tar xvzf eclipse-rcp-????-linux-gtk.tar.gz
-
-  This will create an "eclipse" directory in the current directory.
-
-- Set ECLIPSE_HOME to that "eclipse" directory:
-
-  $ export ECLIPSE_HOME=~/eclipse-3.6/eclipse
-
-  Note: it is important you set ECLIPSE_HOME before starting the build.
-  Otherwise the build process will try to download and install its own Eclipse
-  installation in /buildroot, which is probably limited to root.
-
-- Now, before you can build anything, it is important that you start Eclipse
-  *manually* once using the same user that you will use to build later. That's
-  because your Eclipse installation is not finished: Eclipse must be run at
-  least once to create some files in ~/.eclipse/. So run Eclipse now:
-
-  $ ~/eclipse-3.6/eclipse/eclipse &
-
-- Since you have Eclipse loaded, now is a perfect time to pick up the
-  CDT plugin. (Another alternative is is to fetch the CDT from its archives
-  and manually dump all the *.jar in eclipse/plugins.)
-  
-  That's it. You won't need to run it manually again.
-
-
-
-B- Building ADT
----------------
-
-Finally, you have Eclipse, it's installed and it created its own config files,
-so now you can build your ADT plugin. To do that you'll change directories to
-your git repository and invoke the build script by giving it a destination
-directory and an optional build number:
+Instead you just change directories to your git repository and invoke the
+build script by giving it a destination directory and an optional build number:
 
   $ mkdir ~/mysdk
   $ cd ~/my-android-git   # <-- this is where you did your "repo sync"
   $ sdk/eclipse/scripts/build_server.sh ~/mysdk $USER
 
+
 The first argument is the destination directory. It must be absolute. Do not
-give a relative destination directory such as "../mysdk". This will make the
+give a relative destination directory such as "../mysdk" -- this would make the
 Eclipse build fail with a cryptic message:
 
   BUILD SUCCESSFUL
