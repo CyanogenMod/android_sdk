@@ -1,6 +1,6 @@
 <project name="com.android.eclipse.rcp.build" default="build">
     <tstamp>
-        <format property="QUALIFIER" pattern="yyyy-M-d-H-m"/>
+        <format property="QUALIFIER" pattern="yyyyMMddHHmm"/>
     </tstamp>
 
     <!-- Root of Android Source Tree -->
