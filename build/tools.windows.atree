@@ -24,9 +24,6 @@
 rm tools/android
 prebuilts/devtools/tools/android.bat              tools/android.bat
 
-rm tools/apkbuilder
-sdk/apkbuilder/etc/apkbuilder.bat                 tools/apkbuilder.bat
-
 rm tools/ddms
 prebuilts/devtools/tools/ddms.bat                 tools/ddms.bat
 
