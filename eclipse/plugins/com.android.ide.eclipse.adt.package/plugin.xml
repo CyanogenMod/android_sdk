@@ -40,30 +40,15 @@
    <extension
          point="org.eclipse.ui.intro">
       <intro
-            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
+            class="com.android.ide.eclipse.adt.internal.AdtIntro"
             icon="icons/adt16.png"
-            id="org.eclipse.intro.minimal"
+            id="com.android.ide.eclipse.adt.intro"
             label="Android IDE"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.intro.config">
-      <config
-            content="introcontent.xml"
-            id="org.eclipse.intro.minimal.config"
-            introId="org.eclipse.intro.minimal">
-         <presentation
-               home-page-id="root"
-               standby-page-id="standby">
-            <implementation
-                  kind="html">
-            </implementation>
-         </presentation>
-      </config>
    </extension>
    <extension
          point="org.eclipse.ui.intro">
       <introProductBinding
-            introId="org.eclipse.intro.minimal"
+            introId="com.android.ide.eclipse.adt.intro"
             productId="com.android.ide.eclipse.adt.package.product">
       </introProductBinding>
    </extension>
