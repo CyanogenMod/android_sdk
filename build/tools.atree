@@ -14,28 +14,28 @@
 # limitations under the License.
 #
 
+##############################################################################
+# Tools Component
+##############################################################################
+
 #
 # These are the files that comprise the tools component of the SDK.
 #
 
-prebuilts/devtools/tools/lib                  tools/lib
+prebuilts/devtools/tools/lib                        tools/lib
 
-prebuilts/devtools/tools/android              tools/android
-prebuilts/devtools/tools/draw9patch           tools/draw9patch
-prebuilts/devtools/tools/ddms                 tools/ddms
-prebuilts/devtools/tools/hierarchyviewer      tools/hierarchyviewer
-prebuilts/devtools/tools/jobb                 tools/jobb
-prebuilts/devtools/tools/lint                 tools/lint
-prebuilts/devtools/tools/monkeyrunner         tools/monkeyrunner
-prebuilts/devtools/tools/traceview            tools/traceview
-prebuilts/devtools/tools/uiautomatorviewer    tools/uiautomatorviewer
+prebuilts/devtools/tools/android                    tools/android
+prebuilts/devtools/tools/draw9patch                 tools/draw9patch
+prebuilts/devtools/tools/ddms                       tools/ddms
+prebuilts/devtools/tools/hierarchyviewer            tools/hierarchyviewer
+prebuilts/devtools/tools/jobb                       tools/jobb
+prebuilts/devtools/tools/lint                       tools/lint
+prebuilts/devtools/tools/monkeyrunner               tools/monkeyrunner
+prebuilts/devtools/tools/traceview                  tools/traceview
+prebuilts/devtools/tools/uiautomatorviewer          tools/uiautomatorviewer
 
-prebuilts/devtools/notices/NOTICE.txt         tols/NOTICE.txt
+prebuilts/devtools/notices/NOTICE.txt               tools/NOTICE.txt
 
-
-##############################################################################
-# Tools Component
-##############################################################################
 
 # version files for the SDK updater, from sdk.git
 sdk/files/tools_source.properties                   tools/source.properties
@@ -97,9 +97,6 @@ external/qemu/android/avd/hardware-properties.ini   tools/lib/hardware-propertie
 
 # emacs support from sdk.git
 sdk/files/android.el tools/lib/android.el
-
-# Java Libraries for the tools
-sdk/apkbuilder/etc/apkbuilder                       tools/apkbuilder
 
 # 3rd Party java libraries
 framework/emmalib.jar                                                               tools/lib/emma_device.jar
