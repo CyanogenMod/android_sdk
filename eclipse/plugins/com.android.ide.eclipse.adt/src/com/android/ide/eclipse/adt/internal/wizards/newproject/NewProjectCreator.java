@@ -18,12 +18,13 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import static com.android.SdkConstants.FN_PROJECT_PROPERTIES;
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
+
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.ValueResourceParser;
+import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -1058,7 +1059,7 @@ public class NewProjectCreator  {
                 String value = strings.get(key);
 
                 // Escape values if necessary
-                value = ValueResourceParser.escapeResourceString(value);
+                value = ValueXmlHelper.escapeResourceString(value);
 
                 // place them in the template
                 String stringDef = stringTemplate.replace(PARAM_STRING_NAME, key);
