@@ -20,7 +20,7 @@ import static com.android.SdkConstants.QUOT_ENTITY;
 import static com.android.SdkConstants.STRING_PREFIX;
 
 import com.android.SdkConstants;
-import com.android.ide.common.resources.ValueResourceParser;
+import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -1217,7 +1217,7 @@ public class ExtractStringRefactoring extends Refactoring {
         IStructuredModel smodel = null;
 
         // Single and double quotes must be escaped in the <string>value</string> declaration
-        tokenString = ValueResourceParser.escapeResourceString(tokenString);
+        tokenString = ValueXmlHelper.escapeResourceString(tokenString);
 
         try {
             IStructuredDocument sdoc = null;
