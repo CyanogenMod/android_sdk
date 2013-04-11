@@ -32,7 +32,12 @@ import org.w3c.dom.Element;
 
 /** Helper class for looking up the gravity masks of gravity attributes */
 public class GravityHelper {
+    // From SDK constants; temporary
+    public static final String GRAVITY_VALUE_START = "start";                         //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_END = "end";                             //$NON-NLS-1$
+
     /** Bitmask for a gravity which includes left */
+    @SuppressWarnings("PointlessBitwiseExpression") // for symmetry with other fields
     public static final int GRAVITY_LEFT         = 1 << 0;
 
     /** Bitmask for a gravity which includes right */
@@ -56,9 +61,15 @@ public class GravityHelper {
     /** Bitmask for a gravity which includes bottom */
     public static final int GRAVITY_BOTTOM       = 1 << 7;
 
+    /** Bitmask for a gravity which includes start */
+    public static final int GRAVITY_START        = 1 << 8;
+
+    /** Bitmask for a gravity which includes end */
+    public static final int GRAVITY_END          = 1 << 9;
+
     /** Bitmask for a gravity which includes any horizontal constraint */
     public static final int GRAVITY_HORIZ_MASK = GRAVITY_CENTER_HORIZ | GRAVITY_FILL_HORIZ
-            | GRAVITY_LEFT | GRAVITY_RIGHT;
+            | GRAVITY_LEFT | GRAVITY_RIGHT | GRAVITY_START | GRAVITY_END;
 
     /** Bitmask for a gravity which any vertical constraint */
     public static final int GRAVITY_VERT_MASK = GRAVITY_CENTER_VERT | GRAVITY_FILL_VERT
@@ -84,7 +95,7 @@ public class GravityHelper {
      */
     public static int getGravity(String gravityString, int defaultMask) {
         int gravity = defaultMask;
-        if (gravityString != null && gravityString.length() > 0) {
+        if (gravityString != null && !gravityString.isEmpty()) {
             String[] anchors = gravityString.split("\\|"); //$NON-NLS-1$
             for (String anchor : anchors) {
                 if (GRAVITY_VALUE_CENTER.equals(anchor)) {
@@ -104,12 +115,14 @@ public class GravityHelper {
                 } else if (GRAVITY_VALUE_BOTTOM.equals(anchor)) {
                     gravity = (gravity & GRAVITY_HORIZ_MASK) | GRAVITY_BOTTOM;
                 } else if (GRAVITY_VALUE_LEFT.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_VERT_MASK) | GRAVITY_LEFT;
+                    gravity = (gravity & (GRAVITY_VERT_MASK|GRAVITY_START)) | GRAVITY_LEFT;
                 } else if (GRAVITY_VALUE_RIGHT.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_VERT_MASK) | GRAVITY_RIGHT;
-                } else {
-                    // "clip" not supported
-                }
+                    gravity = (gravity & (GRAVITY_VERT_MASK|GRAVITY_END)) | GRAVITY_RIGHT;
+                } else if (GRAVITY_VALUE_START.equals(anchor)) {
+                    gravity = (gravity & (GRAVITY_VERT_MASK|GRAVITY_LEFT)) | GRAVITY_START;
+                } else if (GRAVITY_VALUE_END.equals(anchor)) {
+                    gravity = (gravity & (GRAVITY_VERT_MASK|GRAVITY_RIGHT)) | GRAVITY_END;
+                } // else: "clip" not supported
             }
         }
 
@@ -143,7 +156,7 @@ public class GravityHelper {
      * @return true if the given gravity bitmask is left aligned
      */
     public static boolean isLeftAligned(int gravity) {
-        return (gravity & GRAVITY_LEFT) != 0;
+        return (gravity & (GRAVITY_LEFT|GRAVITY_START)) != 0;
     }
 
     /**
@@ -175,10 +188,26 @@ public class GravityHelper {
         int horizontal = gravity & GRAVITY_HORIZ_MASK;
         int vertical = gravity & GRAVITY_VERT_MASK;
 
-        if ((horizontal & GRAVITY_LEFT) != 0) {
-            sb.append(GRAVITY_VALUE_LEFT);
-        } else if ((horizontal & GRAVITY_RIGHT) != 0) {
-            sb.append(GRAVITY_VALUE_RIGHT);
+        if ((horizontal & (GRAVITY_LEFT|GRAVITY_START)) != 0) {
+            if ((horizontal & GRAVITY_LEFT) != 0) {
+                sb.append(GRAVITY_VALUE_LEFT);
+            }
+            if ((horizontal & GRAVITY_START) != 0) {
+                if (sb.length() > 0) {
+                    sb.append('|');
+                }
+                sb.append(GRAVITY_VALUE_START);
+            }
+        } else if ((horizontal & (GRAVITY_RIGHT|GRAVITY_END)) != 0) {
+            if ((horizontal & GRAVITY_RIGHT) != 0) {
+                sb.append(GRAVITY_VALUE_RIGHT);
+            }
+            if ((horizontal & GRAVITY_END) != 0) {
+                if (sb.length() > 0) {
+                    sb.append('|');
+                }
+                sb.append(GRAVITY_VALUE_END);
+            }
         } else if ((horizontal & GRAVITY_CENTER_HORIZ) != 0) {
             sb.append(GRAVITY_VALUE_CENTER_HORIZONTAL);
         } else if ((horizontal & GRAVITY_FILL_HORIZ) != 0) {
