@@ -22,6 +22,7 @@ import static com.android.resources.ScreenSize.XLARGE;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 
@@ -402,6 +403,11 @@ public class ManifestInfoTest extends AdtProjectTest {
         @Override
         public List<String> getBootClasspath() {
             return new ArrayList<String>();
+        }
+
+        @Override
+        public BuildToolInfo getBuildToolInfo() {
+            return null;
         }
     }
 }
