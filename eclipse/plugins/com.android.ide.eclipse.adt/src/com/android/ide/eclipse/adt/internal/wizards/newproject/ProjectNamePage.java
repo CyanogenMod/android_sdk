@@ -60,6 +60,7 @@ import org.eclipse.ui.IWorkingSet;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Locale;
 
 /**
  * Initial page shown when creating projects which asks for the project name,
@@ -580,10 +581,13 @@ public class ProjectNamePage extends WizardPage implements SelectionListener, Mo
             if (!nameStatus.isOK()) {
                 return nameStatus;
             } else {
-                IProject handle = workspace.getRoot().getProject(projectName);
-                if (handle.exists()) {
-                    return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                            "A project with that name already exists in the workspace");
+                // Note: the case-sensitiveness of the project name matters and can cause a
+                // conflict *later* when creating the project resource, so let's check it now.
+                for (IProject existingProj : workspace.getRoot().getProjects()) {
+                    if (projectName.equalsIgnoreCase(existingProj.getName())) {
+                        return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                                "A project with that name already exists in the workspace");
+                    }
                 }
             }
         }
