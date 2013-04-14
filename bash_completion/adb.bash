@@ -78,6 +78,9 @@ _adb() {
                     install)
                         _adb_cmd_install "$serial" $i
                         ;;
+                    sideload)
+                        _adb_cmd_sideload "$serial" $i
+                        ;;
                     pull)
                         _adb_cmd_pull "$serial" $i
                         ;;
@@ -131,6 +134,19 @@ _adb_cmd_install() {
     fi
 
     _adb_util_complete_local_file "${cur}" '!*.apk'
+}
+
+_adb_cmd_sideload() {
+    local serial i cur where
+
+    serial=$1
+    i=$2
+
+    where=FILE
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    _adb_util_complete_local_file "${cur}" '!*.zip'
 }
 
 _adb_cmd_push() {
