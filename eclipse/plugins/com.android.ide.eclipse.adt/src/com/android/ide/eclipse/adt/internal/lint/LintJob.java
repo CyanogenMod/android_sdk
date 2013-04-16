@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.SdkUtils;
@@ -46,23 +47,33 @@ import java.util.EnumSet;
 import java.util.List;
 
 /** Job to check lint on a set of resources */
-final class LintJob extends Job {
+public final class LintJob extends Job {
     /** Job family */
     private static final Object FAMILY_RUN_LINT = new Object();
     private final EclipseLintClient mClient;
     private final List<? extends IResource> mResources;
     private final IResource mSource;
+    private final IssueRegistry mRegistry;
     private LintDriver mLint;
     private boolean mFatal;
 
-    LintJob(
+    public LintJob(
             @NonNull EclipseLintClient client,
             @NonNull List<? extends IResource> resources,
-            @Nullable IResource source) {
+            @Nullable IResource source,
+            @NonNull IssueRegistry registry) {
         super("Running Android Lint");
         mClient = client;
         mResources = resources;
         mSource = source;
+        mRegistry = registry;
+    }
+
+    public LintJob(
+            @NonNull EclipseLintClient client,
+            @NonNull List<? extends IResource> resources,
+            @Nullable IResource source) {
+        this(client, resources, source, EclipseLintClient.getRegistry());
     }
 
     @Override
@@ -83,7 +94,6 @@ final class LintJob extends Job {
     protected IStatus run(IProgressMonitor monitor) {
         try {
             monitor.beginTask("Looking for errors", IProgressMonitor.UNKNOWN);
-            IssueRegistry registry = EclipseLintClient.getRegistry();
             EnumSet<Scope> scope = null;
             List<File> files = new ArrayList<File>(mResources.size());
             for (IResource resource : mResources) {
@@ -136,7 +146,7 @@ final class LintJob extends Job {
                 IMarker[] markers = EclipseLintClient.getMarkers(mSource);
                 for (IMarker marker : markers) {
                     String id = marker.getAttribute(EclipseLintRunner.MARKER_CHECKID_PROPERTY, "");
-                    Issue issue = registry.getIssue(id);
+                    Issue issue = mRegistry.getIssue(id);
                     if (issue == null) {
                         continue;
                     }
@@ -149,8 +159,8 @@ final class LintJob extends Job {
                 EclipseLintClient.clearMarkers(mResources);
             }
 
-            mLint = new LintDriver(registry, mClient);
-            mLint.analyze(files, scope);
+            mLint = new LintDriver(mRegistry, mClient);
+            mLint.analyze(new LintRequest(mClient, files).setScope(scope));
             mFatal = mClient.hasFatalErrors();
             return Status.OK_STATUS;
         } catch (Exception e) {
