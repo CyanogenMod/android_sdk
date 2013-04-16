@@ -384,7 +384,7 @@ public final class Sdk  {
 
     @Nullable
     public BuildToolInfo getLatestBuildTool() {
-        return mManager.getLatestBuildTool(false /*isPreview*/);
+        return mManager.getLatestBuildTool();
     }
 
     /**
