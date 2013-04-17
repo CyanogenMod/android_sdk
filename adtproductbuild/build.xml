@@ -146,6 +146,7 @@
             <arg value="-DrepoBaseLocation=${targetDir}/repos/" />
             <arg value="-DtransformedRepoLocation=${targetDir}/transformedRepos/" />
             <arg value="-Dconfigs=${buildconfigs}" />
+            <arg value="-DforceContextQualifier=${QUALIFIER}" />
             <classpath>
                 <pathelement location="${equinox.launcher}" />
             </classpath>
