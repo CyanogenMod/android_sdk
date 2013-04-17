@@ -299,6 +299,7 @@ public final class ProjectHelper {
 
         boolean foundFrameworkContainer = false;
         boolean foundLibrariesContainer = false;
+        boolean foundDependenciesContainer = false;
 
         for (int i = 0 ; i < entries.length ;) {
             // get the entry and kind
@@ -319,8 +320,11 @@ public final class ProjectHelper {
                 if (AdtConstants.CONTAINER_FRAMEWORK.equals(path)) {
                     foundFrameworkContainer = true;
                 }
-                if (AdtConstants.CONTAINER_LIBRARIES.equals(path)) {
+                if (AdtConstants.CONTAINER_PRIVATE_LIBRARIES.equals(path)) {
                     foundLibrariesContainer = true;
+                }
+                if (AdtConstants.CONTAINER_DEPENDENCIES.equals(path)) {
+                    foundDependenciesContainer = true;
                 }
             }
 
@@ -336,9 +340,16 @@ public final class ProjectHelper {
 
         // same thing for the library container
         if (foundLibrariesContainer == false) {
-            // add the android container to the array
+            // add the exported libraries android container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
-                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_LIBRARIES)));
+                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_PRIVATE_LIBRARIES), true));
+        }
+
+        // same thing for the dependencies container
+        if (foundDependenciesContainer == false) {
+            // add the android dependencies container to the array
+            entries = ProjectHelper.addEntryToClasspath(entries,
+                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_DEPENDENCIES)));
         }
 
         // set the new list of entries to the project
