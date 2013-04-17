@@ -24,6 +24,7 @@ DEST_DIR=""
 BUILD_NUMBER=""
 CREATE_ZIP="1"
 INTERNAL_BUILD=""
+PREVIEW="preview"   # "preview" for preview builds, "" for final release builds.
 
 function get_params() {
   # parse input parameters
@@ -60,10 +61,10 @@ function check_params() {
   [ -n "$DEST_DIR" ] || die "Usage: $0 <destination-directory> [build-number]"
   [ -d "$DEST_DIR" ] || die "Destination directory $DEST_DIR must exist."
 
-  # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format and the optional
-  # build number.
+  # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format, an optional "preview"
+  # tag and the optional build number.
   DATE=`date +v%Y%m%d%H%M`
-  QUALIFIER="$DATE"
+  QUALIFIER="${DATE}-$PREVIEW"
   [ -n "$BUILD_NUMBER" ] && QUALIFIER="${QUALIFIER}-${BUILD_NUMBER}"
 
   return 0
