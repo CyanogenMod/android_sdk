@@ -1,7 +1,15 @@
 <project name="com.android.eclipse.rcp.build" default="build">
+
+    <!-- Set QUALIFIER to ADT_IDE_QUALIFIER if defined, otherwise use a date timestamp. -->
     <tstamp>
-        <format property="QUALIFIER" pattern="yyyyMMddHHmm"/>
+        <format property="defaultQualifier" pattern="yyyyMMddHHmm"/>
     </tstamp>
+
+    <condition property="QUALIFIER" value="v${defaultQualifier}" else="${ADT_IDE_QUALIFIER}">
+        <equals arg1="${ADT_IDE_QUALIFIER}" arg2="" />
+    </condition>
+
+    <echo message="## ADT IDE Build Qualifier: ${QUALIFIER}"/>
 
     <!-- Root of Android Source Tree -->
     <property name="ANDROID_SRC" location="../../" />
