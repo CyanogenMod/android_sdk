@@ -24,7 +24,7 @@ DEST_DIR=""
 BUILD_NUMBER=""
 CREATE_ZIP="1"
 INTERNAL_BUILD=""
-PREVIEW="preview"   # "preview" for preview builds, "" for final release builds.
+ADT_PREVIEW="preview"   # "preview" for preview builds, "" for final release builds.
 
 function get_params() {
   # parse input parameters
@@ -64,7 +64,7 @@ function check_params() {
   # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format, an optional "preview"
   # tag and the optional build number.
   DATE=`date +v%Y%m%d%H%M`
-  QUALIFIER="${DATE}-$PREVIEW"
+  QUALIFIER="${DATE}-$ADT_PREVIEW"
   [ -n "$BUILD_NUMBER" ] && QUALIFIER="${QUALIFIER}-${BUILD_NUMBER}"
 
   return 0
@@ -77,14 +77,15 @@ function build_plugin() {
   # runs if any.
   BUILD_PREFIX="android-eclipse"
   if [ "$INTERNAL_BUILD" ]; then
-    # append 'eng' signifier to end of archive name to denote internal build
+    # append 'eng' qualifier to end of archive name to denote internal build
     BUILD_PREFIX="${BUILD_PREFIX}-eng"
   fi
 
   # exclude date from build-zip name so it can be auto-calculated by continuous
   # test process unless there's no build number, in which case the date is
   # still used (useful for testing)
-  ZIP_NAME="${BUILD_PREFIX}-${BUILD_NUMBER:-$DATE}.zip"
+  local preview="${ADT_PREVIEW:+-}${ADT_PREVIEW}"
+  ZIP_NAME="${BUILD_PREFIX}${preview}-${BUILD_NUMBER:-$DATE}.zip"
   [ -d "$DEST_DIR/$BUILD_PREFIX" ] || rm -rfv "$DEST_DIR/$BUILD_PREFIX"
 
   # Perform the Eclipse build and move the result in $DEST_DIR/android-build
@@ -112,6 +113,7 @@ function build_plugin() {
 }
 
 function build_adt_ide() {
+  local preview="${ADT_PREVIEW}${ADT_PREVIEW:+-}"
   if [[ -z $INTERNAL_BUILD ]]; then
     # This needs to run from the top android directory
     D="$PROG_DIR"
@@ -119,7 +121,7 @@ function build_adt_ide() {
     for sc in */*/*/build_ide*.sh; do
       if [[ -x $sc ]]; then
         echo "RUNNING $sc from $PWD"
-        $sc "$DEST_DIR" "$QUALIFIER" "${BUILD_NUMBER:-$QUALIFIER}"
+        $sc "$DEST_DIR" "$QUALIFIER" "${preview}${BUILD_NUMBER:-$QUALIFIER}"
       else
         echo "WARNING: skipping non-exec $sc script"
       fi
