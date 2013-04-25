@@ -1505,6 +1505,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             }
         };
         job.setPriority(Job.BUILD); // build jobs are run after other interactive jobs
+        job.setRule(ResourcesPlugin.getWorkspace().getRoot());
         if (delay > 0) {
             job.schedule(delay);
         } else {
@@ -1833,6 +1834,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                 return Status.OK_STATUS;
             }
         };
+        job.setRule(ResourcesPlugin.getWorkspace().getRoot());
         job.setPriority(Job.SHORT); // a short background job, not interactive.
         job.schedule();
     }
