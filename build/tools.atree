@@ -119,6 +119,7 @@ prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  to
 # Templates
 sdk/templates/projects                  tools/templates/projects
 sdk/templates/activities                tools/templates/activities
+sdk/templates/gradle                    tools/templates/gradle
 sdk/templates/other                     tools/templates/other
 
 # SDK Controller
