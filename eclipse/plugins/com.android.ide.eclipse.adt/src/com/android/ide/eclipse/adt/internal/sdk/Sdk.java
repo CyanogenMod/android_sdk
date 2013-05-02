@@ -63,6 +63,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -599,6 +600,7 @@ public final class Sdk  {
 
         // build jobs are run after other interactive jobs
         markerJob.setPriority(Job.BUILD);
+        markerJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
         markerJob.schedule();
     }
 
@@ -701,6 +703,7 @@ public final class Sdk  {
                 }
             };
             job.setPriority(Job.BUILD); // build jobs are run after other interactive jobs
+            job.setRule(ResourcesPlugin.getWorkspace().getRoot());
             job.schedule();
         }
 
@@ -1108,11 +1111,29 @@ public final class Sdk  {
                 // Correct file editor associations.
                 fixEditorAssociations(openedProject);
 
-                try {
-                    ProjectHelper.fixProjectClasspathEntries(JavaCore.create(openedProject));
-                } catch (JavaModelException e) {
-                    AdtPlugin.log(e, "error fixing classpath entries");
-                }
+                // Fix classpath entries in a job since the workspace might be locked now.
+                Job fixCpeJob = new Job("Adjusting Android Project Classpath") {
+                    @Override
+                    protected IStatus run(IProgressMonitor monitor) {
+                        try {
+                            ProjectHelper.fixProjectClasspathEntries(
+                                    JavaCore.create(openedProject));
+                        } catch (JavaModelException e) {
+                            AdtPlugin.log(e, "error fixing classpath entries");
+                            // Don't return e2.getStatus(); the job control will then produce
+                            // a popup with this error, which isn't very interesting for the
+                            // user.
+                        }
+
+                        return Status.OK_STATUS;
+                    }
+                };
+
+                // build jobs are run after other interactive jobs
+                fixCpeJob.setPriority(Job.BUILD);
+                fixCpeJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
+                fixCpeJob.schedule();
+
 
                 if (DEBUG) {
                     System.out.println("<<<");
@@ -1313,6 +1334,7 @@ public final class Sdk  {
                 }
             };
             job.setPriority(Job.BUILD);
+            job.setRule(ResourcesPlugin.getWorkspace().getRoot());
             job.schedule();
         }
     };
