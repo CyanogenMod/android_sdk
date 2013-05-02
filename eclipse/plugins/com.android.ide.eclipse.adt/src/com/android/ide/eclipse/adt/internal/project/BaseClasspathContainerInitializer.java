@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -79,6 +80,7 @@ abstract class BaseClasspathContainerInitializer extends ClasspathContainerIniti
 
                 // build jobs are run after other interactive jobs
                 markerJob.setPriority(Job.BUILD);
+                markerJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
                 markerJob.schedule();
             }
         } else {
