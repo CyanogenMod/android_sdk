@@ -39,17 +39,18 @@ bin/hprof-conv   strip tools/hprof-conv
 bin/mksdcard     strip tools/mksdcard
 bin/zipalign     strip tools/zipalign
 
-# emulator
-bin/emulator                         strip tools/emulator
-bin/emulator-x86                     strip tools/emulator-x86
-bin/emulator-arm                     strip tools/emulator-arm
-bin/emulator-mips                    strip tools/emulator-mips
-bin/emulator64-x86                   strip tools/emulator64-x86
-bin/emulator64-arm                   strip tools/emulator64-arm
-bin/emulator64-mips                  strip tools/emulator64-mips
-sdk/emulator/snapshot/snapshots.img  tools/lib/emulator/snapshots.img
-usr/share/pc-bios/bios.bin           tools/lib/pc-bios/bios.bin
-usr/share/pc-bios/vgabios-cirrus.bin tools/lib/pc-bios/vgabios-cirrus.bin
+# Emulator disabled for mr1.1 (build currently broken on Mac 10.8)
+## emulator
+#bin/emulator                         strip tools/emulator
+#bin/emulator-x86                     strip tools/emulator-x86
+#bin/emulator-arm                     strip tools/emulator-arm
+#bin/emulator-mips                    strip tools/emulator-mips
+#bin/emulator64-x86                   strip tools/emulator64-x86
+#bin/emulator64-arm                   strip tools/emulator64-arm
+#bin/emulator64-mips                  strip tools/emulator64-mips
+#sdk/emulator/snapshot/snapshots.img  tools/lib/emulator/snapshots.img
+#usr/share/pc-bios/bios.bin           tools/lib/pc-bios/bios.bin
+#usr/share/pc-bios/vgabios-cirrus.bin tools/lib/pc-bios/vgabios-cirrus.bin
 
 # OpenGLES emulation libraries
 lib/libOpenglRender${DLL_EXTENSION}         strip tools/lib/libOpenglRender${DLL_EXTENSION}
