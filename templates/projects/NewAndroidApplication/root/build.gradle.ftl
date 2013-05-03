@@ -1,7 +1,6 @@
 buildscript {
     repositories {
-        maven { url '${mavenUrl}/prebuilts-repo' }
-        maven { url '${mavenUrl}/tools-repo' }
+        maven { url '${mavenUrl}' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.4-SNAPSHOT'
