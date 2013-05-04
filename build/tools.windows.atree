@@ -39,25 +39,26 @@ sdk/draw9patch/etc/draw9patch.bat                 tools/draw9patch.bat
 rm tools/lint
 sdk/lint/cli/etc/lint.bat                         tools/lint.bat
 
-rm tools/emulator
-rm tools/emulator-arm
-rm tools/emulator-x86
-rm tools/emulator-mips
-bin/emulator.exe                            strip tools/emulator.exe
-bin/emulator-arm.exe                        strip tools/emulator-arm.exe
-bin/emulator-x86.exe                        strip tools/emulator-x86.exe
-bin/emulator-mips.exe                       strip tools/emulator-mips.exe
-# Emulator libraries
-rm tools/lib/libOpenglRender.so
-rm tools/lib/libGLES_CM_translator.so
-rm tools/lib/libGLES_V2_translator.so
-rm tools/lib/libEGL_translator.so
-lib/libOpenglRender.dll          tools/lib/libOpenglRender.dll
-lib/libGLES_CM_translator.dll    tools/lib/libGLES_CM_translator.dll
-lib/libGLES_V2_translator.dll    tools/lib/libGLES_V2_translator.dll
-lib/libEGL_translator.dll        tools/lib/libEGL_translator.dll
-# Copy the emulator NOTICE in the tools dir
-external/qemu/NOTICE                              tools/emulator_NOTICE.txt
+# Emulator disabled for mr1.1 (build currently broken on Mac 10.8)
+#rm tools/emulator
+#rm tools/emulator-arm
+#rm tools/emulator-x86
+#rm tools/emulator-mips
+#bin/emulator.exe                            strip tools/emulator.exe
+#bin/emulator-arm.exe                        strip tools/emulator-arm.exe
+#bin/emulator-x86.exe                        strip tools/emulator-x86.exe
+#bin/emulator-mips.exe                       strip tools/emulator-mips.exe
+## Emulator libraries
+#rm tools/lib/libOpenglRender.so
+#rm tools/lib/libGLES_CM_translator.so
+#rm tools/lib/libGLES_V2_translator.so
+#rm tools/lib/libEGL_translator.so
+#lib/libOpenglRender.dll          tools/lib/libOpenglRender.dll
+#lib/libGLES_CM_translator.dll    tools/lib/libGLES_CM_translator.dll
+#lib/libGLES_V2_translator.dll    tools/lib/libGLES_V2_translator.dll
+#lib/libEGL_translator.dll        tools/lib/libEGL_translator.dll
+## Copy the emulator NOTICE in the tools dir
+#external/qemu/NOTICE                              tools/emulator_NOTICE.txt
 
 rm tools/etc1tool
 bin/etc1tool.exe                            strip tools/etc1tool.exe
