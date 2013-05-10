@@ -3,7 +3,7 @@ buildscript {
         maven { url '${mavenUrl}' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.4-SNAPSHOT'
+        classpath 'com.android.tools.build:gradle:0.4'
     }
 }
 apply plugin: 'android-library'
