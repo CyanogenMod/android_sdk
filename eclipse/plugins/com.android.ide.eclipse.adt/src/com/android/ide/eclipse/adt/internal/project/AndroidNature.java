@@ -118,10 +118,12 @@ public class AndroidNature implements IProjectNature {
      *
      * @param project An existing or new project to update
      * @param monitor An optional progress monitor. Can be null.
+     * @param addAndroidNature true if the Android Nature should be added to the project; false to
+     * add only the Java nature.
      * @throws CoreException if fails to change the nature.
      */
     public static synchronized void setupProjectNatures(IProject project,
-            IProgressMonitor monitor) throws CoreException {
+            IProgressMonitor monitor, boolean addAndroidNature) throws CoreException {
         if (project == null || !project.isOpen()) return;
         if (monitor == null) monitor = new NullProgressMonitor();
 
@@ -131,7 +133,9 @@ public class AndroidNature implements IProjectNature {
         // Adding the java nature after the android one, would place the java builder before the
         // android builders.
         addNatureToProjectDescription(project, JavaCore.NATURE_ID, monitor);
-        addNatureToProjectDescription(project, AdtConstants.NATURE_DEFAULT, monitor);
+        if (addAndroidNature) {
+            addNatureToProjectDescription(project, AdtConstants.NATURE_DEFAULT, monitor);
+        }
     }
 
     /**

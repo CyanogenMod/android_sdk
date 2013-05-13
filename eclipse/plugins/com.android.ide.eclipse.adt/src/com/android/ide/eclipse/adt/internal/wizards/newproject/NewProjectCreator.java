@@ -24,6 +24,7 @@ import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.common.xml.XmlFormatStyle;
@@ -299,7 +300,34 @@ public class NewProjectCreator  {
         WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
-                createProjectAsync(monitor, mainData, testData, null);
+                createProjectAsync(monitor, mainData, testData, null, true);
+            }
+        };
+
+        // Run the operation in a different thread
+        runAsyncOperation(op);
+        return true;
+    }
+
+    /**
+     * Creates the a plain Java project without typical android directories or an Android Nature.
+     * This is intended for use by unit tests and not as a general-purpose Java project creator.
+     * @return True if the project could be created.
+     */
+    @VisibleForTesting
+    public boolean createJavaProjects() {
+        if (mValues.importProjects != null && !mValues.importProjects.isEmpty()) {
+            return importProjects();
+        }
+
+        final ProjectInfo mainData = collectMainPageInfo();
+        final ProjectInfo testData = collectTestPageInfo();
+
+        // Create a monitored operation to create the actual project
+        WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
+            @Override
+            protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
+                createProjectAsync(monitor, mainData, testData, null, false);
             }
         };
 
@@ -369,7 +397,7 @@ public class NewProjectCreator  {
         WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws InvocationTargetException {
-                createProjectAsync(monitor, null, null, projectData);
+                createProjectAsync(monitor, null, null, projectData, true);
             }
         };
 
@@ -553,6 +581,8 @@ public class NewProjectCreator  {
      *
      * @param monitor An existing monitor.
      * @param mainData Data for main project. Can be null.
+     * @param isAndroidProject true if the project is to be set up as a full Android project; false
+     * for a plain Java project.
      * @throws InvocationTargetException to wrap any unmanaged exception and
      *         return it to the calling thread. The method can fail if it fails
      *         to create or modify the project or if it is canceled by the user.
@@ -560,7 +590,8 @@ public class NewProjectCreator  {
     private void createProjectAsync(IProgressMonitor monitor,
             ProjectInfo mainData,
             ProjectInfo testData,
-            List<ProjectInfo> importData)
+            List<ProjectInfo> importData,
+            boolean isAndroidProject)
                 throws InvocationTargetException {
         monitor.beginTask("Create Android Project", 100);
         try {
@@ -573,7 +604,8 @@ public class NewProjectCreator  {
                         mainData.getDescription(),
                         mainData.getParameters(),
                         mainData.getDictionary(),
-                        null);
+                        null,
+                        isAndroidProject);
 
                 if (mainProject != null) {
                     final IJavaProject javaProject = JavaCore.create(mainProject);
@@ -594,7 +626,8 @@ public class NewProjectCreator  {
                         testData.getDescription(),
                         parameters,
                         testData.getDictionary(),
-                        null);
+                        null,
+                        isAndroidProject);
                 if (testProject != null) {
                     final IJavaProject javaProject = JavaCore.create(testProject);
                     Display.getDefault().syncExec(new WorksetAdder(javaProject,
@@ -630,7 +663,8 @@ public class NewProjectCreator  {
                             data.getDescription(),
                             data.getParameters(),
                             data.getDictionary(),
-                            projectPopulator);
+                            projectPopulator,
+                            isAndroidProject);
                     if (project != null) {
                         final IJavaProject javaProject = JavaCore.create(project);
                         Display.getDefault().syncExec(new WorksetAdder(javaProject,
@@ -670,6 +704,8 @@ public class NewProjectCreator  {
      * @param description A description of the project.
      * @param parameters Template parameters.
      * @param dictionary String definition.
+     * @param isAndroidProject true if the project is to be set up as a full Android project; false
+     * for a plain Java project.
      * @return The project newly created
      * @throws StreamException
      */
@@ -679,12 +715,13 @@ public class NewProjectCreator  {
             @NonNull IProjectDescription description,
             @NonNull Map<String, Object> parameters,
             @Nullable Map<String, String> dictionary,
-            @Nullable ProjectPopulator projectPopulator)
+            @Nullable ProjectPopulator projectPopulator,
+            boolean isAndroidProject)
                 throws CoreException, IOException, StreamException {
 
         // get the project target
         IAndroidTarget target = (IAndroidTarget) parameters.get(PARAM_SDK_TARGET);
-        boolean legacy = target.getVersion().getApiLevel() < 4;
+        boolean legacy = isAndroidProject && target.getVersion().getApiLevel() < 4;
 
         // Create project and open it
         project.create(description, new SubProgressMonitor(monitor, 10));
@@ -693,14 +730,21 @@ public class NewProjectCreator  {
         project.open(IResource.BACKGROUND_REFRESH, new SubProgressMonitor(monitor, 10));
 
         // Add the Java and android nature to the project
-        AndroidNature.setupProjectNatures(project, monitor);
+        AndroidNature.setupProjectNatures(project, monitor, isAndroidProject);
 
         // Create folders in the project if they don't already exist
         addDefaultDirectories(project, AdtConstants.WS_ROOT, DEFAULT_DIRECTORIES, monitor);
-        String[] sourceFolders = new String[] {
+        String[] sourceFolders;
+        if (isAndroidProject) {
+            sourceFolders = new String[] {
                     (String) parameters.get(PARAM_SRC_FOLDER),
                     GEN_SRC_DIRECTORY
                 };
+        } else {
+            sourceFolders = new String[] {
+                    (String) parameters.get(PARAM_SRC_FOLDER)
+                };
+        }
         addDefaultDirectories(project, AdtConstants.WS_ROOT, sourceFolders, monitor);
 
         // Create the resource folders in the project if they don't already exist.
@@ -784,7 +828,9 @@ public class NewProjectCreator  {
             }
         }
 
-        Sdk.getCurrent().initProject(project, target);
+        if (isAndroidProject) {
+            Sdk.getCurrent().initProject(project, target);
+        }
 
         // Fix the project to make sure all properties are as expected.
         // Necessary for existing projects and good for new ones to.
@@ -866,7 +912,7 @@ public class NewProjectCreator  {
             public void run(IProgressMonitor submonitor) throws CoreException {
                 try {
                     creator.createEclipseProject(submonitor, project, description, parameters,
-                            dictionary, projectPopulator);
+                            dictionary, projectPopulator, true);
                 } catch (IOException e) {
                     throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                             "Unexpected error while creating project", e));
