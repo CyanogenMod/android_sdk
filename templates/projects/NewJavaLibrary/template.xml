@@ -18,6 +18,20 @@
         constraints="nonempty"
         default="MyLibrary"/>
 
+    <parameter
+        id="packageName"
+        name="Java package name"
+        type="string"
+        constraints="nonempty"
+        default="com.example"/>
+
+    <parameter
+        id="className"
+        name="Java class name"
+        type="string"
+        constraints="nonempty"
+        default="MyClass"/>
+
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />
 
