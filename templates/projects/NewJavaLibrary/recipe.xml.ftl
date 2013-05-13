@@ -6,6 +6,6 @@
     <instantiate from="build.gradle.ftl"
                    to="${projectOut}/build.gradle" />
 </#if>
-    <instantiate from="/src/library_package/Placeholder.java"
-                   to="${srcOut}/Placeholder.java" />
+    <instantiate from="/src/library_package/Placeholder.java.ftl"
+                   to="${srcOut}/${className}.java" />
 </recipe>
