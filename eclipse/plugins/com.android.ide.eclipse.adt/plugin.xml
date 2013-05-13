@@ -606,6 +606,22 @@
             name="Export Android Application">
         </wizard>
     </extension>
+    <extension point="org.eclipse.ui.exportWizards">
+        <category
+            id="com.android.ide.eclipse.wizards.category"
+            name="Android">
+        </category>
+        <wizard
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.exportgradle.GradleExportWizard"
+            icon="icons/gradle.png"
+            id="com.android.ide.eclipse.adt.project.ExportGradleWizard"
+            name="Generate Gradle build files">
+            <selection
+                class="org.eclipse.jdt.core.IJavaProject">
+            </selection>
+        </wizard>
+    </extension>
     <extension point="org.eclipse.ui.commands">
         <command
             name="Debug Android Application"
