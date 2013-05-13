@@ -228,7 +228,7 @@ public class GradleExportPage extends WizardPage {
             cyclicProjects = getCyclicProjects(getProjects(false));
             if (cyclicProjects.size() > 0) {
                 setErrorMessage(MessageFormat.format(ExportMessages.CyclicProjectsError,
-                        Joiner.on(", ").join(cyclicProjects))); //$NON-NLS-1$
+                        new Object[] { Joiner.on(", ").join(cyclicProjects) })); //$NON-NLS-1$
                 complete = false;
             }
         } catch (CoreException e) {}
@@ -261,7 +261,7 @@ public class GradleExportPage extends WizardPage {
         } catch (JavaModelException e) {
             AdtPlugin.log(e, null);
             setErrorMessage(MessageFormat.format(
-                    ExportMessages.ExportFailedError, e.toString()));
+                    ExportMessages.ExportFailedError, new Object[] { e.toString() }));
             return false;
         }
         IRunnableWithProgress runnable = new IRunnableWithProgress() {
@@ -284,7 +284,7 @@ public class GradleExportPage extends WizardPage {
                 if (problem != null) {
                     AdtPlugin.log(problem, null);
                     setErrorMessage(MessageFormat.format(ExportMessages.ExportFailedError,
-                            problem.toString()));
+                            new Object[] { problem.toString() }));
                 }
             }
         };
