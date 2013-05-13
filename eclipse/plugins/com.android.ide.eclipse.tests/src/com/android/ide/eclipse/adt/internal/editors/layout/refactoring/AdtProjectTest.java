@@ -317,7 +317,7 @@ public abstract class AdtProjectTest extends SdkLoadingTestCase {
         assertNotNull(target);
     }
 
-    private static IProject validateProjectExists(String name) {
+    protected static IProject validateProjectExists(String name) {
         IProject iproject = getProject(name);
         assertTrue(String.format("%s project not created", name), iproject.exists());
         assertTrue(String.format("%s project not opened", name), iproject.isOpen());
