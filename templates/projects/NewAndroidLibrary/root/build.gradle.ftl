@@ -1,6 +1,10 @@
 buildscript {
     repositories {
+<#if mavenUrl == "mavenCentral">
+        mavenCentral()
+<#else>
         maven { url '${mavenUrl}' }
+</#if>
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.4'
