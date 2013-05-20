@@ -332,24 +332,26 @@ public final class ProjectHelper {
         }
 
         // if the framework container is not there, we add it
-        if (foundFrameworkContainer == false) {
+        if (!foundFrameworkContainer) {
             // add the android container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
                     JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_FRAMEWORK)));
         }
 
         // same thing for the library container
-        if (foundLibrariesContainer == false) {
+        if (!foundLibrariesContainer) {
             // add the exported libraries android container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
-                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_PRIVATE_LIBRARIES), true));
+                    JavaCore.newContainerEntry(
+                            new Path(AdtConstants.CONTAINER_PRIVATE_LIBRARIES), true));
         }
 
         // same thing for the dependencies container
-        if (foundDependenciesContainer == false) {
+        if (!foundDependenciesContainer) {
             // add the android dependencies container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
-                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_DEPENDENCIES)));
+                    JavaCore.newContainerEntry(
+                            new Path(AdtConstants.CONTAINER_DEPENDENCIES), true));
         }
 
         // set the new list of entries to the project
