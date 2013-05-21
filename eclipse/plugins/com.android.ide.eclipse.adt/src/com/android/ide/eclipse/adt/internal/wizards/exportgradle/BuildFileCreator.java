@@ -16,8 +16,25 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.exportgradle;
 
+import com.android.SdkConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.io.IFolderWrapper;
+import com.android.io.IAbstractFile;
+import com.android.sdklib.io.FileOp;
+import com.android.utils.Pair;
+import com.android.xml.AndroidManifest;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -33,29 +50,16 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Shell;
 
-import com.android.SdkConstants;
-import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
-import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.adt.io.IFolderWrapper;
-import com.android.io.IAbstractFile;
-import com.android.sdklib.io.FileOp;
-import com.android.utils.Pair;
-import com.android.xml.AndroidManifest;
-import com.google.common.base.Joiner;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -64,12 +68,8 @@ import java.util.regex.Pattern;
  * Based on {@link org.eclipse.ant.internal.ui.datatransfer.BuildFileCreator}
  */
 public class BuildFileCreator {
-    //Finds include ':module_name_1', ':module_name_2',... statements in settings.gradle files
-    private static final Pattern INCLUDE_PATTERN =
-            Pattern.compile("include +(':[^']+', *)*':[^']+'"); //$NON-NLS-1$
     private static final String BUILD_FILE = "build.gradle"; //$NON-NLS-1$
     private static final String SETTINGS_FILE = "settings.gradle"; //$NON-NLS-1$
-    private static final String ANDROID_SUPPORT_JAR = "android-support-v4.jar"; //$NON-NLS-1$
     private static final String NEWLINE = System.getProperty("line.separator"); //$NON-NLS-1$
     private static final String GRADLE_WRAPPER_LOCATION =
             "tools/templates/gradle/wrapper"; //$NON-NLS-1$
@@ -95,9 +95,7 @@ public class BuildFileCreator {
     private IJavaProject project;
     private String projectName;
     private String projectRoot;
-    private Set<String> settingsFileEntries = new HashSet<String>();
-    private boolean needsSettingsFile = false;
-    private String commonRoot = null;
+    private final IPath commonRoot;
 
     /**
      * Create buildfile for the given projects.
@@ -123,34 +121,74 @@ public class BuildFileCreator {
                     hasGradleWrapper = false;
                 }
             }
+
+            Set<IJavaProject> fullProjectSet = Sets.newHashSet();
+
+            // build a list of all projects that must be included. This is in case
+            // some dependencies have not been included in the selected projects. We also include
+            // parent projects so that the full multi-project setup is correct.
+            // Note that if two projects are selected that are not related, both will be added
+            // in the same multi-project anyway.
+            for (IJavaProject javaProject : projects) {
+                fullProjectSet.add(javaProject);
+                ProjectState projectState = Sdk.getProjectState(javaProject.getProject());
+
+                // add dependencies
+                List<IProject> dependencies = projectState.getFullLibraryProjects();
+                for (IProject dependency : dependencies) {
+                    fullProjectSet.add(JavaCore.create(dependency));
+                }
+
+                Collection<ProjectState> parents = projectState.getFullParentProjects();
+                for (ProjectState parent : parents) {
+                    fullProjectSet.add(JavaCore.create(parent.getProject()));
+                }
+            }
+
             // determine files to create/change
             List<IFile> files = new ArrayList<IFile>();
-            for (IJavaProject project : projects) {
+
+            // add the build.gradle file for all projects.
+            for (IJavaProject project : fullProjectSet) {
                 // build.gradle file
                 IFile file = project.getProject().getFile(BuildFileCreator.BUILD_FILE);
                 files.add(file);
             }
 
-            // Locate the settings.gradle file and add it to the changed files list
-            for (IJavaProject project : projects) {
-                BuildFileCreator instance = new BuildFileCreator(project, shell);
-                instance.determineCommonRoot();
-                IPath path = Path.fromOSString(instance.getGradleSettingsFile().getAbsolutePath());
-                IFile file = project.getProject().getWorkspace().getRoot().getFile(path);
-                if (file != null) {
-                    files.add(file);
+            // get the commonRoot for all projects. If only one project, this returns the path
+            // of the project.
+            IPath commonRoot = determineCommonRoot(fullProjectSet);
+
+            IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+            IPath workspaceLocation = workspaceRoot.getLocation();
+
+            IPath relativePath = commonRoot.makeRelativeTo(workspaceLocation);
+            boolean rootInWorkspace = !relativePath.equals(commonRoot);
+
+            File settingsFile = new File(commonRoot.toFile(), SETTINGS_FILE);
+
+            // more than one project -> generate settings.gradle
+            if (fullProjectSet.size() > 1 && rootInWorkspace) {
+                // Locate the settings.gradle file and add it to the changed files list
+                IPath settingsGradle = Path.fromOSString(settingsFile.getAbsolutePath());
+
+                // different path, means commonRoot is inside the workspace, which means we have
+                // to add settings.gradle and wrapper files to the list of files to add.
+                IFile iFile = workspaceRoot.getFile(settingsGradle);
+                if (iFile != null) {
+                    files.add(iFile);
                 }
-                // Gradle wrapper files
-                if (hasGradleWrapper) {
-                    // See if there already wrapper files there and only mark nonexistent ones for
-                    // creation.
-                    for (File wrapperFile : getGradleWrapperFiles(
-                            new File(project.getResource().getLocation().toString()))) {
-                        if (!wrapperFile.exists()) {
-                            path = Path.fromOSString(wrapperFile.getAbsolutePath());
-                            file = project.getProject().getWorkspace().getRoot().getFile(path);
-                            files.add(file);
-                        }
+            }
+
+            // Gradle wrapper files
+            if (hasGradleWrapper && rootInWorkspace) {
+                // See if there already wrapper files there and only mark nonexistent ones for
+                // creation.
+                for (File wrapperFile : getGradleWrapperFiles(commonRoot.toFile())) {
+                    if (!wrapperFile.exists()) {
+                        IPath path = Path.fromOSString(wrapperFile.getAbsolutePath());
+                        IFile file = workspaceRoot.getFile(path);
+                        files.add(file);
                     }
                 }
             }
@@ -161,7 +199,8 @@ public class BuildFileCreator {
             // Now iterate over all the projects and generate the build files.
             localmonitor = SubMonitor.convert(pm, ExportMessages.PageTitle,
                     confirmedFiles.size());
-            for (IJavaProject currentProject : projects) {
+            List<String> projectSettingsPath = Lists.newArrayList();
+            for (IJavaProject currentProject : fullProjectSet) {
                 IFile file = currentProject.getProject().getFile(BuildFileCreator.BUILD_FILE);
                 if (!confirmedFiles.contains(file)) {
                     continue;
@@ -171,22 +210,15 @@ public class BuildFileCreator {
                         currentProject.getProject().getName()));
 
                 ProjectState projectState = Sdk.getProjectState(currentProject.getProject());
-                BuildFileCreator instance = new BuildFileCreator(currentProject, shell);
-                instance.determineCommonRoot();
+                BuildFileCreator instance = new BuildFileCreator(currentProject, commonRoot, shell);
                 if (projectState != null) {
                     // This is an Android project
                     instance.appendHeader(projectState.isLibrary());
                     instance.appendDependencies();
                     instance.startAndroidTask(projectState);
-                    instance.appendDefaultConfig();
+                    //instance.appendDefaultConfig();
                     instance.createAndroidSourceSets();
                     instance.finishAndroidTask();
-                    if (instance.needsSettingsFile) {
-                        instance.mergeGradleSettingsFile();
-                        if (hasGradleWrapper) {
-                            copyGradleWrapper(gradleLocation, new File(instance.commonRoot));
-                        }
-                    }
                 } else {
                     // This is a plain Java project
                     instance.appendJavaHeader();
@@ -207,7 +239,23 @@ public class BuildFileCreator {
                 }
                 localmonitor.worked(1);
                 res.add(instance.projectName);
+
+                // get the project path to add it to the settings.gradle.
+                projectSettingsPath.add(instance.getRelativeGradleProjectPath());
             }
+
+            // write the settings file.
+            if (fullProjectSet.size() > 1) {
+                writeGradleSettingsFile(settingsFile, projectSettingsPath);
+                writeRootBuildGradle(new File(commonRoot.toFile(), BUILD_FILE));
+            }
+
+            // finally write the wrapper
+            // TODO check we can based on where it is
+            if (hasGradleWrapper) {
+                copyGradleWrapper(gradleLocation, commonRoot.toFile());
+            }
+
         } finally {
             if (localmonitor != null && !localmonitor.isCanceled()) {
                 localmonitor.done();
@@ -223,11 +271,12 @@ public class BuildFileCreator {
      * @param project create buildfile for this project
      * @param shell parent instance for dialogs
      */
-    private BuildFileCreator(IJavaProject project, Shell shell) {
+    private BuildFileCreator(IJavaProject project, IPath commonRoot, Shell shell) {
         this.project = project;
         this.projectName = project.getProject().getName();
         this.buildfile = new StringBuilder();
         this.projectRoot = project.getResource().getLocation().toString();
+        this.commonRoot = commonRoot;
     }
 
     /**
@@ -262,22 +311,19 @@ public class BuildFileCreator {
 
     /**
      * Finds the common parent directory shared by this project and all its dependencies.
+     * If there's only one project, returns the single project's folder.
      */
-    private void determineCommonRoot() {
-        String currentProjectRoot = project.getResource().getLocation().toString();
-
-        if (commonRoot == null) {
-            commonRoot = new Path(currentProjectRoot).removeLastSegments(1).toString();
-        }
-
-        for (IClasspathEntry entry : project.readRawClasspath()) {
-            if (entry.getEntryKind() != IClasspathEntry.CPE_PROJECT) {
-                continue;
+    private static IPath determineCommonRoot(Collection<IJavaProject> projects) {
+        IPath commonRoot = null;
+        for (IJavaProject javaProject : projects) {
+            if (commonRoot == null) {
+                commonRoot = javaProject.getProject().getLocation();
+            } else {
+                commonRoot = findCommonRoot(commonRoot, javaProject.getProject().getLocation());
             }
-            IJavaProject referencedProject = getJavaProjectByName(entry.getPath().toString());
-            String referencedProjectRoot = referencedProject.getResource().getLocation().toString();
-            commonRoot = findCommonRoot(commonRoot, referencedProjectRoot);
         }
+
+        return commonRoot;
     }
 
     /**
@@ -310,105 +356,79 @@ public class BuildFileCreator {
         }
         buildfile.append("dependencies {\n"); //$NON-NLS-1$
 
-        // We'll have to do a preliminary pass and pull out any projects that have or are
-        // dependencies. Then we need to identify the common parent of all of those projects,
-        // and merge all those projects into a settings.gradle file there. Then we need to build
-        // relative gradle paths to each library and populate those into the compile
-        // project(':a:b:library') entries output below.
+        // first the local jars.
+        buildfile.append("    compile fileTree(dir: 'libs', include: '*.jar')\n");
 
-        String currentProjectRoot = project.getResource().getLocation().toString();
-        String path = getRelativeGradleProjectPath(currentProjectRoot, commonRoot);
-        settingsFileEntries.add("'" + path + "'"); //$NON-NLS-1$
+        // then the project dependencies.
+        // First the Android libraries.
+        ProjectState state = Sdk.getProjectState(project.getProject());
 
+        for (LibraryState libState : state.getLibraries()) {
+            String path = getRelativeGradleProjectPath(
+                    libState.getProjectState().getProject().getLocation(), commonRoot);
+
+            buildfile.append("    compile project('" + path + "')\n"); //$NON-NLS-1$
+        }
+
+        // Next, the other non-Android projects.
         for (IClasspathEntry entry : project.readRawClasspath()) {
-            String entryPath = entry.getPath().makeAbsolute().toString();
-            switch(entry.getEntryKind()) {
-                case IClasspathEntry.CPE_PROJECT:
-                    IJavaProject cpProject = getJavaProjectByName(entry.getPath().toString());
-                    String cpProjectRoot = cpProject.getResource().getLocation().toString();
-                    path = getRelativeGradleProjectPath(cpProjectRoot, commonRoot);
-                    settingsFileEntries.add("'" + path + "'"); //$NON-NLS-1$
-                    needsSettingsFile = true;
+            if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+                IProject cpProject = getNonAndroidProjectByName(entry.getPath().toString());
+                if (cpProject != null) {
+                    String path = getRelativeGradleProjectPath(
+                            cpProject.getLocation(), commonRoot);
+
                     buildfile.append("    compile project('" + path + "')\n"); //$NON-NLS-1$
-                    break;
-                case IClasspathEntry.CPE_LIBRARY:
-                    if (entry.getPath().lastSegment().equals(ANDROID_SUPPORT_JAR)) {
-                        // This jar gets added automatically by the Android Gradle plugin
-                        continue;
-                    }
-                    path = getRelativePath(entryPath, projectRoot);
-                    buildfile.append("    compile files('" + path + "')\n"); //$NON-NLS-1$
-                    break;
-                default:
-                    break;
+                }
             }
         }
+
         buildfile.append("}\n"); //$NON-NLS-1$
         buildfile.append("\n"); //$NON-NLS-1$
     }
 
     /**
-     * Given two filesystem paths, finds the parent directory of both of them.
+     * Given two IPaths, finds the parent directory of both of them.
      */
-    private String findCommonRoot(String path1, String path2) {
-        IPath f1 = new Path(path1);
-        IPath f2 = new Path(path2);
+    private static IPath findCommonRoot(IPath path1, IPath path2) {
+        // TODO: detect paths on different disk drive on Windows!
         IPath result = (IPath) Path.ROOT.clone();
-        for (int i = 0; i < Math.min(f1.segmentCount(), f2.segmentCount()); i++) {
-            if (f1.segment(i).equals(f2.segment(i))) {
-                result = result.append(Path.SEPARATOR + f1.segment(i));
+        final int count = Math.min(path1.segmentCount(), path2.segmentCount());
+        for (int i = 0; i < count; i++) {
+            if (path1.segment(i).equals(path2.segment(i))) {
+                result = result.append(Path.SEPARATOR + path2.segment(i));
             }
         }
-        return result.toString();
+        return result;
+    }
+
+    private String getRelativeGradleProjectPath() {
+        return getRelativeGradleProjectPath(project.getProject().getLocation(), commonRoot);
     }
 
     /**
      * Converts the given path to be relative to the given root path, and converts it to
      * Gradle project notation, such as is used in the settings.gradle file.
      */
-    private String getRelativeGradleProjectPath(String path, String root) {
-        String relativePath = getRelativePath(path, root);
-        return ":" + relativePath.replaceAll("\\" + Path.SEPARATOR, ":"); //$NON-NLS-1$
-    }
-
-    /**
-     * Returns a path which is equivalent to the given location relative to the
-     * specified base path.
-     */
-    private static String getRelativePath(String otherLocation, String basePath) {
-
-        IPath location = new Path(otherLocation);
-        IPath base = new Path(basePath);
-        if ((location.getDevice() != null && !location.getDevice()
-                .equalsIgnoreCase(base.getDevice())) || !location.isAbsolute()) {
-            return otherLocation;
-        }
-        int baseCount = base.segmentCount();
-        int count = base.matchingFirstSegments(location);
-        String temp = ""; //$NON-NLS-1$
-        for (int j = 0; j < baseCount - count; j++) {
-            temp += "../"; //$NON-NLS-1$
-        }
-        String relative = new Path(temp).append(
-                location.removeFirstSegments(count)).toString();
-        if (relative.length() == 0) {
-            relative = "."; //$NON-NLS-1$
-        }
-
-        return relative;
+    private String getRelativeGradleProjectPath(IPath path, IPath root) {
+        IPath relativePath = path.makeRelativeTo(root);
+        String relativeString = relativePath.toOSString();
+        return ":" + relativeString.replaceAll(Pattern.quote(File.separator), ":"); //$NON-NLS-1$
     }
 
     /**
      * Finds the workspace project with the given name
      */
-    private static IJavaProject getJavaProjectByName(String name) {
+    private static IProject getNonAndroidProjectByName(String name) {
         try {
             IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
-            if (project.exists()) {
-                return JavaCore.create(project);
+            if (project.exists() && !project.hasNature(AdtConstants.NATURE_DEFAULT)) {
+                return project;
             }
         } catch (IllegalArgumentException iae) {
+        } catch (CoreException e) {
         }
+
         return null;
     }
 
@@ -417,9 +437,10 @@ public class BuildFileCreator {
      */
     private void startAndroidTask(ProjectState projectState) {
         int buildApi = projectState.getTarget().getVersion().getApiLevel();
+        String toolsVersion = projectState.getTarget().getBuildToolInfo().getRevision().toString();
         buildfile.append("android {\n"); //$NON-NLS-1$
         buildfile.append("    compileSdkVersion " + buildApi + "\n"); //$NON-NLS-1$
-        buildfile.append("    buildToolsVersion \"" + buildApi + "\"\n"); //$NON-NLS-1$
+        buildfile.append("    buildToolsVersion \"" + toolsVersion + "\"\n"); //$NON-NLS-1$
         buildfile.append("\n"); //$NON-NLS-1$
     }
 
@@ -457,17 +478,15 @@ public class BuildFileCreator {
             srcDirs.add("'" + path.toOSString() + "'"); //$NON-NLS-1$
         }
 
+        String srcPaths = Joiner.on(",").join(srcDirs);
+
         buildfile.append("    sourceSets {\n"); //$NON-NLS-1$
         buildfile.append("        main {\n"); //$NON-NLS-1$
-        buildfile.append("            manifest.srcFile '"
-                + getRelativePath(mManifestFile.getOsLocation(), projectRoot)
-                + "'\n"); //$NON-NLS-1$
-        buildfile.append("            java.srcDirs = ["
-                + Joiner.on(",").join(srcDirs)
-                + "]\n"); //$NON-NLS-1$
-        buildfile.append("            resources.srcDirs = ['src']\n"); //$NON-NLS-1$
-        buildfile.append("            aidl.srcDirs = ['src']\n"); //$NON-NLS-1$
-        buildfile.append("            renderscript.srcDirs = ['src']\n"); //$NON-NLS-1$
+        buildfile.append("            manifest.srcFile '" + SdkConstants.FN_ANDROID_MANIFEST_XML + "'\n"); //$NON-NLS-1$
+        buildfile.append("            java.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        buildfile.append("            resources.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        buildfile.append("            aidl.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        buildfile.append("            renderscript.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
         buildfile.append("            res.srcDirs = ['res']\n"); //$NON-NLS-1$
         buildfile.append("            assets.srcDirs = ['assets']\n"); //$NON-NLS-1$
         buildfile.append("        }\n"); //$NON-NLS-1$
@@ -502,10 +521,14 @@ public class BuildFileCreator {
             IPath path = entry.getPath().removeFirstSegments(1);
             dirs.add("'" + path.toOSString() + "'"); //$NON-NLS-1$
         }
+
+        String srcPaths = Joiner.on(",").join(dirs);
+
         buildfile.append("sourceSets {\n"); //$NON-NLS-1$
-        buildfile.append("    main.java.srcDirs = ["); //$NON-NLS-1$
-        buildfile.append(Joiner.on(",").join(dirs)); //$NON-NLS-1$
-        buildfile.append("]\n"); //$NON-NLS-1$
+        buildfile.append("    main.java.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        buildfile.append("    main.resources.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        buildfile.append("    test.java.srcDirs = ['tests/java']\n"); //$NON-NLS-1$
+        buildfile.append("    test.resources.srcDirs = ['tests/resources']\n"); //$NON-NLS-1$
         buildfile.append("}\n"); //$NON-NLS-1$
     }
 
@@ -513,37 +536,18 @@ public class BuildFileCreator {
      * Merges the new subproject dependencies into the settings.gradle file if it already exists,
      * and creates one if it does not.
      */
-    private void mergeGradleSettingsFile() {
-        File file = getGradleSettingsFile();
+    private static void writeGradleSettingsFile(File settingsFile, List<String> projectPaths) {
         StringBuilder contents = new StringBuilder();
-        if (file.exists()) {
-            contents.append(AdtPlugin.readFile(file));
-
-            for (String entry : settingsFileEntries) {
-                if (contents.indexOf(entry) != -1) {
-                    continue;
-                }
-                Matcher matcher = INCLUDE_PATTERN.matcher(contents);
-                if (matcher.find()) {
-                    contents.insert(matcher.end(), ", " + entry); //$NON-NLS-1$
-                } else {
-                    contents.insert(0, "include " + entry + "\n"); //$NON-NLS-1$
-                }
-            }
-        } else {
-            contents.append("include ");
-            contents.append(Joiner.on(",").join(settingsFileEntries));
-            contents.append("\n"); //$NON-NLS-1$
+        for (String path : projectPaths) {
+            contents.append("include '").append(path).append("'\n"); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        AdtPlugin.writeFile(file, contents.toString());
+        AdtPlugin.writeFile(settingsFile, contents.toString());
     }
 
-    /**
-     * Returns the settings.gradle file (which may not exist yet).
-     */
-    private File getGradleSettingsFile() {
-        return new File(commonRoot, SETTINGS_FILE);
+    private static void writeRootBuildGradle(File buildFile) {
+        AdtPlugin.writeFile(buildFile,
+                "// Top-level build file where you can add configuration options common to all sub-projects/modules.\n");
     }
 
     /**
