@@ -32,8 +32,16 @@
             name="startupForegroundColor"
             value="999999" />
          <property
-               name="windowImages"
-               value="icons/adt16.png,icons/adt32.png,icons/adt48.png">
+            name="windowImages"
+            value="icons/adt16.png,icons/adt32.png,icons/adt48.png">
+         </property>
+         <property
+            name="cssTheme"
+            value="org.eclipse.e4.ui.css.theme.e4_default">
+         </property>
+         <property
+            name="applicationCSSResources"
+            value="platform:/plugin/org.eclipse.platform/images/">
          </property>
       </product>
    </extension>
