@@ -1181,6 +1181,9 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                     public void run() {
                         Shell shell = disp.getActiveShell();
                         if (shell == null) {
+                            shell = AdtPlugin.getShell();
+                        }
+                        if (shell == null) {
                             return;
                         }
 
