@@ -121,7 +121,7 @@ public final class VersionCheck {
         }
 
         // test the plugin number
-        String versionString = plugin.getBundle().getHeaders().get(
+        String versionString = (String) plugin.getBundle().getHeaders().get(
                 Constants.BUNDLE_VERSION);
         Version version = new Version(versionString);
 
