@@ -28,6 +28,8 @@ public class Messages extends NLS {
 
     public static String VersionCheck_Plugin_Version_Failed;
 
+    public static String VersionCheck_Build_Tool_Missing;
+
     public static String VersionCheck_Tools_Too_Old;
 
     public static String VersionCheck_Unable_To_Parse_Version_s;

@@ -22,13 +22,14 @@ import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.Messages;
 import com.android.sdklib.repository.FullRevision;
-import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.FullRevision.PreviewComparison;
+import com.android.sdklib.repository.PkgProps;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -110,8 +111,17 @@ public final class VersionCheck {
                     Messages.VersionCheck_Plugin_Version_Failed);
         }
 
+        // Are the build tools installed? We can't query Sdk#getLatestBuildTool yet, since
+        // SDK initialization typically hasn't completed yet and Sdk.getCurrent() is null.
+        File buildToolsFolder = new File(osSdkPath, SdkConstants.FD_BUILD_TOOLS);
+        if (!buildToolsFolder.isDirectory()) {
+            return errorHandler.handleWarning(
+                    Solution.OPEN_SDK_MANAGER,
+                    Messages.VersionCheck_Build_Tool_Missing);
+        }
+
         // test the plugin number
-        String versionString = (String) plugin.getBundle().getHeaders().get(
+        String versionString = plugin.getBundle().getHeaders().get(
                 Constants.BUNDLE_VERSION);
         Version version = new Version(versionString);
 
