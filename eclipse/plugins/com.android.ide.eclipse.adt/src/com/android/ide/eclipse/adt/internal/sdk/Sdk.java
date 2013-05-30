@@ -100,6 +100,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -238,11 +239,14 @@ public final class Sdk  {
                 sCurrentSdk = null;
             }
 
+            final AtomicBoolean hasWarning = new AtomicBoolean();
+            final AtomicBoolean hasError = new AtomicBoolean();
             final ArrayList<String> logMessages = new ArrayList<String>();
             ILogger log = new ILogger() {
                 @Override
                 public void error(@Nullable Throwable throwable, @Nullable String errorFormat,
                         Object... arg) {
+                    hasError.set(true);
                     if (errorFormat != null) {
                         logMessages.add(String.format("Error: " + errorFormat, arg));
                     }
@@ -254,6 +258,7 @@ public final class Sdk  {
 
                 @Override
                 public void warning(@NonNull String warningFormat, Object... arg) {
+                    hasWarning.set(true);
                     logMessages.add(String.format("Warning: " + warningFormat, arg));
                 }
 
@@ -270,23 +275,36 @@ public final class Sdk  {
 
             // get an SdkManager object for the location
             SdkManager manager = SdkManager.createManager(sdkLocation, log);
-            if (manager != null) {
-                // create the AVD Manager
-                AvdManager avdManager = null;
-                try {
-                    avdManager = AvdManager.getInstance(manager, log);
-                } catch (AndroidLocationException e) {
-                    log.error(e, "Error parsing the AVDs");
+            try {
+                if (manager == null) {
+                    hasError.set(true);
+                } else {
+                    // create the AVD Manager
+                    AvdManager avdManager = null;
+                    try {
+                        avdManager = AvdManager.getInstance(manager, log);
+                    } catch (AndroidLocationException e) {
+                        log.error(e, "Error parsing the AVDs");
+                    }
+                    sCurrentSdk = new Sdk(manager, avdManager);
+                    return sCurrentSdk;
                 }
-                sCurrentSdk = new Sdk(manager, avdManager);
-                return sCurrentSdk;
-            } else {
-                StringBuilder sb = new StringBuilder("Error Loading the SDK:\n");
-                for (String msg : logMessages) {
-                    sb.append('\n');
-                    sb.append(msg);
+            } finally {
+                if (hasError.get() || hasWarning.get()) {
+                    StringBuilder sb = new StringBuilder(
+                            String.format("%s when loading the SDK:\n",
+                                    hasError.get() ? "Error" : "Warning"));
+                    for (String msg : logMessages) {
+                        sb.append('\n');
+                        sb.append(msg);
+                    }
+                    if (hasError.get()) {
+                        AdtPlugin.printErrorToConsole("Android SDK", sb.toString());
+                        AdtPlugin.displayError("Android SDK", sb.toString());
+                    } else {
+                        AdtPlugin.printToConsole("Android SDK", sb.toString());
+                    }
                 }
-                AdtPlugin.displayError("Android SDK", sb.toString());
             }
             return null;
         }
