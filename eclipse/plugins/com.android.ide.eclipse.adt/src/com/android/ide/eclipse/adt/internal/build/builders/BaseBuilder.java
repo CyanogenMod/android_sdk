@@ -339,6 +339,8 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
             mBuildToolInfo = sdk.getLatestBuildTool();
 
             if (mBuildToolInfo == null) {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, iProject,
+                        "No \"Build Tools\" package available; use SDK Manager to install one.");
                 throw new AbortBuildException();
             } else {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, iProject,
