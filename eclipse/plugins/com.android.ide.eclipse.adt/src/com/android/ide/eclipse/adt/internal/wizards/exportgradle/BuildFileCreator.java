@@ -392,7 +392,9 @@ public class BuildFileCreator {
      */
     private static IPath findCommonRoot(IPath path1, IPath path2) {
         // TODO: detect paths on different disk drive on Windows!
-        assert path1.getDevice().equals(path2.getDevice());
+        if (path1 != null && path1.getDevice() != null) {
+            assert path1.getDevice().equals(path2.getDevice());
+        }
         IPath result = path1.uptoSegment(0);
 
         final int count = Math.min(path1.segmentCount(), path2.segmentCount());
