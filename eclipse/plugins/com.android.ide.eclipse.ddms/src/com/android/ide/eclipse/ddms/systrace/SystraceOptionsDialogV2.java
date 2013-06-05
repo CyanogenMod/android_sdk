@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.ddms.views;
+package com.android.ide.eclipse.ddms.systrace;
 
 import com.android.ddmuilib.TableHelper;
-import com.android.ide.eclipse.ddms.systrace.ISystraceOptions;
-import com.android.ide.eclipse.ddms.systrace.ISystraceOptionsDialog;
-import com.android.ide.eclipse.ddms.systrace.SystraceTag;
 
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -30,6 +27,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
@@ -54,20 +52,24 @@ public class SystraceOptionsDialogV2 extends TitleAreaDialog implements ISystrac
     private String mDestinationPath;
     private Text mTraceDurationText;
     private Text mTraceBufferSizeText;
+    private Combo mTraceAppCombo;
 
     private static String sSaveToFolder = System.getProperty("user.home"); //$NON-NLS-1$
     private static String sTraceDuration = "";
     private static String sTraceBufferSize = "";
     private static Set<String> sEnabledTags = new HashSet<String>();
+    private static String sLastSelectedApp = null;
 
     private final List<SystraceTag> mSupportedTags;
+    private final List<String> mCurrentApps;
 
     private final SystraceOptions mOptions = new SystraceOptions();
     private Table mTable;
 
-    public SystraceOptionsDialogV2(Shell parentShell, List<SystraceTag> tags) {
+    public SystraceOptionsDialogV2(Shell parentShell, List<SystraceTag> tags, List<String> apps) {
         super(parentShell);
         mSupportedTags = tags;
+        mCurrentApps = apps;
     }
 
     @Override
@@ -114,6 +116,24 @@ public class SystraceOptionsDialogV2 extends TitleAreaDialog implements ISystrac
         mTraceBufferSizeText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
         mTraceBufferSizeText.setText(sTraceBufferSize);
 
+        Label lblTraceAppName = new Label(c, SWT.NONE);
+        lblTraceAppName.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        lblTraceAppName.setText("Enable Application Traces from: ");
+
+        mTraceAppCombo = new Combo(c, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mTraceAppCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        String[] items = new String[mCurrentApps.size() + 1];
+        items[0] = "None";
+        for (int i = 0; i < mCurrentApps.size(); i++) {
+            items[i+1] = mCurrentApps.get(i);
+        }
+        mTraceAppCombo.setItems(items);
+        if (sLastSelectedApp != null) {
+            mTraceAppCombo.setText(sLastSelectedApp);
+        } else {
+            mTraceAppCombo.select(0);
+        }
+
         Label separator = new Label(c, SWT.SEPARATOR | SWT.HORIZONTAL);
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = 3;
@@ -144,6 +164,7 @@ public class SystraceOptionsDialogV2 extends TitleAreaDialog implements ISystrac
         for (SystraceTag tag : mSupportedTags) {
             TableItem item = new TableItem(mTable, SWT.NONE);
             item.setText(tag.info);
+            item.setChecked(sEnabledTags.contains(tag.tag));
         }
 
         TableHelper.createTableColumn(mTable,
@@ -247,6 +268,10 @@ public class SystraceOptionsDialogV2 extends TitleAreaDialog implements ISystrac
             mOptions.mTraceBufferSize = Integer.parseInt(sTraceBufferSize);
         }
 
+        if (mTraceAppCombo.getSelectionIndex() != 0) {
+            mOptions.mTraceApp = sLastSelectedApp = mTraceAppCombo.getText();
+        }
+
         sEnabledTags.clear();
         for (int i = 0; i < mTable.getItemCount(); i++) {
             TableItem it = mTable.getItem(i);
@@ -271,6 +296,7 @@ public class SystraceOptionsDialogV2 extends TitleAreaDialog implements ISystrac
     private class SystraceOptions implements ISystraceOptions {
         private int mTraceBufferSize;
         private int mTraceDuration;
+        private String mTraceApp;
 
         @Override
         public String getTags() {
@@ -280,6 +306,12 @@ public class SystraceOptionsDialogV2 extends TitleAreaDialog implements ISystrac
         @Override
         public String getOptions() {
             StringBuilder sb = new StringBuilder(5 * mSupportedTags.size());
+
+            if (mTraceApp != null) {
+                sb.append("-a ");   //$NON-NLS-1$
+                sb.append(mTraceApp);
+                sb.append(' ');
+            }
 
             if (mTraceDuration > 0) {
                 sb.append("-t");    //$NON-NLS-1$
