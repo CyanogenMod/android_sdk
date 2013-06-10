@@ -15,17 +15,17 @@ public final class GLProtoBuf {
       initFields();
     }
     private GLMessage(boolean noInit) {}
-
+    
     private static final GLMessage defaultInstance;
     public static GLMessage getDefaultInstance() {
       return defaultInstance;
     }
-
+    
     @Override
     public GLMessage getDefaultInstanceForType() {
       return defaultInstance;
     }
-
+    
     public enum Function
         implements com.google.protobuf.Internal.EnumLite {
       glActiveTexture(0, 0),
@@ -404,121 +404,225 @@ public final class GLProtoBuf {
       glVertexPointer(373, 373),
       glViewport(374, 374),
       glWeightPointerOES(375, 375),
-      glActiveShaderProgramEXT(376, 502),
-      glAlphaFuncQCOM(377, 503),
-      glBeginQueryEXT(378, 504),
-      glBindProgramPipelineEXT(379, 505),
-      glBlitFramebufferANGLE(380, 506),
-      glCreateShaderProgramvEXT(381, 507),
-      glDeleteProgramPipelinesEXT(382, 508),
-      glDeleteQueriesEXT(383, 509),
-      glDrawBuffersNV(384, 510),
-      glEndQueryEXT(385, 511),
-      glFramebufferTexture2DMultisampleEXT(386, 512),
-      glGenProgramPipelinesEXT(387, 513),
-      glGenQueriesEXT(388, 514),
-      glGetGraphicsResetStatusEXT(389, 515),
-      glGetObjectLabelEXT(390, 516),
-      glGetProgramPipelineInfoLogEXT(391, 517),
-      glGetProgramPipelineivEXT(392, 518),
-      glGetQueryObjectuivEXT(393, 519),
-      glGetQueryivEXT(394, 520),
-      glGetnUniformfvEXT(395, 521),
-      glInsertEventMarkerEXT(397, 522),
-      glIsProgramPipelineEXT(398, 523),
-      glIsQueryEXT(399, 524),
-      glLabelObjectEXT(400, 525),
-      glPopGroupMarkerEXT(401, 526),
-      glProgramParameteriEXT(402, 527),
-      glProgramUniform1fEXT(403, 528),
-      glProgramUniform1fvEXT(404, 529),
-      glProgramUniform1iEXT(405, 530),
-      glProgramUniform1ivEXT(406, 531),
-      glProgramUniform2fEXT(407, 532),
-      glProgramUniform2fvEXT(408, 533),
-      glProgramUniform2iEXT(409, 534),
-      glProgramUniform2ivEXT(410, 535),
-      glProgramUniform3fEXT(411, 536),
-      glProgramUniform3fvEXT(412, 537),
-      glProgramUniform3iEXT(413, 538),
-      glProgramUniform3ivEXT(414, 539),
-      glProgramUniform4fEXT(415, 540),
-      glProgramUniform4fvEXT(416, 541),
-      glProgramUniform4iEXT(417, 542),
-      glProgramUniform4ivEXT(418, 543),
-      glProgramUniformMatrix2fvEXT(419, 544),
-      glProgramUniformMatrix3fvEXT(420, 545),
-      glProgramUniformMatrix4fvEXT(421, 546),
-      glPushGroupMarkerEXT(422, 547),
-      glReadBufferNV(423, 548),
-      glReadnPixelsEXT(424, 549),
-      glRenderbufferStorageMultisampleANGLE(425, 550),
-      glRenderbufferStorageMultisampleAPPLE(426, 551),
-      glRenderbufferStorageMultisampleEXT(427, 552),
-      glResolveMultisampleFramebufferAPPLE(428, 553),
-      glTexStorage1DEXT(429, 554),
-      glTexStorage2DEXT(430, 555),
-      glTexStorage3DEXT(431, 556),
-      glTextureStorage1DEXT(432, 557),
-      glTextureStorage2DEXT(433, 558),
-      glTextureStorage3DEXT(434, 559),
-      glUseProgramStagesEXT(435, 560),
-      glValidateProgramPipelineEXT(436, 561),
-      eglGetDisplay(437, 2000),
-      eglInitialize(438, 2001),
-      eglTerminate(439, 2002),
-      eglGetConfigs(440, 2003),
-      eglChooseConfig(441, 2004),
-      eglGetConfigAttrib(442, 2005),
-      eglCreateWindowSurface(443, 2006),
-      eglCreatePixmapSurface(444, 2007),
-      eglCreatePbufferSurface(445, 2008),
-      eglDestroySurface(446, 2009),
-      eglQuerySurface(447, 2010),
-      eglCreateContext(448, 2011),
-      eglDestroyContext(449, 2012),
-      eglMakeCurrent(450, 2013),
-      eglGetCurrentContext(451, 2014),
-      eglGetCurrentSurface(452, 2015),
-      eglGetCurrentDisplay(453, 2016),
-      eglQueryContext(454, 2017),
-      eglWaitGL(455, 2018),
-      eglWaitNative(456, 2019),
-      eglSwapBuffers(457, 2020),
-      eglCopyBuffers(458, 2021),
-      eglGetError(459, 2022),
-      eglQueryString(460, 2023),
-      eglGetProcAddress(461, 2024),
-      eglSurfaceAttrib(462, 2025),
-      eglBindTexImage(463, 2026),
-      eglReleaseTexImage(464, 2027),
-      eglSwapInterval(465, 2028),
-      eglBindAPI(466, 2029),
-      eglQueryAPI(467, 2030),
-      eglWaitClient(468, 2031),
-      eglReleaseThread(469, 2032),
-      eglCreatePbufferFromClientBuffer(470, 2033),
-      eglLockSurfaceKHR(471, 2034),
-      eglUnlockSurfaceKHR(472, 2035),
-      eglCreateImageKHR(473, 2036),
-      eglDestroyImageKHR(474, 2037),
-      eglCreateSyncKHR(475, 2038),
-      eglDestroySyncKHR(476, 2039),
-      eglClientWaitSyncKHR(477, 2040),
-      eglGetSyncAttribKHR(478, 2041),
-      eglSetSwapRectangleANDROID(479, 2042),
-      eglGetRenderBufferANDROID(480, 2043),
-      eglGetSystemTimeFrequencyNV(481, 2044),
-      eglGetSystemTimeNV(482, 2045),
-      invalid(483, 3000),
-      glVertexAttribPointerData(484, 3001),
+      glReadBuffer(376, 376),
+      glDrawRangeElements(377, 377),
+      glTexImage3D(378, 378),
+      glTexSubImage3D(379, 379),
+      glCopyTexSubImage3D(380, 380),
+      glCompressedTexImage3D(381, 381),
+      glCompressedTexSubImage3D(382, 382),
+      glGenQueries(383, 383),
+      glDeleteQueries(384, 384),
+      glIsQuery(385, 385),
+      glBeginQuery(386, 386),
+      glEndQuery(387, 387),
+      glGetQueryiv(388, 388),
+      glGetQueryObjectuiv(389, 389),
+      glUnmapBuffer(390, 390),
+      glGetBufferPointerv(391, 391),
+      glDrawBuffers(392, 392),
+      glUniformMatrix2x3fv(393, 393),
+      glUniformMatrix3x2fv(394, 394),
+      glUniformMatrix2x4fv(395, 395),
+      glUniformMatrix4x2fv(396, 396),
+      glUniformMatrix3x4fv(397, 397),
+      glUniformMatrix4x3fv(398, 398),
+      glBlitFramebuffer(399, 399),
+      glRenderbufferStorageMultisample(400, 400),
+      glFramebufferTextureLayer(401, 401),
+      glMapBufferRange(402, 402),
+      glFlushMappedBufferRange(403, 403),
+      glBindVertexArray(404, 404),
+      glDeleteVertexArrays(405, 405),
+      glGenVertexArrays(406, 406),
+      glIsVertexArray(407, 407),
+      glGetIntegeri_v(408, 408),
+      glBeginTransformFeedback(409, 409),
+      glEndTransformFeedback(410, 410),
+      glBindBufferRange(411, 411),
+      glBindBufferBase(412, 412),
+      glTransformFeedbackVaryings(413, 413),
+      glGetTransformFeedbackVarying(414, 414),
+      glVertexAttribIPointer(415, 415),
+      glGetVertexAttribIiv(416, 416),
+      glGetVertexAttribIuiv(417, 417),
+      glVertexAttribI4i(418, 418),
+      glVertexAttribI4ui(419, 419),
+      glVertexAttribI4iv(420, 420),
+      glVertexAttribI4uiv(421, 421),
+      glGetUniformuiv(422, 422),
+      glGetFragDataLocation(423, 423),
+      glUniform1ui(424, 424),
+      glUniform2ui(425, 425),
+      glUniform3ui(426, 426),
+      glUniform4ui(427, 427),
+      glUniform1uiv(428, 428),
+      glUniform2uiv(429, 429),
+      glUniform3uiv(430, 430),
+      glUniform4uiv(431, 431),
+      glClearBufferiv(432, 432),
+      glClearBufferuiv(433, 433),
+      glClearBufferfv(434, 434),
+      glClearBufferfi(435, 435),
+      glGetStringi(436, 436),
+      glCopyBufferSubData(437, 437),
+      glGetUniformIndices(438, 438),
+      glGetActiveUniformsiv(439, 439),
+      glGetUniformBlockIndex(440, 440),
+      glGetActiveUniformBlockiv(441, 441),
+      glGetActiveUniformBlockName(442, 442),
+      glUniformBlockBinding(443, 443),
+      glDrawArraysInstanced(444, 444),
+      glDrawElementsInstanced(445, 445),
+      glFenceSync(446, 446),
+      glIsSync(447, 447),
+      glDeleteSync(448, 448),
+      glClientWaitSync(449, 449),
+      glWaitSync(450, 450),
+      glGetInteger64v(451, 451),
+      glGetSynciv(452, 452),
+      glGetInteger64i_v(453, 453),
+      glGetBufferParameteri64v(454, 454),
+      glGenSamplers(455, 455),
+      glDeleteSamplers(456, 456),
+      glIsSampler(457, 457),
+      glBindSampler(458, 458),
+      glSamplerParameteri(459, 459),
+      glSamplerParameteriv(460, 460),
+      glSamplerParameterf(461, 461),
+      glSamplerParameterfv(462, 462),
+      glGetSamplerParameteriv(463, 463),
+      glGetSamplerParameterfv(464, 464),
+      glVertexAttribDivisor(465, 465),
+      glBindTransformFeedback(466, 466),
+      glDeleteTransformFeedbacks(467, 467),
+      glGenTransformFeedbacks(468, 468),
+      glIsTransformFeedback(469, 469),
+      glPauseTransformFeedback(470, 470),
+      glResumeTransformFeedback(471, 471),
+      glGetProgramBinary(472, 472),
+      glProgramBinary(473, 473),
+      glProgramParameteri(474, 474),
+      glInvalidateFramebuffer(475, 475),
+      glInvalidateSubFramebuffer(476, 476),
+      glTexStorage2D(477, 477),
+      glTexStorage3D(478, 478),
+      glGetInternalformativ(479, 479),
+      glActiveShaderProgramEXT(480, 502),
+      glAlphaFuncQCOM(481, 503),
+      glBeginQueryEXT(482, 504),
+      glBindProgramPipelineEXT(483, 505),
+      glBlitFramebufferANGLE(484, 506),
+      glCreateShaderProgramvEXT(485, 507),
+      glDeleteProgramPipelinesEXT(486, 508),
+      glDeleteQueriesEXT(487, 509),
+      glDrawBuffersNV(488, 510),
+      glEndQueryEXT(489, 511),
+      glFramebufferTexture2DMultisampleEXT(490, 512),
+      glGenProgramPipelinesEXT(491, 513),
+      glGenQueriesEXT(492, 514),
+      glGetGraphicsResetStatusEXT(493, 515),
+      glGetObjectLabelEXT(494, 516),
+      glGetProgramPipelineInfoLogEXT(495, 517),
+      glGetProgramPipelineivEXT(496, 518),
+      glGetQueryObjectuivEXT(497, 519),
+      glGetQueryivEXT(498, 520),
+      glGetnUniformfvEXT(499, 521),
+      glInsertEventMarkerEXT(501, 522),
+      glIsProgramPipelineEXT(502, 523),
+      glIsQueryEXT(503, 524),
+      glLabelObjectEXT(504, 525),
+      glPopGroupMarkerEXT(505, 526),
+      glProgramParameteriEXT(506, 527),
+      glProgramUniform1fEXT(507, 528),
+      glProgramUniform1fvEXT(508, 529),
+      glProgramUniform1iEXT(509, 530),
+      glProgramUniform1ivEXT(510, 531),
+      glProgramUniform2fEXT(511, 532),
+      glProgramUniform2fvEXT(512, 533),
+      glProgramUniform2iEXT(513, 534),
+      glProgramUniform2ivEXT(514, 535),
+      glProgramUniform3fEXT(515, 536),
+      glProgramUniform3fvEXT(516, 537),
+      glProgramUniform3iEXT(517, 538),
+      glProgramUniform3ivEXT(518, 539),
+      glProgramUniform4fEXT(519, 540),
+      glProgramUniform4fvEXT(520, 541),
+      glProgramUniform4iEXT(521, 542),
+      glProgramUniform4ivEXT(522, 543),
+      glProgramUniformMatrix2fvEXT(523, 544),
+      glProgramUniformMatrix3fvEXT(524, 545),
+      glProgramUniformMatrix4fvEXT(525, 546),
+      glPushGroupMarkerEXT(526, 547),
+      glReadBufferNV(527, 548),
+      glReadnPixelsEXT(528, 549),
+      glRenderbufferStorageMultisampleANGLE(529, 550),
+      glRenderbufferStorageMultisampleAPPLE(530, 551),
+      glRenderbufferStorageMultisampleEXT(531, 552),
+      glResolveMultisampleFramebufferAPPLE(532, 553),
+      glTexStorage1DEXT(533, 554),
+      glTexStorage2DEXT(534, 555),
+      glTexStorage3DEXT(535, 556),
+      glTextureStorage1DEXT(536, 557),
+      glTextureStorage2DEXT(537, 558),
+      glTextureStorage3DEXT(538, 559),
+      glUseProgramStagesEXT(539, 560),
+      glValidateProgramPipelineEXT(540, 561),
+      eglGetDisplay(541, 2000),
+      eglInitialize(542, 2001),
+      eglTerminate(543, 2002),
+      eglGetConfigs(544, 2003),
+      eglChooseConfig(545, 2004),
+      eglGetConfigAttrib(546, 2005),
+      eglCreateWindowSurface(547, 2006),
+      eglCreatePixmapSurface(548, 2007),
+      eglCreatePbufferSurface(549, 2008),
+      eglDestroySurface(550, 2009),
+      eglQuerySurface(551, 2010),
+      eglCreateContext(552, 2011),
+      eglDestroyContext(553, 2012),
+      eglMakeCurrent(554, 2013),
+      eglGetCurrentContext(555, 2014),
+      eglGetCurrentSurface(556, 2015),
+      eglGetCurrentDisplay(557, 2016),
+      eglQueryContext(558, 2017),
+      eglWaitGL(559, 2018),
+      eglWaitNative(560, 2019),
+      eglSwapBuffers(561, 2020),
+      eglCopyBuffers(562, 2021),
+      eglGetError(563, 2022),
+      eglQueryString(564, 2023),
+      eglGetProcAddress(565, 2024),
+      eglSurfaceAttrib(566, 2025),
+      eglBindTexImage(567, 2026),
+      eglReleaseTexImage(568, 2027),
+      eglSwapInterval(569, 2028),
+      eglBindAPI(570, 2029),
+      eglQueryAPI(571, 2030),
+      eglWaitClient(572, 2031),
+      eglReleaseThread(573, 2032),
+      eglCreatePbufferFromClientBuffer(574, 2033),
+      eglLockSurfaceKHR(575, 2034),
+      eglUnlockSurfaceKHR(576, 2035),
+      eglCreateImageKHR(577, 2036),
+      eglDestroyImageKHR(578, 2037),
+      eglCreateSyncKHR(579, 2038),
+      eglDestroySyncKHR(580, 2039),
+      eglClientWaitSyncKHR(581, 2040),
+      eglGetSyncAttribKHR(582, 2041),
+      eglSetSwapRectangleANDROID(583, 2042),
+      eglGetRenderBufferANDROID(584, 2043),
+      eglGetSystemTimeFrequencyNV(585, 2044),
+      eglGetSystemTimeNV(586, 2045),
+      invalid(587, 3000),
+      glVertexAttribPointerData(588, 3001),
       ;
-
+      
       public static final Function glGetnUniformivEXT = glGetnUniformfvEXT;
-
+      
       @Override
     public final int getNumber() { return value; }
-
+      
       public static Function valueOf(int value) {
         switch (value) {
           case 0: return glActiveTexture;
@@ -897,6 +1001,110 @@ public final class GLProtoBuf {
           case 373: return glVertexPointer;
           case 374: return glViewport;
           case 375: return glWeightPointerOES;
+          case 376: return glReadBuffer;
+          case 377: return glDrawRangeElements;
+          case 378: return glTexImage3D;
+          case 379: return glTexSubImage3D;
+          case 380: return glCopyTexSubImage3D;
+          case 381: return glCompressedTexImage3D;
+          case 382: return glCompressedTexSubImage3D;
+          case 383: return glGenQueries;
+          case 384: return glDeleteQueries;
+          case 385: return glIsQuery;
+          case 386: return glBeginQuery;
+          case 387: return glEndQuery;
+          case 388: return glGetQueryiv;
+          case 389: return glGetQueryObjectuiv;
+          case 390: return glUnmapBuffer;
+          case 391: return glGetBufferPointerv;
+          case 392: return glDrawBuffers;
+          case 393: return glUniformMatrix2x3fv;
+          case 394: return glUniformMatrix3x2fv;
+          case 395: return glUniformMatrix2x4fv;
+          case 396: return glUniformMatrix4x2fv;
+          case 397: return glUniformMatrix3x4fv;
+          case 398: return glUniformMatrix4x3fv;
+          case 399: return glBlitFramebuffer;
+          case 400: return glRenderbufferStorageMultisample;
+          case 401: return glFramebufferTextureLayer;
+          case 402: return glMapBufferRange;
+          case 403: return glFlushMappedBufferRange;
+          case 404: return glBindVertexArray;
+          case 405: return glDeleteVertexArrays;
+          case 406: return glGenVertexArrays;
+          case 407: return glIsVertexArray;
+          case 408: return glGetIntegeri_v;
+          case 409: return glBeginTransformFeedback;
+          case 410: return glEndTransformFeedback;
+          case 411: return glBindBufferRange;
+          case 412: return glBindBufferBase;
+          case 413: return glTransformFeedbackVaryings;
+          case 414: return glGetTransformFeedbackVarying;
+          case 415: return glVertexAttribIPointer;
+          case 416: return glGetVertexAttribIiv;
+          case 417: return glGetVertexAttribIuiv;
+          case 418: return glVertexAttribI4i;
+          case 419: return glVertexAttribI4ui;
+          case 420: return glVertexAttribI4iv;
+          case 421: return glVertexAttribI4uiv;
+          case 422: return glGetUniformuiv;
+          case 423: return glGetFragDataLocation;
+          case 424: return glUniform1ui;
+          case 425: return glUniform2ui;
+          case 426: return glUniform3ui;
+          case 427: return glUniform4ui;
+          case 428: return glUniform1uiv;
+          case 429: return glUniform2uiv;
+          case 430: return glUniform3uiv;
+          case 431: return glUniform4uiv;
+          case 432: return glClearBufferiv;
+          case 433: return glClearBufferuiv;
+          case 434: return glClearBufferfv;
+          case 435: return glClearBufferfi;
+          case 436: return glGetStringi;
+          case 437: return glCopyBufferSubData;
+          case 438: return glGetUniformIndices;
+          case 439: return glGetActiveUniformsiv;
+          case 440: return glGetUniformBlockIndex;
+          case 441: return glGetActiveUniformBlockiv;
+          case 442: return glGetActiveUniformBlockName;
+          case 443: return glUniformBlockBinding;
+          case 444: return glDrawArraysInstanced;
+          case 445: return glDrawElementsInstanced;
+          case 446: return glFenceSync;
+          case 447: return glIsSync;
+          case 448: return glDeleteSync;
+          case 449: return glClientWaitSync;
+          case 450: return glWaitSync;
+          case 451: return glGetInteger64v;
+          case 452: return glGetSynciv;
+          case 453: return glGetInteger64i_v;
+          case 454: return glGetBufferParameteri64v;
+          case 455: return glGenSamplers;
+          case 456: return glDeleteSamplers;
+          case 457: return glIsSampler;
+          case 458: return glBindSampler;
+          case 459: return glSamplerParameteri;
+          case 460: return glSamplerParameteriv;
+          case 461: return glSamplerParameterf;
+          case 462: return glSamplerParameterfv;
+          case 463: return glGetSamplerParameteriv;
+          case 464: return glGetSamplerParameterfv;
+          case 465: return glVertexAttribDivisor;
+          case 466: return glBindTransformFeedback;
+          case 467: return glDeleteTransformFeedbacks;
+          case 468: return glGenTransformFeedbacks;
+          case 469: return glIsTransformFeedback;
+          case 470: return glPauseTransformFeedback;
+          case 471: return glResumeTransformFeedback;
+          case 472: return glGetProgramBinary;
+          case 473: return glProgramBinary;
+          case 474: return glProgramParameteri;
+          case 475: return glInvalidateFramebuffer;
+          case 476: return glInvalidateSubFramebuffer;
+          case 477: return glTexStorage2D;
+          case 478: return glTexStorage3D;
+          case 479: return glGetInternalformativ;
           case 502: return glActiveShaderProgramEXT;
           case 503: return glAlphaFuncQCOM;
           case 504: return glBeginQueryEXT;
@@ -1008,7 +1216,7 @@ public final class GLProtoBuf {
           default: return null;
         }
       }
-
+      
       public static com.google.protobuf.Internal.EnumLiteMap<Function>
           internalGetValueMap() {
         return internalValueMap;
@@ -1016,22 +1224,22 @@ public final class GLProtoBuf {
       private static com.google.protobuf.Internal.EnumLiteMap<Function>
           internalValueMap =
             new com.google.protobuf.Internal.EnumLiteMap<Function>() {
-            @Override
+              @Override
             public Function findValueByNumber(int number) {
-                return Function.valueOf(number);
-            }
-      };
-
+                return Function.valueOf(number)
+      ;        }
+            };
+      
       private final int index;
       private final int value;
       private Function(int index, int value) {
         this.index = index;
         this.value = value;
       }
-
+      
       // @@protoc_insertion_point(enum_scope:android.gltrace.GLMessage.Function)
     }
-
+    
     public static final class DataType extends
         com.google.protobuf.GeneratedMessageLite {
       // Use DataType.newBuilder() to construct.
@@ -1039,17 +1247,17 @@ public final class GLProtoBuf {
         initFields();
       }
       private DataType(boolean noInit) {}
-
+      
       private static final DataType defaultInstance;
       public static DataType getDefaultInstance() {
         return defaultInstance;
       }
-
+      
       @Override
-      public DataType getDefaultInstanceForType() {
+    public DataType getDefaultInstanceForType() {
         return defaultInstance;
       }
-
+      
       public enum Type
           implements com.google.protobuf.Internal.EnumLite {
         VOID(0, 1),
@@ -1059,12 +1267,13 @@ public final class GLProtoBuf {
         FLOAT(4, 5),
         BOOL(5, 6),
         ENUM(6, 7),
+        INT64(7, 8),
         ;
-
-
+        
+        
         @Override
         public final int getNumber() { return value; }
-
+        
         public static Type valueOf(int value) {
           switch (value) {
             case 1: return VOID;
@@ -1074,10 +1283,11 @@ public final class GLProtoBuf {
             case 5: return FLOAT;
             case 6: return BOOL;
             case 7: return ENUM;
+            case 8: return INT64;
             default: return null;
           }
         }
-
+        
         public static com.google.protobuf.Internal.EnumLiteMap<Type>
             internalGetValueMap() {
           return internalValueMap;
@@ -1087,34 +1297,34 @@ public final class GLProtoBuf {
               new com.google.protobuf.Internal.EnumLiteMap<Type>() {
                 @Override
                 public Type findValueByNumber(int number) {
-                  return Type.valueOf(number);
-                }
+                  return Type.valueOf(number)
+        ;        }
               };
-
+        
         private final int index;
         private final int value;
         private Type(int index, int value) {
           this.index = index;
           this.value = value;
         }
-
+        
         // @@protoc_insertion_point(enum_scope:android.gltrace.GLMessage.DataType.Type)
       }
-
+      
       // required .android.gltrace.GLMessage.DataType.Type type = 1 [default = VOID];
       public static final int TYPE_FIELD_NUMBER = 1;
       private boolean hasType;
       private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type type_;
       public boolean hasType() { return hasType; }
       public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type getType() { return type_; }
-
+      
       // required bool isArray = 2 [default = false];
       public static final int ISARRAY_FIELD_NUMBER = 2;
       private boolean hasIsArray;
       private boolean isArray_ = false;
       public boolean hasIsArray() { return hasIsArray; }
       public boolean getIsArray() { return isArray_; }
-
+      
       // repeated int32 intValue = 3;
       public static final int INTVALUE_FIELD_NUMBER = 3;
       private java.util.List<java.lang.Integer> intValue_ =
@@ -1126,7 +1336,7 @@ public final class GLProtoBuf {
       public int getIntValue(int index) {
         return intValue_.get(index);
       }
-
+      
       // repeated float floatValue = 4;
       public static final int FLOATVALUE_FIELD_NUMBER = 4;
       private java.util.List<java.lang.Float> floatValue_ =
@@ -1138,7 +1348,7 @@ public final class GLProtoBuf {
       public float getFloatValue(int index) {
         return floatValue_.get(index);
       }
-
+      
       // repeated bytes charValue = 5;
       public static final int CHARVALUE_FIELD_NUMBER = 5;
       private java.util.List<com.google.protobuf.ByteString> charValue_ =
@@ -1150,7 +1360,7 @@ public final class GLProtoBuf {
       public com.google.protobuf.ByteString getCharValue(int index) {
         return charValue_.get(index);
       }
-
+      
       // repeated bytes rawBytes = 6;
       public static final int RAWBYTES_FIELD_NUMBER = 6;
       private java.util.List<com.google.protobuf.ByteString> rawBytes_ =
@@ -1162,7 +1372,7 @@ public final class GLProtoBuf {
       public com.google.protobuf.ByteString getRawBytes(int index) {
         return rawBytes_.get(index);
       }
-
+      
       // repeated bool boolValue = 7;
       public static final int BOOLVALUE_FIELD_NUMBER = 7;
       private java.util.List<java.lang.Boolean> boolValue_ =
@@ -1174,7 +1384,19 @@ public final class GLProtoBuf {
       public boolean getBoolValue(int index) {
         return boolValue_.get(index);
       }
-
+      
+      // repeated int64 int64Value = 8;
+      public static final int INT64VALUE_FIELD_NUMBER = 8;
+      private java.util.List<java.lang.Long> int64Value_ =
+        java.util.Collections.emptyList();
+      public java.util.List<java.lang.Long> getInt64ValueList() {
+        return int64Value_;
+      }
+      public int getInt64ValueCount() { return int64Value_.size(); }
+      public long getInt64Value(int index) {
+        return int64Value_.get(index);
+      }
+      
       private void initFields() {
         type_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type.VOID;
       }
@@ -1184,7 +1406,7 @@ public final class GLProtoBuf {
         if (!hasIsArray) return false;
         return true;
       }
-
+      
       @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
@@ -1210,14 +1432,17 @@ public final class GLProtoBuf {
         for (boolean element : getBoolValueList()) {
           output.writeBool(7, element);
         }
+        for (long element : getInt64ValueList()) {
+          output.writeInt64(8, element);
+        }
       }
-
+      
       private int memoizedSerializedSize = -1;
       @Override
     public int getSerializedSize() {
         int size = memoizedSerializedSize;
         if (size != -1) return size;
-
+      
         size = 0;
         if (hasType()) {
           size += com.google.protobuf.CodedOutputStream
@@ -1266,10 +1491,19 @@ public final class GLProtoBuf {
           size += dataSize;
           size += 1 * getBoolValueList().size();
         }
+        {
+          int dataSize = 0;
+          for (long element : getInt64ValueList()) {
+            dataSize += com.google.protobuf.CodedOutputStream
+              .computeInt64SizeNoTag(element);
+          }
+          size += dataSize;
+          size += 1 * getInt64ValueList().size();
+        }
         memoizedSerializedSize = size;
         return size;
       }
-
+      
       public static com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1336,7 +1570,7 @@ public final class GLProtoBuf {
         return newBuilder().mergeFrom(input, extensionRegistry)
                  .buildParsed();
       }
-
+      
       public static Builder newBuilder() { return Builder.create(); }
       @Override
     public Builder newBuilderForType() { return newBuilder(); }
@@ -1345,26 +1579,26 @@ public final class GLProtoBuf {
       }
       @Override
     public Builder toBuilder() { return newBuilder(this); }
-
+      
       public static final class Builder extends
           com.google.protobuf.GeneratedMessageLite.Builder<
             com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType, Builder> {
         private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType result;
-
+        
         // Construct using com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.newBuilder()
         private Builder() {}
-
+        
         private static Builder create() {
           Builder builder = new Builder();
           builder.result = new com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType();
           return builder;
         }
-
+        
         @Override
         protected com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType internalGetResult() {
           return result;
         }
-
+        
         @Override
         public Builder clear() {
           if (result == null) {
@@ -1374,17 +1608,17 @@ public final class GLProtoBuf {
           result = new com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType();
           return this;
         }
-
+        
         @Override
         public Builder clone() {
           return create().mergeFrom(result);
         }
-
+        
         @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType getDefaultInstanceForType() {
           return com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance();
         }
-
+        
         @Override
         public boolean isInitialized() {
           return result.isInitialized();
@@ -1396,7 +1630,7 @@ public final class GLProtoBuf {
           }
           return buildPartial();
         }
-
+        
         private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType buildParsed()
             throws com.google.protobuf.InvalidProtocolBufferException {
           if (!isInitialized()) {
@@ -1405,7 +1639,7 @@ public final class GLProtoBuf {
           }
           return buildPartial();
         }
-
+        
         @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType buildPartial() {
           if (result == null) {
@@ -1432,11 +1666,15 @@ public final class GLProtoBuf {
             result.boolValue_ =
               java.util.Collections.unmodifiableList(result.boolValue_);
           }
+          if (result.int64Value_ != java.util.Collections.EMPTY_LIST) {
+            result.int64Value_ =
+              java.util.Collections.unmodifiableList(result.int64Value_);
+          }
           com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType returnMe = result;
           result = null;
           return returnMe;
         }
-
+        
         @Override
         public Builder mergeFrom(com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType other) {
           if (other == com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance()) return this;
@@ -1476,9 +1714,15 @@ public final class GLProtoBuf {
             }
             result.boolValue_.addAll(other.boolValue_);
           }
+          if (!other.int64Value_.isEmpty()) {
+            if (result.int64Value_.isEmpty()) {
+              result.int64Value_ = new java.util.ArrayList<java.lang.Long>();
+            }
+            result.int64Value_.addAll(other.int64Value_);
+          }
           return this;
         }
-
+        
         @Override
         public Builder mergeFrom(
             com.google.protobuf.CodedInputStream input,
@@ -1554,11 +1798,24 @@ public final class GLProtoBuf {
                 input.popLimit(limit);
                 break;
               }
+              case 64: {
+                addInt64Value(input.readInt64());
+                break;
+              }
+              case 66: {
+                int length = input.readRawVarint32();
+                int limit = input.pushLimit(length);
+                while (input.getBytesUntilLimit() > 0) {
+                  addInt64Value(input.readInt64());
+                }
+                input.popLimit(limit);
+                break;
+              }
             }
           }
         }
-
-
+        
+        
         // required .android.gltrace.GLMessage.DataType.Type type = 1 [default = VOID];
         public boolean hasType() {
           return result.hasType();
@@ -1579,7 +1836,7 @@ public final class GLProtoBuf {
           result.type_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type.VOID;
           return this;
         }
-
+        
         // required bool isArray = 2 [default = false];
         public boolean hasIsArray() {
           return result.hasIsArray();
@@ -1597,7 +1854,7 @@ public final class GLProtoBuf {
           result.isArray_ = false;
           return this;
         }
-
+        
         // repeated int32 intValue = 3;
         public java.util.List<java.lang.Integer> getIntValueList() {
           return java.util.Collections.unmodifiableList(result.intValue_);
@@ -1631,7 +1888,7 @@ public final class GLProtoBuf {
           result.intValue_ = java.util.Collections.emptyList();
           return this;
         }
-
+        
         // repeated float floatValue = 4;
         public java.util.List<java.lang.Float> getFloatValueList() {
           return java.util.Collections.unmodifiableList(result.floatValue_);
@@ -1665,7 +1922,7 @@ public final class GLProtoBuf {
           result.floatValue_ = java.util.Collections.emptyList();
           return this;
         }
-
+        
         // repeated bytes charValue = 5;
         public java.util.List<com.google.protobuf.ByteString> getCharValueList() {
           return java.util.Collections.unmodifiableList(result.charValue_);
@@ -1705,7 +1962,7 @@ public final class GLProtoBuf {
           result.charValue_ = java.util.Collections.emptyList();
           return this;
         }
-
+        
         // repeated bytes rawBytes = 6;
         public java.util.List<com.google.protobuf.ByteString> getRawBytesList() {
           return java.util.Collections.unmodifiableList(result.rawBytes_);
@@ -1745,7 +2002,7 @@ public final class GLProtoBuf {
           result.rawBytes_ = java.util.Collections.emptyList();
           return this;
         }
-
+        
         // repeated bool boolValue = 7;
         public java.util.List<java.lang.Boolean> getBoolValueList() {
           return java.util.Collections.unmodifiableList(result.boolValue_);
@@ -1779,19 +2036,53 @@ public final class GLProtoBuf {
           result.boolValue_ = java.util.Collections.emptyList();
           return this;
         }
-
+        
+        // repeated int64 int64Value = 8;
+        public java.util.List<java.lang.Long> getInt64ValueList() {
+          return java.util.Collections.unmodifiableList(result.int64Value_);
+        }
+        public int getInt64ValueCount() {
+          return result.getInt64ValueCount();
+        }
+        public long getInt64Value(int index) {
+          return result.getInt64Value(index);
+        }
+        public Builder setInt64Value(int index, long value) {
+          result.int64Value_.set(index, value);
+          return this;
+        }
+        public Builder addInt64Value(long value) {
+          if (result.int64Value_.isEmpty()) {
+            result.int64Value_ = new java.util.ArrayList<java.lang.Long>();
+          }
+          result.int64Value_.add(value);
+          return this;
+        }
+        public Builder addAllInt64Value(
+            java.lang.Iterable<? extends java.lang.Long> values) {
+          if (result.int64Value_.isEmpty()) {
+            result.int64Value_ = new java.util.ArrayList<java.lang.Long>();
+          }
+          super.addAll(values, result.int64Value_);
+          return this;
+        }
+        public Builder clearInt64Value() {
+          result.int64Value_ = java.util.Collections.emptyList();
+          return this;
+        }
+        
         // @@protoc_insertion_point(builder_scope:android.gltrace.GLMessage.DataType)
       }
-
+      
       static {
         defaultInstance = new DataType(true);
         com.android.ide.eclipse.gltrace.GLProtoBuf.internalForceInit();
         defaultInstance.initFields();
       }
-
+      
       // @@protoc_insertion_point(class_scope:android.gltrace.GLMessage.DataType)
     }
-
+    
     public static final class FrameBuffer extends
         com.google.protobuf.GeneratedMessageLite {
       // Use FrameBuffer.newBuilder() to construct.
@@ -1799,31 +2090,31 @@ public final class GLProtoBuf {
         initFields();
       }
       private FrameBuffer(boolean noInit) {}
-
+      
       private static final FrameBuffer defaultInstance;
       public static FrameBuffer getDefaultInstance() {
         return defaultInstance;
       }
-
+      
       @Override
-      public FrameBuffer getDefaultInstanceForType() {
+    public FrameBuffer getDefaultInstanceForType() {
         return defaultInstance;
       }
-
+      
       // required int32 width = 1;
       public static final int WIDTH_FIELD_NUMBER = 1;
       private boolean hasWidth;
       private int width_ = 0;
       public boolean hasWidth() { return hasWidth; }
       public int getWidth() { return width_; }
-
+      
       // required int32 height = 2;
       public static final int HEIGHT_FIELD_NUMBER = 2;
       private boolean hasHeight;
       private int height_ = 0;
       public boolean hasHeight() { return hasHeight; }
       public int getHeight() { return height_; }
-
+      
       // repeated bytes contents = 3;
       public static final int CONTENTS_FIELD_NUMBER = 3;
       private java.util.List<com.google.protobuf.ByteString> contents_ =
@@ -1835,7 +2126,7 @@ public final class GLProtoBuf {
       public com.google.protobuf.ByteString getContents(int index) {
         return contents_.get(index);
       }
-
+      
       private void initFields() {
       }
       @Override
@@ -1844,7 +2135,7 @@ public final class GLProtoBuf {
         if (!hasHeight) return false;
         return true;
       }
-
+      
       @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
@@ -1859,13 +2150,13 @@ public final class GLProtoBuf {
           output.writeBytes(3, element);
         }
       }
-
+      
       private int memoizedSerializedSize = -1;
       @Override
     public int getSerializedSize() {
         int size = memoizedSerializedSize;
         if (size != -1) return size;
-
+      
         size = 0;
         if (hasWidth()) {
           size += com.google.protobuf.CodedOutputStream
@@ -1887,7 +2178,7 @@ public final class GLProtoBuf {
         memoizedSerializedSize = size;
         return size;
       }
-
+      
       public static com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1954,7 +2245,7 @@ public final class GLProtoBuf {
         return newBuilder().mergeFrom(input, extensionRegistry)
                  .buildParsed();
       }
-
+      
       public static Builder newBuilder() { return Builder.create(); }
       @Override
     public Builder newBuilderForType() { return newBuilder(); }
@@ -1963,26 +2254,26 @@ public final class GLProtoBuf {
       }
       @Override
     public Builder toBuilder() { return newBuilder(this); }
-
+      
       public static final class Builder extends
           com.google.protobuf.GeneratedMessageLite.Builder<
             com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer, Builder> {
         private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer result;
-
+        
         // Construct using com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.newBuilder()
         private Builder() {}
-
+        
         private static Builder create() {
           Builder builder = new Builder();
           builder.result = new com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer();
           return builder;
         }
-
+        
         @Override
         protected com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer internalGetResult() {
           return result;
         }
-
+        
         @Override
         public Builder clear() {
           if (result == null) {
@@ -1992,17 +2283,17 @@ public final class GLProtoBuf {
           result = new com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer();
           return this;
         }
-
+        
         @Override
         public Builder clone() {
           return create().mergeFrom(result);
         }
-
+        
         @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer getDefaultInstanceForType() {
           return com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.getDefaultInstance();
         }
-
+        
         @Override
         public boolean isInitialized() {
           return result.isInitialized();
@@ -2014,7 +2305,7 @@ public final class GLProtoBuf {
           }
           return buildPartial();
         }
-
+        
         private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer buildParsed()
             throws com.google.protobuf.InvalidProtocolBufferException {
           if (!isInitialized()) {
@@ -2023,7 +2314,7 @@ public final class GLProtoBuf {
           }
           return buildPartial();
         }
-
+        
         @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer buildPartial() {
           if (result == null) {
@@ -2038,7 +2329,7 @@ public final class GLProtoBuf {
           result = null;
           return returnMe;
         }
-
+        
         @Override
         public Builder mergeFrom(com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer other) {
           if (other == com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.getDefaultInstance()) return this;
@@ -2056,7 +2347,7 @@ public final class GLProtoBuf {
           }
           return this;
         }
-
+        
         @Override
         public Builder mergeFrom(
             com.google.protobuf.CodedInputStream input,
@@ -2088,8 +2379,8 @@ public final class GLProtoBuf {
             }
           }
         }
-
-
+        
+        
         // required int32 width = 1;
         public boolean hasWidth() {
           return result.hasWidth();
@@ -2107,7 +2398,7 @@ public final class GLProtoBuf {
           result.width_ = 0;
           return this;
         }
-
+        
         // required int32 height = 2;
         public boolean hasHeight() {
           return result.hasHeight();
@@ -2125,7 +2416,7 @@ public final class GLProtoBuf {
           result.height_ = 0;
           return this;
         }
-
+        
         // repeated bytes contents = 3;
         public java.util.List<com.google.protobuf.ByteString> getContentsList() {
           return java.util.Collections.unmodifiableList(result.contents_);
@@ -2165,47 +2456,47 @@ public final class GLProtoBuf {
           result.contents_ = java.util.Collections.emptyList();
           return this;
         }
-
+        
         // @@protoc_insertion_point(builder_scope:android.gltrace.GLMessage.FrameBuffer)
       }
-
+      
       static {
         defaultInstance = new FrameBuffer(true);
         com.android.ide.eclipse.gltrace.GLProtoBuf.internalForceInit();
         defaultInstance.initFields();
       }
-
+      
       // @@protoc_insertion_point(class_scope:android.gltrace.GLMessage.FrameBuffer)
     }
-
+    
     // required int32 context_id = 1;
     public static final int CONTEXT_ID_FIELD_NUMBER = 1;
     private boolean hasContextId;
     private int contextId_ = 0;
     public boolean hasContextId() { return hasContextId; }
     public int getContextId() { return contextId_; }
-
+    
     // required int64 start_time = 2;
     public static final int START_TIME_FIELD_NUMBER = 2;
     private boolean hasStartTime;
     private long startTime_ = 0L;
     public boolean hasStartTime() { return hasStartTime; }
     public long getStartTime() { return startTime_; }
-
+    
     // required int32 duration = 3;
     public static final int DURATION_FIELD_NUMBER = 3;
     private boolean hasDuration;
     private int duration_ = 0;
     public boolean hasDuration() { return hasDuration; }
     public int getDuration() { return duration_; }
-
+    
     // required .android.gltrace.GLMessage.Function function = 4 [default = invalid];
     public static final int FUNCTION_FIELD_NUMBER = 4;
     private boolean hasFunction;
     private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function function_;
     public boolean hasFunction() { return hasFunction; }
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function getFunction() { return function_; }
-
+    
     // repeated .android.gltrace.GLMessage.DataType args = 5;
     public static final int ARGS_FIELD_NUMBER = 5;
     private java.util.List<com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType> args_ =
@@ -2217,28 +2508,28 @@ public final class GLProtoBuf {
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType getArgs(int index) {
       return args_.get(index);
     }
-
+    
     // optional .android.gltrace.GLMessage.DataType returnValue = 6;
     public static final int RETURNVALUE_FIELD_NUMBER = 6;
     private boolean hasReturnValue;
     private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType returnValue_;
     public boolean hasReturnValue() { return hasReturnValue; }
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType getReturnValue() { return returnValue_; }
-
+    
     // optional .android.gltrace.GLMessage.FrameBuffer fb = 7;
     public static final int FB_FIELD_NUMBER = 7;
     private boolean hasFb;
     private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer fb_;
     public boolean hasFb() { return hasFb; }
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer getFb() { return fb_; }
-
+    
     // optional int32 threadtime = 8;
     public static final int THREADTIME_FIELD_NUMBER = 8;
     private boolean hasThreadtime;
     private int threadtime_ = 0;
     public boolean hasThreadtime() { return hasThreadtime; }
     public int getThreadtime() { return threadtime_; }
-
+    
     private void initFields() {
       function_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function.invalid;
       returnValue_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance();
@@ -2261,7 +2552,7 @@ public final class GLProtoBuf {
       }
       return true;
     }
-
+    
     @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
@@ -2291,13 +2582,13 @@ public final class GLProtoBuf {
         output.writeInt32(8, getThreadtime());
       }
     }
-
+    
     private int memoizedSerializedSize = -1;
     @Override
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
-
+    
       size = 0;
       if (hasContextId()) {
         size += com.google.protobuf.CodedOutputStream
@@ -2334,7 +2625,7 @@ public final class GLProtoBuf {
       memoizedSerializedSize = size;
       return size;
     }
-
+    
     public static com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2401,7 +2692,7 @@ public final class GLProtoBuf {
       return newBuilder().mergeFrom(input, extensionRegistry)
                .buildParsed();
     }
-
+    
     public static Builder newBuilder() { return Builder.create(); }
     @Override
     public Builder newBuilderForType() { return newBuilder(); }
@@ -2410,26 +2701,26 @@ public final class GLProtoBuf {
     }
     @Override
     public Builder toBuilder() { return newBuilder(this); }
-
+    
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageLite.Builder<
           com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage, Builder> {
       private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage result;
-
+      
       // Construct using com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.newBuilder()
       private Builder() {}
-
+      
       private static Builder create() {
         Builder builder = new Builder();
         builder.result = new com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage();
         return builder;
       }
-
+      
       @Override
     protected com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage internalGetResult() {
         return result;
       }
-
+      
       @Override
     public Builder clear() {
         if (result == null) {
@@ -2439,17 +2730,17 @@ public final class GLProtoBuf {
         result = new com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage();
         return this;
       }
-
+      
       @Override
     public Builder clone() {
         return create().mergeFrom(result);
       }
-
+      
       @Override
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage getDefaultInstanceForType() {
         return com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.getDefaultInstance();
       }
-
+      
       @Override
     public boolean isInitialized() {
         return result.isInitialized();
@@ -2461,7 +2752,7 @@ public final class GLProtoBuf {
         }
         return buildPartial();
       }
-
+      
       private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
         if (!isInitialized()) {
@@ -2470,7 +2761,7 @@ public final class GLProtoBuf {
         }
         return buildPartial();
       }
-
+      
       @Override
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage buildPartial() {
         if (result == null) {
@@ -2485,7 +2776,7 @@ public final class GLProtoBuf {
         result = null;
         return returnMe;
       }
-
+      
       @Override
     public Builder mergeFrom(com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage other) {
         if (other == com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.getDefaultInstance()) return this;
@@ -2518,7 +2809,7 @@ public final class GLProtoBuf {
         }
         return this;
       }
-
+      
       @Override
     public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
@@ -2586,8 +2877,8 @@ public final class GLProtoBuf {
           }
         }
       }
-
-
+      
+      
       // required int32 context_id = 1;
       public boolean hasContextId() {
         return result.hasContextId();
@@ -2605,7 +2896,7 @@ public final class GLProtoBuf {
         result.contextId_ = 0;
         return this;
       }
-
+      
       // required int64 start_time = 2;
       public boolean hasStartTime() {
         return result.hasStartTime();
@@ -2623,7 +2914,7 @@ public final class GLProtoBuf {
         result.startTime_ = 0L;
         return this;
       }
-
+      
       // required int32 duration = 3;
       public boolean hasDuration() {
         return result.hasDuration();
@@ -2641,7 +2932,7 @@ public final class GLProtoBuf {
         result.duration_ = 0;
         return this;
       }
-
+      
       // required .android.gltrace.GLMessage.Function function = 4 [default = invalid];
       public boolean hasFunction() {
         return result.hasFunction();
@@ -2662,7 +2953,7 @@ public final class GLProtoBuf {
         result.function_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function.invalid;
         return this;
       }
-
+      
       // repeated .android.gltrace.GLMessage.DataType args = 5;
       public java.util.List<com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType> getArgsList() {
         return java.util.Collections.unmodifiableList(result.args_);
@@ -2713,7 +3004,7 @@ public final class GLProtoBuf {
         result.args_ = java.util.Collections.emptyList();
         return this;
       }
-
+      
       // optional .android.gltrace.GLMessage.DataType returnValue = 6;
       public boolean hasReturnValue() {
         return result.hasReturnValue();
@@ -2750,7 +3041,7 @@ public final class GLProtoBuf {
         result.returnValue_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance();
         return this;
       }
-
+      
       // optional .android.gltrace.GLMessage.FrameBuffer fb = 7;
       public boolean hasFb() {
         return result.hasFb();
@@ -2787,7 +3078,7 @@ public final class GLProtoBuf {
         result.fb_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.getDefaultInstance();
         return this;
       }
-
+      
       // optional int32 threadtime = 8;
       public boolean hasThreadtime() {
         return result.hasThreadtime();
@@ -2805,24 +3096,24 @@ public final class GLProtoBuf {
         result.threadtime_ = 0;
         return this;
       }
-
+      
       // @@protoc_insertion_point(builder_scope:android.gltrace.GLMessage)
     }
-
+    
     static {
       defaultInstance = new GLMessage(true);
       com.android.ide.eclipse.gltrace.GLProtoBuf.internalForceInit();
       defaultInstance.initFields();
     }
-
+    
     // @@protoc_insertion_point(class_scope:android.gltrace.GLMessage)
   }
-
-
+  
+  
   static {
   }
-
+  
   public static void internalForceInit() {}
-
+  
   // @@protoc_insertion_point(outer_class_scope)
 }
