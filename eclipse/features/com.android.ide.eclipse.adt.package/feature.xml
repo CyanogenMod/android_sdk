@@ -79,6 +79,13 @@
       <import feature="com.android.ide.eclipse.hierarchyviewer" version="22.0.0" match="greaterOrEqual" />
       <import feature="com.android.ide.eclipse.ndk"             version="22.0.0" match="greaterOrEqual" />
       <import feature="com.android.ide.eclipse.traceview"       version="22.0.0" match="greaterOrEqual" />
+      <!-- 
+           The build scripts will pull in the translation plugin if its plugin repository is accessible.
+           The following line should remain without any modifications as the build script looks for
+           exactly this pattern and removes the comment tags.
+           See sdk.git/adtproductbuild/build.xml.
+      -->
+      <!--import feature="com.google.i18n.inkstone.eclipse.localization" -->
    </requires>
 
 </feature>
