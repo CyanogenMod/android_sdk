@@ -19,6 +19,8 @@ package com.android.ide.eclipse.adt.internal.sdk;
 import com.android.annotations.NonNull;
 import com.android.manifmerger.ICallback;
 import com.android.manifmerger.ManifestMerger;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 
 /**
@@ -30,11 +32,14 @@ public class AdtManifestMergeCallback implements ICallback {
     public int queryCodenameApiLevel(@NonNull String codename) {
         Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
-            IAndroidTarget t = sdk.getTargetFromHashString(
-                    IAndroidTarget.PLATFORM_HASH_PREFIX + codename);
-            if (t != null) {
-                return t.getVersion().getApiLevel();
-            }
+            try {
+                AndroidVersion version = new AndroidVersion(codename);
+                String hashString = AndroidTargetHash.getPlatformHashString(version);
+                IAndroidTarget t = sdk.getTargetFromHashString(hashString);
+                if (t != null) {
+                    return t.getVersion().getApiLevel();
+                }
+            } catch (AndroidVersion.AndroidVersionException ignore) {}
         }
         return ICallback.UNKNOWN_CODENAME;
     }
