@@ -16,12 +16,16 @@
 
 package com.android.hierarchyviewer;
 
+import com.android.ddmlib.IDevice;
+import com.android.hierarchyviewer.device.Window;
+import com.android.hierarchyviewer.scene.CaptureLoader;
 import com.android.hierarchyviewer.ui.Workspace;
 import com.android.hierarchyviewer.device.DeviceBridge;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import java.io.File;
 
 public class HierarchyViewer {
     private static final CharSequence OS_WINDOWS = "Windows";
@@ -44,7 +48,7 @@ public class HierarchyViewer {
             if (os.contains(OS_WINDOWS) || os.contains(OS_MACOSX)) {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } else {
-                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());                
+                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -57,14 +61,95 @@ public class HierarchyViewer {
         }
     }
 
+    private static void listDevices() {
+        System.out.println("List of devices attached");
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (IDevice device : DeviceBridge.getDevices()) {
+            printDevice(device);
+        }
+        DeviceBridge.terminate();
+    }
+
+    private static void printDevice(IDevice device) {
+        System.out.println(device.toString() + "\t\t" +
+                (device.isEmulator() ? "emulator" : "device"));
+    }
+
+    private static void outputPsd(String deviceName, String file) {
+        IDevice device = selectDevice(deviceName);
+        if (device != null) {
+            if (DeviceBridge.isViewServerRunning(device)) {
+                DeviceBridge.stopViewServer(device);
+            }
+            DeviceBridge.startViewServer(device);
+            DeviceBridge.setupDeviceForward(device);
+            System.out.println("Capturing layers to " + file);
+            CaptureLoader.saveLayers(device, Window.FOCUSED_WINDOW, new File(file));
+        } else {
+            System.out.println("The selected device does not exist");
+        }
+        DeviceBridge.terminate();
+    }
+
+    private static IDevice selectDevice(String deviceName) {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (DeviceBridge.getDevices() == null) return null;
+        if (deviceName == null) return DeviceBridge.getDevices()[0];
+        for (IDevice device : DeviceBridge.getDevices()) {
+            if (device.getSerialNumber().equalsIgnoreCase(deviceName)) {
+                return device;
+            }
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
+        DeviceBridge.initDebugBridge();
+
         if (args.length > 0) {
-            sProfilingEnabled = !args[0].equalsIgnoreCase("-profiling=false");
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i];
+                if ("--help".equalsIgnoreCase(arg)) {
+                    System.out.println("Usage: hierarchyviewer1 [options]\n");
+                    System.out.println("Options:");
+                    System.out.println("  --help\t\t\t Show this help message and exit");
+                    System.out.println("  --no-profiling\t Disable views profiling");
+                    System.out.println("  --devices\t\t\t Show the list of available devices");
+                    System.out.println("  --psd [device] <file>\t Export psd and exit");
+                    System.exit(0);
+                } else if ("--no-profiling".equalsIgnoreCase(arg)) {
+                    sProfilingEnabled = false;
+                } else if ("--devices".equalsIgnoreCase(arg)) {
+                    listDevices();
+                    System.exit(0);
+                } else if ("--psd".equalsIgnoreCase(arg)) {
+                    if (i == args.length - 1) {
+                        System.out.println("You must specify at least an output file with --psd");
+                        System.exit(1);
+                    }
+                    String device = null;
+                    String file = null;
+                    if (i < args.length - 2) {
+                        device = args[++i];
+                    }
+                    if (i < args.length - 1) {
+                        file = args[++i];
+                    }
+                    outputPsd(device, file);
+                    System.exit(0);
+                }
+            }
         }
 
         initUserInterface();
-        DeviceBridge.initDebugBridge();
-
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 Workspace workspace = new Workspace();
