@@ -21,7 +21,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.FlagManager;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.UiTreeBlock;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -57,7 +57,7 @@ public final class ValuesTreePage extends FormPage implements IPageImageProvider
         if (file != null) {
             IContainer parent = file.getParent();
             if (parent != null) {
-                Image flag = LocaleManager.get().getFlagForFolderName(parent.getName());
+                Image flag = FlagManager.get().getFlagForFolderName(parent.getName());
                 if (flag != null) {
                     return flag;
                 }

@@ -21,11 +21,12 @@ import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.res2.ValueXmlHelper;
+import com.android.ide.common.resources.LocaleManager;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.FlagManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -358,7 +359,7 @@ public class AddTranslationDialog extends Dialog implements ControlListener, Sel
             // Nothing selected
             ((GridData) mFlag.getLayoutData()).exclude = true;
         } else {
-            LocaleManager manager = LocaleManager.get();
+            FlagManager manager = FlagManager.get();
             Image flag = manager.getFlag(mSelectedLanguage, mSelectedRegion);
             if (flag != null) {
                 ((GridData) mFlag.getLayoutData()).exclude = false;

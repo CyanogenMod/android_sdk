@@ -96,13 +96,13 @@ public class Locale {
         Image image = null;
         String languageCode = hasLanguage() ? language.getValue() : null;
         String regionCode = hasRegion() ? region.getValue() : null;
-        LocaleManager icons = LocaleManager.get();
         if (languageCode == null && regionCode == null) {
-            return LocaleManager.getGlobeIcon();
+            return FlagManager.getGlobeIcon();
         } else {
+            FlagManager icons = FlagManager.get();
             image = icons.getFlag(languageCode, regionCode);
             if (image == null) {
-                image = LocaleManager.getEmptyIcon();
+                image = FlagManager.getEmptyIcon();
             }
 
             return image;
