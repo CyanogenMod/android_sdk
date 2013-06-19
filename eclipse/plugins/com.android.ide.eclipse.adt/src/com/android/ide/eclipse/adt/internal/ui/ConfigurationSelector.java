@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.ui;
 
 import com.android.SdkConstants;
+import com.android.ide.common.resources.LocaleManager;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -40,7 +41,6 @@ import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
