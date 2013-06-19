@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
-import com.google.common.collect.Sets;
+import com.android.ide.common.resources.LocaleManager;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -30,70 +30,9 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
-public class LocaleManagerTest extends TestCase {
-    public void testIntegrity() {
-        LocaleManager localeManager = LocaleManager.get();
-        assertSame(localeManager, LocaleManager.get());
-
-        Map<String, String> languageToCountry = LocaleManager.getLanguageToCountryMap();
-        Map<String, String> languageNames = LocaleManager.getLanguageNamesMap();
-        Map<String, String> regionNames = LocaleManager.getRegionNamesMap();
-        assertEquals("Make sure to update initial capacity in declaration after editing map",
-                177, languageToCountry.size());
-        assertEquals("Make sure to update initial capacity in declaration after editing map",
-                187, languageNames.size());
-        assertEquals("Make sure to update initial capacity in declaration after editing map",
-                249, regionNames.size());
-
-        assertTrue(Sets.difference(languageToCountry.keySet(),
-                languageNames.keySet()).isEmpty());
-        for (Map.Entry<String, String> entry : languageToCountry.entrySet()) {
-            assertTrue(entry.getValue(), entry.getKey().length() > 0);
-            assertTrue(entry.getKey(), entry.getValue().length() > 0);
-        }
-        for (Map.Entry<String, String> entry : regionNames.entrySet()) {
-            assertTrue(entry.getValue(), entry.getKey().length() > 0);
-            assertTrue(entry.getKey(), entry.getValue().length() > 0);
-        }
-        for (Map.Entry<String, String> entry : languageNames.entrySet()) {
-            assertTrue(entry.getValue(), entry.getKey().length() > 0);
-            assertTrue(entry.getKey(), entry.getValue().length() > 0);
-        }
-        for (String s : languageToCountry.keySet()) {
-            assertTrue(s, s.length() == 2 && s.equals(s.toLowerCase(Locale.US)));
-        }
-        for (String s : languageNames.keySet()) {
-            assertTrue(s, s.length() == 2 && s.equals(s.toLowerCase(Locale.US)));
-        }
-        for (String s : languageNames.values()) {
-            assertTrue(s, s.length() > 2 && Character.isUpperCase(s.charAt(0)));
-        }
-        for (String s : languageToCountry.values()) {
-            assertTrue(s, s.length() == 2 && s.equals(s.toUpperCase(Locale.US)));
-        }
-        for (String s : regionNames.keySet()) {
-            assertTrue(s, s.length() == 2 && s.equals(s.toUpperCase(Locale.US)));
-        }
-        for (String s : regionNames.values()) {
-            assertTrue(s, s.length() > 2 && Character.isUpperCase(s.charAt(0)));
-        }
-        assertNull(languageToCountry.get(""));
-        assertNull(languageNames.get(""));
-        assertTrue(Sets.difference(languageToCountry.keySet(),
-                languageNames.keySet()).isEmpty());
-    }
-
-    public void testGetLanguageNames() throws Exception {
-        assertEquals("English", LocaleManager.getLanguageName("en"));
-        assertEquals("Norwegian Bokmål", LocaleManager.getLanguageName("nb"));
-        assertEquals("Norwegian", LocaleManager.getLanguageName("no"));
-        assertEquals("French", LocaleManager.getLanguageName("fr"));
-        assertEquals("German", LocaleManager.getLanguageName("de"));
-        assertEquals("Hindi", LocaleManager.getLanguageName("hi"));
-    }
-
+public class FlagManagerTest extends TestCase {
     public void testGetFlagImage() {
-        LocaleManager manager = LocaleManager.get();
+        FlagManager manager = FlagManager.get();
         Image us = manager.getFlag("US");
         Image gb = manager.getFlag("GB");
         Image ca = manager.getFlag("CA");
@@ -127,21 +66,10 @@ public class LocaleManagerTest extends TestCase {
         assertSame(manager.getFlag("yi", null), manager.getFlag("ji", null));
         assertSame(manager.getFlag("in", null), manager.getFlag("id", null));
         assertSame(manager.getFlag("iw", null), manager.getFlag("he", null));
-        assertSame(LocaleManager.getLanguageName("iw"), LocaleManager.getLanguageName("he"));
-        assertSame(LocaleManager.getLanguageName("in"), LocaleManager.getLanguageName("id"));
-        assertSame(LocaleManager.getLanguageName("yi"), LocaleManager.getLanguageName("ji"));
-
         assertSame(us, manager.getFlagForFolderName("values-en-rUS"));
         assertSame(gb, manager.getFlagForFolderName("values-en-rGB"));
         Locale.setDefault(Locale.CANADA);
         assertSame(ca, manager.getFlagForFolderName("values-en"));
-    }
-
-    public void testGetRegionNames() {
-        assertEquals("United States", LocaleManager.getRegionName("US"));
-        assertEquals("Norway", LocaleManager.getRegionName("NO"));
-        assertEquals("France", LocaleManager.getRegionName("FR"));
-        assertEquals("India", LocaleManager.getRegionName("IN"));
     }
 
     public void testAvailableIcons() {
