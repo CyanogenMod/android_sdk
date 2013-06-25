@@ -188,16 +188,16 @@ bool ColorBuffer::blitFromCurrentReadBuffer()
         s_gl2.glGenTextures(1,&tmpTex);
         s_gl2.glBindTexture(GL_TEXTURE_2D, tmpTex);
         s_gl2.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_blitEGLImage);
-        s_gl2.glCopyTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat,
-                               0, 0, m_width, m_height, 0);
+        s_gl2.glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0,
+                                  m_width, m_height);
     }
     else {
         s_gl.glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexBind);
         s_gl.glGenTextures(1,&tmpTex);
         s_gl.glBindTexture(GL_TEXTURE_2D, tmpTex);
         s_gl.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_blitEGLImage);
-        s_gl.glCopyTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat,
-                              0, 0, m_width, m_height, 0);
+        s_gl.glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0,
+                                 m_width, m_height);
     }
 
 
