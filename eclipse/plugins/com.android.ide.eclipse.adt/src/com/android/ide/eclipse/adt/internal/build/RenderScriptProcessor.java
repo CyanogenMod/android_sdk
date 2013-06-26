@@ -24,7 +24,6 @@ import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -173,8 +172,6 @@ public class RenderScriptProcessor extends SourceProcessor {
             List<IPath> sourceFolders, List<IFile> notCompiledOut,  List<File> libraryProjectsOut,
             IProgressMonitor monitor) throws CoreException {
 
-        String sdkOsPath = Sdk.getCurrent().getSdkLocation();
-
         IFolder genFolder = getGenFolder();
 
         IFolder rawFolder = project.getFolder(
@@ -182,15 +179,16 @@ public class RenderScriptProcessor extends SourceProcessor {
 
         int depIndex;
 
+        BuildToolInfo buildToolInfo = getBuildToolInfo();
+
         // create the command line
         String[] command = new String[15];
         int index = 0;
-        command[index++] = quote(sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER
-                + SdkConstants.FN_RENDERSCRIPT);
+        command[index++] = quote(buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC));
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG));
+        command[index++] = quote(buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG));
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS));
+        command[index++] = quote(buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS));
         command[index++] = "-p";   //$NON-NLS-1$
         command[index++] = quote(genFolder.getLocation().toOSString());
         command[index++] = "-o";   //$NON-NLS-1$
