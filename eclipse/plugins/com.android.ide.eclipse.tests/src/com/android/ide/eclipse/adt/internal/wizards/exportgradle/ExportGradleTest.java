@@ -17,17 +17,6 @@ package com.android.ide.eclipse.adt.internal.wizards.exportgradle;
 
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jface.operation.IRunnableContext;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-
 import com.android.SdkConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -40,11 +29,22 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardS
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jface.operation.IRunnableContext;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 
 public class ExportGradleTest extends AdtProjectTest {
     private QualifiedName ERROR_KEY = new QualifiedName(AdtPlugin.PLUGIN_ID, "JobErrorKey");
@@ -64,12 +64,17 @@ public class ExportGradleTest extends AdtProjectTest {
     public void testSimpleAndroidApp() throws Throwable {
         IProject project = getProject("simple-app");
         final IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
+
+        final ProjectSetupBuilder builder = new ProjectSetupBuilder();
+        builder.setProject(Collections.singletonList(javaProject));
+
         Job job = new Job("Validate project") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
-                    BuildFileCreator.createBuildFiles(Sets.newHashSet(javaProject), null, null);
-                    File buildfile = new File(javaProject.getResource().getLocation().toString(), "build.gradle");
+                    BuildFileCreator.createBuildFiles(builder, null, monitor);
+                    File buildfile = new File(javaProject.getResource().getLocation().toString(),
+                            BuildFileCreator.BUILD_FILE);
                     assertTrue(buildfile.exists());
                     String contents = Files.toString(buildfile, Charsets.UTF_8);
                     String expectedContents =
@@ -134,14 +139,19 @@ public class ExportGradleTest extends AdtProjectTest {
         if (projectProp != null) {
             projectProp.refreshLocal(IResource.DEPTH_ZERO, new NullProgressMonitor());
         }
+
         Job job = new Job("Validate project") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
                     IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
 
-                    BuildFileCreator.createBuildFiles(Sets.newHashSet(javaProject), null, null);
-                    File buildfile = new File(javaProject.getResource().getLocation().toString(), "build.gradle");
+                    final ProjectSetupBuilder builder = new ProjectSetupBuilder();
+                    builder.setProject(Collections.singletonList(javaProject));
+
+                    BuildFileCreator.createBuildFiles(builder, null, monitor);
+                    File buildfile = new File(javaProject.getResource().getLocation().toString(),
+                            BuildFileCreator.BUILD_FILE);
                     assertTrue(buildfile.exists());
                     String contents = Files.toString(buildfile, Charsets.UTF_8);
                     String expectedContents =
@@ -199,7 +209,11 @@ public class ExportGradleTest extends AdtProjectTest {
     public void testPlainJavaProject() throws Throwable {
         IProject project = getJavaProject("simple-java");
         final IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
-        BuildFileCreator.createBuildFiles(Sets.newHashSet(javaProject), null, null);
+
+        final ProjectSetupBuilder builder = new ProjectSetupBuilder();
+        builder.setProject(Collections.singletonList(javaProject));
+
+        BuildFileCreator.createBuildFiles(builder, null, null);
         Job job = new Job("Validate project") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
@@ -272,8 +286,6 @@ public class ExportGradleTest extends AdtProjectTest {
         creator.createJavaProjects();
         return validateProjectExists(name);
     }
-
-
 
     /**
      * Compares two strings, disregarding whitespace. This makes the test less brittle with respect

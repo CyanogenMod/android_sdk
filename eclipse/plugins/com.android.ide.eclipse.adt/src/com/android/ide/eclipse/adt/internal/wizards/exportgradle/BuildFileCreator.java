@@ -17,20 +17,17 @@
 package com.android.ide.eclipse.adt.internal.wizards.exportgradle;
 
 import com.android.SdkConstants;
-import com.android.ide.eclipse.adt.AdtConstants;
-import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
-import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.IAbstractFile;
 import com.android.sdklib.io.FileOp;
-import com.android.utils.Pair;
 import com.android.xml.AndroidManifest;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -41,12 +38,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Shell;
 
@@ -60,7 +53,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 /**
  * Creates build.gradle and settings.gradle files for a set of projects.
@@ -68,13 +60,13 @@ import java.util.regex.Pattern;
  * Based on {@link org.eclipse.ant.internal.ui.datatransfer.BuildFileCreator}
  */
 public class BuildFileCreator {
-    private static final String BUILD_FILE = "build.gradle"; //$NON-NLS-1$
-    private static final String SETTINGS_FILE = "settings.gradle"; //$NON-NLS-1$
+    static final String BUILD_FILE = "build.gradle"; //$NON-NLS-1$
+    static final String SETTINGS_FILE = "settings.gradle"; //$NON-NLS-1$
     private static final String NEWLINE = System.getProperty("line.separator"); //$NON-NLS-1$
     private static final String GRADLE_WRAPPER_LOCATION =
             "tools/templates/gradle/wrapper"; //$NON-NLS-1$
     static final String PLUGIN_CLASSPATH =
-            "classpath 'com.android.tools.build:gradle:0.4'"; //$NON-NLS-1$
+            "classpath 'com.android.tools.build:gradle:0.4.+'"; //$NON-NLS-1$
     static final String MAVEN_REPOSITORY = "mavenCentral()"; //$NON-NLS-1$
 
     private static final String[] GRADLE_WRAPPER_FILES = new String[] {
@@ -91,27 +83,24 @@ public class BuildFileCreator {
         }
     };
 
-    private StringBuilder buildfile;
-    private IJavaProject project;
-    private String projectName;
-    private String projectRoot;
-    private final IPath commonRoot;
+    private final GradleModule mModule;
+    private final StringBuilder mBuildFile = new StringBuilder();
 
     /**
-     * Create buildfile for the given projects.
+     * Create buildfile for the projects.
      *
-     * @param projects create buildfiles for these <code>IJavaProject</code>
-     *            objects
      * @param shell parent instance for dialogs
      * @return project names for which buildfiles were created
      * @throws InterruptedException thrown when user cancels task
      */
-    public static List<String> createBuildFiles(Set<IJavaProject> projects, Shell shell,
-            IProgressMonitor pm)
-            throws JavaModelException, IOException, CoreException, InterruptedException {
+    public static void createBuildFiles(
+            @NonNull ProjectSetupBuilder builder,
+            @NonNull Shell shell,
+            @NonNull IProgressMonitor pm) {
+
         File gradleLocation = new File(Sdk.getCurrent().getSdkLocation(), GRADLE_WRAPPER_LOCATION);
-        List<String> res = new ArrayList<String>();
         SubMonitor localmonitor = null;
+
         try {
             // See if we have a Gradle wrapper in the SDK templates directory. If so, we can copy
             // it over.
@@ -122,42 +111,22 @@ public class BuildFileCreator {
                 }
             }
 
-            Set<IJavaProject> fullProjectSet = Sets.newHashSet();
-
-            // build a list of all projects that must be included. This is in case
-            // some dependencies have not been included in the selected projects. We also include
-            // parent projects so that the full multi-project setup is correct.
-            // Note that if two projects are selected that are not related, both will be added
-            // in the same multi-project anyway.
-            for (IJavaProject javaProject : projects) {
-                fullProjectSet.add(javaProject);
-                ProjectState projectState = Sdk.getProjectState(javaProject.getProject());
-
-                // add dependencies
-                List<IProject> dependencies = projectState.getFullLibraryProjects();
-                for (IProject dependency : dependencies) {
-                    fullProjectSet.add(JavaCore.create(dependency));
-                }
-
-                Collection<ProjectState> parents = projectState.getFullParentProjects();
-                for (ProjectState parent : parents) {
-                    fullProjectSet.add(JavaCore.create(parent.getProject()));
-                }
-            }
+            Collection<GradleModule> modules = builder.getModules();
+            boolean multiModules = modules.size() > 1;
 
             // determine files to create/change
             List<IFile> files = new ArrayList<IFile>();
 
-            // add the build.gradle file for all projects.
-            for (IJavaProject project : fullProjectSet) {
+            // add the build.gradle file for all modules.
+            for (GradleModule module : modules) {
                 // build.gradle file
-                IFile file = project.getProject().getFile(BuildFileCreator.BUILD_FILE);
+                IFile file = module.getProject().getFile(BuildFileCreator.BUILD_FILE);
                 files.add(file);
             }
 
-            // get the commonRoot for all projects. If only one project, this returns the path
+            // get the commonRoot for all modules. If only one module, this returns the path
             // of the project.
-            IPath commonRoot = determineCommonRoot(fullProjectSet);
+            IPath commonRoot = builder.getCommonRoot();
 
             IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
             IPath workspaceLocation = workspaceRoot.getLocation();
@@ -167,8 +136,8 @@ public class BuildFileCreator {
 
             File settingsFile = new File(commonRoot.toFile(), SETTINGS_FILE);
 
-            // more than one project -> generate settings.gradle
-            if (fullProjectSet.size() > 1 && rootInWorkspace) {
+            // more than one modules -> generate settings.gradle
+            if (multiModules && rootInWorkspace) {
                 // Locate the settings.gradle file and add it to the changed files list
                 IPath settingsGradle = Path.fromOSString(settingsFile.getAbsolutePath());
 
@@ -193,26 +162,38 @@ public class BuildFileCreator {
                 }
             }
 
-            // Trigger checkout of changed files
-            Set<IFile> confirmedFiles = validateEdit(shell, files);
+            ExportStatus status = new ExportStatus();
+            builder.setStatus(status);
 
-            // Now iterate over all the projects and generate the build files.
+            // Trigger checkout of changed files
+            Set<IFile> confirmedFiles = validateEdit(files, status, shell);
+
+            if (status.hasError()) {
+                return;
+            }
+
+            // Now iterate over all the modules and generate the build files.
             localmonitor = SubMonitor.convert(pm, ExportMessages.PageTitle,
                     confirmedFiles.size());
             List<String> projectSettingsPath = Lists.newArrayList();
-            for (IJavaProject currentProject : fullProjectSet) {
-                IFile file = currentProject.getProject().getFile(BuildFileCreator.BUILD_FILE);
+            for (GradleModule currentModule : modules) {
+                IProject moduleProject = currentModule.getProject();
+
+                IFile file = moduleProject.getFile(BuildFileCreator.BUILD_FILE);
                 if (!confirmedFiles.contains(file)) {
                     continue;
                 }
 
                 localmonitor.setTaskName(NLS.bind(ExportMessages.FileStatusMessage,
-                        currentProject.getProject().getName()));
+                        moduleProject.getName()));
 
-                ProjectState projectState = Sdk.getProjectState(currentProject.getProject());
-                BuildFileCreator instance = new BuildFileCreator(currentProject, commonRoot, shell);
+                ProjectState projectState = Sdk.getProjectState(moduleProject);
+                BuildFileCreator instance = new BuildFileCreator(currentModule, shell);
                 if (projectState != null) {
                     // This is an Android project
+                    if (!multiModules) {
+                        instance.appendBuildScript();
+                    }
                     instance.appendHeader(projectState.isLibrary());
                     instance.appendDependencies();
                     instance.startAndroidTask(projectState);
@@ -225,35 +206,58 @@ public class BuildFileCreator {
                     instance.createJavaSourceSets();
                 }
 
-                // Write the build file
-                String buildfile = instance.buildfile.toString();
-                InputStream is =
-                        new ByteArrayInputStream(buildfile.getBytes("UTF-8")); //$NON-NLS-1$
-                if (file.exists()) {
-                    file.setContents(is, true, true, null);
-                } else {
-                    file.create(is, true, null);
-                }
-                if (localmonitor.isCanceled()) {
-                    return res;
-                }
-                localmonitor.worked(1);
-                res.add(instance.projectName);
+               try {
+                    // Write the build file
+                    String buildfile = instance.mBuildFile.toString();
+                    InputStream is =
+                            new ByteArrayInputStream(buildfile.getBytes("UTF-8")); //$NON-NLS-1$
+                    if (file.exists()) {
+                        file.setContents(is, true, true, null);
+                    } else {
+                        file.create(is, true, null);
+                    }
+               } catch (Exception e) {
+                     status.addFileStatus(ExportStatus.FileStatus.IO_FAILURE,
+                             file.getLocation().toFile());
+                     status.setErrorMessage(e.getMessage());
+                     return;
+               }
+
+               if (localmonitor.isCanceled()) {
+                   return;
+               }
+               localmonitor.worked(1);
 
                 // get the project path to add it to the settings.gradle.
-                projectSettingsPath.add(instance.getRelativeGradleProjectPath());
+                projectSettingsPath.add(currentModule.getPath());
             }
 
             // write the settings file.
-            if (fullProjectSet.size() > 1) {
-                writeGradleSettingsFile(settingsFile, projectSettingsPath);
-                writeRootBuildGradle(new File(commonRoot.toFile(), BUILD_FILE));
+            if (multiModules) {
+                try {
+                    writeGradleSettingsFile(settingsFile, projectSettingsPath);
+                } catch (IOException e) {
+                    status.addFileStatus(ExportStatus.FileStatus.IO_FAILURE, settingsFile);
+                    status.setErrorMessage(e.getMessage());
+                    return;
+                }
+                File mainBuildFile = new File(commonRoot.toFile(), BUILD_FILE);
+                try {
+                    writeRootBuildGradle(mainBuildFile);
+                } catch (IOException e) {
+                    status.addFileStatus(ExportStatus.FileStatus.IO_FAILURE, mainBuildFile);
+                    status.setErrorMessage(e.getMessage());
+                    return;
+                }
             }
 
             // finally write the wrapper
             // TODO check we can based on where it is
             if (hasGradleWrapper) {
-                copyGradleWrapper(gradleLocation, commonRoot.toFile());
+                copyGradleWrapper(gradleLocation, commonRoot.toFile(), status);
+                if (status.hasError()) {
+                    return;
+                }
             }
 
         } finally {
@@ -264,19 +268,14 @@ public class BuildFileCreator {
                 pm.done();
             }
         }
-        return res;
     }
 
     /**
-     * @param project create buildfile for this project
+     * @param GradleModule create buildfile for this project
      * @param shell parent instance for dialogs
      */
-    private BuildFileCreator(IJavaProject project, IPath commonRoot, Shell shell) {
-        this.project = project;
-        this.projectName = project.getProject().getName();
-        this.buildfile = new StringBuilder();
-        this.projectRoot = project.getResource().getLocation().toString();
-        this.commonRoot = commonRoot;
+    private BuildFileCreator(GradleModule module, Shell shell) {
+        mModule = module;
     }
 
     /**
@@ -295,145 +294,71 @@ public class BuildFileCreator {
     /**
      * Copy the Gradle wrapper files from one directory to another.
      */
-    private static void copyGradleWrapper(File from, File to) throws IOException {
+    private static void copyGradleWrapper(File from, File to, ExportStatus status) {
         for (String file : GRADLE_WRAPPER_FILES) {
             File dest = new File(to, file);
-            if (dest.exists()) {
-                // Don't clobber an existing file. The user may have modified it already.
-                continue;
+            try {
+                File src = new File(from, file);
+                dest.getParentFile().mkdirs();
+                new FileOp().copyFile(src, dest);
+                dest.setExecutable(src.canExecute());
+                status.addFileStatus(ExportStatus.FileStatus.OK, dest);
+            } catch (IOException e) {
+                status.addFileStatus(ExportStatus.FileStatus.IO_FAILURE, dest);
+                return;
             }
-            File src = new File(from, file);
-            dest.getParentFile().mkdirs();
-            new FileOp().copyFile(src, dest);
-            dest.setExecutable(src.canExecute());
         }
     }
 
     /**
-     * Finds the common parent directory shared by this project and all its dependencies.
-     * If there's only one project, returns the single project's folder.
+     * Outputs boilerplate buildscript information common to all Gradle build files.
      */
-    private static IPath determineCommonRoot(Collection<IJavaProject> projects) {
-        IPath commonRoot = null;
-        for (IJavaProject javaProject : projects) {
-            if (commonRoot == null) {
-                commonRoot = javaProject.getProject().getLocation();
-            } else {
-                commonRoot = findCommonRoot(commonRoot, javaProject.getProject().getLocation());
-            }
-        }
+    private void appendBuildScript() {
+        appendBuildScript(mBuildFile);
+    }
 
-        return commonRoot;
+    /**
+     * Outputs boilerplate header information common to all Gradle build files.
+     */
+    private static void appendBuildScript(StringBuilder builder) {
+        builder.append("buildscript {\n"); //$NON-NLS-1$
+        builder.append("    repositories {\n"); //$NON-NLS-1$
+        builder.append("        " + MAVEN_REPOSITORY + "\n"); //$NON-NLS-1$
+        builder.append("    }\n"); //$NON-NLS-1$
+        builder.append("    dependencies {\n"); //$NON-NLS-1$
+        builder.append("        " + PLUGIN_CLASSPATH + "\n"); //$NON-NLS-1$
+        builder.append("    }\n"); //$NON-NLS-1$
+        builder.append("}\n"); //$NON-NLS-1$
     }
 
     /**
      * Outputs boilerplate header information common to all Gradle build files.
      */
     private void appendHeader(boolean isLibrary) {
-        buildfile.append("buildscript {\n"); //$NON-NLS-1$
-        buildfile.append("    repositories {\n"); //$NON-NLS-1$
-        buildfile.append("        " + MAVEN_REPOSITORY + "\n"); //$NON-NLS-1$
-        buildfile.append("    }\n"); //$NON-NLS-1$
-        buildfile.append("    dependencies {\n"); //$NON-NLS-1$
-        buildfile.append("        " + PLUGIN_CLASSPATH + "\n"); //$NON-NLS-1$
-        buildfile.append("    }\n"); //$NON-NLS-1$
-        buildfile.append("}\n"); //$NON-NLS-1$
         if (isLibrary) {
-            buildfile.append("apply plugin: 'android-library'\n"); //$NON-NLS-1$
+            mBuildFile.append("apply plugin: 'android-library'\n"); //$NON-NLS-1$
         } else {
-            buildfile.append("apply plugin: 'android'\n"); //$NON-NLS-1$
+            mBuildFile.append("apply plugin: 'android'\n"); //$NON-NLS-1$
         }
-        buildfile.append("\n"); //$NON-NLS-1$
+        mBuildFile.append("\n"); //$NON-NLS-1$
     }
 
     /**
      * Outputs a block which sets up library and project dependencies.
      */
     private void appendDependencies() {
-        if (project == null) {
-            AdtPlugin.log(IStatus.WARNING, "project is not loaded in workspace"); //$NON-NLS-1$
-            return;
-        }
-        buildfile.append("dependencies {\n"); //$NON-NLS-1$
+        mBuildFile.append("dependencies {\n"); //$NON-NLS-1$
 
         // first the local jars.
-        buildfile.append("    compile fileTree(dir: 'libs', include: '*.jar')\n");
+        // TODO: Fix
+        mBuildFile.append("    compile fileTree(dir: 'libs', include: '*.jar')\n"); //$NON-NLS-1$
 
-        // then the project dependencies.
-        // First the Android libraries.
-        ProjectState state = Sdk.getProjectState(project.getProject());
-
-        for (LibraryState libState : state.getLibraries()) {
-            String path = getRelativeGradleProjectPath(
-                    libState.getProjectState().getProject().getLocation(), commonRoot);
-
-            buildfile.append("    compile project('" + path + "')\n"); //$NON-NLS-1$
+        for (GradleModule dep : mModule.getDependencies()) {
+            mBuildFile.append("    compile project('" + dep.getPath() + "')\n"); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        // Next, the other non-Android projects.
-        for (IClasspathEntry entry : project.readRawClasspath()) {
-            if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-                IProject cpProject = getNonAndroidProjectByName(entry.getPath().toString());
-                if (cpProject != null) {
-                    String path = getRelativeGradleProjectPath(
-                            cpProject.getLocation(), commonRoot);
-
-                    buildfile.append("    compile project('" + path + "')\n"); //$NON-NLS-1$
-                }
-            }
-        }
-
-        buildfile.append("}\n"); //$NON-NLS-1$
-        buildfile.append("\n"); //$NON-NLS-1$
-    }
-
-    /**
-     * Given two IPaths, finds the parent directory of both of them.
-     */
-    private static IPath findCommonRoot(IPath path1, IPath path2) {
-        // TODO: detect paths on different disk drive on Windows!
-        if (path1 != null && path1.getDevice() != null) {
-            assert path1.getDevice().equals(path2.getDevice());
-        }
-        IPath result = path1.uptoSegment(0);
-
-        final int count = Math.min(path1.segmentCount(), path2.segmentCount());
-        for (int i = 0; i < count; i++) {
-            if (path1.segment(i).equals(path2.segment(i))) {
-                result = result.append(Path.SEPARATOR + path2.segment(i));
-            }
-        }
-        return result;
-    }
-
-    private String getRelativeGradleProjectPath() {
-        return getRelativeGradleProjectPath(project.getProject().getLocation(), commonRoot);
-    }
-
-    /**
-     * Converts the given path to be relative to the given root path, and converts it to
-     * Gradle project notation, such as is used in the settings.gradle file.
-     */
-    private String getRelativeGradleProjectPath(IPath path, IPath root) {
-        IPath relativePath = path.makeRelativeTo(root);
-        String relativeString = relativePath.toOSString();
-        return ":" + relativeString.replaceAll(Pattern.quote(File.separator), ":"); //$NON-NLS-1$
-    }
-
-    /**
-     * Finds the workspace project with the given name
-     */
-    private static IProject getNonAndroidProjectByName(String name) {
-        try {
-            IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
-            if (project.exists() && !project.hasNature(AdtConstants.NATURE_DEFAULT)) {
-                return project;
-            }
-        } catch (IllegalArgumentException iae) {
-        } catch (CoreException e) {
-        }
-
-        return null;
+        mBuildFile.append("}\n"); //$NON-NLS-1$
+        mBuildFile.append("\n"); //$NON-NLS-1$
     }
 
     /**
@@ -442,24 +367,10 @@ public class BuildFileCreator {
     private void startAndroidTask(ProjectState projectState) {
         int buildApi = projectState.getTarget().getVersion().getApiLevel();
         String toolsVersion = projectState.getTarget().getBuildToolInfo().getRevision().toString();
-        buildfile.append("android {\n"); //$NON-NLS-1$
-        buildfile.append("    compileSdkVersion " + buildApi + "\n"); //$NON-NLS-1$
-        buildfile.append("    buildToolsVersion \"" + toolsVersion + "\"\n"); //$NON-NLS-1$
-        buildfile.append("\n"); //$NON-NLS-1$
-    }
-
-    /**
-     * Outputs the defaultConfig block in the Android task.
-     */
-    private void appendDefaultConfig() {
-        Pair<Integer, Integer> v = ManifestInfo.computeSdkVersions(project.getProject());
-        int minApi = v.getFirst();
-        int targetApi = v.getSecond();
-
-        buildfile.append("    defaultConfig {\n"); //$NON-NLS-1$
-        buildfile.append("        minSdkVersion " + minApi + "\n"); //$NON-NLS-1$
-        buildfile.append("        targetSdkVersion " + targetApi + "\n"); //$NON-NLS-1$
-        buildfile.append("    }\n"); //$NON-NLS-1$
+        mBuildFile.append("android {\n"); //$NON-NLS-1$
+        mBuildFile.append("    compileSdkVersion " + buildApi + "\n"); //$NON-NLS-1$
+        mBuildFile.append("    buildToolsVersion \"" + toolsVersion + "\"\n"); //$NON-NLS-1$
+        mBuildFile.append("\n"); //$NON-NLS-1$
     }
 
     /**
@@ -467,13 +378,13 @@ public class BuildFileCreator {
      * subdirectories in the project.
      */
     private void createAndroidSourceSets() {
-        IFolderWrapper projectFolder = new IFolderWrapper(project.getProject());
+        IFolderWrapper projectFolder = new IFolderWrapper(mModule.getProject());
         IAbstractFile mManifestFile = AndroidManifest.getManifest(projectFolder);
         if (mManifestFile == null) {
             return;
         }
         List<String> srcDirs = new ArrayList<String>();
-        for (IClasspathEntry entry : project.readRawClasspath()) {
+        for (IClasspathEntry entry : mModule.getJavaProject().readRawClasspath()) {
             if (entry.getEntryKind() != IClasspathEntry.CPE_SOURCE ||
                     SdkConstants.FD_GEN_SOURCES.equals(entry.getPath().lastSegment())) {
                 continue;
@@ -484,33 +395,33 @@ public class BuildFileCreator {
 
         String srcPaths = Joiner.on(",").join(srcDirs);
 
-        buildfile.append("    sourceSets {\n"); //$NON-NLS-1$
-        buildfile.append("        main {\n"); //$NON-NLS-1$
-        buildfile.append("            manifest.srcFile '" + SdkConstants.FN_ANDROID_MANIFEST_XML + "'\n"); //$NON-NLS-1$
-        buildfile.append("            java.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
-        buildfile.append("            resources.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
-        buildfile.append("            aidl.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
-        buildfile.append("            renderscript.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
-        buildfile.append("            res.srcDirs = ['res']\n"); //$NON-NLS-1$
-        buildfile.append("            assets.srcDirs = ['assets']\n"); //$NON-NLS-1$
-        buildfile.append("        }\n"); //$NON-NLS-1$
-        buildfile.append("\n"); //$NON-NLS-1$
-        buildfile.append("        instrumentTest.setRoot('tests')\n"); //$NON-NLS-1$
-        buildfile.append("    }\n"); //$NON-NLS-1$
+        mBuildFile.append("    sourceSets {\n"); //$NON-NLS-1$
+        mBuildFile.append("        main {\n"); //$NON-NLS-1$
+        mBuildFile.append("            manifest.srcFile '" + SdkConstants.FN_ANDROID_MANIFEST_XML + "'\n"); //$NON-NLS-1$
+        mBuildFile.append("            java.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        mBuildFile.append("            resources.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        mBuildFile.append("            aidl.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        mBuildFile.append("            renderscript.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        mBuildFile.append("            res.srcDirs = ['res']\n"); //$NON-NLS-1$
+        mBuildFile.append("            assets.srcDirs = ['assets']\n"); //$NON-NLS-1$
+        mBuildFile.append("        }\n"); //$NON-NLS-1$
+        mBuildFile.append("\n"); //$NON-NLS-1$
+        mBuildFile.append("        instrumentTest.setRoot('tests')\n"); //$NON-NLS-1$
+        mBuildFile.append("    }\n"); //$NON-NLS-1$
     }
 
     /**
      * Outputs the completion of the Android task in the build file.
      */
     private void finishAndroidTask() {
-        buildfile.append("}\n"); //$NON-NLS-1$
+        mBuildFile.append("}\n"); //$NON-NLS-1$
     }
 
     /**
      * Outputs a boilerplate header for non-Android projects
      */
     private void appendJavaHeader() {
-        buildfile.append("apply plugin: 'java'\n"); //$NON-NLS-1$
+        mBuildFile.append("apply plugin: 'java'\n"); //$NON-NLS-1$
     }
 
     /**
@@ -518,7 +429,7 @@ public class BuildFileCreator {
      */
     private void createJavaSourceSets() {
         List<String> dirs = new ArrayList<String>();
-        for (IClasspathEntry entry : project.readRawClasspath()) {
+        for (IClasspathEntry entry : mModule.getJavaProject().readRawClasspath()) {
             if (entry.getEntryKind() != IClasspathEntry.CPE_SOURCE) {
                 continue;
             }
@@ -528,30 +439,36 @@ public class BuildFileCreator {
 
         String srcPaths = Joiner.on(",").join(dirs);
 
-        buildfile.append("sourceSets {\n"); //$NON-NLS-1$
-        buildfile.append("    main.java.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
-        buildfile.append("    main.resources.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
-        buildfile.append("    test.java.srcDirs = ['tests/java']\n"); //$NON-NLS-1$
-        buildfile.append("    test.resources.srcDirs = ['tests/resources']\n"); //$NON-NLS-1$
-        buildfile.append("}\n"); //$NON-NLS-1$
+        mBuildFile.append("sourceSets {\n"); //$NON-NLS-1$
+        mBuildFile.append("    main.java.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        mBuildFile.append("    main.resources.srcDirs = [" + srcPaths + "]\n"); //$NON-NLS-1$
+        mBuildFile.append("    test.java.srcDirs = ['tests/java']\n"); //$NON-NLS-1$
+        mBuildFile.append("    test.resources.srcDirs = ['tests/resources']\n"); //$NON-NLS-1$
+        mBuildFile.append("}\n"); //$NON-NLS-1$
     }
 
     /**
      * Merges the new subproject dependencies into the settings.gradle file if it already exists,
      * and creates one if it does not.
+     * @throws IOException
      */
-    private static void writeGradleSettingsFile(File settingsFile, List<String> projectPaths) {
+    private static void writeGradleSettingsFile(File settingsFile, List<String> projectPaths)
+            throws IOException {
         StringBuilder contents = new StringBuilder();
         for (String path : projectPaths) {
             contents.append("include '").append(path).append("'\n"); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        AdtPlugin.writeFile(settingsFile, contents.toString());
+        Files.write(contents.toString(), settingsFile, Charsets.UTF_8);
     }
 
-    private static void writeRootBuildGradle(File buildFile) {
-        AdtPlugin.writeFile(buildFile,
+    private static void writeRootBuildGradle(File buildFile) throws IOException {
+        StringBuilder sb = new StringBuilder(
                 "// Top-level build file where you can add configuration options common to all sub-projects/modules.\n");
+
+        appendBuildScript(sb);
+
+        Files.write(sb.toString(), buildFile, Charsets.UTF_8);
     }
 
     /**
@@ -564,7 +481,10 @@ public class BuildFileCreator {
      * @throws CoreException
      *             thrown if project is under version control, but not connected
      */
-    static Set<IFile> validateEdit(Shell shell, List<IFile> files) throws CoreException {
+    static Set<IFile> validateEdit(
+            @NonNull List<IFile> files,
+            @NonNull ExportStatus exportStatus,
+            @NonNull Shell shell) {
         Set<IFile> confirmedFiles = new TreeSet<IFile>(FILE_COMPARATOR);
         if (files.size() == 0) {
             return confirmedFiles;
@@ -576,6 +496,10 @@ public class BuildFileCreator {
                 IStatus statusChild = status.getChildren()[i];
                 if (statusChild.isOK()) {
                     confirmedFiles.add(files.get(i));
+                } else {
+                    exportStatus.addFileStatus(
+                            ExportStatus.FileStatus.VCS_FAILURE,
+                            files.get(i).getLocation().toFile());
                 }
             }
         } else if (status.isOK()) {
@@ -593,8 +517,8 @@ public class BuildFileCreator {
                     message.append(statusChild.getMessage() + NEWLINE);
                 }
             }
-            throw new CoreException(new Status(IStatus.ERROR,
-                    AdtPlugin.PLUGIN_ID, 0, message.toString(), null));
+            String s = message.toString();
+            exportStatus.setErrorMessage(s);
         }
 
         return confirmedFiles;
