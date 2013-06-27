@@ -16,7 +16,7 @@
         id="packageName"
         name="Package name"
         type="string"
-        constraints="package"
+        constraints="package|nonempty"
         default="com.mycompany.myapp" />
 
     <parameter
