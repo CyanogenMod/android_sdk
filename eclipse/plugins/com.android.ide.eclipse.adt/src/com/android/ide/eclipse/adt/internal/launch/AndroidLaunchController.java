@@ -1194,7 +1194,17 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 String.format("Installation failed: Could not copy %1$s to its final location!",
                         launchInfo.getPackageFile().getName()),
                 "Please check logcat output for more details.");
-        } else if (result.equals("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES")) {
+        } else if (result.equals("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES")) { //$NON-NLS-1$
+            if (retryMode != InstallRetryMode.NEVER) {
+                boolean prompt = AdtPlugin.displayPrompt("Application Install",
+                                "Re-installation failed due to different application signatures. You must perform a full uninstall of the application. WARNING: This will remove the application data!\nDo you want to uninstall?");
+                if (prompt) {
+                    doUninstall(device, launchInfo);
+                    String res = doInstall(launchInfo, remotePath, device, false);
+                    return checkInstallResult(res, device, launchInfo, remotePath,
+                            InstallRetryMode.NEVER);
+                }
+            }
             AdtPlugin.printErrorToConsole(launchInfo.getProject(),
                     "Re-installation failed due to different application signatures.",
                     "You must perform a full uninstall of the application. WARNING: This will remove the application data!",
@@ -1215,7 +1225,6 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @return a {@link String} with an error code, or <code>null</code> if success.
      * @throws InstallException if the installation failed.
      */
-    @SuppressWarnings("unused")
     private String doUninstall(IDevice device, DelayedLaunchInfo launchInfo)
             throws InstallException {
         try {
