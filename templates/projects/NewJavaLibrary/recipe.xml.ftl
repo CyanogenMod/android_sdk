@@ -2,10 +2,10 @@
 <recipe>
 <#if isGradle == "true">
     <merge from="settings.gradle.ftl"
-             to="${topOut}/settings.gradle" />
+             to="${escapeXmlAttribute(topOut)}/settings.gradle" />
     <instantiate from="build.gradle.ftl"
-                   to="${projectOut}/build.gradle" />
+                   to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 </#if>
     <instantiate from="/src/library_package/Placeholder.java.ftl"
-                   to="${srcOut}/${className}.java" />
+                   to="${escapeXmlAttribute(srcOut)}/${className}.java" />
 </recipe>
