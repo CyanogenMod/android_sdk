@@ -406,7 +406,19 @@ public class BuildFileCreator {
         mBuildFile.append("            assets.srcDirs = ['assets']\n"); //$NON-NLS-1$
         mBuildFile.append("        }\n"); //$NON-NLS-1$
         mBuildFile.append("\n"); //$NON-NLS-1$
+        mBuildFile.append("        // Move the tests to tests/java, tests/res, etc...\n"); //$NON-NLS-1$
         mBuildFile.append("        instrumentTest.setRoot('tests')\n"); //$NON-NLS-1$
+        if (srcDirs.contains("'src'")) {
+            mBuildFile.append("\n"); //$NON-NLS-1$
+            mBuildFile.append("        // Move the build types to build-types/<type>\n"); //$NON-NLS-1$
+            mBuildFile.append("        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...\n"); //$NON-NLS-1$
+            mBuildFile.append("        // This moves them out of them default location under src/<type>/... which would\n"); //$NON-NLS-1$
+            mBuildFile.append("        // conflict with src/ being used by the main source set.\n"); //$NON-NLS-1$
+            mBuildFile.append("        // Adding new build types or product flavors should be accompanied\n"); //$NON-NLS-1$
+            mBuildFile.append("        // by a similar customization.\n"); //$NON-NLS-1$
+            mBuildFile.append("        debug.setRoot('build-types/debug')\n"); //$NON-NLS-1$
+            mBuildFile.append("        release.setRoot('build-types/release')\n"); //$NON-NLS-1$
+        }
         mBuildFile.append("    }\n"); //$NON-NLS-1$
     }
 
