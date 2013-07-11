@@ -419,7 +419,7 @@ bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
                 fb->m_nativeWindow = p_window;
 
                 // create EGLSurface from the generated subwindow
-                fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay, 
+                fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay,
                                                     fb->m_eglConfig,
                                                     fb->m_subWin,
                                                     NULL);
@@ -692,28 +692,31 @@ bool FrameBuffer::bindContext(HandleType p_context,
                               draw ? draw->getEGLSurface() : EGL_NO_SURFACE,
                               read ? read->getEGLSurface() : EGL_NO_SURFACE,
                               ctx ? ctx->getEGLContext() : EGL_NO_CONTEXT)) {
-        // MakeCurrent failed
+        ERR("eglMakeCurrent failed\n");
         return false;
     }
 
     //
     // Bind the surface(s) to the context
     //
-    RenderThreadInfo *tinfo = getRenderThreadInfo();
+    RenderThreadInfo *tinfo = RenderThreadInfo::get();
+    WindowSurfacePtr bindDraw, bindRead;
     if (draw.Ptr() == NULL && read.Ptr() == NULL) {
-        // if this is an unbind operation - make sure the current bound
-        // surfaces get unbound from the context.
-        draw = tinfo->currDrawSurf;
-        read = tinfo->currReadSurf;
+        // Unbind the current read and draw surfaces from the context
+        bindDraw = tinfo->currDrawSurf;
+        bindRead = tinfo->currReadSurf;
+    } else {
+        bindDraw = draw;
+        bindRead = read;
     }
 
-    if (draw.Ptr() != NULL && read.Ptr() != NULL) {
-        if (p_readSurface != p_drawSurface) {
-            draw->bind( ctx, SURFACE_BIND_DRAW );
-            read->bind( ctx, SURFACE_BIND_READ );
+    if (bindDraw.Ptr() != NULL && bindRead.Ptr() != NULL) {
+        if (bindDraw.Ptr() != bindRead.Ptr()) {
+            bindDraw->bind(ctx, SURFACE_BIND_DRAW);
+            bindRead->bind(ctx, SURFACE_BIND_READ);
         }
         else {
-            draw->bind( ctx, SURFACE_BIND_READDRAW );
+            bindDraw->bind(ctx, SURFACE_BIND_READDRAW);
         }
     }
 
@@ -846,7 +849,7 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
 
             s_egl.eglSwapBuffers(m_eglDisplay, m_eglSurface);
         }
- 
+
         // restore previous binding
         unbind_locked();
 
