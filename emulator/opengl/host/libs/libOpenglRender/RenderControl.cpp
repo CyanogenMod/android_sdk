@@ -63,7 +63,7 @@ static EGLint rcQueryEGLString(EGLenum name, void* buffer, EGLint bufferSize)
 
 static EGLint rcGetGLString(EGLenum name, void* buffer, EGLint bufferSize)
 {
-    RenderThreadInfo *tInfo = getRenderThreadInfo();
+    RenderThreadInfo *tInfo = RenderThreadInfo::get();
     if (!tInfo || !tInfo->currContext.Ptr()) {
         return 0;
     }

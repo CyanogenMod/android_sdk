@@ -23,13 +23,15 @@
 
 struct RenderThreadInfo
 {
+    RenderThreadInfo();
+    ~RenderThreadInfo();
+    static RenderThreadInfo* get();
+
     RenderContextPtr currContext;
     WindowSurfacePtr currDrawSurf;
     WindowSurfacePtr currReadSurf;
     GLDecoder        m_glDec;
     GL2Decoder       m_gl2Dec;
 };
-
-RenderThreadInfo *getRenderThreadInfo();
 
 #endif
