@@ -66,7 +66,7 @@ public class BuildFileCreator {
     private static final String GRADLE_WRAPPER_LOCATION =
             "tools/templates/gradle/wrapper"; //$NON-NLS-1$
     static final String PLUGIN_CLASSPATH =
-            "classpath 'com.android.tools.build:gradle:0.4.+'"; //$NON-NLS-1$
+            "classpath 'com.android.tools.build:gradle:0.5.+'"; //$NON-NLS-1$
     static final String MAVEN_REPOSITORY = "mavenCentral()"; //$NON-NLS-1$
 
     private static final String[] GRADLE_WRAPPER_FILES = new String[] {
