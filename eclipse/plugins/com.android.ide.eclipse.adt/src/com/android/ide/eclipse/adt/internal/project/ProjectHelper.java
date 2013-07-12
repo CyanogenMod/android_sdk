@@ -73,7 +73,7 @@ public final class ProjectHelper {
     public final static int COMPILER_COMPLIANCE_CODEGEN_TARGET = 3;
 
     /**
-     * Adds the corresponding source folder to the class path entries.
+     * Adds the given ClasspathEntry object to the class path entries.
      * This method does not check whether the entry is already defined in the project.
      *
      * @param entries The class path entries to read. A copy will be returned.
@@ -87,6 +87,32 @@ public final class ProjectHelper {
         System.arraycopy(entries, 0, newEntries, 0, n);
         newEntries[n] = newEntry;
         return newEntries;
+    }
+
+    /**
+     * Replaces the given ClasspathEntry in the classpath entries.
+     *
+     * If the classpath does not yet exists (Check is based on entry path), then it is added.
+     *
+     * @param entries The class path entries to read. The same array (replace) or a copy (add)
+     *                will be returned.
+     * @param newEntry The new class path entry to add.
+     * @return The same array (replace) or a copy (add) will be returned.
+     *
+     * @see IClasspathEntry#getPath()
+     */
+    public static IClasspathEntry[] replaceEntryInClasspath(
+            IClasspathEntry[] entries, IClasspathEntry newEntry) {
+
+        IPath path = newEntry.getPath();
+        for (int i = 0, count = entries.length; i < count ; i++) {
+            if (path.equals(entries[i].getPath())) {
+                entries[i] = newEntry;
+                return entries;
+            }
+        }
+
+        return addEntryToClasspath(entries, newEntry);
     }
 
     /**
@@ -285,6 +311,7 @@ public final class ProjectHelper {
         // get the project classpath
         IClasspathEntry[] entries = javaProject.getRawClasspath();
         IClasspathEntry[] oldEntries = entries;
+        boolean forceRewriteOfCPE = false;
 
         // check if the JRE is set as library
         int jreIndex = ProjectHelper.findClasspathEntryByPath(entries, JavaRuntime.JRE_CONTAINER,
@@ -298,8 +325,8 @@ public final class ProjectHelper {
         IPath outputFolder = javaProject.getOutputLocation();
 
         boolean foundFrameworkContainer = false;
-        boolean foundLibrariesContainer = false;
-        boolean foundDependenciesContainer = false;
+        IClasspathEntry foundLibrariesContainer = null;
+        IClasspathEntry foundDependenciesContainer = null;
 
         for (int i = 0 ; i < entries.length ;) {
             // get the entry and kind
@@ -319,17 +346,25 @@ public final class ProjectHelper {
                 String path = entry.getPath().toString();
                 if (AdtConstants.CONTAINER_FRAMEWORK.equals(path)) {
                     foundFrameworkContainer = true;
-                }
-                if (AdtConstants.CONTAINER_PRIVATE_LIBRARIES.equals(path)) {
-                    foundLibrariesContainer = true;
-                }
-                if (AdtConstants.CONTAINER_DEPENDENCIES.equals(path)) {
-                    foundDependenciesContainer = true;
+                } else if (AdtConstants.CONTAINER_PRIVATE_LIBRARIES.equals(path)) {
+                    foundLibrariesContainer = entry;
+                } else if (AdtConstants.CONTAINER_DEPENDENCIES.equals(path)) {
+                    foundDependenciesContainer = entry;
                 }
             }
 
             i++;
         }
+
+        // look to see if we have the m2eclipse nature
+        boolean m2eNature = false;
+        try {
+            m2eNature = javaProject.getProject().hasNature("org.eclipse.m2e.core.maven2Nature");
+        } catch (CoreException e) {
+            AdtPlugin.log(e, "Failed to query project %s for m2e nature",
+                    javaProject.getProject().getName());
+        }
+
 
         // if the framework container is not there, we add it
         if (!foundFrameworkContainer) {
@@ -339,23 +374,45 @@ public final class ProjectHelper {
         }
 
         // same thing for the library container
-        if (!foundLibrariesContainer) {
+        if (foundLibrariesContainer == null) {
             // add the exported libraries android container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
                     JavaCore.newContainerEntry(
                             new Path(AdtConstants.CONTAINER_PRIVATE_LIBRARIES), true));
+        } else if (!m2eNature && !foundLibrariesContainer.isExported()) {
+            // the container is present but it's not exported and since there's no m2e nature
+            // we do want it to be exported.
+            // keep all the other parameters the same.
+            entries = ProjectHelper.replaceEntryInClasspath(entries,
+                    JavaCore.newContainerEntry(
+                            new Path(AdtConstants.CONTAINER_PRIVATE_LIBRARIES),
+                            foundLibrariesContainer.getAccessRules(),
+                            foundLibrariesContainer.getExtraAttributes(),
+                            true));
+            forceRewriteOfCPE = true;
         }
 
         // same thing for the dependencies container
-        if (!foundDependenciesContainer) {
+        if (foundDependenciesContainer == null) {
             // add the android dependencies container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
                     JavaCore.newContainerEntry(
                             new Path(AdtConstants.CONTAINER_DEPENDENCIES), true));
+        } else if (!m2eNature && !foundDependenciesContainer.isExported()) {
+            // the container is present but it's not exported and since there's no m2e nature
+            // we do want it to be exported.
+            // keep all the other parameters the same.
+            entries = ProjectHelper.replaceEntryInClasspath(entries,
+                    JavaCore.newContainerEntry(
+                            new Path(AdtConstants.CONTAINER_DEPENDENCIES),
+                            foundDependenciesContainer.getAccessRules(),
+                            foundDependenciesContainer.getExtraAttributes(),
+                            true));
+            forceRewriteOfCPE = true;
         }
 
         // set the new list of entries to the project
-        if (entries != oldEntries) {
+        if (entries != oldEntries || forceRewriteOfCPE) {
             javaProject.setRawClasspath(entries, new NullProgressMonitor());
         }
 
