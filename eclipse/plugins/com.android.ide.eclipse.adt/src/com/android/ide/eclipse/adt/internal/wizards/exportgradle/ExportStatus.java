@@ -35,7 +35,9 @@ public class ExportStatus {
     }
 
     boolean hasError() {
-        return mMainError != null || !mFileStatus.isEmpty();
+        return mMainError != null ||
+                !mFileStatus.get(FileStatus.VCS_FAILURE).isEmpty() ||
+                !mFileStatus.get(FileStatus.IO_FAILURE).isEmpty();
     }
 
     public void setErrorMessage(String error) {
