@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.gltrace.state;
 
-import com.android.sdklib.util.SparseArray;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import com.android.utils.SparseArray;
 
 public class GLSparseArrayProperty implements IGLProperty {
     private final GLStateType mType;

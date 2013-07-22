@@ -46,8 +46,8 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.repository.PkgProps;
-import com.android.sdklib.util.SparseIntArray;
 import com.android.utils.Pair;
+import com.android.utils.SparseIntArray;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
