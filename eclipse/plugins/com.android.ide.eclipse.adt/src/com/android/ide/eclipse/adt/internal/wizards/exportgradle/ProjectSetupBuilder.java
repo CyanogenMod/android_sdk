@@ -324,7 +324,7 @@ public class ProjectSetupBuilder {
     @NonNull
     private static IPath findCommonRoot(@NonNull IPath path1, @NonNull IPath path2)
             throws InternalException {
-        if (path1.getDevice() != null && path1.getDevice().equals(path2.getDevice())) {
+        if (path1.getDevice() != null && !path1.getDevice().equals(path2.getDevice())) {
             throw new InternalException(
                     "Different modules have been detected on different drives.\n" +
                     "This prevents finding a common root to all modules.");
