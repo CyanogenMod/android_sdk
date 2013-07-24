@@ -107,6 +107,11 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
         checkRefactoring(newLayoutType, basename, flatten, null);
     }
 
+    @Override
+    protected int getMinSdk() {
+        return 14;
+    }
+
     private void checkRefactoring(String newLayoutType, String basename,
             boolean flatten, String initialAttributes) throws Exception {
         IFile file = getLayoutFile(getProject(), basename);

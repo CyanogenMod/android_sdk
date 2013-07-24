@@ -15,6 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.preferences;
 
+import static com.android.tools.lint.detector.api.Issue.OutputFormat.RAW;
+import static com.android.tools.lint.detector.api.Issue.OutputFormat.TEXT;
+
 import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -448,8 +451,8 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             Object data = item != null ? item.getData() : null;
             if (data instanceof Issue) {
                 Issue issue = (Issue) data;
-                String summary = issue.getDescription();
-                String explanation = issue.getExplanation();
+                String summary = issue.getDescription(Issue.OutputFormat.TEXT);
+                String explanation = issue.getExplanation(Issue.OutputFormat.TEXT);
 
                 StringBuilder sb = new StringBuilder(summary.length() + explanation.length() + 20);
                 sb.append(summary);
@@ -568,7 +571,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 || issue.getCategory().getName().toLowerCase(Locale.US).startsWith(filter)
                 || issue.getCategory().getFullName().toLowerCase(Locale.US).startsWith(filter)
                 || issue.getId().toLowerCase(Locale.US).contains(filter)
-                || issue.getDescription().toLowerCase(Locale.US).contains(filter);
+                || issue.getDescription(RAW).toLowerCase(Locale.US).contains(filter);
     }
 
     private class ContentProvider extends TreeNodeContentProvider {
@@ -703,7 +706,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 if (columnIndex == 0) {
                     return ((Category) element).getFullName();
                 } else {
-                    return ((Category) element).getExplanation();
+                    return null;
                 }
             }
 
@@ -712,7 +715,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 case 0:
                     return issue.getId();
                 case 1:
-                    return issue.getDescription();
+                    return issue.getDescription(TEXT);
             }
 
             return null;

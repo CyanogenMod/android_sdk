@@ -124,6 +124,7 @@ class GridMatch implements Comparable<GridMatch> {
                 }
                 return String.format("Align bottom at y=%1d", matchedLine - layout.getBounds().y);
             case CENTER_VERTICAL:
+                return "Center vertically";
             case UNKNOWN:
             default:
                 return null;

@@ -19,6 +19,7 @@ import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -58,8 +59,9 @@ import java.util.Set;
 public class NewProjectWizard extends TemplateWizard {
     private static final String PARENT_ACTIVITY_CLASS = "parentActivityClass";  //$NON-NLS-1$
     private static final String ACTIVITY_TITLE = "activityTitle";  //$NON-NLS-1$
-    private static final String IS_LAUNCHER = "isLauncher";        //$NON-NLS-1$
+    static final String IS_LAUNCHER = "isLauncher";                //$NON-NLS-1$
     static final String IS_NEW_PROJECT = "isNewProject";           //$NON-NLS-1$
+    static final String IS_LIBRARY_PROJECT = "isLibraryProject";   //$NON-NLS-1$
     static final String ATTR_COPY_ICONS = "copyIcons";             //$NON-NLS-1$
     static final String ATTR_TARGET_API = "targetApi";             //$NON-NLS-1$
     static final String ATTR_MIN_API = "minApi";                   //$NON-NLS-1$
@@ -98,6 +100,7 @@ public class NewProjectWizard extends TemplateWizard {
         mContentsPage = new ProjectContentsPage(mValues);
         mContentsPage.init(selection, AdtUtils.getActivePart());
         mActivityPage = new ActivityPage(mValues, true, true);
+        mActivityPage.setLauncherActivitiesOnly(true);
     }
 
     @Override
@@ -240,6 +243,16 @@ public class NewProjectWizard extends TemplateWizard {
         return mValues.template.getFilesToOpen();
     }
 
+    @VisibleForTesting
+    NewProjectWizardState getValues() {
+        return mValues;
+    }
+
+    @VisibleForTesting
+    void setValues(NewProjectWizardState values) {
+        mValues = values;
+    }
+
     @Override
     protected List<Change> computeChanges() {
         final TemplateHandler template = mValues.template;
@@ -374,6 +387,7 @@ public class NewProjectWizard extends TemplateWizard {
         addProjectInfo(parameters);
 
         parameters.put(IS_NEW_PROJECT, true);
+        parameters.put(IS_LIBRARY_PROJECT, mValues.isLibrary);
         // Ensure that activities created as part of a new project are marked as
         // launcher activities
         parameters.put(IS_LAUNCHER, true);

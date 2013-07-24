@@ -15,8 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_HORIZ_MASK;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_BACKGROUND;
 import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
 import static com.android.SdkConstants.ATTR_LAYOUT_ALIGN_BASELINE;
@@ -34,10 +33,10 @@ import static com.android.SdkConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.FQCN_GRID_LAYOUT;
+import static com.android.SdkConstants.FQCN_SPACE;
 import static com.android.SdkConstants.GRAVITY_VALUE_FILL;
 import static com.android.SdkConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
 import static com.android.SdkConstants.GRAVITY_VALUE_FILL_VERTICAL;
-import static com.android.SdkConstants.GRID_LAYOUT;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
@@ -51,10 +50,9 @@ import static com.android.SdkConstants.VALUE_HORIZONTAL;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VALUE_VERTICAL;
 import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_HORIZ_MASK;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
 
-
-import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.layout.GravityHelper;
@@ -66,7 +64,9 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
+import com.android.ide.eclipse.adt.internal.project.SupportLibraryHelper;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.text.edits.InsertEdit;
@@ -227,9 +227,12 @@ class GridLayoutConverter {
             int column = columnFixed.size();
             StringBuilder sb = new StringBuilder(64);
             String spaceTag = SPACE;
-            if (!gridLayout.equals(GRID_LAYOUT) && gridLayout.length() > GRID_LAYOUT.length()) {
-                String pkg = gridLayout.substring(0, gridLayout.length() - GRID_LAYOUT.length());
-                spaceTag = pkg + spaceTag;
+            IFile file = mRefactoring.getFile();
+            if (file != null) {
+                spaceTag = SupportLibraryHelper.getTagFor(file.getProject(), FQCN_SPACE);
+                if (spaceTag.equals(FQCN_SPACE)) {
+                    spaceTag = SPACE;
+                }
             }
 
             sb.append('<').append(spaceTag).append(' ');

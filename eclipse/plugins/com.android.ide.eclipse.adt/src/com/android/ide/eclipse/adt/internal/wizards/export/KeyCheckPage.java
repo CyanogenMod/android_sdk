@@ -57,6 +57,18 @@ import java.util.Calendar;
  */
 final class KeyCheckPage extends ExportWizardPage {
 
+    private static final int REQUIRED_YEARS = 25;
+
+    private static final String VALIDITY_WARNING =
+            "<p>Make sure the certificate is valid for the planned lifetime of the product.</p>"
+            + "<p>If the certificate expires, you will be forced to sign your application with "
+            + "a different one.</p>"
+            + "<p>Applications cannot be upgraded if their certificate changes from "
+            + "one version to another, forcing a full uninstall/install, which will make "
+            + "the user lose his/her data.</p>"
+            + "<p>Google Play(Android Market) currently requires certificates to be valid "
+            + "until 2033.</p>";
+
     private final ExportWizard mWizard;
     private PrivateKey mPrivateKey;
     private X509Certificate mCertificate;
@@ -169,12 +181,8 @@ final class KeyCheckPage extends ExportWizardPage {
                         String.format("<p>Certificate expires in %d years.</p>",
                         validity));
 
-                if (validity < 25) {
-                    sb.append("<p>Make sure the certificate is valid for the planned lifetime of the product.</p>");
-                    sb.append("<p>If the certificate expires, you will be forced to sign your application with a different one.</p>");
-                    sb.append("<p>Applications cannot be upgraded if their certificate changes from one version to another, ");
-                    sb.append("forcing a full uninstall/install, which will make the user lose his/her data.</p>");
-                    sb.append("<p>Android Market currently requires certificates to be valid until 2033.</p>");
+                if (validity < REQUIRED_YEARS) {
+                    sb.append(VALIDITY_WARNING);
                 }
 
                 mKeyDetails = sb.toString();
@@ -239,7 +247,7 @@ final class KeyCheckPage extends ExportWizardPage {
                         int expirationYear = expirationCalendar.get(Calendar.YEAR);
                         int thisYear = today.get(Calendar.YEAR);
 
-                        if (thisYear + 25 < expirationYear) {
+                        if (thisYear + REQUIRED_YEARS < expirationYear) {
                             // do nothing
                         } else {
                             if (expirationYear == thisYear) {
@@ -250,13 +258,18 @@ final class KeyCheckPage extends ExportWizardPage {
                                         "<p>The Certificate expires in %1$s %2$s.</p>",
                                         count, count == 1 ? "year" : "years"));
                             }
-
-                            sb.append("<p>Make sure the certificate is valid for the planned lifetime of the product.</p>");
-                            sb.append("<p>If the certificate expires, you will be forced to sign your application with a different one.</p>");
-                            sb.append("<p>Applications cannot be upgraded if their certificate changes from one version to another, ");
-                            sb.append("forcing a full uninstall/install, which will make the user lose his/her data.</p>");
-                            sb.append("<p>Android Market currently requires certificates to be valid until 2033.</p>");
+                            sb.append(VALIDITY_WARNING);
                         }
+
+                        // show certificate fingerprints
+                        String sha1 = mWizard.getCertSha1Fingerprint();
+                        String md5 = mWizard.getCertMd5Fingerprint();
+
+                        sb.append("<p></p>" /*blank line*/);
+                        sb.append("<p>Certificate fingerprints:</p>");
+                        sb.append(String.format("<li>MD5 : %s</li>", md5));
+                        sb.append(String.format("<li>SHA1: %s</li>", sha1));
+                        sb.append("<p></p>" /*blank line*/);
 
                         mKeyDetails = sb.toString();
                     }

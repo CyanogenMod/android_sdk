@@ -21,9 +21,9 @@
 
 #include "utils.h"
 
-// We currently search for a Java version for at least 1.5
+// We currently search for a Java version for at least 1.6
 #define MIN_JAVA_VERSION_MAJOR 1
-#define MIN_JAVA_VERSION_MINOR 5
+#define MIN_JAVA_VERSION_MINOR 6
 #define MIN_JAVA_VERSION (MIN_JAVA_VERSION_MAJOR * 1000 + MIN_JAVA_VERSION_MINOR)
 
 

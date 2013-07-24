@@ -37,6 +37,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.Density;
 import com.android.utils.Pair;
+import com.google.common.base.Splitter;
+import com.google.common.io.Closeables;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -140,6 +142,8 @@ public class ViewMetadataRepository {
         } catch (Exception e) {
             AdtPlugin.log(e, "Parsing palette file failed");
             return null;
+        } finally {
+            Closeables.closeQuietly(paletteStream);
         }
     }
 
@@ -195,6 +199,7 @@ public class ViewMetadataRepository {
     }
 
     /** Returns an ordered list of categories and views, parsed from a metadata file */
+    @SuppressWarnings("resource") // streams passed to parser InputSource closed by parser
     private List<CategoryData> getCategories() {
         if (mCategories == null) {
             mCategories = new ArrayList<CategoryData>();
@@ -536,13 +541,12 @@ public class ViewMetadataRepository {
             if (mRelatedTo == null || mRelatedTo.length() == 0) {
                 return Collections.emptyList();
             } else {
-                String[] basenames = mRelatedTo.split(","); //$NON-NLS-1$
                 List<String> result = new ArrayList<String>();
                 ViewMetadataRepository repository = ViewMetadataRepository.get();
                 Map<String, ViewData> classToView = repository.getClassToView();
 
                 List<String> fqns = new ArrayList<String>(classToView.keySet());
-                for (String basename : basenames) {
+                for (String basename : Splitter.on(',').split(mRelatedTo)) {
                     boolean found = false;
                     for (String fqcn : fqns) {
                         String suffix = '.' + basename;

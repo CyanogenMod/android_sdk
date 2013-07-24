@@ -21,9 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
+import com.android.tools.lint.checks.DosLineEndingDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.ManifestOrderDetector;
+import com.android.tools.lint.checks.MissingIdDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
@@ -35,6 +37,7 @@ import com.android.tools.lint.checks.TypographyDetector;
 import com.android.tools.lint.checks.UseCompoundDrawableDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Issue.OutputFormat;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -107,7 +110,7 @@ abstract class LintFix implements ICompletionProposal {
     public String getAdditionalProposalInfo() {
         Issue issue = EclipseLintClient.getRegistry().getIssue(mId);
         if (issue != null) {
-            return issue.getExplanationAsHtml();
+            return issue.getExplanation(OutputFormat.HTML);
         }
 
         return null;
@@ -150,6 +153,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(AccessibilityDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(InefficientWeightDetector.BASELINE_WEIGHTS.getId(), SetAttributeFix.class);
         sFixes.put(ManifestOrderDetector.ALLOW_BACKUP.getId(), SetAttributeFix.class);
+        sFixes.put(MissingIdDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(HardcodedValuesDetector.ISSUE.getId(), ExtractStringFix.class);
         sFixes.put(UselessViewDetector.USELESS_LEAF.getId(), RemoveUselessViewFix.class);
         sFixes.put(UselessViewDetector.USELESS_PARENT.getId(), RemoveUselessViewFix.class);
@@ -168,6 +172,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(UseCompoundDrawableDetector.ISSUE.getId(),
                 UseCompoundDrawableDetectorFix.class);
         sFixes.put(TypoDetector.ISSUE.getId(), TypoFix.class);
+        sFixes.put(DosLineEndingDetector.ISSUE.getId(), DosLineEndingsFix.class);
         // ApiDetector.UNSUPPORTED is provided as a marker resolution rather than
         // a quick assistant (the marker resolution adds a suitable @TargetApi annotation)
     }

@@ -55,6 +55,7 @@ colspan
 combo
 combobox
 combos
+compositor
 config
 configs
 configurability
@@ -80,6 +81,7 @@ diffs
 dir
 dirs
 discoverable
+displayable
 ditto
 div
 docs
@@ -90,6 +92,7 @@ drawables
 dropdown
 ed
 editable
+em
 endian
 endpoint
 enum
@@ -198,6 +201,7 @@ os
 palette
 param
 params
+parented
 pings
 placeholder
 placeholders
@@ -231,6 +235,7 @@ recompilation
 rect
 redo
 refactor
+refactored
 refactoring
 refactorings
 regex
@@ -348,6 +353,7 @@ wildcard
 workflow
 xdpi
 xhdpi
+xlarge
 xml
 xmlns
 ydpi

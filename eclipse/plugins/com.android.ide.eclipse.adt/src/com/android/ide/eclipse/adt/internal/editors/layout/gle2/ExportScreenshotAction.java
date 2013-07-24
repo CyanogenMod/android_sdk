@@ -42,7 +42,7 @@ class ExportScreenshotAction extends Action {
 
     @Override
     public void run() {
-        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+        Shell shell = AdtPlugin.getShell();
 
         ImageOverlay imageOverlay = mCanvas.getImageOverlay();
         BufferedImage image = imageOverlay.getAwtImage();

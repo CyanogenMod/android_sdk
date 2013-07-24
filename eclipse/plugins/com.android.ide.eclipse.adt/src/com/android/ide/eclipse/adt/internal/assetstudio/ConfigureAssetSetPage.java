@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.DEFAULT_LAUNCHER_ICON;
-
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 import com.android.annotations.NonNull;
@@ -106,7 +105,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         ModifyListener {
     private final CreateAssetSetWizardState mValues;
 
-    private static final int PREVIEW_AREA_WIDTH = 120;
+    private static final int PREVIEW_AREA_WIDTH = 144;
 
     private boolean mShown;
 
@@ -481,7 +480,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             // Initial image - use the most recently used image, or the default launcher
             // icon created in our default projects, if there
             if (mValues.imagePath != null) {
-                sImagePath = mValues.imagePath.getPath();;
+                sImagePath = mValues.imagePath.getPath();
             }
             if (sImagePath == null) {
                 IProject project = mValues.project;
@@ -1149,10 +1148,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             }
             case NOTIFICATION: {
                 generator = new NotificationIconGenerator();
-                NotificationIconGenerator.NotificationOptions notificationOptions =
-                        new NotificationIconGenerator.NotificationOptions();
-                notificationOptions.shape = mValues.shape;
-                options = notificationOptions;
+                options = new NotificationIconGenerator.NotificationOptions();
                 break;
             }
             case TAB:

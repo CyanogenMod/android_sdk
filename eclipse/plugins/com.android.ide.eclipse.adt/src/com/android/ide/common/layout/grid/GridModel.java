@@ -80,7 +80,7 @@ public class GridModel {
     static final int UNDEFINED = Integer.MIN_VALUE;
 
     /** The size of spacers in the dimension that they are not defining */
-    private static final int SPACER_SIZE_DP = 1;
+    static final int SPACER_SIZE_DP = 1;
 
     /** Attribute value used for {@link #SPACER_SIZE_DP} */
     private static final String SPACER_SIZE = String.format(VALUE_N_DP, SPACER_SIZE_DP);
@@ -361,7 +361,8 @@ public class GridModel {
         if (mNamespace == null) {
             mNamespace = ANDROID_URI;
 
-            if (!layout.getFqcn().equals(FQCN_GRID_LAYOUT)) {
+            String fqcn = layout.getFqcn();
+            if (!fqcn.equals(GRID_LAYOUT) && !fqcn.equals(FQCN_GRID_LAYOUT)) {
                 mNamespace = mRulesEngine.getAppNameSpace();
             }
         }
@@ -681,11 +682,26 @@ public class GridModel {
             if (cellBounds != null) {
                 int[] xs = cellBounds.getFirst();
                 int[] ys = cellBounds.getSecond();
+                Rect layoutBounds = layout.getBounds();
+
+                // Handle "blank" grid layouts: insert a fake grid of CELL_COUNT^2 cells
+                // where the user can do initial placement
+                if (actualColumnCount <= 1 && actualRowCount <= 1 && mChildViews.isEmpty()) {
+                    final int CELL_COUNT = 1;
+                    xs = new int[CELL_COUNT + 1];
+                    ys = new int[CELL_COUNT + 1];
+                    int cellWidth = layoutBounds.w / CELL_COUNT;
+                    int cellHeight = layoutBounds.h / CELL_COUNT;
+
+                    for (int i = 0; i <= CELL_COUNT; i++) {
+                        xs[i] = i * cellWidth;
+                        ys[i] = i * cellHeight;
+                    }
+                }
 
                 actualColumnCount = xs.length - 1;
                 actualRowCount = ys.length - 1;
 
-                Rect layoutBounds = layout.getBounds();
                 int layoutBoundsX = layoutBounds.x;
                 int layoutBoundsY = layoutBounds.y;
                 mLeft = new int[xs.length];
@@ -1810,7 +1826,7 @@ public class GridModel {
      * Data about a view in a table; this is not the same as a cell because multiple views
      * can share a single cell, and a view can span many cells.
      */
-    class ViewData {
+    public class ViewData {
         public final INode node;
         public final int index;
         public int row;

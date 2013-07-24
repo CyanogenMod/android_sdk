@@ -75,6 +75,12 @@ public class LintOverlay extends Overlay {
             CanvasTransform mHScale = mCanvas.getHorizontalTransform();
             CanvasTransform mVScale = mCanvas.getVerticalTransform();
 
+            // Right/bottom edges of the canvas image; don't paint overlays outside of
+            // that. (With for example RelativeLayouts with margins rendered on smaller
+            // screens than they are intended for this can happen.)
+            int maxX = mHScale.translate(0) + mHScale.getScaledImgSize();
+            int maxY = mVScale.translate(0) + mVScale.getScaledImgSize();
+
             int oldAlpha = gc.getAlpha();
             try {
                 gc.setAlpha(ALPHA);
@@ -94,6 +100,10 @@ public class LintOverlay extends Overlay {
 
                         x += w - iconWidth;
                         y += h - iconHeight;
+
+                        if (x > maxX || y > maxY) {
+                            continue;
+                        }
 
                         boolean isError = false;
                         IMarker marker = editor.getIssueForNode(vi.getUiViewNode());

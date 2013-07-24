@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -26,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.build.ApkBuilder;
@@ -39,6 +41,9 @@ import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -101,9 +106,16 @@ public class BuildHelper {
     private static final String COMMAND_CRUNCH = "crunch";  //$NON-NLS-1$
     private static final String COMMAND_PACKAGE = "package"; //$NON-NLS-1$
 
+    @NonNull
     private final IProject mProject;
+    @NonNull
+    private final BuildToolInfo mBuildToolInfo;
+    @NonNull
     private final AndroidPrintStream mOutStream;
+    @NonNull
     private final AndroidPrintStream mErrStream;
+    private final boolean mForceJumbo;
+    private final boolean mDisableDexMerger;
     private final boolean mVerbose;
     private final boolean mDebugMode;
 
@@ -132,14 +144,20 @@ public class BuildHelper {
      * @param verbose
      * @throws CoreException
      */
-    public BuildHelper(IProject project, AndroidPrintStream outStream,
-            AndroidPrintStream errStream, boolean debugMode, boolean verbose,
-            ResourceMarker resMarker) throws CoreException {
+    public BuildHelper(@NonNull IProject project,
+            @NonNull BuildToolInfo buildToolInfo,
+            @NonNull AndroidPrintStream outStream,
+            @NonNull AndroidPrintStream errStream,
+            boolean forceJumbo, boolean disableDexMerger, boolean debugMode,
+            boolean verbose, ResourceMarker resMarker) throws CoreException {
         mProject = project;
+        mBuildToolInfo = buildToolInfo;
         mOutStream = outStream;
         mErrStream = errStream;
         mDebugMode = debugMode;
         mVerbose = verbose;
+        mForceJumbo = forceJumbo;
+        mDisableDexMerger = disableDexMerger;
 
         gatherPaths(resMarker);
     }
@@ -683,7 +701,7 @@ public class BuildHelper {
 
         // get the dex wrapper
         Sdk sdk = Sdk.getCurrent();
-        DexWrapper wrapper = sdk.getDexWrapper();
+        DexWrapper wrapper = sdk.getDexWrapper(mBuildToolInfo);
 
         if (wrapper == null) {
             throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
@@ -704,24 +722,28 @@ public class BuildHelper {
 
             // replace the libs by their dexed versions (dexing them if needed.)
             List<String> finalInputPaths = new ArrayList<String>(inputPaths.size());
-            if (inputPaths.size() == 1) {
+            if (mDisableDexMerger || inputPaths.size() == 1) {
                 // only one input, no need to put a pre-dexed version, even if this path is
                 // just a jar file (case for proguard'ed builds)
                 finalInputPaths.addAll(inputPaths);
             } else {
+
                 for (String input : inputPaths) {
                     File inputFile = new File(input);
                     if (inputFile.isDirectory()) {
                         finalInputPaths.add(input);
                     } else if (inputFile.isFile()) {
-                        File dexedLib = new File(dexedLibs, inputFile.getName());
+                        String fileName = getDexFileName(inputFile);
+
+                        File dexedLib = new File(dexedLibs, fileName);
                         String dexedLibPath = dexedLib.getAbsolutePath();
 
                         if (dexedLib.isFile() == false ||
                                 dexedLib.lastModified() < inputFile.lastModified()) {
 
                             if (mVerbose) {
-                                mOutStream.println("Pre-Dexing " + input);
+                                mOutStream.println(
+                                        String.format("Pre-Dexing %1$s -> %2$s", input, fileName));
                             }
 
                             if (dexedLib.isFile()) {
@@ -729,12 +751,18 @@ public class BuildHelper {
                             }
 
                             int res = wrapper.run(dexedLibPath, Collections.singleton(input),
-                                    mVerbose, mOutStream, mErrStream);
+                                    mForceJumbo, mVerbose, mOutStream, mErrStream);
 
                             if (res != 0) {
                                 // output error message and mark the project.
                                 String message = String.format(Messages.Dalvik_Error_d, res);
                                 throw new DexException(message);
+                            }
+                        } else {
+                            if (mVerbose) {
+                                mOutStream.println(
+                                        String.format("Using Pre-Dexed %1$s <- %2$s",
+                                                fileName, input));
                             }
                         }
 
@@ -751,6 +779,7 @@ public class BuildHelper {
 
             int res = wrapper.run(osOutFilePath,
                     finalInputPaths,
+                    mForceJumbo,
                     mVerbose,
                     mOutStream, mErrStream);
 
@@ -775,6 +804,22 @@ public class BuildHelper {
         }
     }
 
+    private String getDexFileName(File inputFile) {
+        // get the filename
+        String name = inputFile.getName();
+        // remove the extension
+        int pos = name.lastIndexOf('.');
+        if (pos != -1) {
+            name = name.substring(0, pos);
+        }
+
+        // add a hash of the original file path
+        HashFunction hashFunction = Hashing.md5();
+        HashCode hashCode = hashFunction.hashString(inputFile.getAbsolutePath());
+
+        return name + "-" + hashCode.toString() + ".jar";
+    }
+
     /**
      * Executes aapt. If any error happen, files or the project will be marked.
      * @param command The command for aapt to execute. Currently supported: package and crunch
@@ -796,7 +841,7 @@ public class BuildHelper {
             String configFilter, int versionCode) throws AaptExecException, AaptResultException {
         IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
 
-        @SuppressWarnings("deprecation") String aapt = target.getPath(IAndroidTarget.AAPT);
+        String aapt = mBuildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
 
         // Create the command line.
         ArrayList<String> commandArray = new ArrayList<String>();

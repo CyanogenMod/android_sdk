@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.IntArrayWrapper;
@@ -26,6 +27,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
+import com.android.io.IAbstractFolder;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
@@ -48,6 +50,7 @@ import java.util.Map.Entry;
  *       on the fly.</li>
  *</ul>
  */
+@SuppressWarnings("deprecation")
 public class ProjectResources extends ResourceRepository {
     // project resources are defined as 0x7FXX#### where XX is the resource type (layout, drawable,
     // etc...). Using FF as the type allows for 255 resource types before we get a collision
@@ -62,15 +65,21 @@ public class ProjectResources extends ResourceRepository {
     private Map<IntArrayWrapper, String> mStyleableValueToNameMap;
 
     private final DynamicIdMap mDynamicIdMap = new DynamicIdMap(DYNAMIC_ID_SEED_START);
-
+    private final IntArrayWrapper mWrapper = new IntArrayWrapper(null);
     private final IProject mProject;
+
+    public static ProjectResources create(IProject project) {
+        IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
+
+        return new ProjectResources(project, new IFolderWrapper(resFolder));
+    }
 
     /**
      * Makes a ProjectResources for a given <var>project</var>.
      * @param project the project.
      */
-    public ProjectResources(IProject project) {
-        super(false /*isFrameworkRepository*/);
+    private ProjectResources(IProject project, IAbstractFolder resFolder) {
+        super(resFolder, false /*isFrameworkRepository*/);
         mProject = project;
     }
 
@@ -85,6 +94,7 @@ public class ProjectResources extends ResourceRepository {
     @NonNull
     public Map<ResourceType, Map<String, ResourceValue>> getConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
+        ensureInitialized();
 
         Map<ResourceType, Map<String, ResourceValue>> resultMap =
             new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);

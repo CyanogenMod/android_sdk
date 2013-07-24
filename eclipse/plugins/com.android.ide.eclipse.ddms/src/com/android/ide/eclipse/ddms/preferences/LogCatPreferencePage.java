@@ -48,6 +48,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     private IntegerFieldEditor mMaxMessages;
     private BooleanFieldEditor mAutoMonitorLogcat;
     private ComboFieldEditor mAutoMonitorLogcatLevel;
+    private BooleanFieldEditor mAutoScrollLock;
 
     public LogCatPreferencePage() {
         super(GRID);
@@ -64,6 +65,11 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
                 LogCatMessageList.MAX_MESSAGES_PREFKEY,
                 Messages.LogCatPreferencePage_MaxMessages, getFieldEditorParent());
         addField(mMaxMessages);
+
+        mAutoScrollLock = new BooleanFieldEditor(LogCatPanel.AUTO_SCROLL_LOCK_PREFKEY,
+                "Automatically enable/disable scroll lock based on the scrollbar position",
+                getFieldEditorParent());
+        addField(mAutoScrollLock);
 
         createHorizontalSeparator();
 

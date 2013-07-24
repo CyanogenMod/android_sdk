@@ -28,36 +28,9 @@
 # Host tools and java libraries that are parts of the SDK.
 PRODUCT_PACKAGES += \
 	ant-glob \
-	android \
 	annotations \
-	anttasks \
-	archquery \
-	assetstudio \
-	common-tests \
-	ddmlib \
-	ddmlib-tests \
-	ddms \
-	ddmuilib \
-	draw9patch \
-	dvlib \
-	dvlib-tests \
-	emulator \
-	hierarchyviewer \
-	sdk_common \
-	layoutlib_api \
-	lint \
-	manifmerger \
 	mksdcard \
 	monitor \
-	monkeyrunner \
-	ninepatch-tests \
-	rule_api \
-	sdklib \
-	sdklib-tests \
-	sdkmanager \
-	sdkstats \
-	sdkuilib \
-	sdkuilib-tests \
-	swtmenubar \
-	traceview \
-	uiautomatorviewer
+	fastboot \
+	emugen
+

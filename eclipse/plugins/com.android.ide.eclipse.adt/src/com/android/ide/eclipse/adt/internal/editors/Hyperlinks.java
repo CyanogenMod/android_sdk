@@ -22,6 +22,8 @@ import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLASS;
+import static com.android.SdkConstants.ATTR_CONTEXT;
+import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_ON_CLICK;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
@@ -36,8 +38,10 @@ import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.ide.common.resources.ResourceRepository.parseResource;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
@@ -56,11 +60,13 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
@@ -217,7 +223,7 @@ public class Hyperlinks {
             // It's a value -declaration-, nowhere else to jump
             // (though we could consider jumping to the R-file; would that
             // be helpful?)
-            return false;
+            return !ATTR_ID.equals(attribute.getLocalName());
         }
 
         Pair<ResourceType,String> resource = parseResource(value);
@@ -342,7 +348,9 @@ public class Hyperlinks {
         String tag = context.getElement().getTagName();
         String attributeName = attribute.getLocalName();
         return ATTR_CLASS.equals(attributeName) && (VIEW.equals(tag) || VIEW_FRAGMENT.equals(tag))
-                || ATTR_NAME.equals(attributeName) && VIEW_FRAGMENT.equals(tag);
+                || ATTR_NAME.equals(attributeName) && VIEW_FRAGMENT.equals(tag)
+                || (ATTR_CONTEXT.equals(attributeName)
+                        && TOOLS_URI.equals(attribute.getNamespaceURI()));
     }
 
     /** Returns true if this represents an onClick attribute specifying a method handler */
@@ -369,7 +377,18 @@ public class Hyperlinks {
     /** Returns the FQCN for a class declaration at the given context */
     private static String getClassFqcn(XmlContext context) {
         if (isClassAttribute(context)) {
-            return context.getAttribute().getValue();
+            String value = context.getAttribute().getValue();
+            if (!value.isEmpty() && value.charAt(0) == '.') {
+                IProject project = getProject();
+                if (project != null) {
+                    ManifestInfo info = ManifestInfo.get(project);
+                    String pkg = info.getPackage();
+                    if (pkg != null) {
+                        value = pkg + value;
+                    }
+                }
+            }
+            return value;
         } else if (isClassElement(context)) {
             return context.getElement().getTagName();
         }
@@ -896,24 +915,50 @@ public class Hyperlinks {
         String targetTag = getTagName(type);
         Element root = document.getDocumentElement();
         if (root.getTagName().equals(TAG_RESOURCES)) {
-            NodeList children = root.getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                Node child = children.item(i);
-                if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element)child;
-                    if (element.getTagName().equals(targetTag)) {
-                        String elementName = element.getAttribute(ATTR_NAME);
-                        if (elementName.equals(name)) {
-                            IRegion region = null;
-                            if (element instanceof IndexedRegion) {
-                                IndexedRegion r = (IndexedRegion) element;
-                                // IndexedRegion.getLength() returns bogus values
-                                int length = r.getEndOffset() - r.getStartOffset();
-                                region = new Region(r.getStartOffset(), length);
+            NodeList topLevel = root.getChildNodes();
+            Pair<IFile, IRegion> value = findValueInChildren(name, file, targetTag, topLevel);
+            if (value == null && type == ResourceType.ATTR) {
+                for (int i = 0, n = topLevel.getLength(); i < n; i++) {
+                    Node child = topLevel.item(i);
+                    if (child.getNodeType() == Node.ELEMENT_NODE) {
+                        Element element = (Element)child;
+                        String tagName = element.getTagName();
+                        if (tagName.equals("declare-styleable")) {
+                            NodeList children = element.getChildNodes();
+                            value = findValueInChildren(name, file, targetTag, children);
+                            if (value != null) {
+                                return value;
                             }
-
-                            return Pair.of(file, region);
                         }
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        return null;
+    }
+
+    private static Pair<IFile, IRegion> findValueInChildren(String name, IFile file,
+            String targetTag, NodeList children) {
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element)child;
+                String tagName = element.getTagName();
+                if (tagName.equals(targetTag)) {
+                    String elementName = element.getAttribute(ATTR_NAME);
+                    if (elementName.equals(name)) {
+                        IRegion region = null;
+                        if (element instanceof IndexedRegion) {
+                            IndexedRegion r = (IndexedRegion) element;
+                            // IndexedRegion.getLength() returns bogus values
+                            int length = r.getEndOffset() - r.getStartOffset();
+                            region = new Region(r.getStartOffset(), length);
+                        }
+
+                        return Pair.of(file, region);
                     }
                 }
             }
@@ -957,16 +1002,25 @@ public class Hyperlinks {
     private static Pair<IFile, IRegion> findIdInDocument(String id, IFile file,
             Document document) {
         String targetAttribute = NEW_ID_PREFIX + id;
-        return findIdInElement(document.getDocumentElement(), file, targetAttribute);
+        Element root = document.getDocumentElement();
+        Pair<IFile, IRegion> result = findIdInElement(root, file, targetAttribute,
+                true /*requireId*/);
+        if (result == null) {
+            result = findIdInElement(root, file, targetAttribute, false /*requireId*/);
+        }
+        return result;
     }
 
     private static Pair<IFile, IRegion> findIdInElement(
-            Element root, IFile file, String targetAttribute) {
+            Element root, IFile file, String targetAttribute, boolean requireIdAttribute) {
         NamedNodeMap attributes = root.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Node item = attributes.item(i);
             if (item instanceof Attr) {
-                Attr attribute = (Attr)item;
+                Attr attribute = (Attr) item;
+                if (requireIdAttribute && !ATTR_ID.equals(attribute.getLocalName())) {
+                    continue;
+                }
                 String value = attribute.getValue();
                 if (value.equals(targetAttribute)) {
                     // Select the element -containing- the id rather than the attribute itself
@@ -989,7 +1043,8 @@ public class Hyperlinks {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element)child;
-                Pair<IFile, IRegion> result = findIdInElement(element, file, targetAttribute);
+                Pair<IFile, IRegion> result = findIdInElement(element, file, targetAttribute,
+                        requireIdAttribute);
                 if (result != null) {
                     return result;
                 }
@@ -1097,16 +1152,6 @@ public class Hyperlinks {
         return getResourceLinks(range, url, project, configuration);
     }
 
-    /** Parse a resource reference or a theme reference and return the individual parts */
-    private static Pair<ResourceType,String> parseResource(String url) {
-        if (url.startsWith(PREFIX_THEME_REF)) {
-            url = PREFIX_RESOURCE_REF + url.substring(PREFIX_THEME_REF.length());
-            return ResourceHelper.parseResource(url);
-        }
-
-        return ResourceHelper.parseResource(url);
-    }
-
     /**
      * Computes hyperlinks to resource definitions for resource urls (e.g.
      * {@code @android:string/ok} or {@code @layout/foo}. May create multiple links.
@@ -1141,6 +1186,22 @@ public class Hyperlinks {
         }
         List<ResourceFile> sourceFiles = resources.getSourceFiles(type, name,
                 null /*configuration*/);
+        if (sourceFiles == null) {
+            ProjectState projectState = Sdk.getProjectState(project);
+            if (projectState != null) {
+                List<IProject> libraries = projectState.getFullLibraryProjects();
+                if (libraries != null && !libraries.isEmpty()) {
+                    for (IProject library : libraries) {
+                        resources = ResourceManager.getInstance().getProjectResources(library);
+                        sourceFiles = resources.getSourceFiles(type, name, null /*configuration*/);
+                        if (sourceFiles != null && !sourceFiles.isEmpty()) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         ResourceFile best = null;
         if (configuration != null && sourceFiles != null && sourceFiles.size() > 0) {
             List<ResourceFile> bestFiles = resources.getSourceFiles(type, name, configuration);

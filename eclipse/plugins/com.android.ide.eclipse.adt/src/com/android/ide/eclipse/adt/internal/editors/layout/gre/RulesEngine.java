@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
 import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.SdkConstants.VIEW_MERGE;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -792,6 +793,12 @@ public class RulesEngine {
                 String baseName = realFqcn.substring(dotIndex+1);
                 // Capitalize rule class name to match naming conventions, if necessary (<merge>)
                 if (Character.isLowerCase(baseName.charAt(0))) {
+                    if (baseName.equals(VIEW_TAG)) {
+                        // Hack: ViewRule is generic for the "View" class, so we can't use it
+                        // for the special XML "view" tag (lowercase); instead, the rule is
+                        // named "ViewTagRule" instead.
+                        baseName = "ViewTag"; //$NON-NLS-1$
+                    }
                     baseName = Character.toUpperCase(baseName.charAt(0)) + baseName.substring(1);
                 }
                 ruleClassName = packageName + "." + //$NON-NLS-1$

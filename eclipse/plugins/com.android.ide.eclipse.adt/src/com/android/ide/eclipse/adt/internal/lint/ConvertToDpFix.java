@@ -54,7 +54,7 @@ final class ConvertToDpFix extends DocumentFix implements IInputValidator {
     @Override
     protected void apply(IDocument document, IStructuredModel model, Node node, int start,
             int end) {
-        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+        Shell shell = AdtPlugin.getShell();
         InputDensityDialog densityDialog = new InputDensityDialog(shell);
         if (densityDialog.open() == Window.OK) {
             int dpi = densityDialog.getDensity();

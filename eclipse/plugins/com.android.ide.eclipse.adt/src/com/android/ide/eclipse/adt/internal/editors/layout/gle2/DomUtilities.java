@@ -15,19 +15,17 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
-
-
 import static org.eclipse.wst.xml.core.internal.provisional.contenttype.ContentTypeIdForXML.ContentTypeID_XML;
 
-import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.utils.Pair;
 
@@ -61,6 +59,7 @@ import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Various utility methods for manipulating DOM nodes.
@@ -184,6 +183,31 @@ public class DomUtilities {
 
         return null;
     }
+
+    /**
+     * Returns the DOM document for the given editor
+     *
+     * @param editor the XML editor
+     * @return the document, or null if not found or not parsed properly (no
+     *         errors are generated/thrown)
+     */
+    @Nullable
+    public static Document getDocument(@NonNull AndroidXmlEditor editor) {
+        IStructuredModel model = editor.getModelForRead();
+        try {
+            if (model instanceof IDOMModel) {
+                IDOMModel domModel = (IDOMModel) model;
+                return domModel.getDocument();
+            }
+        } finally {
+            if (model != null) {
+                model.releaseFromRead();
+            }
+        }
+
+        return null;
+    }
+
 
     /**
      * Returns the XML DOM node corresponding to the given offset of the given
@@ -822,6 +846,33 @@ public class DomUtilities {
         if (model instanceof IDOMModel) {
             IDOMModel domModel = (IDOMModel) model;
             return domModel.getDocument();
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates an empty non-Eclipse XML document.
+     * This is used when you need to use XML operations not supported by
+     * the Eclipse XML model (such as serialization).
+     * <p>
+     * The new document will not validate, will ignore comments, and will
+     * support namespace.
+     *
+     * @return the new document
+     */
+    @Nullable
+    public static Document createEmptyPlainDocument() {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        factory.setIgnoringComments(true);
+        DocumentBuilder builder;
+        try {
+            builder = factory.newDocumentBuilder();
+            return builder.newDocument();
+        } catch (ParserConfigurationException e) {
+            AdtPlugin.log(e, null);
         }
 
         return null;

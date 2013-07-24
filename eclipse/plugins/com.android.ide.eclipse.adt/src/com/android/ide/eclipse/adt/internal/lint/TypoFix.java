@@ -105,7 +105,7 @@ final class TypoFix extends DocumentFix {
         String message = mMarker.getAttribute(IMarker.MESSAGE, "");
         String typo = TypoDetector.getTypo(message);
         List<String> replacements = TypoDetector.getSuggestions(message);
-        if (!replacements.isEmpty() && typo != null) {
+        if (replacements != null && !replacements.isEmpty() && typo != null) {
             List<LintFix> allFixes = new ArrayList<LintFix>(replacements.size());
             for (String replacement : replacements) {
                 TypoFix fix = new TypoFix(mId, mMarker);

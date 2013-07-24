@@ -15,13 +15,13 @@
  */
 package com.android.ide.common.layout;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.ANDROID_URI;
 import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,9 +30,10 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.common.xml.XmlFormatStyle;
+import com.android.ide.common.xml.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.google.common.base.Splitter;
 
@@ -51,8 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import junit.framework.Assert;
 
 /** Test/mock implementation of {@link INode} */
 @SuppressWarnings("javadoc")
@@ -257,7 +256,7 @@ public class TestNode implements INode {
         String xml = dumpDocument(document);
         document = DomUtilities.parseDocument(xml, false);
 
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(XmlFormatPreferences.create(),
+        XmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(EclipseXmlFormatPreferences.create(),
                 XmlFormatStyle.LAYOUT, "\n");
         StringBuilder sb = new StringBuilder(1000);
         sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
@@ -466,7 +465,7 @@ public class TestNode implements INode {
             int bottom = Integer.parseInt(bounds[3]);
             mBounds = new Rect(left, top, right - left, bottom - top);
         } catch (NumberFormatException nufe) {
-            Assert.fail(nufe.getLocalizedMessage());
+            fail(nufe.getLocalizedMessage());
         }
         String tag = matcher.group(3);
 

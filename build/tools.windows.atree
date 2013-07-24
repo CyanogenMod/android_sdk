@@ -22,22 +22,26 @@
 #
 
 rm tools/android
-sdk/sdkmanager/app/etc/android.bat                tools/android.bat
+prebuilts/devtools/tools/android.bat              tools/android.bat
 
 rm tools/apkbuilder
 sdk/apkbuilder/etc/apkbuilder.bat                 tools/apkbuilder.bat
 
 rm tools/ddms
-sdk/ddms/app/etc/ddms.bat                         tools/ddms.bat
+prebuilts/devtools/tools/ddms.bat                 tools/ddms.bat
 
 rm tools/dmtracedump
 bin/dmtracedump.exe                         strip tools/dmtracedump.exe
 
 rm tools/draw9patch
-sdk/draw9patch/etc/draw9patch.bat                 tools/draw9patch.bat
+prebuilts/devtools/tools/draw9patch.bat           tools/draw9patch.bat
 
 rm tools/lint
-sdk/lint/cli/etc/lint.bat                         tools/lint.bat
+prebuilts/devtools/tools/lint.bat                 tools/lint.bat
+
+rm tools/jobb
+prebuilts/devtools/tools/jobb.bat                 tools/jobb.bat
+
 
 rm tools/emulator
 rm tools/emulator-arm
@@ -52,10 +56,10 @@ rm tools/lib/libOpenglRender.so
 rm tools/lib/libGLES_CM_translator.so
 rm tools/lib/libGLES_V2_translator.so
 rm tools/lib/libEGL_translator.so
-lib/libOpenglRender.dll          tools/lib/libOpenglRender.dll
-lib/libGLES_CM_translator.dll    tools/lib/libGLES_CM_translator.dll
-lib/libGLES_V2_translator.dll    tools/lib/libGLES_V2_translator.dll
-lib/libEGL_translator.dll        tools/lib/libEGL_translator.dll
+lib/libOpenglRender.dll                           tools/lib/libOpenglRender.dll
+lib/libGLES_CM_translator.dll                     tools/lib/libGLES_CM_translator.dll
+lib/libGLES_V2_translator.dll                     tools/lib/libGLES_V2_translator.dll
+lib/libEGL_translator.dll                         tools/lib/libEGL_translator.dll
 # Copy the emulator NOTICE in the tools dir
 external/qemu/NOTICE                              tools/emulator_NOTICE.txt
 
@@ -63,7 +67,7 @@ rm tools/etc1tool
 bin/etc1tool.exe                            strip tools/etc1tool.exe
 
 rm tools/hierarchyviewer
-sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat  tools/hierarchyviewer.bat
+prebuilts/devtools/tools/hierarchyviewer.bat      tools/hierarchyviewer.bat
 
 rm tools/hprof-conv
 bin/hprof-conv.exe                          strip tools/hprof-conv.exe
@@ -72,7 +76,7 @@ rm tools/mksdcard
 bin/mksdcard.exe                            strip tools/mksdcard.exe
 
 rm tools/monkeyrunner
-sdk/monkeyrunner/etc/monkeyrunner.bat             tools/monkeyrunner.bat
+prebuilts/devtools/tools/monkeyrunner.bat         tools/monkeyrunner.bat
 
 rm tools/proguard/bin
 prebuilts/tools/common/proguard/proguard4.7/bin/proguard.bat    tools/proguard/bin/proguard.bat
@@ -83,10 +87,10 @@ rm tools/sqlite3
 bin/sqlite3.exe                             strip tools/sqlite3.exe
 
 rm tools/traceview
-sdk/traceview/etc/traceview.bat                   tools/traceview.bat
+prebuilts/devtools/tools/traceview.bat            tools/traceview.bat
 
 rm tools/uiautomatorviewer
-sdk/uiautomatorviewer/etc/uiautomatorviewer.bat   tools/uiautomatorviewer.bat
+prebuilts/devtools/tools/uiautomatorviewer.bat    tools/uiautomatorviewer.bat
 
 rm tools/zipalign
 bin/zipalign.exe                            strip tools/zipalign.exe

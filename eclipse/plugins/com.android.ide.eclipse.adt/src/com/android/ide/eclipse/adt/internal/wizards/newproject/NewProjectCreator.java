@@ -18,23 +18,24 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import static com.android.SdkConstants.FN_PROJECT_PROPERTIES;
 import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_LIBRARY;
+
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.common.xml.ManifestData;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
@@ -522,10 +523,10 @@ public class NewProjectCreator  {
                 if (core.getStatus().getCode() == IResourceStatus.CASE_VARIANT_EXISTS) {
                     // The error indicates the file system is not case sensitive
                     // and there's a resource with a similar name.
-                    MessageDialog.openError(AdtPlugin.getDisplay().getActiveShell(),
+                    MessageDialog.openError(AdtPlugin.getShell(),
                             "Error", "Error: Case Variant Exists");
                 } else {
-                    ErrorDialog.openError(AdtPlugin.getDisplay().getActiveShell(),
+                    ErrorDialog.openError(AdtPlugin.getShell(),
                             "Error", core.getMessage(), core.getStatus());
                 }
             } else {
@@ -539,7 +540,7 @@ public class NewProjectCreator  {
                 if (msg == null) {
                     msg = t.toString();
                 }
-                MessageDialog.openError(AdtPlugin.getDisplay().getActiveShell(), "Error", msg);
+                MessageDialog.openError(AdtPlugin.getShell(), "Error", msg);
             }
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -1058,7 +1059,7 @@ public class NewProjectCreator  {
                 String value = strings.get(key);
 
                 // Escape values if necessary
-                value = ExtractStringRefactoring.escapeString(value);
+                value = ValueXmlHelper.escapeResourceString(value);
 
                 // place them in the template
                 String stringDef = stringTemplate.replace(PARAM_STRING_NAME, key);
@@ -1088,8 +1089,8 @@ public class NewProjectCreator  {
     /** Reformats the given contents with the current formatting settings */
     private String reformat(XmlFormatStyle style, String contents) {
         if (AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
-            XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
-            return XmlPrettyPrinter.prettyPrint(contents, formatPrefs, style,
+            EclipseXmlFormatPreferences formatPrefs = EclipseXmlFormatPreferences.create();
+            return EclipseXmlPrettyPrinter.prettyPrint(contents, formatPrefs, style,
                     null /*lineSeparator*/);
         } else {
             return contents;
@@ -1404,7 +1405,8 @@ public class NewProjectCreator  {
 
         if (reformat) {
             // Guess the formatting style based on the file location
-            XmlFormatStyle style = XmlFormatStyle.getForFile(destFile.getProjectRelativePath());
+            XmlFormatStyle style = EclipseXmlPrettyPrinter
+                    .getForFile(destFile.getProjectRelativePath());
             if (style != null) {
                 template = reformat(style, template);
             }

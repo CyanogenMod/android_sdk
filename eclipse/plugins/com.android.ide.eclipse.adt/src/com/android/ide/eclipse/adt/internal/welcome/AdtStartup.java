@@ -71,15 +71,21 @@ public class AdtStartup implements IStartup, IWindowListener {
 
     @Override
     public void earlyStartup() {
-        if (InstallDetails.isAndroidIdePackage()) {
-            useBundledSdk();
+        if (!isSdkSpecified()) {
+            File bundledSdk = getBundledSdk();
+            if (bundledSdk != null) {
+                AdtPrefs.getPrefs().setSdkLocation(bundledSdk);
+            }
         }
 
-        if (isFirstTime()) {
-            showWelcomeWizard();
-            // Usage statistics are sent after the wizard has run asynchronously (provided the
-            // user opted in)
-        } else if (mStore.isPingOptIn()) {
+        boolean showSdkInstallationPage = !isSdkSpecified() && isFirstTime();
+        boolean showOptInDialogPage = !mStore.hasPingId();
+
+        if (showSdkInstallationPage || showOptInDialogPage) {
+            showWelcomeWizard(showSdkInstallationPage, showOptInDialogPage);
+        }
+
+        if (mStore.isPingOptIn()) {
             sendUsageStats();
         }
 
@@ -88,40 +94,37 @@ public class AdtStartup implements IStartup, IWindowListener {
         AdtPlugin.getDefault().workbenchStarted();
     }
 
-    private void useBundledSdk() {
+    private boolean isSdkSpecified() {
         String osSdkFolder = AdtPrefs.getPrefs().getOsSdkFolder();
+        return (osSdkFolder != null && !osSdkFolder.isEmpty());
+    }
 
-        // sdk path is already set
-        if (osSdkFolder != null && osSdkFolder.length() > 0) {
-            return;
-        }
-
-        // The Android IDE bundle is structured as follows:
-        // root
-        //    |--eclipse
-        //    |--sdk
-        // So use the SDK folder that is
+    /**
+     * Returns the path to the bundled SDK if this is part of the ADT package.
+     * The ADT package has the following structure:
+     *   root
+     *      |--eclipse
+     *      |--sdk
+     * @return path to bundled SDK, null if no valid bundled SDK detected.
+     */
+    private File getBundledSdk() {
         Location install = Platform.getInstallLocation();
         if (install != null && install.getURL() != null) {
-            String toolsFolder = new File(install.getURL().getFile()).getParent();
+            File toolsFolder = new File(install.getURL().getFile()).getParentFile();
             if (toolsFolder != null) {
-                String osSdkPath = toolsFolder + File.separator + "sdk";
-                if (AdtPlugin.getDefault().checkSdkLocationAndId(osSdkPath,
-                                new SdkValidator())) {
-                    AdtPrefs.getPrefs().setSdkLocation(new File(osSdkPath));
+                File sdkFolder = new File(toolsFolder, "sdk");
+                if (sdkFolder.exists() && AdtPlugin.getDefault().checkSdkLocationAndId(
+                        sdkFolder.getAbsolutePath(),
+                        new SdkValidator())) {
+                    return sdkFolder;
                 }
             }
         }
+
+        return null;
     }
 
     private boolean isFirstTime() {
-        // If we already have a known SDK location in our workspace then we know this
-        // is not the first time this user is running ADT.
-        String osSdkFolder = AdtPrefs.getPrefs().getOsSdkFolder();
-        if (osSdkFolder != null && osSdkFolder.length() > 0) {
-            return false;
-        }
-
         for (int i = 0; i < 2; i++) {
             String osSdkPath = null;
 
@@ -251,14 +254,16 @@ public class AdtStartup implements IStartup, IWindowListener {
         });
     }
 
-    private void showWelcomeWizard() {
+    private void showWelcomeWizard(final boolean showSdkInstallPage,
+            final boolean showUsageOptInPage) {
         final IWorkbench workbench = PlatformUI.getWorkbench();
         workbench.getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
                 IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
                 if (window != null) {
-                    WelcomeWizard wizard = new WelcomeWizard(mStore);
+                    WelcomeWizard wizard = new WelcomeWizard(mStore, showSdkInstallPage,
+                            showUsageOptInPage);
                     WizardDialog dialog = new WizardDialog(window.getShell(), wizard);
                     dialog.open();
                 }

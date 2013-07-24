@@ -121,6 +121,8 @@ public class ChooseConfigurationPage extends WizardPage {
         });
 
         setControl(composite);
+
+        mConfigSelector.setConfiguration(mValues.configuration);
     }
 
     /**

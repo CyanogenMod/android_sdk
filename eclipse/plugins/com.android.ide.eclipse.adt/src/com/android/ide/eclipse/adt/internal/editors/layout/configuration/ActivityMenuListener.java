@@ -88,7 +88,7 @@ class ActivityMenuListener extends SelectionAdapter {
 
         if (current != null) {
             MenuItem item = new MenuItem(menu, SWT.PUSH);
-            String label = ConfigurationChooser.getActivityLabel(current, true);;
+            String label = ConfigurationChooser.getActivityLabel(current, true);
             item.setText( String.format("Open %1$s...", label));
             Image image = sharedImages.getImage(ISharedImages.IMG_OBJS_CUNIT);
             item.setImage(image);
@@ -154,7 +154,7 @@ class ActivityMenuListener extends SelectionAdapter {
             }
 
             item.addSelectionListener(new ActivityMenuListener(chooser,
-                    ACTION_OPEN_ACTIVITY, fqcn));
+                    ACTION_SELECT_ACTIVITY, fqcn));
         }
 
         return current;

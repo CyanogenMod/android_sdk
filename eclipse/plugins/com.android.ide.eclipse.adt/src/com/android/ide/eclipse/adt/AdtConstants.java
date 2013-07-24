@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt;
 
 import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_DEP;
+import static com.android.SdkConstants.DOT_FS;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_RS;
 
@@ -118,6 +119,8 @@ public class AdtConstants {
     public final static String RE_AIDL_EXT = "\\" + DOT_AIDL + "$"; //$NON-NLS-1$ //$NON-NLS-2$
     /** Regexp for rs extension, i.e. "\.rs$" */
     public final static String RE_RS_EXT = "\\" + DOT_RS + "$"; //$NON-NLS-1$ //$NON-NLS-2$
+    /** Regexp for rs extension, i.e. "\.fs$" */
+    public final static String RE_FS_EXT = "\\" + DOT_FS + "$"; //$NON-NLS-1$ //$NON-NLS-2$
     /** Regexp for .d extension, i.e. "\.d$" */
     public final static String RE_DEP_EXT = "\\" + DOT_DEP + "$"; //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -148,6 +151,10 @@ public class AdtConstants {
      * when an AndroidClasspathContainerInitializer has succeeded in creating an
      * AndroidClasspathContainer */
     public final static String MARKER_TARGET = AdtPlugin.PLUGIN_ID + ".targetProblem"; //$NON-NLS-1$
+    /** Marker for Android Build Tools errors.
+     * This is not cleared on each build like other markers. Instead, it's cleared
+     * when the build tools are setup in the projectState. */
+    public final static String MARKER_BUILD_TOOLS = AdtPlugin.PLUGIN_ID + ".buildToolsProblem"; //$NON-NLS-1$
     /** Marker for Android Dependency errors.
      * This is not cleared on each build like other markers. Instead, it's cleared
      * when a LibraryClasspathContainerInitializer has succeeded in creating a
@@ -218,4 +225,7 @@ public class AdtConstants {
 
     /** Documentation marker for elements, attributes etc that should be hidden */
     public static final String DOC_HIDE = "@hide"; //$NON-NLS-1$
+
+    public static final String DEX_OPTIONS_FORCEJUMBO = "dex.force.jumbo"; //$NON-NLS-1$
+    public static final String DEX_OPTIONS_DISABLE_MERGER = "dex.disable.merger"; //$NON-NLS-1$
 }

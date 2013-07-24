@@ -84,9 +84,9 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      */
     @Override
     public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-            int kind, @Nullable String extension, int flags) {
-        if (flags == IResourceDelta.MARKERS) {
-            // Only the markers changed: not relevant
+            int kind, @Nullable String extension, int flags, boolean isAndroidProject) {
+        if (!isAndroidProject || flags == IResourceDelta.MARKERS) {
+            // Not Android or only the markers changed: not relevant
             return;
         }
 

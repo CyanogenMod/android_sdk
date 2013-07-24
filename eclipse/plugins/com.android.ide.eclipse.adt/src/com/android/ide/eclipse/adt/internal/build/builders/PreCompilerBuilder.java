@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.xml.ManifestData;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -46,6 +47,7 @@ import com.android.io.StreamException;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.build.BuildConfigGenerator;
 import com.android.sdklib.internal.build.SymbolLoader;
@@ -55,7 +57,9 @@ import com.android.sdklib.io.FileOp;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.xml.AndroidManifest;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -76,6 +80,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -138,6 +143,9 @@ public class PreCompilerBuilder extends BaseBuilder {
      * and set the generated files as derived.
      */
     private DerivedProgressMonitor mDerivedProgressMonitor;
+
+    private AidlProcessor mAidlProcessor;
+    private RenderScriptProcessor mRenderScriptProcessor;
 
     /**
      * Progress monitor waiting the end of the process to set a persistent value
@@ -258,6 +266,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                 return null;
             }
 
+            boolean isLibrary = projectState.isLibrary();
+
             IAndroidTarget projectTarget = projectState.getTarget();
 
             // get the libraries
@@ -267,7 +277,9 @@ public class PreCompilerBuilder extends BaseBuilder {
             IJavaProject javaProject = JavaCore.create(project);
 
             // Top level check to make sure the build can move forward.
-            abortOnBadSetup(javaProject);
+            abortOnBadSetup(javaProject, projectState);
+
+            setupSourceProcessors(javaProject, projectState);
 
             // now we need to get the classpath list
             List<IPath> sourceFolderPathList = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -321,17 +333,22 @@ public class PreCompilerBuilder extends BaseBuilder {
 
                     // Notify the ResourceManager:
                     ResourceManager resManager = ResourceManager.getInstance();
-                    ProjectResources projectResources = resManager.getProjectResources(project);
 
                     if (ResourceManager.isAutoBuilding()) {
+                        ProjectResources projectResources = resManager.getProjectResources(project);
+
                         IdeScanningContext context = new IdeScanningContext(projectResources,
                                 project, true);
 
-                        resManager.processDelta(delta, context);
+                        boolean wasCleared = projectResources.ensureInitialized();
+
+                        if (!wasCleared) {
+                            resManager.processDelta(delta, context);
+                        }
 
                         // Check whether this project or its dependencies (libraries) have
                         // resources that need compilation
-                        if (context.needsFullAapt()) {
+                        if (wasCleared || context.needsFullAapt()) {
                             mMustCompileResources = true;
 
                             // Must also call markAaptRequested on the project to not just
@@ -362,7 +379,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // if the main manifest didn't change, then we check for the library
             // ones (will trigger manifest merging too)
-            if (mMustMergeManifest == false && libProjects.size() > 0) {
+            if (libProjects.size() > 0) {
                 for (IProject libProject : libProjects) {
                     IResourceDelta delta = getDelta(libProject);
                     if (delta != null) {
@@ -371,12 +388,24 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 "PRE:LibManifest"); //$NON-NLS-1$
                         visitor.addSet(ChangedFileSetHelper.MANIFEST);
 
+                        ChangedFileSet textSymbolCFS = null;
+                        if (isLibrary == false) {
+                            textSymbolCFS = ChangedFileSetHelper.getTextSymbols(
+                                    libProject);
+                            visitor.addSet(textSymbolCFS);
+                        }
+
                         delta.accept(visitor);
 
                         mMustMergeManifest |= visitor.checkSet(ChangedFileSetHelper.MANIFEST);
 
-                        // no need to test others.
-                        if (mMustMergeManifest) {
+                        if (textSymbolCFS != null) {
+                            mMustCompileResources |= visitor.checkSet(textSymbolCFS);
+                        }
+
+                        // no need to test others if we have all flags at true.
+                        if (mMustMergeManifest &&
+                                (mMustCompileResources || textSymbolCFS == null)) {
                             break;
                         }
                     }
@@ -631,10 +660,27 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // run the source processors
             int processorStatus = SourceProcessor.COMPILE_STATUS_NONE;
+
+            // get the renderscript target
+            int rsTarget = minSdkValue == -1 ? 11 : minSdkValue;
+            String rsTargetStr = projectState.getProperty(ProjectProperties.PROPERTY_RS_TARGET);
+            if (rsTargetStr != null) {
+                try {
+                    rsTarget = Integer.parseInt(rsTargetStr);
+                } catch (NumberFormatException e) {
+                    handleException(e, String.format(
+                            "Property %s is not an integer.",
+                            ProjectProperties.PROPERTY_RS_TARGET));
+                    return result;
+                }
+            }
+
+            mRenderScriptProcessor.setTargetApi(rsTarget);
+
             for (SourceProcessor processor : mProcessors) {
                 try {
                     processorStatus |= processor.compileFiles(this,
-                            project, projectTarget, minSdkValue, sourceFolderPathList,
+                            project, projectTarget, sourceFolderPathList,
                             libProjectsOut, monitor);
                 } catch (Throwable t) {
                     handleException(t, String.format(
@@ -664,8 +710,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     proguardFile = androidOutputFolder.getFile(AdtConstants.FN_AAPT_PROGUARD);
                 }
 
-                handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
-                        projectState.isLibrary(), proguardFile);
+                handleResources(project, javaPackage, projectTarget, manifestFile,
+                        libProjects, isLibrary, proguardFile);
             }
 
             if (processorStatus == SourceProcessor.COMPILE_STATUS_NONE &&
@@ -721,6 +767,10 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // Also clean up lint
         EclipseLintClient.clearMarkers(project);
+
+        // clean the project repo
+        ProjectResources res = ResourceManager.getInstance().getProjectResources(project);
+        res.clear();
     }
 
     @Override
@@ -749,19 +799,26 @@ public class PreCompilerBuilder extends BaseBuilder {
                 mLastBuildConfigMode = v;
             }
 
-            IJavaProject javaProject = JavaCore.create(project);
-
-            // load the source processors
-            SourceProcessor aidlProcessor = new AidlProcessor(javaProject, mGenFolder);
-            SourceProcessor renderScriptProcessor = new RenderScriptProcessor(javaProject,
-                    mGenFolder);
-            mProcessors.add(aidlProcessor);
-            mProcessors.add(renderScriptProcessor);
         } catch (Throwable throwable) {
             AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
         }
     }
 
+    private void setupSourceProcessors(@NonNull IJavaProject javaProject,
+            @NonNull ProjectState projectState) {
+        if (mAidlProcessor == null) {
+            mAidlProcessor = new AidlProcessor(javaProject, mBuildToolInfo, mGenFolder);
+            mRenderScriptProcessor = new RenderScriptProcessor(javaProject, mBuildToolInfo,
+                    mGenFolder);
+            mProcessors.add(mAidlProcessor);
+            mProcessors.add(mRenderScriptProcessor);
+        } else {
+            mAidlProcessor.setBuildToolInfo(mBuildToolInfo);
+            mRenderScriptProcessor.setBuildToolInfo(mBuildToolInfo);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
     private void handleBuildConfig(@SuppressWarnings("rawtypes") Map args)
             throws IOException, CoreException {
         boolean debugMode = !args.containsKey(RELEASE_REQUESTED);
@@ -851,7 +908,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                     }
 
                     @Override
-                    public void error(Throwable t, String errorFormat, Object... args) {
+                    public void error(@Nullable Throwable t, @Nullable String errorFormat,
+                            Object... args) {
                         errors.add(String.format(errorFormat, args));
                     }
                 }),
@@ -867,7 +925,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             if (merger.process(
                     outFile.getLocation().toFile(),
                     manifest.getLocation().toFile(),
-                    libManifests) == false) {
+                    libManifests,
+                    null /*injectAttributes*/, null /*packageOverride*/) == false) {
                 if (errors.size() > 1) {
                     StringBuilder sb = new StringBuilder();
                     for (String s : errors) {
@@ -989,6 +1048,7 @@ public class PreCompilerBuilder extends BaseBuilder {
      * @param proguardFile an optional path to store proguard information
      * @throws AbortBuildException
      */
+    @SuppressWarnings("deprecation")
     private void execAapt(IProject project, IAndroidTarget projectTarget, String osOutputPath,
             String osResPath, String osManifestPath, IFolder packageFolder,
             ArrayList<IFolder> libResFolders, List<Pair<File, String>> libRFiles,
@@ -1004,8 +1064,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         // launch aapt: create the command line
         ArrayList<String> array = new ArrayList<String>();
 
-        @SuppressWarnings("deprecation")
-        String aaptPath = projectTarget.getPath(IAndroidTarget.AAPT);
+        String aaptPath = mBuildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
 
         array.add(aaptPath);
         array.add("package"); //$NON-NLS-1$
@@ -1109,24 +1168,65 @@ public class PreCompilerBuilder extends BaseBuilder {
             }
 
             // now if the project has libraries, R needs to be created for each libraries
-            if (!libRFiles.isEmpty()) {
-                SymbolLoader symbolValues = new SymbolLoader(new File(outputFolder, "R.txt"));
-                symbolValues.load();
+            // unless this is a library.
+            if (isLibrary == false && !libRFiles.isEmpty()) {
+                File rFile = new File(outputFolder, SdkConstants.FN_RESOURCE_TEXT);
+                // if the project has no resources, the file could not exist.
+                if (rFile.isFile()) {
+                    // Load the full symbols from the full R.txt file.
+                    SymbolLoader fullSymbolValues = new SymbolLoader(rFile);
+                    fullSymbolValues.load();
 
-                for (Pair<File, String> libData : libRFiles) {
-                    SymbolLoader symbols = new SymbolLoader(libData.getFirst());
-                    symbols.load();
+                    Multimap<String, SymbolLoader> libMap = ArrayListMultimap.create();
 
-                    SymbolWriter writer = new SymbolWriter(osOutputPath, libData.getSecond(),
-                            symbols, symbolValues);
-                    writer.write();
+                    // First pass processing the libraries, collecting them by packageName,
+                    // and ignoring the ones that have the same package name as the application
+                    // (since that R class was already created).
+
+                    for (Pair<File, String> lib : libRFiles) {
+                        String libPackage = lib.getSecond();
+                        File rText = lib.getFirst();
+
+                        if (rText.isFile()) {
+                            // load the lib symbols
+                            SymbolLoader libSymbols = new SymbolLoader(rText);
+                            libSymbols.load();
+
+                            // store these symbols by associating them with the package name.
+                            libMap.put(libPackage, libSymbols);
+                        }
+                    }
+
+                    // now loop on all the package names, merge all the symbols to write,
+                    // and write them
+                    for (String packageName : libMap.keySet()) {
+                        Collection<SymbolLoader> symbols = libMap.get(packageName);
+
+                        SymbolWriter writer = new SymbolWriter(osOutputPath, packageName,
+                                fullSymbolValues);
+                        for (SymbolLoader symbolLoader : symbols) {
+                            writer.addSymbolsToWrite(symbolLoader);
+                        }
+                        writer.write();
+                    }
                 }
             }
 
         } catch (IOException e1) {
             // something happen while executing the process,
             // mark the project and exit
-            String msg = String.format(Messages.AAPT_Exec_Error_s, array.get(0));
+            String msg;
+            String path = array.get(0);
+            if (!new File(path).exists()) {
+                msg = String.format(Messages.AAPT_Exec_Error_s, path);
+            } else {
+                String description = e1.getLocalizedMessage();
+                if (e1.getCause() != null && e1.getCause() != e1) {
+                    description = description + ": " + e1.getCause().getLocalizedMessage();
+                }
+                msg = String.format(Messages.AAPT_Exec_Error_Other_s, description);
+            }
+
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
             // Add workaround for the Linux problem described here:

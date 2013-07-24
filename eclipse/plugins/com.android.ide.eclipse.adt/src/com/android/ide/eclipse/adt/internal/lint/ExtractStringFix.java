@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 
@@ -28,6 +28,7 @@ import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -59,16 +60,13 @@ final class ExtractStringFix extends DocumentFix {
     @Override
     protected void apply(IDocument document, IStructuredModel model, Node node, int start,
             int end) {
-        // Invoke refactoring
-        LayoutEditorDelegate delegate =
-            LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
-
-        if (delegate != null) {
+        IEditorPart editorPart = AdtUtils.getActiveEditor();
+        if (editorPart instanceof AndroidXmlEditor) {
             IFile file = (IFile) mMarker.getResource();
             ITextSelection selection = new TextSelection(start, end - start);
 
             ExtractStringRefactoring refactoring =
-                new ExtractStringRefactoring(file, delegate.getEditor(), selection);
+                new ExtractStringRefactoring(file, editorPart, selection);
             RefactoringWizard wizard = new ExtractStringWizard(refactoring, file.getProject());
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {

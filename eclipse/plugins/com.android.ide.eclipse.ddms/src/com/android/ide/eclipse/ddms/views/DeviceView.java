@@ -38,14 +38,17 @@ import com.android.ddmuilib.SyncProgressHelper.SyncRunnable;
 import com.android.ddmuilib.handler.BaseFileHandler;
 import com.android.ddmuilib.handler.MethodProfilingHandler;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.IClientAction;
 import com.android.ide.eclipse.ddms.IDebuggerConnector;
 import com.android.ide.eclipse.ddms.editors.UiAutomatorViewer;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
-import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialog;
-import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialog.SystraceOptions;
+import com.android.ide.eclipse.ddms.systrace.ISystraceOptions;
+import com.android.ide.eclipse.ddms.systrace.ISystraceOptionsDialog;
+import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialogV1;
 import com.android.ide.eclipse.ddms.systrace.SystraceOutputParser;
 import com.android.ide.eclipse.ddms.systrace.SystraceTask;
+import com.android.ide.eclipse.ddms.systrace.SystraceVersionDetector;
 import com.android.uiautomator.UiAutomatorHelper;
 import com.android.uiautomator.UiAutomatorHelper.UiAutomatorException;
 import com.android.uiautomator.UiAutomatorHelper.UiAutomatorResult;
@@ -550,24 +553,44 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                 }
             });
         } catch (Exception e) {
+            Throwable t = e;
+            if (e instanceof InvocationTargetException) {
+                t = ((InvocationTargetException) e).getTargetException();
+            }
             Status s = new Status(IStatus.ERROR, DdmsPlugin.PLUGIN_ID,
-                                            "Error obtaining UI hierarchy", e);
+                                            "Error obtaining UI hierarchy", t);
             ErrorDialog.openError(shell, "UI Automator",
                     "Unexpected error while obtaining UI hierarchy", s);
         }
     };
 
     private void launchSystrace(final IDevice device, final Shell parentShell) {
-        final SystraceOptionsDialog dlg = new SystraceOptionsDialog(parentShell);
-        if (dlg.open() != SystraceOptionsDialog.OK) {
+        SystraceVersionDetector detector = new SystraceVersionDetector(device);
+        try {
+            new ProgressMonitorDialog(parentShell).run(true, false, detector);
+        } catch (InvocationTargetException e) {
+            MessageDialog.openError(parentShell,
+                    "Systrace",
+                    "Unexpected error while detecting atrace version: " + e);
+            return;
+        } catch (InterruptedException e) {
             return;
         }
 
-        final SystraceOptions options = dlg.getSystraceOptions();
+        final ISystraceOptionsDialog dlg =
+                (detector.getVersion() == SystraceVersionDetector.SYSTRACE_V1) ?
+                        new SystraceOptionsDialogV1(parentShell) :
+                            new SystraceOptionsDialogV2(parentShell, detector.getTags());
+
+        if (dlg.open() != SystraceOptionsDialogV1.OK) {
+            return;
+        }
+
+        final ISystraceOptions options = dlg.getSystraceOptions();
 
         // set trace tag if necessary:
         //      adb shell setprop debug.atrace.tags.enableflags <tag>
-        String tag = options.getTraceTag();
+        String tag = options.getTags();
         if (tag != null) {
             CountDownLatch setTagLatch = new CountDownLatch(1);
             CollectingOutputReceiver receiver = new CollectingOutputReceiver(setTagLatch);
@@ -598,7 +621,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                     boolean COMPRESS_DATA = true;
 
                     monitor.setTaskName("Collecting Trace Information");
-                    final String atraceOptions = options.getCommandLineOptions()
+                    final String atraceOptions = options.getOptions()
                                                 + (COMPRESS_DATA ? " -z" : "");
                     SystraceTask task = new SystraceTask(device, atraceOptions);
                     Thread t = new Thread(task, "Systrace Output Receiver");
@@ -745,6 +768,10 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
             mTracingAction.setToolTipText(Messages.DeviceView_Start_Method_Profiling_Tooltip);
             mTracingAction.setText(Messages.DeviceView_Start_Method_Profiling);
         }
+
+        for (IClientAction a : DdmsPlugin.getDefault().getClientSpecificActions()) {
+            a.selectedClientChanged(selectedClient);
+        }
     }
 
     private void doSelectionChanged(IDevice selectedDevice) {
@@ -782,6 +809,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         menuManager.add(mSystraceAction);
         menuManager.add(new Separator());
         menuManager.add(mResetAdbAction);
+        for (IClientAction a : DdmsPlugin.getDefault().getClientSpecificActions()) {
+            menuManager.add(a.getAction());
+        }
 
         // and then in the toolbar
         IToolBarManager toolBarManager = actionBars.getToolBarManager();
@@ -802,6 +832,9 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         toolBarManager.add(mViewUiAutomatorHierarchyAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(mSystraceAction);
+        for (IClientAction a : DdmsPlugin.getDefault().getClientSpecificActions()) {
+            toolBarManager.add(a.getAction());
+        }
     }
 
     @Override

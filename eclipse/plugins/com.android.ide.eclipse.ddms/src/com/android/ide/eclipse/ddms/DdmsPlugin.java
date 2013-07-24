@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.ddms;
 
+import com.android.annotations.NonNull;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Client;
@@ -61,6 +62,8 @@ import org.osgi.framework.BundleContext;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -86,7 +89,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      */
     private IDebuggerConnector[] mDebuggerConnectors;
     private ITraceviewLauncher[] mTraceviewLaunchers;
-
+    private List<IClientAction> mClientSpecificActions = null;
 
     /** Console for DDMS log message */
     private MessageConsole mDdmsConsole;
@@ -424,6 +427,29 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         }
 
         return list.toArray(new ITraceviewLauncher[list.size()]);
+    }
+
+    /**
+     * Returns the classes that implement {@link IClientAction} in each of the extensions that
+     * extend clientAction extension point.
+     * @throws CoreException
+     */
+    private List<IClientAction> instantiateClientSpecificActions(IConfigurationElement[] elements)
+            throws CoreException {
+        if (elements == null || elements.length == 0) {
+            return Collections.emptyList();
+        }
+
+        List<IClientAction> extensions = new ArrayList<IClientAction>(1);
+
+        for (IConfigurationElement e : elements) {
+            Object o = e.createExecutableExtension("class"); //$NON-NLS-1$
+            if (o instanceof IClientAction) {
+                extensions.add((IClientAction) o);
+            }
+        }
+
+        return extensions;
     }
 
     public static Display getDisplay() {
@@ -809,6 +835,25 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         }
 
         return false;
+    }
+
+    /**
+     * Returns the list of clients that extend the clientAction extension point.
+     */
+    @NonNull
+    public synchronized List<IClientAction> getClientSpecificActions() {
+        if (mClientSpecificActions == null) {
+            // get available client specific action extensions
+            IConfigurationElement[] elements =
+                    findConfigElements("com.android.ide.eclipse.ddms.clientAction"); //$NON-NLS-1$
+            try {
+                mClientSpecificActions = instantiateClientSpecificActions(elements);
+            } catch (CoreException e) {
+                mClientSpecificActions = Collections.emptyList();
+            }
+        }
+
+        return mClientSpecificActions;
     }
 
     private LogCatMonitor mLogCatMonitor;

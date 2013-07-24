@@ -140,10 +140,11 @@ final class LintJob extends Job {
                     if (issue == null) {
                         continue;
                     }
-                    if (issue.isAdequate(scope)) {
+                    if (issue.getImplementation().isAdequate(scope)) {
                         marker.delete();
                     }
                 }
+                mClient.setSearchForSuperClasses(true);
             } else {
                 EclipseLintClient.clearMarkers(mResources);
             }

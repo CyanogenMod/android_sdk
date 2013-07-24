@@ -22,6 +22,7 @@ import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
+import com.android.ide.common.resources.configuration.LayoutDirectionQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
@@ -44,6 +45,7 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
+import com.android.resources.LayoutDirection;
 import com.android.resources.Navigation;
 import com.android.resources.NavigationState;
 import com.android.resources.NightMode;
@@ -433,6 +435,8 @@ public class ConfigurationSelector extends Composite {
             mUiMap.put(NetworkCodeQualifier.class, new MNCEdit(mQualifierEditParent));
             mUiMap.put(LanguageQualifier.class, new LanguageEdit(mQualifierEditParent));
             mUiMap.put(RegionQualifier.class, new RegionEdit(mQualifierEditParent));
+            mUiMap.put(LayoutDirectionQualifier.class,
+                    new LayoutDirectionEdit(mQualifierEditParent));
             mUiMap.put(SmallestScreenWidthQualifier.class,
                     new SmallestScreenWidthEdit(mQualifierEditParent));
             mUiMap.put(ScreenWidthQualifier.class, new ScreenWidthEdit(mQualifierEditParent));
@@ -1015,6 +1019,65 @@ public class ConfigurationSelector extends Composite {
             }
         }
     }
+
+    /**
+     * Edit widget for {@link LayoutDirectionQualifier}.
+     */
+    private class LayoutDirectionEdit extends QualifierEditBase {
+
+        private Combo mDirection;
+
+        public LayoutDirectionEdit(Composite parent) {
+            super(parent, LayoutDirectionQualifier.NAME);
+
+            mDirection = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+            fillCombo(mDirection, LayoutDirection.values());
+
+            mDirection.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mDirection.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetDefaultSelected(SelectionEvent e) {
+                    onDirectionChange();
+                }
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    onDirectionChange();
+                }
+            });
+        }
+
+        protected void onDirectionChange() {
+            // update the current config
+            int index = mDirection.getSelectionIndex();
+
+            if (index != -1) {
+                mSelectedConfiguration.setLayoutDirectionQualifier(new LayoutDirectionQualifier(
+                        LayoutDirection.getByIndex(index)));
+            } else {
+                // empty selection, means no qualifier.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setLayoutDirectionQualifier(
+                        new LayoutDirectionQualifier());
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            LayoutDirectionQualifier q = (LayoutDirectionQualifier)qualifier;
+
+            LayoutDirection value = q.getValue();
+            if (value == null) {
+                mDirection.clearSelection();
+            } else {
+                mDirection.select(LayoutDirection.getIndex(value));
+            }
+        }
+    }
+
 
     /**
      * Edit widget for {@link SmallestScreenWidthQualifier}.

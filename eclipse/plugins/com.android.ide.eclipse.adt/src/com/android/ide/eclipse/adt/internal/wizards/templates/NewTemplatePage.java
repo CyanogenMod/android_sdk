@@ -811,7 +811,7 @@ public class NewTemplatePage extends WizardPage
                 scope = SearchEngine.createJavaSearchScope(classes, IJavaSearchScope.SOURCES);
             }
 
-            Shell parent = AdtPlugin.getDisplay().getActiveShell();
+            Shell parent = AdtPlugin.getShell();
             final SelectionDialog dialog = JavaUI.createTypeDialog(
                     parent,
                     new ProgressMonitorDialog(parent),
@@ -870,7 +870,6 @@ public class NewTemplatePage extends WizardPage
                         p.type == Parameter.Type.SEPARATOR) {
                     continue;
                 }
-                p.suggest.indexOf(id);
                 if (!p.suggest.contains(id)) {
                     continue;
                 }

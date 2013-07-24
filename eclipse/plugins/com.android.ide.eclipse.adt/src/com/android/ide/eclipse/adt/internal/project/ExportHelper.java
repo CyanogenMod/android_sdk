@@ -31,6 +31,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -123,13 +124,33 @@ public final class ExportHelper {
                 }
             });
 
-            BuildHelper helper = new BuildHelper(project,
+            ProjectState projectState = Sdk.getProjectState(project);
+
+            // get the jumbo mode option
+            String forceJumboStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_FORCEJUMBO);
+            Boolean jumbo = Boolean.valueOf(forceJumboStr);
+
+            String dexMergerStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
+            Boolean dexMerger = Boolean.valueOf(dexMergerStr);
+
+            BuildToolInfo buildToolInfo = projectState.getBuildToolInfo();
+            if (buildToolInfo == null) {
+                buildToolInfo = Sdk.getCurrent().getLatestBuildTool();
+            }
+
+            if (buildToolInfo == null) {
+                throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        "No Build Tools installed in the SDK."));
+            }
+
+            BuildHelper helper = new BuildHelper(project, buildToolInfo,
                     fakeStream, fakeStream,
+                    jumbo.booleanValue(),
+                    dexMerger.booleanValue(),
                     debugMode, false /*verbose*/,
                     null /*resourceMarker*/);
 
             // get the list of library projects
-            ProjectState projectState = Sdk.getProjectState(project);
             List<IProject> libProjects = projectState.getFullLibraryProjects();
 
             // Step 1. Package the resources.

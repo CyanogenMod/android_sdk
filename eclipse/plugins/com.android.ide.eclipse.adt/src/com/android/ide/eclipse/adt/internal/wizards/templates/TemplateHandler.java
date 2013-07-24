@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_FTL;
 import static com.android.SdkConstants.DOT_JAVA;
@@ -24,18 +25,20 @@ import static com.android.SdkConstants.DOT_TXT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.EXT_XML;
 import static com.android.SdkConstants.FD_NATIVE_LIBS;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateManager.getTemplateRootFolder;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtManifestMergeCallback;
@@ -58,6 +61,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
@@ -66,6 +70,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.NullChange;
@@ -77,8 +82,10 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.Attributes;
@@ -95,6 +102,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -389,6 +397,14 @@ class TemplateHandler {
         }
     }
 
+    /**
+     * Most recent thrown exception during template instantiation. This should
+     * basically always be null. Used by unit tests to see if any template
+     * instantiation recorded a failure.
+     */
+    @VisibleForTesting
+    public static Exception sMostRecentException;
+
     /** Read the given FreeMarker file and process the variable definitions */
     private void processVariables(final Configuration freemarker,
             String file, final Map<String, Object> paramMap) {
@@ -469,6 +485,7 @@ class TemplateHandler {
                 }
             });
         } catch (Exception e) {
+            sMostRecentException = e;
             AdtPlugin.log(e, null);
         }
     }
@@ -579,12 +596,14 @@ class TemplateHandler {
                             System.err.println("WARNING: Unknown template directive " + name);
                         }
                     } catch (Exception e) {
+                        sMostRecentException = e;
                         AdtPlugin.log(e, null);
                     }
                 }
             });
 
         } catch (Exception e) {
+            sMostRecentException = e;
             AdtPlugin.log(e, null);
         }
     }
@@ -657,26 +676,28 @@ class TemplateHandler {
             }
         }
 
-        Document currentManifest = DomUtilities.parseStructuredDocument(currentXml);
+        Document currentDocument = DomUtilities.parseStructuredDocument(currentXml);
+        assert currentDocument != null : currentXml;
         Document fragment = DomUtilities.parseStructuredDocument(xml);
+        assert fragment != null : xml;
 
         XmlFormatStyle formatStyle = XmlFormatStyle.MANIFEST;
         boolean modified;
         boolean ok;
         String fileName = to.getName();
         if (fileName.equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
-            modified = ok = mergeManifest(currentManifest, fragment);
+            modified = ok = mergeManifest(currentDocument, fragment);
         } else {
             // Merge plain XML files
             String parentFolderName = to.getParent().getName();
             ResourceFolderType folderType = ResourceFolderType.getFolderType(parentFolderName);
             if (folderType != null) {
-                formatStyle = XmlFormatStyle.getForFile(toPath);
+                formatStyle = EclipseXmlPrettyPrinter.getForFile(toPath);
             } else {
                 formatStyle = XmlFormatStyle.FILE;
             }
 
-            modified = mergeResourceFile(currentManifest, fragment, folderType, paramMap);
+            modified = mergeResourceFile(currentDocument, fragment, folderType, paramMap);
             ok = true;
         }
 
@@ -684,11 +705,9 @@ class TemplateHandler {
         String contents = null;
         if (ok) {
             if (modified) {
-                XmlPrettyPrinter printer = new XmlPrettyPrinter(
-                        XmlFormatPreferences.create(), formatStyle, null);
-                StringBuilder sb = new StringBuilder(2 );
-                printer.prettyPrint(-1, currentManifest, null, null, sb, false /*openTagOnly*/);
-                contents = sb.toString();
+                contents = EclipseXmlPrettyPrinter.prettyPrint(currentDocument,
+                        EclipseXmlFormatPreferences.create(), formatStyle, null,
+                        currentXml.endsWith("\n")); //$NON-NLS-1$
             }
         } else {
             // Just insert into file along with comment, using the "standard" conflict
@@ -714,9 +733,21 @@ class TemplateHandler {
 
     /** Merges the given resource file contents into the given resource file
      * @param paramMap */
-    private boolean mergeResourceFile(Document currentManifest, Document fragment,
+    private static boolean mergeResourceFile(Document currentDocument, Document fragment,
             ResourceFolderType folderType, Map<String, Object> paramMap) {
         boolean modified = false;
+
+        // Copy namespace declarations
+        NamedNodeMap attributes = fragment.getDocumentElement().getAttributes();
+        if (attributes != null) {
+            for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                Attr attribute = (Attr) attributes.item(i);
+                if (attribute.getName().startsWith(XMLNS_PREFIX)) {
+                    currentDocument.getDocumentElement().setAttribute(attribute.getName(),
+                            attribute.getValue());
+                }
+            }
+        }
 
         // For layouts for example, I want to *append* inside the root all the
         // contents of the new file.
@@ -733,8 +764,9 @@ class TemplateHandler {
             nodes.add(child);
             root.removeChild(child);
         }
+        Collections.reverse(nodes);
 
-        root = currentManifest.getDocumentElement();
+        root = currentDocument.getDocumentElement();
 
         if (folderType == ResourceFolderType.VALUES) {
             // Try to merge items of the same name
@@ -794,15 +826,31 @@ class TemplateHandler {
     }
 
     /** Merges the given manifest fragment into the given manifest file */
-    private boolean mergeManifest(Document currentManifest, Document fragment) {
+    private static boolean mergeManifest(Document currentManifest, Document fragment) {
         // TODO change MergerLog.wrapSdkLog by a custom IMergerLog that will create
         // and maintain error markers.
+
+        // Transfer package element from manifest to merged in root; required by
+        // manifest merger
+        Element fragmentRoot = fragment.getDocumentElement();
+        Element manifestRoot = currentManifest.getDocumentElement();
+        if (fragmentRoot == null || manifestRoot == null) {
+            return false;
+        }
+        String pkg = fragmentRoot.getAttribute(ATTR_PACKAGE);
+        if (pkg == null || pkg.isEmpty()) {
+            pkg = manifestRoot.getAttribute(ATTR_PACKAGE);
+            if (pkg != null && !pkg.isEmpty()) {
+                fragmentRoot.setAttribute(ATTR_PACKAGE, pkg);
+            }
+        }
+
         ManifestMerger merger = new ManifestMerger(
                 MergerLog.wrapSdkLog(AdtPlugin.getDefault()),
-                new AdtManifestMergeCallback());
+                new AdtManifestMergeCallback()).setExtractPackagePrefix(true);
         return currentManifest != null &&
-               fragment != null &&
-               merger.process(currentManifest, fragment);
+                fragment != null &&
+                merger.process(currentManifest, fragment);
     }
 
     /**
@@ -856,7 +904,7 @@ class TemplateHandler {
 
             contents = format(mProject, contents, to);
             IFile targetFile = getTargetFile(to);
-            TextFileChange change = createTextChange(targetFile);
+            TextFileChange change = createNewFileChange(targetFile);
             MultiTextEdit rootEdit = new MultiTextEdit();
             rootEdit.addChild(new InsertEdit(0, contents));
             change.setEdit(rootEdit);
@@ -867,9 +915,9 @@ class TemplateHandler {
     private static String format(IProject project, String contents, IPath to) {
         String name = to.lastSegment();
         if (name.endsWith(DOT_XML)) {
-            XmlFormatStyle formatStyle = XmlFormatStyle.getForFile(to);
-            XmlFormatPreferences prefs = XmlFormatPreferences.create();
-            return XmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
+            XmlFormatStyle formatStyle = EclipseXmlPrettyPrinter.getForFile(to);
+            EclipseXmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
+            return EclipseXmlPrettyPrinter.prettyPrint(contents, prefs, formatStyle, null);
         } else if (name.endsWith(DOT_JAVA)) {
             Map<?, ?> options = null;
             if (project != null && project.isAccessible()) {
@@ -908,7 +956,7 @@ class TemplateHandler {
         return contents;
     }
 
-    private static TextFileChange createTextChange(IFile targetFile) {
+    private static TextFileChange createNewFileChange(IFile targetFile) {
         String fileName = targetFile.getName();
         String message;
         if (targetFile.exists()) {
@@ -917,7 +965,29 @@ class TemplateHandler {
             message = String.format("Create %1$s", fileName);
         }
 
-        TextFileChange change = new TextFileChange(message, targetFile);
+        TextFileChange change = new TextFileChange(message, targetFile) {
+            @Override
+            protected IDocument acquireDocument(IProgressMonitor pm) throws CoreException {
+                IDocument document = super.acquireDocument(pm);
+
+                // In our case, we know we *always* use this TextFileChange
+                // to *create* files, we're not appending to existing files.
+                // However, due to the following bug we can end up with cached
+                // contents of previously deleted files that happened to have the
+                // same file name:
+                //   https://bugs.eclipse.org/bugs/show_bug.cgi?id=390402
+                // Therefore, as a workaround, wipe out the cached contents here
+                if (document.getLength() > 0) {
+                    try {
+                        document.replace(0, document.getLength(), "");
+                    } catch (BadLocationException e) {
+                        // pass
+                    }
+                }
+
+                return document;
+            }
+        };
         change.setTextType(fileName.substring(fileName.lastIndexOf('.') + 1));
         return change;
     }
@@ -989,7 +1059,7 @@ class TemplateHandler {
                 String newFile = Files.toString(src, Charsets.UTF_8);
                 newFile = format(mProject, newFile, path);
 
-                TextFileChange addFile = createTextChange(file);
+                TextFileChange addFile = createNewFileChange(file);
                 addFile.setEdit(new InsertEdit(0, newFile));
                 mTextChanges.add(addFile);
             } else {

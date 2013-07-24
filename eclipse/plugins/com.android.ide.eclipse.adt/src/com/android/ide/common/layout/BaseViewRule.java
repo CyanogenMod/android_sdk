@@ -44,7 +44,6 @@ import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
-import com.android.ide.common.api.IValidator;
 import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.RuleAction;
@@ -191,27 +190,11 @@ public class BaseViewRule extends AbstractViewRule {
                     // Ids must be set individually so open the id dialog for each
                     // selected node (though allow cancel to break the loop)
                     for (INode node : selectedNodes) {
-                        // Strip off the @id prefix stuff
-                        String oldId = node.getStringAttr(ANDROID_URI, ATTR_ID);
-                        oldId = stripIdPrefix(ensureValidString(oldId));
-                        IValidator validator = mRulesEngine.getResourceValidator("id",//$NON-NLS-1$
-                                false /*uniqueInProject*/,
-                                true /*uniqueInLayout*/,
-                                false /*exists*/,
-                                oldId);
-                        String newId = mRulesEngine.displayInput("New Id:", oldId, validator);
-                        if (newId != null && newId.trim().length() > 0) {
-                            if (!newId.startsWith(NEW_ID_PREFIX)) {
-                                newId = NEW_ID_PREFIX + stripIdPrefix(newId);
-                            }
-                            node.editXml("Change ID", new PropertySettingNodeHandler(ANDROID_URI,
-                                    ATTR_ID, newId));
-                            editedProperty(ATTR_ID);
-                        } else if (newId == null) {
-                            // Cancelled
+                        if (!mRulesEngine.rename(node)) {
                             break;
                         }
                     }
+                    editedProperty(ATTR_ID);
                     return;
                 } else if (isProp) {
                     INode firstNode = selectedNodes.get(0);

@@ -2,8 +2,8 @@
 <template
     format="3"
     revision="2"
-    name="New Blank Activity"
-    description="Creates a new blank activity, with optional inner navigation.">
+    name="Blank Activity"
+    description="Creates a new blank activity, with an action bar and optional navigational elements such as tabs or horizontal swipe.">
     <dependency name="android-support-v4" revision="8" />
 
     <category value="Activities" />
@@ -12,7 +12,7 @@
         id="activityClass"
         name="Activity Name"
         type="string"
-        constraints="class|nonempty"
+        constraints="class|unique|nonempty"
         suggest="${layoutToActivity(layoutName)}"
         default="MainActivity"
         help="The name of the activity class to create" />
@@ -57,9 +57,9 @@
         default="none"
         help="The type of navigation to use for the activity" >
         <option id="none" default="true">None</option>
-        <option id="tabs" minApi="11">Tabs</option>
-        <option id="tabs_pager" minApi="11">Tabs + Swipe</option>
-        <option id="pager_strip" minApi="11">Swipe Views + Title Strip</option>
+        <!--<option id="tabs" minApi="11">Fixed Tabs</option>-->
+        <option id="tabs_pager" minApi="11">Fixed Tabs + Swipe</option>
+        <option id="pager_strip" minApi="11">Scrollable Tabs + Swipe</option>
         <option id="dropdown" minApi="11">Dropdown</option>
     </parameter>
 

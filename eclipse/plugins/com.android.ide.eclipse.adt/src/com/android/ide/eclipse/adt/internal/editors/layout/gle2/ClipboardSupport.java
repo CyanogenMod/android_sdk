@@ -304,7 +304,7 @@ public class ClipboardSupport {
      * In case of success, the new element will have some default attributes set (xmlns:android,
      * layout_width and height). The edit is wrapped in a proper undo.
      * <p/>
-     * Implementation is similar to {@link #createDocumentRoot(String)} except we also
+     * Implementation is similar to {@link #createDocumentRoot} except we also
      * copy all the attributes and inner elements recursively.
      */
     private void pasteInEmptyDocument(final IDragElement pastedElement) {

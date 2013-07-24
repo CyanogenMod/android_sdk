@@ -132,7 +132,13 @@ public class RectTest extends TestCase {
     public final void testContainsPoint_Null() {
         // contains(null) returns false rather than an NPE
         Rect r = new Rect(3, 4, -20, -30);
-        assertFalse(r.contains(null));
+        assertFalse(r.contains((Point) null));
+    }
+
+    public final void testContainsRect_Null() {
+        // contains(null) returns false rather than an NPE
+        Rect r = new Rect(3, 4, -20, -30);
+        assertFalse(r.contains((Rect) null));
     }
 
     public final void testContainsPoint() {
@@ -150,6 +156,29 @@ public class RectTest extends TestCase {
         assertFalse(r.contains(new Point(3+20, 4)));
         assertFalse(r.contains(new Point(3+20, 4+30)));
         assertFalse(r.contains(new Point(3,    4+30)));
+    }
+
+    public final void testContainsRect() {
+        Rect r = new Rect(3, 4, 20, 30);
+
+        assertTrue(r.contains(new Rect(3, 4, 5, 10)));
+        assertFalse(r.contains(new Rect(3 - 1, 4, 5, 10)));
+    }
+
+    public final void testIntersects() {
+        Rect r1 = new Rect(0, 0, 10, 10);
+        Rect r2 = new Rect(1, 1, 5, 5);
+        Rect r3 = new Rect(10, 0, 1, 1);
+        Rect r4 = new Rect(5, 5, 10, 10);
+        Rect r5 = new Rect(-1, 0, 1, 1);
+        Rect r6 = new Rect(0, 10, 1, 1);
+
+        assertTrue(r1.intersects(r2));
+        assertTrue(r2.intersects(r1));
+        assertTrue(r1.intersects(r4));
+        assertFalse(r1.intersects(r3));
+        assertFalse(r1.intersects(r5));
+        assertFalse(r1.intersects(r6));
     }
 
     public final void testMoveTo() {

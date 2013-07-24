@@ -1,5 +1,7 @@
 package ${packageName};
 
+import java.util.Locale;
+
 <#if navType?contains("tabs")>import android.app.ActionBar;
 import android.app.FragmentTransaction;</#if>
 import android.os.Bundle;
@@ -35,7 +37,7 @@ public class ${activityClass} extends FragmentActivity<#if navType?contains("tab
     ViewPager mViewPager;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
 
@@ -133,13 +135,14 @@ public class ${activityClass} extends FragmentActivity<#if navType?contains("tab
 
         @Override
         public CharSequence getPageTitle(int position) {
+            Locale l = Locale.getDefault();
             switch (position) {
                 case 0:
-                    return getString(R.string.title_section1).toUpperCase();
+                    return getString(R.string.title_section1).toUpperCase(l);
                 case 1:
-                    return getString(R.string.title_section2).toUpperCase();
+                    return getString(R.string.title_section2).toUpperCase(l);
                 case 2:
-                    return getString(R.string.title_section3).toUpperCase();
+                    return getString(R.string.title_section3).toUpperCase(l);
             }
             return null;
         }

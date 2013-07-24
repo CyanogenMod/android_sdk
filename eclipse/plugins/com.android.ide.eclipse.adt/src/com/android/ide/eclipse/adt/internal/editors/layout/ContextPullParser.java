@@ -16,9 +16,15 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import static com.android.SdkConstants.ATTR_IGNORE;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.SdkConstants.GRID_VIEW;
+import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.SPINNER;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FILL_PARENT;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
@@ -28,12 +34,14 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
-import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
+import com.google.common.collect.Maps;
 
 import org.kxml2.io.KXmlParser;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Modified {@link KXmlParser} that adds the methods of {@link ILayoutPullParser}, and
@@ -80,7 +88,37 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
 
     @Override
     public Object getViewCookie() {
-        return null; // never any key to return
+        String name = super.getName();
+        if (name == null) {
+            return null;
+        }
+
+        // Store tools attributes if this looks like a layout we'll need adapter view
+        // bindings for in the ProjectCallback.
+        if (LIST_VIEW.equals(name)
+                || EXPANDABLE_LIST_VIEW.equals(name)
+                || GRID_VIEW.equals(name)
+                || SPINNER.equals(name)) {
+            Map<String, String> map = null;
+            int count = getAttributeCount();
+            for (int i = 0; i < count; i++) {
+                String namespace = getAttributeNamespace(i);
+                if (namespace != null && namespace.equals(TOOLS_URI)) {
+                    String attribute = getAttributeName(i);
+                    if (attribute.equals(ATTR_IGNORE)) {
+                        continue;
+                    }
+                    if (map == null) {
+                        map = Maps.newHashMapWithExpectedSize(4);
+                    }
+                    map.put(attribute, getAttributeValue(i));
+                }
+            }
+
+            return map;
+        }
+
+        return null;
     }
 
     // --- KXMLParser override
@@ -99,12 +137,13 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
             mFragmentLayout = null;
         }
 
+
         return name;
     }
 
     @Override
     public String getAttributeValue(String namespace, String localName) {
-        if (localName.equals(ATTR_LAYOUT) && mFragmentLayout != null) {
+        if (ATTR_LAYOUT.equals(localName) && mFragmentLayout != null) {
             return mFragmentLayout;
         }
 
@@ -119,10 +158,8 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
             return VALUE_FILL_PARENT;
         }
 
-        // Handle unicode escapes
-        if (value != null && value.indexOf('\\') != -1) {
-            value = AdtUtils.replaceUnicodeEscapes(value);
-        }
+        // Handle unicode escapes etc
+        value = ValueXmlHelper.unescapeResourceString(value, false, false);
 
         return value;
     }

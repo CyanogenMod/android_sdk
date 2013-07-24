@@ -70,7 +70,7 @@ public class ValuesContentAssist extends AndroidContentAssist {
     }
 
     @Override
-    protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
+    protected boolean computeAttributeValues(List<ICompletionProposal> proposals, int offset,
             String parentTagName, String attributeName, Node node, String wordPrefix,
             boolean skipEndTag, int replaceLength) {
         super.computeAttributeValues(proposals, offset, parentTagName, attributeName, node,
@@ -129,10 +129,12 @@ public class ValuesContentAssist extends AndroidContentAssist {
                     addMatchingProposals(proposals, sorted.toArray(), offset, node, wordPrefix,
                             needTag, true /* isAttribute */, false /* isNew */,
                             skipEndTag /* skipEndTag */, replaceLength);
-                    return;
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 
     @Override

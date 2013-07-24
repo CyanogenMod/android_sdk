@@ -36,7 +36,7 @@ import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;
-import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.FragmentMenu;
@@ -79,7 +79,6 @@ public class UiElementPullParser extends BasePullParser {
     private boolean mIncreaseExistingPadding = false;
     private LayoutDescriptors mDescriptors;
     private final Density mDensity;
-    private final float mXdpi;
 
     /**
      * Number of pixels to pad views with in exploded-rendering mode.
@@ -114,18 +113,16 @@ public class UiElementPullParser extends BasePullParser {
      *            nodes are not individually exploded (but they may all be exploded with the
      *            explodeRendering parameter.
      * @param density the density factor for the screen.
-     * @param xdpi the screen actual dpi in X
      * @param project Project containing this layout.
      */
     public UiElementPullParser(UiElementNode top, boolean explodeRendering,
             Set<UiElementNode> explodeNodes,
-            Density density, float xdpi, IProject project) {
+            Density density, IProject project) {
         super();
         mRoot = top;
         mExplodedRendering = explodeRendering;
         mExplodeNodes = explodeNodes;
         mDensity = density;
-        mXdpi = xdpi;
         if (mExplodedRendering) {
             // get the layout descriptor
             IAndroidTarget target = Sdk.getCurrent().getTarget(project);
@@ -401,10 +398,8 @@ public class UiElementPullParser extends BasePullParser {
                     return VALUE_FILL_PARENT;
                 }
 
-                // Handle unicode escapes
-                if (value.indexOf('\\') != -1) {
-                    value = AdtUtils.replaceUnicodeEscapes(value);
-                }
+                // Handle unicode escapes etc
+                value = ValueXmlHelper.unescapeResourceString(value, false, false);
 
                 return value;
             }
@@ -631,13 +626,13 @@ public class UiElementPullParser extends BasePullParser {
                             f *= (float)mDensity.getDpiValue() / Density.DEFAULT_DENSITY;
                             break;
                         case COMPLEX_UNIT_PT:
-                            f *= mXdpi * (1.0f / 72);
+                            f *= mDensity.getDpiValue() * (1.0f / 72);
                             break;
                         case COMPLEX_UNIT_IN:
-                            f *= mXdpi;
+                            f *= mDensity.getDpiValue();
                             break;
                         case COMPLEX_UNIT_MM:
-                            f *= mXdpi * (1.0f / 25.4f);
+                            f *= mDensity.getDpiValue() * (1.0f / 25.4f);
                             break;
                     }
 

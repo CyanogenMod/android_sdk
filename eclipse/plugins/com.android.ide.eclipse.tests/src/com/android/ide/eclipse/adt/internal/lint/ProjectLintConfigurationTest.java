@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.Severity;
 import org.eclipse.core.resources.IProject;
 
 import java.io.File;
-import java.util.Calendar;
 
 @SuppressWarnings("javadoc")
 public class ProjectLintConfigurationTest extends AdtProjectTest {
@@ -181,31 +180,11 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
         assertSame(config1, config2);
     }
 
-    private static File sTempDir = null;
-    @Override
-    protected File getTempDir() {
-        if (sTempDir == null) {
-            File base = new File(System.getProperty("java.io.tmpdir"));     //$NON-NLS-1$
-            String os = System.getProperty("os.name");          //$NON-NLS-1$
-            if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
-                base = new File("/tmp");
-            }
-            Calendar c = Calendar.getInstance();
-            String name = String.format("lintTests/%1$tF_%1$tT", c).replace(':', '-'); //$NON-NLS-1$
-            File tmpDir = new File(base, name);
-            if (!tmpDir.exists() && tmpDir.mkdirs()) {
-                sTempDir = tmpDir;
-            } else {
-                sTempDir = base;
-            }
-        }
-
-        return sTempDir;
-    }
-
     @Override
     protected File getTargetDir() {
-        return new File(getTempDir(), getClass().getSimpleName() + "_" + getName());
+        File targetDir = new File(getTempDir(), getClass().getSimpleName() + "_" + getName());
+        addCleanupDir(targetDir);
+        return targetDir;
     }
 
     private static class TestClient extends LintClient {

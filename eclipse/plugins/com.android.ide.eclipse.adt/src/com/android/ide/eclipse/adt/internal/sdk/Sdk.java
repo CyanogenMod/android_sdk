@@ -43,18 +43,21 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryState;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
+import com.android.sdklib.repository.FullRevision;
 import com.android.utils.ILogger;
+import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -131,7 +134,7 @@ public final class Sdk  {
     }
 
     private final SdkManager mManager;
-    private final DexWrapper mDexWrapper;
+    private final Map<String, DexWrapper> mDexWrappers = Maps.newHashMap();
     private final AvdManager mAvdManager;
     private final DeviceManager mDeviceManager;
 
@@ -236,7 +239,8 @@ public final class Sdk  {
             final ArrayList<String> logMessages = new ArrayList<String>();
             ILogger log = new ILogger() {
                 @Override
-                public void error(Throwable throwable, String errorFormat, Object... arg) {
+                public void error(@Nullable Throwable throwable, @Nullable String errorFormat,
+                        Object... arg) {
                     if (errorFormat != null) {
                         logMessages.add(String.format("Error: " + errorFormat, arg));
                     }
@@ -265,17 +269,6 @@ public final class Sdk  {
             // get an SdkManager object for the location
             SdkManager manager = SdkManager.createManager(sdkLocation, log);
             if (manager != null) {
-                // load DX.
-                DexWrapper dexWrapper = new DexWrapper();
-                String dexLocation =
-                        sdkLocation + File.separator +
-                        SdkConstants.OS_SDK_PLATFORM_TOOLS_LIB_FOLDER + SdkConstants.FN_DX_JAR;
-                IStatus res = dexWrapper.loadDex(dexLocation);
-                if (res != Status.OK_STATUS) {
-                    log.error(null, res.getMessage());
-                    dexWrapper = null;
-                }
-
                 // create the AVD Manager
                 AvdManager avdManager = null;
                 try {
@@ -283,7 +276,7 @@ public final class Sdk  {
                 } catch (AndroidLocationException e) {
                     log.error(e, "Error parsing the AVDs");
                 }
-                sCurrentSdk = new Sdk(manager, dexWrapper, avdManager);
+                sCurrentSdk = new Sdk(manager, avdManager);
                 return sCurrentSdk;
             } else {
                 StringBuilder sb = new StringBuilder("Error Loading the SDK:\n");
@@ -329,7 +322,7 @@ public final class Sdk  {
      * @param log The logger for the {@link SdkManager}.
      * @return A new {@link SdkManager} parsing the same location.
      */
-    public @NonNull SdkManager getNewSdkManager(@NonNull ILogger log) {
+    public @Nullable SdkManager getNewSdkManager(@NonNull ILogger log) {
         return SdkManager.createManager(getSdkLocation(), log);
     }
 
@@ -374,6 +367,24 @@ public final class Sdk  {
     @Nullable
     public IAndroidTarget getTargetFromHashString(@NonNull String hash) {
         return mManager.getTargetFromHashString(hash);
+    }
+
+    @Nullable
+    public BuildToolInfo getBuildToolInfo(@Nullable String buildToolVersion) {
+        if (buildToolVersion != null) {
+            try {
+                return mManager.getBuildTool(FullRevision.parseRevision(buildToolVersion));
+            } catch (Exception e) {
+                // ignore, return null below.
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public BuildToolInfo getLatestBuildTool() {
+        return mManager.getLatestBuildTool();
     }
 
     /**
@@ -487,7 +498,7 @@ public final class Sdk  {
 
                 // try to resolve the target
                 if (AdtPlugin.getDefault().getSdkLoadStatus() == LoadStatus.LOADED) {
-                    sCurrentSdk.loadTarget(state);
+                    sCurrentSdk.loadTargetAndBuildTools(state);
                 }
             }
 
@@ -513,23 +524,81 @@ public final class Sdk  {
     }
 
     /**
-     * Loads the {@link IAndroidTarget} for a given project.
+     * Loads the {@link IAndroidTarget} and BuildTools for a given project.
      * <p/>This method will get the target hash string from the project properties, and resolve
      * it to an {@link IAndroidTarget} object and store it inside the {@link ProjectState}.
      * @param state the state representing the project to load.
      * @return the target that was loaded.
      */
     @Nullable
-    public IAndroidTarget loadTarget(ProjectState state) {
+    public IAndroidTarget loadTargetAndBuildTools(ProjectState state) {
         IAndroidTarget target = null;
         if (state != null) {
             String hash = state.getTargetHashString();
             if (hash != null) {
                 state.setTarget(target = getTargetFromHashString(hash));
             }
+
+            String markerMessage = null;
+            String buildToolInfoVersion = state.getBuildToolInfoVersion();
+            if (buildToolInfoVersion != null) {
+                BuildToolInfo buildToolsInfo = getBuildToolInfo(buildToolInfoVersion);
+
+                if (buildToolsInfo != null) {
+                    state.setBuildToolInfo(buildToolsInfo);
+                } else {
+                    markerMessage = String.format("Unable to resolve %s property value '%s'",
+                                        ProjectProperties.PROPERTY_BUILD_TOOLS,
+                                        buildToolInfoVersion);
+                }
+            } else {
+                // this is ok, we'll use the latest one automatically.
+                state.setBuildToolInfo(null);
+            }
+
+            handleBuildToolsMarker(state.getProject(), markerMessage);
         }
 
         return target;
+    }
+
+    /**
+     * Adds or edit a build tools marker from the given project. This is done through a Job.
+     * @param project the project
+     * @param markerMessage the message. if null the marker is removed.
+     */
+    private void handleBuildToolsMarker(final IProject project, final String markerMessage) {
+        Job markerJob = new Job("Android SDK: Build Tools Marker") {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                try {
+                    if (project.isAccessible()) {
+                        // always delete existing marker first
+                        project.deleteMarkers(AdtConstants.MARKER_BUILD_TOOLS, true,
+                                IResource.DEPTH_ZERO);
+
+                        // add the new one if needed.
+                        if (markerMessage != null) {
+                            BaseProjectHelper.markProject(project,
+                                    AdtConstants.MARKER_BUILD_TOOLS,
+                                    markerMessage, IMarker.SEVERITY_ERROR,
+                                    IMarker.PRIORITY_HIGH);
+                        }
+                    }
+                } catch (CoreException e2) {
+                    AdtPlugin.log(e2, null);
+                    // Don't return e2.getStatus(); the job control will then produce
+                    // a popup with this error, which isn't very interesting for the
+                    // user.
+                }
+
+                return Status.OK_STATUS;
+            }
+        };
+
+        // build jobs are run after other interactive jobs
+        markerJob.setPriority(Job.BUILD);
+        markerJob.schedule();
     }
 
     /**
@@ -668,8 +737,38 @@ public final class Sdk  {
      * Returns a {@link DexWrapper} object to be used to execute dx commands. If dx.jar was not
      * loaded properly, then this will return <code>null</code>.
      */
-    public DexWrapper getDexWrapper() {
-        return mDexWrapper;
+    @Nullable
+    public DexWrapper getDexWrapper(@Nullable BuildToolInfo buildToolInfo) {
+        if (buildToolInfo == null) {
+            return null;
+        }
+        synchronized (LOCK) {
+            String dexLocation = buildToolInfo.getPath(BuildToolInfo.PathId.DX_JAR);
+            DexWrapper dexWrapper = mDexWrappers.get(dexLocation);
+
+            if (dexWrapper == null) {
+                // load DX.
+                dexWrapper = new DexWrapper();
+                IStatus res = dexWrapper.loadDex(dexLocation);
+                if (res != Status.OK_STATUS) {
+                    AdtPlugin.log(null, res.getMessage());
+                    dexWrapper = null;
+                } else {
+                    mDexWrappers.put(dexLocation, dexWrapper);
+                }
+            }
+
+            return dexWrapper;
+        }
+    }
+
+    public void unloadDexWrappers() {
+        synchronized (LOCK) {
+            for (DexWrapper wrapper : mDexWrappers.values()) {
+                wrapper.unload();
+            }
+            mDexWrappers.clear();
+        }
     }
 
     /**
@@ -700,12 +799,6 @@ public final class Sdk  {
     @NonNull
     public DeviceManager getDeviceManager() {
         return mDeviceManager;
-    }
-
-    /** Returns the devices provided by the SDK, including user created devices */
-    @NonNull
-    public List<Device> getDevices() {
-        return mDeviceManager.getDevices(getSdkLocation());
     }
 
     /**
@@ -769,9 +862,8 @@ public final class Sdk  {
         }
     }
 
-    private Sdk(SdkManager manager, DexWrapper dexWrapper, AvdManager avdManager) {
+    private Sdk(SdkManager manager, AvdManager avdManager) {
         mManager = manager;
-        mDexWrapper = dexWrapper;
         mAvdManager = avdManager;
 
         // listen to projects closing
@@ -784,16 +876,16 @@ public final class Sdk  {
                 IResourceDelta.CHANGED | IResourceDelta.ADDED | IResourceDelta.REMOVED);
 
         // pre-compute some paths
-        mDocBaseUrl = getDocumentationBaseUrl(mManager.getLocation() +
+        mDocBaseUrl = getDocumentationBaseUrl(manager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
-        mDeviceManager = new DeviceManager(AdtPlugin.getDefault());
+        mDeviceManager = DeviceManager.createInstance(manager.getLocation(),
+                                                      AdtPlugin.getDefault());
 
         // update whatever ProjectState is already present with new IAndroidTarget objects.
         synchronized (LOCK) {
             for (Entry<IProject, ProjectState> entry: sProjectStateMap.entrySet()) {
-                entry.getValue().setTarget(
-                        getTargetFromHashString(entry.getValue().getTargetHashString()));
+                loadTargetAndBuildTools(entry.getValue());
             }
         }
     }
@@ -880,16 +972,6 @@ public final class Sdk  {
         }
 
         private void onProjectRemoved(IProject removedProject, boolean deleted) {
-            try {
-                if (removedProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e) {
-                // this can only happen if the project does not exist or is not open, neither
-                // of which can happen here since we're processing a Project removed/deleted event
-                // which is processed before the project is actually removed/closed.
-            }
-
             if (DEBUG) {
                 System.out.println(">>> CLOSED: " + removedProject.getName());
             }
@@ -963,15 +1045,6 @@ public final class Sdk  {
         }
 
         private void onProjectOpened(final IProject openedProject) {
-            try {
-                if (openedProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e) {
-                // this can only happen if the project does not exist or is not open, neither
-                // of which can happen here since we're processing a Project opened event.
-            }
-
 
             ProjectState openedState = getProjectState(openedProject);
             if (openedState != null) {
@@ -1052,7 +1125,11 @@ public final class Sdk  {
     private IFileListener mFileListener = new IFileListener() {
         @Override
         public void fileChanged(final @NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                int kind, @Nullable String extension, int flags) {
+                int kind, @Nullable String extension, int flags, boolean isAndroidPRoject) {
+            if (!isAndroidPRoject) {
+                return;
+            }
+
             if (SdkConstants.FN_PROJECT_PROPERTIES.equals(file.getName()) &&
                     file.getParent() == file.getProject()) {
                 try {
@@ -1060,13 +1137,9 @@ public final class Sdk  {
                     // the target.
                     IProject iProject = file.getProject();
 
-                    if (iProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                        return;
-                    }
-
                     ProjectState state = Sdk.getProjectState(iProject);
 
-                    // get the current target
+                    // get the current target and build tools
                     IAndroidTarget oldTarget = state.getTarget();
 
                     // get the current library flag
@@ -1075,7 +1148,7 @@ public final class Sdk  {
                     LibraryDifference diff = state.reloadProperties();
 
                     // load the (possibly new) target.
-                    IAndroidTarget newTarget = loadTarget(state);
+                    IAndroidTarget newTarget = loadTargetAndBuildTools(state);
 
                     // reload the libraries if needed
                     if (diff.hasDiff()) {

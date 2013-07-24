@@ -37,6 +37,7 @@ import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
@@ -59,9 +60,13 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -100,6 +105,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import lombok.ast.TypeReference;
 import lombok.ast.ecj.EcjTreeConverter;
 import lombok.ast.grammar.ParseProblem;
 import lombok.ast.grammar.Source;
@@ -280,6 +286,19 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         return null;
+    }
+
+    @Override
+    @NonNull
+    public String getProjectName(@NonNull Project project) {
+        // Initialize the lint project's name to the name of the Eclipse project,
+        // which might differ from the directory name
+        IProject eclipseProject = getProject(project);
+        if (eclipseProject != null) {
+            return eclipseProject.getName();
+        }
+
+        return super.getProjectName(project);
     }
 
     @NonNull
@@ -526,6 +545,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      */
     private static Pair<Integer, Integer> adjustOffsets(IDocument doc, int startOffset,
             int endOffset) {
+        int originalStart = startOffset;
+        int originalEnd = endOffset;
+
         if (doc != null) {
             while (endOffset > startOffset && endOffset < doc.getLength()) {
                 try {
@@ -547,6 +569,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                     char c = doc.getChar(lineEnd);
                     if (c == '\n' || c == '\r') {
                         endOffset = lineEnd;
+                        if (endOffset > 0 && doc.getChar(endOffset - 1) == '\r') {
+                            endOffset--;
+                        }
                         break;
                     }
                 } catch (BadLocationException e) {
@@ -555,6 +580,13 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 }
                 lineEnd++;
             }
+        }
+
+        if (startOffset >= endOffset) {
+            // Selecting nothing (for example, for the mangled CRLF delimiter issue selecting
+            // just the newline)
+            // In that case, use the real range
+            return Pair.of(originalStart, originalEnd);
         }
 
         return Pair.of(startOffset, endOffset);
@@ -583,8 +615,8 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             return "";
         }
 
-        String summary = issue.getDescription();
-        String explanation = issue.getExplanationAsSimpleText();
+        String summary = issue.getDescription(Issue.OutputFormat.TEXT);
+        String explanation = issue.getExplanation(Issue.OutputFormat.TEXT);
 
         StringBuilder sb = new StringBuilder(summary.length() + explanation.length() + 20);
         try {
@@ -872,6 +904,125 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return Sdk.getCurrent().getTargets();
     }
 
+    private boolean mSearchForSuperClasses;
+
+    /**
+     * Sets whether this client should search for super types on its own. This
+     * is typically not needed when doing a full lint run (because lint will
+     * look at all classes and libraries), but is useful during incremental
+     * analysis when lint is only looking at a subset of classes. In that case,
+     * we want to use Eclipse's data structures for super classes.
+     *
+     * @param search whether to use a custom Eclipse search for super class
+     *            names
+     */
+    public void setSearchForSuperClasses(boolean search) {
+        mSearchForSuperClasses = search;
+    }
+
+    /**
+     * Whether this lint client is searching for super types. See
+     * {@link #setSearchForSuperClasses(boolean)} for details.
+     *
+     * @return whether the client will search for super types
+     */
+    public boolean getSearchForSuperClasses() {
+        return mSearchForSuperClasses;
+    }
+
+    @Override
+    @Nullable
+    public String getSuperClass(@NonNull Project project, @NonNull String name) {
+        if (!mSearchForSuperClasses) {
+            // Super type search using the Eclipse index is potentially slow, so
+            // only do this when necessary
+            return null;
+        }
+
+        IProject eclipseProject = getProject(project);
+        if (eclipseProject == null) {
+            return null;
+        }
+
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(eclipseProject);
+            if (javaProject == null) {
+                return null;
+            }
+
+            String typeFqcn = ClassContext.getFqcn(name);
+            IType type = javaProject.findType(typeFqcn);
+            if (type != null) {
+                ITypeHierarchy hierarchy = type.newSupertypeHierarchy(new NullProgressMonitor());
+                IType superType = hierarchy.getSuperclass(type);
+                if (superType != null) {
+                    String key = superType.getKey();
+                    if (!key.isEmpty()
+                            && key.charAt(0) == 'L'
+                            && key.charAt(key.length() - 1) == ';') {
+                        return key.substring(1, key.length() - 1);
+                    } else {
+                        String fqcn = superType.getFullyQualifiedName();
+                        return ClassContext.getInternalName(fqcn);
+                    }
+                }
+            }
+        } catch (JavaModelException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        } catch (CoreException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        }
+
+        return null;
+    }
+
+    @Override
+    @Nullable
+    public Boolean isSubclassOf(
+            @NonNull Project project,
+            @NonNull String name, @NonNull
+            String superClassName) {
+        if (!mSearchForSuperClasses) {
+            // Super type search using the Eclipse index is potentially slow, so
+            // only do this when necessary
+            return null;
+        }
+
+        IProject eclipseProject = getProject(project);
+        if (eclipseProject == null) {
+            return null;
+        }
+
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(eclipseProject);
+            if (javaProject == null) {
+                return null;
+            }
+
+            String typeFqcn = ClassContext.getFqcn(name);
+            IType type = javaProject.findType(typeFqcn);
+            if (type != null) {
+                ITypeHierarchy hierarchy = type.newSupertypeHierarchy(new NullProgressMonitor());
+                IType[] allSupertypes = hierarchy.getAllSuperclasses(type);
+                if (allSupertypes != null) {
+                    String target = 'L' + superClassName + ';';
+                    for (IType superType : allSupertypes) {
+                        if (target.equals(superType.getKey())) {
+                            return Boolean.TRUE;
+                        }
+                    }
+                    return Boolean.FALSE;
+                }
+            }
+        } catch (JavaModelException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        } catch (CoreException e) {
+            log(Severity.INFORMATIONAL, e, null);
+        }
+
+        return null;
+    }
+
     private static class LazyLocation extends Location implements Location.Handle {
         private final IStructuredDocument mDocument;
         private final IndexedRegion mRegion;
@@ -1061,6 +1212,19 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         @Override
         public void dispose(@NonNull JavaContext context,
                 @NonNull lombok.ast.Node compilationUnit) {
+        }
+
+        @Override
+        @Nullable
+        public lombok.ast.Node resolve(@NonNull JavaContext context,
+                @NonNull lombok.ast.Node node) {
+            return null;
+        }
+
+        @Override
+        @Nullable
+        public TypeReference getType(@NonNull JavaContext context, @NonNull lombok.ast.Node node) {
+            return null;
         }
 
         /* Handle for creating positions cheaply and returning full fledged locations later */

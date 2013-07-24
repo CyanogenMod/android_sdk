@@ -17,11 +17,15 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.rendering.HardwareConfigHelper;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.DrawableParams;
+import com.android.ide.common.rendering.api.HardwareConfig;
 import com.android.ide.common.rendering.api.IImageFactory;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.LayoutLog;
@@ -32,10 +36,9 @@ import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.resources.ResourceResolver;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.ContextPullParser;
-import com.android.ide.eclipse.adt.internal.editors.layout.ExplodedRenderingHelper;
 import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.UiElementPullParser;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
@@ -47,7 +50,12 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.resources.Density;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.devices.Device;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
@@ -55,8 +63,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -81,18 +89,12 @@ public class RenderService {
     private final int mTargetSdkVersion;
     private final LayoutLibrary mLayoutLib;
     private final IImageFactory mImageFactory;
-    private final Density mDensity;
-    private final float mXdpi;
-    private final float mYdpi;
-    private final ScreenSizeQualifier mScreenSize;
+    private final HardwareConfigHelper mHardwareConfigHelper;
 
     // The following fields are optional or configurable using the various chained
     // setters:
 
     private UiDocumentNode mModel;
-    private int mWidth = -1;
-    private int mHeight = -1;
-    private boolean mUseExplodeMode;
     private Reference mIncludedWithin;
     private RenderingMode mRenderingMode = RenderingMode.NORMAL;
     private LayoutLog mLogger;
@@ -109,15 +111,66 @@ public class RenderService {
         mImageFactory = canvas.getImageOverlay();
         ConfigurationChooser chooser = editor.getConfigurationChooser();
         Configuration config = chooser.getConfiguration();
-        mDensity = config.getDensity();
-        mXdpi = config.getXDpi();
-        mYdpi = config.getYDpi();
-        mScreenSize = chooser.getConfiguration().getFullConfig().getScreenSizeQualifier();
+        FolderConfiguration folderConfig = config.getFullConfig();
+
+        Device device = config.getDevice();
+        assert device != null; // Should only attempt render with configuration that has device
+        mHardwareConfigHelper = new HardwareConfigHelper(device);
+        mHardwareConfigHelper.setOrientation(
+                folderConfig.getScreenOrientationQualifier().getValue());
+
         mLayoutLib = editor.getReadyLayoutLib(true /*displayError*/);
         mResourceResolver = editor.getResourceResolver();
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
+    }
+
+    private RenderService(GraphicalEditorPart editor,
+            Configuration configuration, ResourceResolver resourceResolver) {
+        mEditor = editor;
+
+        mProject = editor.getProject();
+        LayoutCanvas canvas = editor.getCanvasControl();
+        mImageFactory = canvas.getImageOverlay();
+        FolderConfiguration folderConfig = configuration.getFullConfig();
+
+        Device device = configuration.getDevice();
+        assert device != null;
+        mHardwareConfigHelper = new HardwareConfigHelper(device);
+        mHardwareConfigHelper.setOrientation(
+                folderConfig.getScreenOrientationQualifier().getValue());
+
+        mLayoutLib = editor.getReadyLayoutLib(true /*displayError*/);
+        mResourceResolver =  resourceResolver != null ? resourceResolver : editor.getResourceResolver();
+        mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
+        mMinSdkVersion = editor.getMinSdkVersion();
+        mTargetSdkVersion = editor.getTargetSdkVersion();
+    }
+
+    /**
+     * Returns true if this configuration supports the given rendering
+     * capability
+     *
+     * @param target the target to look up the layout library for
+     * @param capability the capability to check
+     * @return true if the capability is supported
+     */
+    public static boolean supports(
+            @NonNull IAndroidTarget target,
+            @NonNull Capability capability) {
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            AndroidTargetData targetData = sdk.getTargetData(target);
+            if (targetData != null) {
+                LayoutLibrary layoutLib = targetData.getLayoutLibrary();
+                if (layoutLib != null) {
+                    return layoutLib.supports(capability);
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -128,6 +181,21 @@ public class RenderService {
      */
     public static RenderService create(GraphicalEditorPart editor) {
         RenderService renderService = new RenderService(editor);
+
+        return renderService;
+    }
+
+    /**
+     * Creates a new {@link RenderService} associated with the given editor.
+     *
+     * @param editor the editor to provide configuration data such as the render target
+     * @param configuration the configuration to use (and fallback to editor for the rest)
+     * @param resolver a resource resolver to use to look up resources
+     * @return a {@link RenderService} which can perform rendering services
+     */
+    public static RenderService create(GraphicalEditorPart editor,
+            Configuration configuration, ResourceResolver resolver) {
+        RenderService renderService = new RenderService(editor, configuration, resolver);
 
         return renderService;
     }
@@ -176,16 +244,34 @@ public class RenderService {
     }
 
     /**
-     * Sets the width and height to be used during rendering (which might be adjusted if
+     * Overrides the width and height to be used during rendering (which might be adjusted if
      * the {@link #setRenderingMode(RenderingMode)} is {@link RenderingMode#FULL_EXPAND}.
      *
-     * @param width the width in pixels of the layout to be rendered
-     * @param height the height in pixels of the layout to be rendered
+     * A value of -1 will make the rendering use the normal width and height coming from the
+     * {@link Configuration#getDevice()} object.
+     *
+     * @param overrideRenderWidth the width in pixels of the layout to be rendered
+     * @param overrideRenderHeight the height in pixels of the layout to be rendered
      * @return this (such that chains of setters can be stringed together)
      */
-    public RenderService setSize(int width, int height) {
-        mWidth = width;
-        mHeight = height;
+    public RenderService setOverrideRenderSize(int overrideRenderWidth, int overrideRenderHeight) {
+        mHardwareConfigHelper.setOverrideRenderSize(overrideRenderWidth, overrideRenderHeight);
+        return this;
+    }
+
+    /**
+     * Sets the max width and height to be used during rendering (which might be adjusted if
+     * the {@link #setRenderingMode(RenderingMode)} is {@link RenderingMode#FULL_EXPAND}.
+     *
+     * A value of -1 will make the rendering use the normal width and height coming from the
+     * {@link Configuration#getDevice()} object.
+     *
+     * @param maxRenderWidth the max width in pixels of the layout to be rendered
+     * @param maxRenderHeight the max height in pixels of the layout to be rendered
+     * @return this (such that chains of setters can be stringed together)
+     */
+    public RenderService setMaxRenderSize(int maxRenderWidth, int maxRenderHeight) {
+        mHardwareConfigHelper.setMaxRenderSize(maxRenderWidth, maxRenderHeight);
         return this;
     }
 
@@ -265,7 +351,7 @@ public class RenderService {
      * @return the {@link RenderSession} resulting from rendering the current model
      */
     public RenderSession createRenderSession() {
-        assert mModel != null && mWidth != -1 && mHeight != -1 : "Incomplete service config";
+        assert mModel != null : "Incomplete service config";
         finishConfiguration();
 
         if (mResourceResolver == null) {
@@ -273,26 +359,10 @@ public class RenderService {
             return null;
         }
 
-        int width = mWidth;
-        int height = mHeight;
-        if (mUseExplodeMode) {
-            // compute how many padding in x and y will bump the screen size
-            List<UiElementNode> children = mModel.getUiChildren();
-            if (children.size() == 1) {
-                ExplodedRenderingHelper helper = new ExplodedRenderingHelper(
-                        children.get(0).getXmlNode(), mProject);
-
-                // there are 2 paddings for each view
-                // left and right, or top and bottom.
-                int paddingValue = ExplodedRenderingHelper.PADDING_VALUE * 2;
-
-                width += helper.getWidthPadding() * paddingValue;
-                height += helper.getHeightPadding() * paddingValue;
-            }
-        }
+        HardwareConfig hardwareConfig = mHardwareConfigHelper.getConfig();
 
         UiElementPullParser modelParser = new UiElementPullParser(mModel,
-                mUseExplodeMode, mExpandNodes, mDensity, mXdpi, mProject);
+                false, mExpandNodes, hardwareConfig.getDensity(), mProject);
         ILayoutPullParser topParser = modelParser;
 
         // Code to support editing included layout
@@ -316,11 +386,12 @@ public class RenderService {
                         mProjectCallback.setLayoutParser(queryLayoutName, modelParser);
                         topParser = new ContextPullParser(mProjectCallback, layoutFile);
                         topParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                        topParser.setInput(new FileInputStream(layoutFile), "UTF-8"); //$NON-NLS-1$
+                        String xmlText = Files.toString(layoutFile, Charsets.UTF_8);
+                        topParser.setInput(new StringReader(xmlText));
+                    } catch (IOException e) {
+                        AdtPlugin.log(e, null);
                     } catch (XmlPullParserException e) {
-                        AdtPlugin.log(e, ""); //$NON-NLS-1$
-                    } catch (FileNotFoundException e) {
-                        // this will not happen since we check above.
+                        AdtPlugin.log(e, null);
                     }
                 }
             }
@@ -330,8 +401,7 @@ public class RenderService {
                 topParser,
                 mRenderingMode,
                 mProject /* projectKey */,
-                width, height,
-                mDensity, mXdpi, mYdpi,
+                hardwareConfig,
                 mResourceResolver,
                 mProjectCallback,
                 mMinSdkVersion,
@@ -355,10 +425,6 @@ public class RenderService {
             } catch (Exception e) {
                 // ignore.
             }
-        }
-
-        if (mScreenSize != null) {
-            params.setConfigScreenSize(mScreenSize.getValue());
         }
 
         if (mOverrideBgColor != null) {
@@ -396,8 +462,10 @@ public class RenderService {
 
         finishConfiguration();
 
-        DrawableParams params = new DrawableParams(drawableResourceValue, mProject, mWidth, mHeight,
-                mDensity, mXdpi, mYdpi, mResourceResolver, mProjectCallback, mMinSdkVersion,
+        HardwareConfig hardwareConfig = mHardwareConfigHelper.getConfig();
+
+        DrawableParams params = new DrawableParams(drawableResourceValue, mProject, hardwareConfig,
+                mResourceResolver, mProjectCallback, mMinSdkVersion,
                 mTargetSdkVersion, mLogger);
         params.setForceNoDecor();
         Result result = mLayoutLib.renderDrawable(params);
@@ -422,14 +490,13 @@ public class RenderService {
     public Map<INode, Rect> measureChildren(INode parent,
             final IClientRulesEngine.AttributeFilter filter) {
         finishConfiguration();
-
-        int width = parent.getBounds().w;
-        int height = parent.getBounds().h;
+        HardwareConfig hardwareConfig = mHardwareConfigHelper.getConfig();
 
         final NodeFactory mNodeFactory = mEditor.getCanvasControl().getNodeFactory();
         UiElementNode parentNode = ((NodeProxy) parent).getNode();
         UiElementPullParser topParser = new UiElementPullParser(parentNode,
-                false, Collections.<UiElementNode>emptySet(), mDensity, mXdpi, mProject) {
+                false, Collections.<UiElementNode>emptySet(), hardwareConfig.getDensity(),
+                mProject) {
             @Override
             public String getAttributeValue(String namespace, String localName) {
                 if (filter != null) {
@@ -465,8 +532,7 @@ public class RenderService {
                 topParser,
                 RenderingMode.FULL_EXPAND,
                 mProject /* projectKey */,
-                width, height,
-                mDensity, mXdpi, mYdpi,
+                hardwareConfig,
                 mResourceResolver,
                 mProjectCallback,
                 mMinSdkVersion,

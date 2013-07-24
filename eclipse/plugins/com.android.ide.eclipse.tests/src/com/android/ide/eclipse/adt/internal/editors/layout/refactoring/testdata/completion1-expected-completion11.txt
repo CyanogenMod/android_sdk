@@ -63,3 +63,5 @@ Code completion in completion1.xml for ^<TextView:
 <android.gesture.GestureOverlayView ></android.gesture.GestureOverlayView> : GestureOverlayView specific attributes.
 <fragment /> : A Fragment is a piece of an application's user interface or behavior  that can be placed in an Activity
 <include /> : Lets you statically include XML layouts inside other XML layouts.
+<requestFocus /> : Requests focus for the parent element or one of its descendants
+<view /> : A view tag whose class attribute names the class to be instantiated

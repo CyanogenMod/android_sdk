@@ -21,7 +21,6 @@ import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IStartup;
@@ -39,12 +38,12 @@ public class MonitorStartup implements IStartup {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 SdkStatsService stats = new SdkStatsService();
-                String sdkPath = MonitorPlugin.getDefault().getSdkPath();
-                if (sdkPath == null) {
+                File sdkFolder = MonitorPlugin.getDefault().getSdkFolder();
+                if (sdkFolder == null) {
                     return Status.OK_STATUS;
                 }
 
-                String toolsPath = new Path(sdkPath).append(SdkConstants.FD_TOOLS).toString();
+                String toolsPath = new File(sdkFolder, SdkConstants.FD_TOOLS).getAbsolutePath();
                 ping(stats, toolsPath);
                 return Status.OK_STATUS;
             }

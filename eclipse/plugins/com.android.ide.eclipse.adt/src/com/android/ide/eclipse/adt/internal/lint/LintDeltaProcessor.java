@@ -167,9 +167,10 @@ public class LintDeltaProcessor implements Runnable {
             @Override
             public void fileChanged(@NonNull IFile file,
                     @NonNull IMarkerDelta[] markerDeltas,
-                    int kind, @Nullable String extension, int flags) {
-                if (flags == IResourceDelta.MARKERS) {
-                    // ONLY the markers changed. Ignore these since they happen
+                    int kind, @Nullable String extension, int flags, boolean isAndroidProject) {
+                if (!isAndroidProject || flags == IResourceDelta.MARKERS) {
+                    // If not an Android project or ONLY the markers changed.
+                    // Ignore these since they happen
                     // when we add markers for lint errors found in the current file,
                     // which would cause us to repeatedly enter this method over and over
                     // again.

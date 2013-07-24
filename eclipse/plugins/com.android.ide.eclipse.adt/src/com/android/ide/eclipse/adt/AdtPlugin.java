@@ -265,16 +265,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         // Listen on resource file edits for updates to file inclusion
         IncludeFinder.start();
-
-        // Parse the SDK content.
-        // This is deferred in separate jobs to avoid blocking the bundle start.
-        final boolean isSdkLocationValid = checkSdkLocationAndId();
-        if (isSdkLocationValid) {
-            // parse the SDK resources.
-            // Wait 2 seconds before starting the job. This leaves some time to the
-            // other bundles to initialize.
-            parseSdkContent(2000 /*milliseconds*/);
-        }
     }
 
     /*
@@ -303,6 +293,16 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
     /** Called when the workbench has been started */
     public void workbenchStarted() {
+        // Parse the SDK content.
+        // This is deferred in separate jobs to avoid blocking the bundle start.
+        final boolean isSdkLocationValid = checkSdkLocationAndId();
+        if (isSdkLocationValid) {
+            // parse the SDK resources.
+            // Wait 2 seconds before starting the job. This leaves some time to the
+            // other bundles to initialize.
+            parseSdkContent(2000 /*milliseconds*/);
+        }
+
         Display display = getDisplay();
         mRed = new Color(display, 0xFF, 0x00, 0x00);
 
@@ -326,19 +326,50 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         return sPlugin;
     }
 
+    /**
+     * Returns the current display, if any
+     *
+     * @return the display
+     */
+    @NonNull
     public static Display getDisplay() {
-        IWorkbench bench = null;
         synchronized (AdtPlugin.class) {
-            if (sPlugin == null) {
-                return null;
+            if (sPlugin != null) {
+                IWorkbench bench = sPlugin.getWorkbench();
+                if (bench != null) {
+                    Display display = bench.getDisplay();
+                    if (display != null) {
+                        return display;
+                    }
+                }
             }
-            bench = sPlugin.getWorkbench();
         }
 
-        if (bench != null) {
-            return bench.getDisplay();
+        Display display = Display.getCurrent();
+        if (display != null) {
+            return display;
         }
-        return null;
+
+        return Display.getDefault();
+    }
+
+    /**
+     * Returns the shell, if any
+     *
+     * @return the shell, if any
+     */
+    @Nullable
+    public static Shell getShell() {
+        Display display = AdtPlugin.getDisplay();
+        Shell shell = display.getActiveShell();
+        if (shell == null) {
+            Shell[] shells = display.getShells();
+            if (shells.length > 0) {
+                shell = shells[0];
+            }
+        }
+
+        return shell;
     }
 
     /** Returns the adb path relative to the sdk folder */
@@ -513,6 +544,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * @param string the string to be searched for
      * @return true if the file is found and contains the given string anywhere within it
      */
+    @SuppressWarnings("resource") // Closed by streamContains
     public static boolean fileContains(IFile file, String string) {
         InputStream contents = null;
         try {
@@ -1197,14 +1229,13 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             }
 
             private void openSdkManager() {
-                // Windows only: open the standalone external SDK Manager since we know
+                // Open the standalone external SDK Manager since we know
                 // that ADT on Windows is bound to be locking some SDK folders.
-                // Also when this is invoked becasue SdkManagerAction.run() fails, this
+                //
+                // Also when this is invoked because SdkManagerAction.run() fails, this
                 // test will fail and we'll fallback on using the internal one.
-                if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-                    if (SdkManagerAction.openExternalSdkManager()) {
-                        return;
-                    }
+                if (SdkManagerAction.openExternalSdkManager()) {
+                    return;
                 }
 
                 // Otherwise open the regular SDK Manager bundled within ADT
@@ -1402,7 +1433,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                                     // project that have been resolved before the sdk was loaded
                                     // will have a ProjectState where the IAndroidTarget is null
                                     // so we load the target now that the SDK is loaded.
-                                    sdk.loadTarget(Sdk.getProjectState(iProject));
+                                    sdk.loadTargetAndBuildTools(Sdk.getProjectState(iProject));
                                     list.add(javaProject);
                                 }
                             }
@@ -1580,7 +1611,10 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         monitor.addFileListener(new IFileListener() {
             @Override
             public void fileChanged(@NonNull IFile file, @NonNull IMarkerDelta[] markerDeltas,
-                    int kind, @Nullable String extension, int flags) {
+                    int kind, @Nullable String extension, int flags, boolean isAndroidProject) {
+                if (!isAndroidProject) {
+                    return;
+                }
                 if (flags == IResourceDelta.MARKERS || !SdkConstants.EXT_XML.equals(extension)) {
                     // ONLY the markers changed, or not XML file: not relevant to this listener
                     return;
@@ -1709,7 +1743,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             (List<ITargetChangeListener>)mTargetChangeListeners.clone();
 
         Display display = AdtPlugin.getDisplay();
-        if (display == null) {
+        if (display == null || display.isDisposed()) {
             return;
         }
         display.asyncExec(new Runnable() {
@@ -1850,7 +1884,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     // --------- ILogger methods -----------
 
     @Override
-    public void error(Throwable t, String format, Object... args) {
+    public void error(@Nullable Throwable t, @Nullable String format, Object... args) {
         if (t != null) {
             log(t, format, args);
         } else {

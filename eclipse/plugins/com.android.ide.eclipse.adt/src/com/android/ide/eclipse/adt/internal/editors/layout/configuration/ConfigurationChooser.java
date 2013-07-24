@@ -19,24 +19,25 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_CONTEXT;
-import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.ide.eclipse.adt.AdtUtils.isUiThread;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_ALL;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_DEVICE;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_DEVICE_CONFIG;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_FOLDER;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_LOCALE;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_RENDER_TARGET;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient.CHANGED_THEME;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE_STATE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_FOLDER;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_LOCALE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_TARGET;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_THEME;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.MASK_ALL;
+import static com.google.common.base.Objects.equal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
@@ -44,12 +45,17 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlDelegate;
+import com.android.ide.eclipse.adt.internal.editors.common.CommonXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -58,12 +64,11 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
-import com.android.resources.ScreenSize;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.DeviceManager.DevicesChangeListener;
+import com.android.sdklib.devices.DeviceManager.DevicesChangedListener;
 import com.android.sdklib.devices.State;
 import com.android.utils.Pair;
 import com.google.common.base.Objects;
@@ -72,7 +77,6 @@ import com.google.common.base.Strings;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -87,10 +91,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.eclipse.ui.IEditorPart;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -102,14 +108,7 @@ import java.util.SortedSet;
  * {@link Configuration} by configuring various constraints.
  */
 public class ConfigurationChooser extends Composite
-        implements DevicesChangeListener, DisposeListener {
-    /**
-     * Settings name for file-specific configuration preferences, such as which theme or
-     * device to render the current layout with
-     */
-    public final static QualifiedName NAME_CONFIG_STATE =
-        new QualifiedName(AdtPlugin.PLUGIN_ID, "state");//$NON-NLS-1$
-
+        implements DevicesChangedListener, DisposeListener {
     private static final String ICON_SQUARE = "square";           //$NON-NLS-1$
     private static final String ICON_LANDSCAPE = "landscape";     //$NON-NLS-1$
     private static final String ICON_PORTRAIT = "portrait";       //$NON-NLS-1$
@@ -205,8 +204,8 @@ public class ConfigurationChooser extends Composite
         ToolBar toolBar = new ToolBar(this, SWT.WRAP | SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
         toolBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-        mConfigCombo = new ToolItem(toolBar, SWT.DROP_DOWN | SWT.BOLD);
-        mConfigCombo.setImage(null);
+        mConfigCombo = new ToolItem(toolBar, SWT.DROP_DOWN );
+        mConfigCombo.setImage(icons.getIcon("android_file")); //$NON-NLS-1$
         mConfigCombo.setToolTipText("Configuration to render this layout with in Eclipse");
 
         @SuppressWarnings("unused")
@@ -296,21 +295,47 @@ public class ConfigurationChooser extends Composite
         mOrientationCombo.addSelectionListener(listener);
 
         addDisposeListener(this);
+
+        initDevices();
+        initTargets();
     }
 
-    IFile getEditedFile() {
+    /**
+     * Returns the edited file
+     *
+     * @return the file
+     */
+    @Nullable
+    public IFile getEditedFile() {
         return mEditedFile;
     }
 
-    IProject getProject() {
-        return mEditedFile.getProject();
+    /**
+     * Returns the project of the edited file
+     *
+     * @return the project
+     */
+    @Nullable
+    public IProject getProject() {
+        if (mEditedFile != null) {
+            return mEditedFile.getProject();
+        } else {
+            return null;
+        }
     }
 
     ConfigurationClient getClient() {
         return mClient;
     }
 
-    ProjectResources getResources() {
+    /**
+     * Returns the project resources for the project being configured by this
+     * chooser
+     *
+     * @return the project resources
+     */
+    @Nullable
+    public ProjectResources getResources() {
         return mResources;
     }
 
@@ -328,7 +353,7 @@ public class ConfigurationChooser extends Composite
      *
      * @return the project target
      */
-    IAndroidTarget getProjectTarget() {
+    public IAndroidTarget getProjectTarget() {
         return mProjectTarget;
     }
 
@@ -462,6 +487,7 @@ public class ConfigurationChooser extends Composite
      */
     public void setFile(IFile file) {
         mEditedFile = file;
+        ensureInitialized();
     }
 
     /**
@@ -478,7 +504,7 @@ public class ConfigurationChooser extends Composite
             return;
         }
 
-        mEditedFile = file;
+        setFile(file);
         IProject project = mEditedFile.getProject();
         mResources = ResourceManager.getInstance().getProjectResources(project);
 
@@ -491,6 +517,7 @@ public class ConfigurationChooser extends Composite
         try {
             // only attempt to do anything if the SDK and targets are loaded.
             LoadStatus sdkStatus = AdtPlugin.getDefault().getSdkLoadStatus();
+
             if (sdkStatus == LoadStatus.LOADED) {
                 setVisible(true);
 
@@ -509,6 +536,8 @@ public class ConfigurationChooser extends Composite
                     selectConfiguration(mConfiguration.getEditedConfig());
                     updateActivity();
                 }
+            } else if (sdkStatus == LoadStatus.FAILED) {
+                setVisible(true);
             }
         } finally {
             mDisableUpdates--;
@@ -522,7 +551,7 @@ public class ConfigurationChooser extends Composite
      * @see #replaceFile(IFile)
      */
     public void changeFileOnNewConfig(IFile file) {
-        mEditedFile = file;
+        setFile(file);
         IProject project = mEditedFile.getProject();
         mResources = ResourceManager.getInstance().getProjectResources(project);
 
@@ -561,8 +590,13 @@ public class ConfigurationChooser extends Composite
         if (resFolder != null) {
             mConfiguration.setEditedConfig(resFolder.getConfiguration());
         } else {
-            mConfiguration.setEditedConfig(FolderConfiguration.getConfig(
-                    parent.getName().split(RES_QUALIFIER_SEP)));
+            FolderConfiguration config = FolderConfiguration.getConfig(
+                    parent.getName().split(RES_QUALIFIER_SEP));
+            if (config != null) {
+                mConfiguration.setEditedConfig(config);
+            } else {
+                mConfiguration.setEditedConfig(new FolderConfiguration());
+            }
         }
 
         onXmlModelLoaded();
@@ -577,15 +611,12 @@ public class ConfigurationChooser extends Composite
      */
     public void setConfiguration(@NonNull Configuration configuration) {
         if (mClient != null) {
-            mClient.aboutToChange(CHANGED_ALL);
+            mClient.aboutToChange(MASK_ALL);
         }
 
         Configuration oldConfiguration = mConfiguration;
         mConfiguration = configuration;
-
-        if (mClient != null) {
-            mClient.changed(CHANGED_ALL);
-        }
+        mConfiguration.setChooser(this);
 
         selectTheme(configuration.getTheme());
         selectLocale(configuration.getLocale());
@@ -596,7 +627,13 @@ public class ConfigurationChooser extends Composite
 
         // This may be a second refresh after triggered by theme above
         if (mClient != null) {
-            boolean accepted = mClient.changed(CHANGED_ALL);
+            LayoutCanvas canvas = mClient.getCanvas();
+            if (canvas != null) {
+                assert mConfiguration != oldConfiguration;
+                canvas.getPreviewManager().updateChooserConfig(oldConfiguration, mConfiguration);
+            }
+
+            boolean accepted = mClient.changed(MASK_ALL);
             if (!accepted) {
                 configuration = oldConfiguration;
                 selectTheme(configuration.getTheme());
@@ -605,7 +642,22 @@ public class ConfigurationChooser extends Composite
                 selectDeviceState(configuration.getDeviceState());
                 selectTarget(configuration.getTarget());
                 selectActivity(configuration.getActivity());
+                if (canvas != null && mConfiguration != oldConfiguration) {
+                    canvas.getPreviewManager().updateChooserConfig(mConfiguration,
+                            oldConfiguration);
+                }
                 return;
+            } else {
+                int changed = 0;
+                if (!equal(oldConfiguration.getTheme(), mConfiguration.getTheme())) {
+                    changed |= CFG_THEME;
+                }
+                if (!equal(oldConfiguration.getDevice(), mConfiguration.getDevice())) {
+                    changed |= CFG_DEVICE | CFG_DEVICE_STATE;
+                }
+                if (changed != 0) {
+                    syncToVariations(changed, mEditedFile, mConfiguration, false, true);
+                }
             }
         }
 
@@ -627,10 +679,9 @@ public class ConfigurationChooser extends Composite
         mDisableUpdates++; // we do not want to trigger onXXXChange when setting
                            // new values in the widgets.
         try {
-            // this is going to be followed by a call to onTargetLoaded.
-            // So we can only care about the layout devices in this case.
-            initDevices();
-            initTargets();
+            updateDevices();
+            updateTargets();
+            ensureInitialized();
         } finally {
             mDisableUpdates--;
         }
@@ -668,8 +719,9 @@ public class ConfigurationChooser extends Composite
             try {
                 // init the devices if needed (new SDK or first time going through here)
                 if (mSdkChanged) {
-                    initDevices();
-                    initTargets();
+                    updateDevices();
+                    updateTargets();
+                    ensureInitialized();
                     mSdkChanged = false;
                 }
 
@@ -683,7 +735,8 @@ public class ConfigurationChooser extends Composite
                 LoadStatus targetStatus = LoadStatus.FAILED;
                 if (mProjectTarget != null) {
                     targetStatus = Sdk.getCurrent().checkAndLoadTargetData(mProjectTarget, null);
-                    initTargets();
+                    updateTargets();
+                    ensureInitialized();
                 }
 
                 if (targetStatus == LoadStatus.LOADED) {
@@ -697,24 +750,22 @@ public class ConfigurationChooser extends Composite
                         if (resFolder != null) {
                             mConfiguration.setEditedConfig(resFolder.getConfiguration());
                         } else {
-                            mConfiguration.setEditedConfig(FolderConfiguration.getConfig(
-                                    parent.getName().split(RES_QUALIFIER_SEP)));
+                            FolderConfiguration config = FolderConfiguration.getConfig(
+                                    parent.getName().split(RES_QUALIFIER_SEP));
+                            if (config != null) {
+                                mConfiguration.setEditedConfig(config);
+                            } else {
+                                mConfiguration.setEditedConfig(new FolderConfiguration());
+                            }
                         }
                     }
 
                     targetData = Sdk.getCurrent().getTargetData(mProjectTarget);
 
                     // get the file stored state
-                    boolean loadedConfigData = false;
-                    String data = AdtPlugin.getFileProperty(mEditedFile, NAME_CONFIG_STATE);
-                    if (mInitialState != null) {
-                        data = mInitialState;
-                        mInitialState = null;
-                    }
-
-                    if (data != null) {
-                        loadedConfigData = mConfiguration.initialize(data);
-                    }
+                    ensureInitialized();
+                    boolean loadedConfigData = mConfiguration.getDevice() != null &&
+                            mConfiguration.getDeviceState() != null;
 
                     // Load locale list. This must be run after we initialize the
                     // configuration above, since it attempts to sync the UI with
@@ -741,11 +792,11 @@ public class ConfigurationChooser extends Composite
                         matcher.findAndSetCompatibleConfig(false);
 
                         // Default to modern layout lib
-                        IProject p = mEditedFile.getProject();
-                        IAndroidTarget target = ConfigurationMatcher.findDefaultRenderTarget(p);
+                        IAndroidTarget target = ConfigurationMatcher.findDefaultRenderTarget(this);
                         if (target != null) {
                             targetData = Sdk.getCurrent().getTargetData(target);
                             selectTarget(target);
+                            mConfiguration.setTarget(target, true);
                         }
                     }
 
@@ -768,6 +819,8 @@ public class ConfigurationChooser extends Composite
 
                     // compute the final current config
                     mConfiguration.syncFolderConfig();
+                } else if (targetStatus == LoadStatus.FAILED) {
+                    setVisible(true);
                 }
             } finally {
                 mDisableUpdates--;
@@ -775,6 +828,19 @@ public class ConfigurationChooser extends Composite
         }
 
         return targetData;
+    }
+
+    /**
+     * This is a temporary workaround for a infrequently happening bug; apparently
+     * there are cases where the configuration chooser isn't shown
+     */
+    public void ensureVisible() {
+        if (!isVisible()) {
+            LoadStatus sdkStatus = AdtPlugin.getDefault().getSdkLoadStatus();
+            if (sdkStatus == LoadStatus.LOADED) {
+                onXmlModelLoaded();
+            }
+        }
     }
 
     /**
@@ -790,7 +856,7 @@ public class ConfigurationChooser extends Composite
             matcher.adaptConfigSelection(true /*needBestMatch*/);
             mConfiguration.syncFolderConfig();
             if (mClient != null) {
-                mClient.changed(CHANGED_ALL);
+                mClient.changed(MASK_ALL);
             }
         }
     }
@@ -801,67 +867,91 @@ public class ConfigurationChooser extends Composite
     private void initDevices() {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
-            mDeviceList = sdk.getDevices();
             DeviceManager manager = sdk.getDeviceManager();
             // This method can be called more than once, so avoid duplicate entries
             manager.unregisterListener(this);
             manager.registerListener(this);
+            mDeviceList = manager.getDevices(DeviceManager.ALL_DEVICES);
         } else {
             mDeviceList = new ArrayList<Device>();
-        }
-
-        // fill with the devices
-        if (!mDeviceList.isEmpty()) {
-            Device first = mDeviceList.get(0);
-            selectDevice(first);
-            List<State> states = first.getAllStates();
-            selectDeviceState(states.get(0));
-        } else {
-            selectDevice(null);
         }
     }
 
     /**
      * Loads the list of {@link IAndroidTarget} and inits the UI with it.
      */
-    private void initTargets() {
+    private boolean initTargets() {
         mTargetList.clear();
-
-        IAndroidTarget renderingTarget = mConfiguration.getTarget();
 
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
             IAndroidTarget[] targets = currentSdk.getTargets();
-            IAndroidTarget match = null;
             for (int i = 0 ; i < targets.length; i++) {
-                // FIXME: add check based on project minSdkVersion
                 if (targets[i].hasRenderingLibrary()) {
                     mTargetList.add(targets[i]);
-
-                    if (renderingTarget != null) {
-                        // use equals because the rendering could be from a previous SDK, so
-                        // it may not be the same instance.
-                        if (renderingTarget.equals(targets[i])) {
-                            match = targets[i];
-                        }
-                    } else if (mProjectTarget == targets[i]) {
-                        match = targets[i];
-                    }
                 }
             }
 
-            if (match == null) {
-                selectTarget(null);
+            return true;
+        }
 
-                // the rendering target is the same as the project.
-                renderingTarget = mProjectTarget;
-            } else {
-                selectTarget(match);
+        return false;
+    }
 
-                // set the rendering target to the new object.
-                renderingTarget = match;
+    /** Ensures that the configuration has been initialized */
+    public void ensureInitialized() {
+        if (mConfiguration.getDevice() == null && mEditedFile != null) {
+            String data = ConfigurationDescription.getDescription(mEditedFile);
+            if (mInitialState != null) {
+                data = mInitialState;
+                mInitialState = null;
+            }
+            if (data != null) {
+                mConfiguration.initialize(data);
+                mConfiguration.syncFolderConfig();
             }
         }
+    }
+
+    private void updateDevices() {
+        if (mDeviceList.size() == 0) {
+            initDevices();
+        }
+    }
+
+    private void updateTargets() {
+        if (mTargetList.size() == 0) {
+            if (!initTargets()) {
+                return;
+            }
+        }
+
+        IAndroidTarget renderingTarget = mConfiguration.getTarget();
+
+        IAndroidTarget match = null;
+        for (IAndroidTarget target : mTargetList) {
+            if (renderingTarget != null) {
+                // use equals because the rendering could be from a previous SDK, so
+                // it may not be the same instance.
+                if (renderingTarget.equals(target)) {
+                    match = target;
+                }
+            } else if (mProjectTarget == target) {
+                match = target;
+            }
+
+        }
+
+        if (match == null) {
+            // the rendering target is the same as the project.
+            renderingTarget = mProjectTarget;
+        } else {
+            // set the rendering target to the new object.
+            renderingTarget = match;
+        }
+
+        mConfiguration.setTarget(renderingTarget, true);
+        selectTarget(renderingTarget);
     }
 
     /** Update the toolbar whenever a label has changed, to not only
@@ -925,7 +1015,9 @@ public class ConfigurationChooser extends Composite
      */
     public void saveConstraints() {
         String description = mConfiguration.toPersistentString();
-        AdtPlugin.setFileProperty(mEditedFile, NAME_CONFIG_STATE, description);
+        if (description != null && !description.isEmpty()) {
+            ConfigurationDescription.setDescription(mEditedFile, description);
+        }
     }
 
     // ---- Setting the current UI state ----
@@ -1043,6 +1135,11 @@ public class ConfigurationChooser extends Composite
     }
 
     private void selectConfiguration(FolderConfiguration fileConfig) {
+        /* For now, don't show any text in the configuration combo, use just an
+           icon. This has the advantage that the configuration contents don't
+           shift around, so you can for example click back and forth between
+           portrait and landscape without the icon moving under the mouse.
+           If this works well, remove this whole method post ADT 21.
         assert isUiThread();
         try {
             String current = mEditedFile.getParent().getName();
@@ -1059,6 +1156,7 @@ public class ConfigurationChooser extends Composite
         } finally {
             mDisableUpdates--;
         }
+         */
     }
 
     /**
@@ -1264,12 +1362,16 @@ public class ConfigurationChooser extends Composite
         }
     }
 
-    // ---- Implements DevicesChangeListener ----
+    // ---- Implements DevicesChangedListener ----
 
     @Override
-    public void onDevicesChange() {
+    public void onDevicesChanged() {
         final Sdk sdk = Sdk.getCurrent();
-        mDeviceList = sdk.getDevices();
+        if (sdk != null) {
+            mDeviceList = sdk.getDeviceManager().getDevices(DeviceManager.ALL_DEVICES);
+        } else {
+            mDeviceList = new ArrayList<Device>();
+        }
     }
 
     // ---- Reacting to UI changes ----
@@ -1303,7 +1405,8 @@ public class ConfigurationChooser extends Composite
         mConfiguration.syncFolderConfig();
 
         // Notify
-        boolean accepted = mClient.changed(CHANGED_DEVICE | CHANGED_DEVICE_CONFIG);
+        IFile file = mEditedFile;
+        boolean accepted = mClient.changed(CFG_DEVICE | CFG_DEVICE_STATE);
         if (!accepted) {
             mConfiguration.setDevice(prevDevice, true);
             mConfiguration.setDeviceState(prevState, true);
@@ -1311,9 +1414,72 @@ public class ConfigurationChooser extends Composite
             selectDevice(prevDevice);
             selectDeviceState(prevState);
             return;
+        } else {
+            syncToVariations(CFG_DEVICE | CFG_DEVICE_STATE, file, mConfiguration, false, true);
         }
 
         saveConstraints();
+    }
+
+    /**
+     * Synchronizes changes to the given attributes (indicated by the mask
+     * referencing the {@code CFG_} configuration attribute bit flags in
+     * {@link Configuration} to the layout variations of the given updated file.
+     *
+     * @param flags the attributes which were updated
+     * @param updatedFile the file which was updated
+     * @param base the base configuration to base the chooser off of
+     * @param includeSelf whether the updated file itself should be updated
+     * @param async whether the updates should be performed asynchronously
+     */
+    public void syncToVariations(
+            final int flags,
+            final @NonNull IFile updatedFile,
+            final @NonNull Configuration base,
+            final boolean includeSelf,
+            boolean async) {
+        if (async) {
+            getDisplay().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    doSyncToVariations(flags, updatedFile, includeSelf, base);
+                }
+            });
+        } else {
+            doSyncToVariations(flags, updatedFile, includeSelf, base);
+        }
+    }
+
+    private void doSyncToVariations(int flags, IFile updatedFile, boolean includeSelf,
+            Configuration base) {
+        // Synchronize the given changes to other configurations as well
+        List<IFile> files = AdtUtils.getResourceVariations(updatedFile, includeSelf);
+        for (IFile file : files) {
+            Configuration configuration = Configuration.create(base, file);
+            configuration.setTheme(base.getTheme());
+            configuration.setActivity(base.getActivity());
+            Collection<IEditorPart> editors = AdtUtils.findEditorsFor(file, false);
+            boolean found = false;
+            for (IEditorPart editor : editors) {
+                if (editor instanceof CommonXmlEditor) {
+                    CommonXmlDelegate delegate = ((CommonXmlEditor) editor).getDelegate();
+                    if (delegate instanceof LayoutEditorDelegate) {
+                        editor = ((LayoutEditorDelegate) delegate).getGraphicalEditor();
+                    }
+                }
+                if (editor instanceof GraphicalEditorPart) {
+                    ConfigurationChooser chooser =
+                        ((GraphicalEditorPart) editor).getConfigurationChooser();
+                    chooser.setConfiguration(configuration);
+                    found = true;
+                }
+            }
+            if (!found) {
+                // Just update the file persistence
+                String description = configuration.toPersistentString();
+                ConfigurationDescription.setDescription(file, description);
+            }
+        }
     }
 
     /**
@@ -1331,7 +1497,7 @@ public class ConfigurationChooser extends Composite
         mConfiguration.setDeviceState(state, false);
 
         if (mClient != null) {
-            boolean accepted = mClient.changed(CHANGED_DEVICE | CHANGED_DEVICE_CONFIG);
+            boolean accepted = mClient.changed(CFG_DEVICE | CFG_DEVICE_STATE);
             if (!accepted) {
                 mConfiguration.setDeviceState(prev, false);
                 selectDeviceState(prev);
@@ -1360,7 +1526,7 @@ public class ConfigurationChooser extends Composite
         mConfiguration.setLocale(locale, false);
 
         if (mClient != null) {
-            boolean accepted = mClient.changed(CHANGED_LOCALE);
+            boolean accepted = mClient.changed(CFG_LOCALE);
             if (!accepted) {
                 mConfiguration.setLocale(prev, false);
                 selectLocale(prev);
@@ -1381,11 +1547,14 @@ public class ConfigurationChooser extends Composite
         mConfiguration.setTheme((String) mThemeCombo.getData());
 
         if (mClient != null) {
-            boolean accepted = mClient.changed(CHANGED_THEME);
+            boolean accepted = mClient.changed(CFG_THEME);
             if (!accepted) {
                 mConfiguration.setTheme(prev);
                 selectTheme(prev);
                 return;
+            } else {
+                syncToVariations(CFG_DEVICE|CFG_DEVICE_STATE, mEditedFile, mConfiguration,
+                        false, true);
             }
         }
 
@@ -1397,7 +1566,7 @@ public class ConfigurationChooser extends Composite
             return;
         }
 
-        if (mClient.changed(CHANGED_FOLDER)) {
+        if (mClient.changed(CFG_FOLDER)) {
             saveConstraints();
         }
     }
@@ -1450,7 +1619,7 @@ public class ConfigurationChooser extends Composite
         // tell the listener a new rendering target is being set. Need to do this before updating
         // mRenderingTarget.
         if (prevTarget != null) {
-            changeFlags |= CHANGED_RENDER_TARGET;
+            changeFlags |= CFG_TARGET;
             mClient.aboutToChange(changeFlags);
         }
 
@@ -1465,12 +1634,12 @@ public class ConfigurationChooser extends Composite
         // updateThemes may change the theme (based on theme availability in the new rendering
         // target) so mark theme change if necessary
         if (!Objects.equal(oldTheme, mConfiguration.getTheme())) {
-            changeFlags |= CHANGED_THEME;
+            changeFlags |= CFG_THEME;
         }
 
         if (target != null) {
-            changeFlags |= CHANGED_RENDER_TARGET;
-            changeFlags |= CHANGED_FOLDER; // In case we added a -vNN qualifier
+            changeFlags |= CFG_TARGET;
+            changeFlags |= CFG_FOLDER; // In case we added a -vNN qualifier
         }
 
         // Store project-wide render-target setting
@@ -1518,7 +1687,7 @@ public class ConfigurationChooser extends Composite
             if (locale != null) {
                 boolean localeChanged = setLocale(locale);
                 if (localeChanged) {
-                    changeFlags |= CHANGED_LOCALE;
+                    changeFlags |= CFG_LOCALE;
                 }
             } else {
                 locale = Locale.ANY;
@@ -1531,7 +1700,7 @@ public class ConfigurationChooser extends Composite
         IAndroidTarget target = pair != null ? pair.getSecond() : configurationTarget;
         if (target != null && configurationTarget != target) {
             if (mClient != null && configurationTarget != null) {
-                changeFlags |= CHANGED_RENDER_TARGET;
+                changeFlags |= CFG_TARGET;
                 mClient.aboutToChange(changeFlags);
             }
 
@@ -1552,7 +1721,7 @@ public class ConfigurationChooser extends Composite
         // Compute the new configuration; we want to do this both for locale changes
         // and for render targets.
         mConfiguration.syncFolderConfig();
-        changeFlags |= CHANGED_FOLDER; // in case we added/remove a -v<NN> qualifier
+        changeFlags |= CFG_FOLDER; // in case we added/remove a -v<NN> qualifier
 
         if (renderTargetChanged) {
             // force a theme update to reflect the new rendering target.
@@ -1588,7 +1757,7 @@ public class ConfigurationChooser extends Composite
                 String theme = mConfiguration.getTheme();
                 if (theme == null || theme.isEmpty() || mClient.getIncludedWithin() != null) {
                     mConfiguration.setTheme(null);
-                    computePreferredTheme();
+                    mConfiguration.computePreferredTheme();
                 }
                 assert mConfiguration.getTheme() != null;
             }
@@ -1680,6 +1849,14 @@ public class ConfigurationChooser extends Composite
                         break;
                     }
                 }
+                if (!theme.startsWith(PREFIX_RESOURCE_REF)) {
+                    // Arbitrary guess
+                    if (theme.startsWith("Theme.")) {
+                        theme = ANDROID_STYLE_RESOURCE_PREFIX + theme;
+                    } else {
+                        theme = STYLE_RESOURCE_PREFIX + theme;
+                    }
+                }
             }
 
             // TODO: Handle the case where you have a theme persisted that isn't available??
@@ -1746,55 +1923,6 @@ public class ConfigurationChooser extends Composite
         } finally {
             mDisableUpdates--;
         }
-    }
-
-    /** Returns the preferred theme, or null */
-    @Nullable
-    String computePreferredTheme() {
-        if (mClient == null) {
-            return null;
-        }
-
-        IProject project = mEditedFile.getProject();
-        ManifestInfo manifest = ManifestInfo.get(project);
-
-        // Look up the screen size for the current state
-        ScreenSize screenSize = null;
-        Device device = mConfiguration.getDevice();
-        if (device != null) {
-            List<State> states = device.getAllStates();
-            for (State state : states) {
-                FolderConfiguration folderConfig = DeviceConfigHelper.getFolderConfig(state);
-                if (folderConfig != null) {
-                    ScreenSizeQualifier qualifier = folderConfig.getScreenSizeQualifier();
-                    screenSize = qualifier.getValue();
-                    break;
-                }
-            }
-        }
-
-        // Look up the default/fallback theme to use for this project (which
-        // depends on the screen size when no particular theme is specified
-        // in the manifest)
-        String defaultTheme = manifest.getDefaultTheme(mConfiguration.getTarget(), screenSize);
-
-        String preferred = defaultTheme;
-        if (mConfiguration.getTheme() == null) {
-            // If we are rendering a layout in included context, pick the theme
-            // from the outer layout instead
-
-            String activity = mConfiguration.getActivity();
-            if (activity != null) {
-                Map<String, String> activityThemes = manifest.getActivityThemes();
-                preferred = activityThemes.get(activity);
-            }
-            if (preferred == null) {
-                preferred = defaultTheme;
-            }
-            mConfiguration.setTheme(preferred);
-        }
-
-        return preferred;
     }
 
     @Nullable
@@ -1938,6 +2066,24 @@ public class ConfigurationChooser extends Composite
                     }
                 }
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if this configuration chooser represents the best match for
+     * the given file
+     *
+     * @param file the file to test
+     * @param config the config to test
+     * @return true if the given config is the best match for the given file
+     */
+    public boolean isBestMatchFor(IFile file, FolderConfiguration config) {
+        ResourceFile match = mResources.getMatchingFile(mEditedFile.getName(),
+                ResourceType.LAYOUT, config);
+        if (match != null) {
+            return match.getFile().equals(mEditedFile);
         }
 
         return false;

@@ -21,13 +21,14 @@ import static com.android.SdkConstants.GRID_LAYOUT;
 
 import com.android.SdkConstants;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.SupportLibraryHelper;
@@ -249,14 +250,14 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
 
         sb.append("</").append(root).append(">\n");  //$NON-NLS-1$ //$NON-NLS-2$
 
-        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
+        EclipseXmlFormatPreferences formatPrefs = EclipseXmlFormatPreferences.create();
         String fileContents;
         if (!autoFormat) {
             fileContents = sb.toString();
         } else {
-            XmlFormatStyle style = XmlFormatStyle.getForFolderType(folderType);
-            fileContents = XmlPrettyPrinter.prettyPrint(sb.toString(), formatPrefs,
-                                style, null /*lineSeparator*/);
+            XmlFormatStyle style = EclipseXmlPrettyPrinter.getForFolderType(folderType);
+            fileContents = EclipseXmlPrettyPrinter.prettyPrint(sb.toString(), formatPrefs,
+                    style, null /*lineSeparator*/);
         }
 
         // Remove marker tokens and replace them with whitespace
@@ -275,6 +276,15 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             }
             file.create(stream, true /*force*/, null /*progress*/);
             IRegion region = caretOffset != -1 ? new Region(caretOffset, 0) : null;
+
+            // If you introduced a new locale, or new screen variations etc, ensure that
+            // the list of render previews is updated if necessary
+            if (file.getParent().getName().indexOf('-') != -1
+                    && (folderType == ResourceFolderType.LAYOUT
+                        || folderType == ResourceFolderType.VALUES)) {
+                RenderPreviewManager.bumpRevision();
+            }
+
             return Pair.of(file, region);
         } catch (UnsupportedEncodingException e) {
             error = e.getMessage();

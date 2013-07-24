@@ -25,6 +25,7 @@ import static org.eclipse.jdt.core.dom.SingleMemberAnnotation.VALUE_PROPERTY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -331,7 +332,8 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         }
 
         int api = -1;
-        if (id.equals(ApiDetector.UNSUPPORTED.getId())) {
+        if (id.equals(ApiDetector.UNSUPPORTED.getId()) ||
+                id.equals(ApiDetector.INLINED.getId())) {
             String message = marker.getAttribute(IMarker.MESSAGE, null);
             if (message != null) {
                 Pattern pattern = Pattern.compile("\\s(\\d+)\\s"); //$NON-NLS-1$
@@ -343,7 +345,8 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
         }
 
         Issue issue = EclipseLintClient.getRegistry().getIssue(id);
-        boolean isClassDetector = issue != null && issue.getScope().contains(Scope.CLASS_FILE);
+        boolean isClassDetector = issue != null && issue.getImplementation().getScope().contains(
+                Scope.CLASS_FILE);
 
         // Don't offer to suppress (with an annotation) the annotation checks
         if (issue == AnnotationDetector.ISSUE) {
@@ -407,7 +410,7 @@ class AddSuppressAnnotation implements IMarkerResolution2 {
                         // @TargetApi is only valid on methods and classes, not fields etc
                         && (body instanceof MethodDeclaration
                                 || body instanceof TypeDeclaration)) {
-                    String apiString = AdtUtils.getBuildCodes(api);
+                    String apiString = SdkVersionInfo.getBuildCode(api);
                     if (apiString == null) {
                         apiString = Integer.toString(api);
                     }

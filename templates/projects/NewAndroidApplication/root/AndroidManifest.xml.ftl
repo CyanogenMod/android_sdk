@@ -3,9 +3,10 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="${minApi}" android:targetSdkVersion="${targetApi}" />
+    <uses-sdk android:minSdkVersion="${minApi}" <#if buildApi gte 4>android:targetSdkVersion="${targetApi}" </#if>/>
 
-    <application android:label="@string/app_name"
+    <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>
+        android:label="@string/app_name"
         android:icon="@drawable/ic_launcher"<#if baseTheme != "none">
         android:theme="@style/AppTheme"</#if>>
 

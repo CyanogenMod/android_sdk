@@ -48,7 +48,7 @@ public final class ManifestContentAssist extends AndroidContentAssist {
     }
 
     @Override
-    protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
+    protected boolean computeAttributeValues(List<ICompletionProposal> proposals, int offset,
             String parentTagName, String attributeName, Node node, String wordPrefix,
             boolean skipEndTag, int replaceLength) {
         if (attributeName.endsWith(ATTRIBUTE_MIN_SDK_VERSION)
@@ -60,7 +60,11 @@ public final class ManifestContentAssist extends AndroidContentAssist {
             List<Pair<String, String>> choices = new ArrayList<Pair<String, String>>();
             int max = AdtUtils.getHighestKnownApiLevel();
             // Look for any more recent installed versions the user may have
-            IAndroidTarget[] targets = Sdk.getCurrent().getTargets();
+            Sdk sdk = Sdk.getCurrent();
+            if (sdk == null) {
+                return false;
+            }
+            IAndroidTarget[] targets = sdk.getTargets();
             for (IAndroidTarget target : targets) {
                 AndroidVersion version = target.getVersion();
                 int apiLevel = version.getApiLevel();
@@ -81,9 +85,10 @@ public final class ManifestContentAssist extends AndroidContentAssist {
             addMatchingProposals(proposals, choices.toArray(), offset, node, wordPrefix,
                     needTag, true /* isAttribute */, false /* isNew */,
                     skipEndTag /* skipEndTag */, replaceLength);
+            return true;
         } else {
-            super.computeAttributeValues(proposals, offset, parentTagName, attributeName, node,
-                    wordPrefix, skipEndTag, replaceLength);
+            return super.computeAttributeValues(proposals, offset, parentTagName, attributeName,
+                    node, wordPrefix, skipEndTag, replaceLength);
         }
     }
 }

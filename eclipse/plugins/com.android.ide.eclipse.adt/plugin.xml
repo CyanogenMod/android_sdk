@@ -81,6 +81,13 @@
         <persistent value="false" />
     </extension>
     <extension
+        id="com.android.ide.eclipse.adt.buildToolsProblem"
+        name="Android Build Tools Problem"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <persistent value="false" />
+    </extension>
+    <extension
         id="com.android.ide.eclipse.adt.dependencyProblem"
         name="Android Dependency Problem"
         point="org.eclipse.core.resources.markers">
@@ -299,7 +306,7 @@
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" >
             <description>
-               Create an Android object such as a Service, an Activity, a Broadcast Receiver, etc.
+               Create an Android object such as a Service, an Activity, a Broadcast Receiver, a Notification, etc.
             </description>
         </wizard>
         <!-- Available through generic object list above
@@ -386,12 +393,24 @@
                     <with variable="selection">
                         <count value="1" />
                         <iterate>
-                            <and>
-                                <test property="org.eclipse.jdt.launching.isContainer" />
-                                <test
-                                    property="org.eclipse.jdt.launching.hasProjectNature"
-                                    args="com.android.ide.eclipse.adt.AndroidNature" />
-                            </and>
+                            <or>
+                                <adapt type="org.eclipse.core.resources.IFile">
+                                    <and>
+                                        <test
+                                            property="org.eclipse.core.resources.contentTypeId"
+                                            value="org.eclipse.core.runtime.xml" />
+                                        <test
+                                            property="org.eclipse.core.resources.projectNature"
+                                            value="com.android.ide.eclipse.adt.AndroidNature" />
+                                    </and>
+                                </adapt>
+                                <and>
+                                    <test property="org.eclipse.jdt.launching.isContainer" />
+                                    <test
+                                        property="org.eclipse.jdt.launching.hasProjectNature"
+                                        args="com.android.ide.eclipse.adt.AndroidNature" />
+                                </and>
+                            </or>
                         </iterate>
                     </with>
                 </enablement>
@@ -535,8 +554,11 @@
     <extension point="org.eclipse.ui.perspectiveExtensions">
         <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
             <newWizardShortcut id="com.android.ide.eclipse.adt.project.NewProjectWizard" />
-            <newWizardShortcut id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard">
-            </newWizardShortcut>
+            <newWizardShortcut id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard" />
+            <actionSet id="adt.actionSet.wizards" />
+            <actionSet id="adt.actionSet.avdManager" />
+            <actionSet id="adt.actionSet.lint" />
+            <actionSet id="adt.actionSet.refactorings" />
         </perspectiveExtension>
         <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
             <viewShortcut id="com.android.ide.eclipse.ddms.views.LogCatView" />
@@ -737,13 +759,15 @@
             class="com.android.ide.eclipse.adt.internal.editors.common.CommonSourceViewerConfig"
             target="com.android.ide.eclipse.editors.CommonXmlEditor">
         </sourceViewerConfiguration>
-
         <quickOutlineConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.AndroidQuickOutlineConfiguration"
             target="org.eclipse.core.runtime.xml" />
         <contentOutlineConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.AndroidOutlineConfiguration"
             target="org.eclipse.core.runtime.xml" />
+        <doubleClickStrategy
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidDoubleClickStrategy"
+            target="org.eclipse.wst.xml.XML_DEFAULT" />
         <provisionalConfiguration
             type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
             class="com.android.ide.eclipse.adt.internal.editors.formatting.XmlQuickAssistManager"
@@ -804,7 +828,7 @@
             description="Android Wizards"
             id="adt.actionSet.wizards"
             label="Android Wizards"
-            visible="true">
+            visible="false">
             <action
                 class="com.android.ide.eclipse.adt.internal.wizards.actions.NewXmlFileAction"
                 icon="icons/new_xml.png"
@@ -813,29 +837,12 @@
                 style="push"
                 toolbarPath="android_project">
             </action>
-            <action
-                class="com.android.ide.eclipse.adt.internal.wizards.actions.NewTestProjectAction"
-                icon="icons/androidjunit.png"
-                id="com.android.ide.eclipse.adt.wizards.actions.NewTestProjectAction"
-                label="New Android Test Project"
-                style="push"
-                toolbarPath="android_project"
-                >
-            </action>
-            <action
-                class="com.android.ide.eclipse.adt.internal.wizards.actions.NewProjectAction"
-                icon="icons/new_adt_project.png"
-                id="com.android.ide.eclipse.adt.wizards.actions.NewProjectAction"
-                label="New Android Application"
-                style="push"
-                toolbarPath="android_project">
-            </action>
         </actionSet>
         <actionSet
             description="Refactorings for Android"
             id="adt.actionSet.refactorings"
             label="Android Refactorings"
-            visible="true">
+            visible="false">
 
          <!-- This duplicates the Refactoring Menu definition from the jdt.ui plugin.xml,
               which allows us to insert our contribution even if the JDT is not loaded.
@@ -933,7 +940,7 @@
             description="Android AVD and SDK Manager"
             id="adt.actionSet.avdManager"
             label="Android SDK and AVD Manager"
-            visible="true">
+            visible="false">
             <action
                 class="com.android.ide.eclipse.adt.internal.actions.AvdManagerAction"
                 icon="icons/avd_manager.png"
@@ -957,7 +964,7 @@
             description="Android Lint"
             id="adt.actionSet.lint"
             label="Android Lint"
-            visible="true">
+            visible="false">
             <action
                 class="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
                 style="pulldown"
@@ -1142,7 +1149,7 @@
     </extension>
     <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
         <renameParticipant
-            class="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidTypeRenameParticipant"
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidTypeRenameParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidTypeRenameParticipant"
             name="Android Rename Type Participant">
             <enablement>
@@ -1158,7 +1165,26 @@
             </enablement>
         </renameParticipant>
         <renameParticipant
-            class="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidPackageRenameParticipant"
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceParticipant"
+            id="com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceParticipant"
+            name="Android Rename Resource Participant">
+            <enablement>
+                <with variable="element">
+                    <or>
+                        <instanceof value="org.eclipse.jdt.core.IField"/>
+                        <instanceof value="org.eclipse.core.resources.IResource" />
+                        <instanceof value="java.lang.String" />
+                    </or>
+                </with>
+                <with variable="affectedNatures">
+                    <iterate operator="or">
+                        <equals value="com.android.ide.eclipse.adt.AndroidNature" />
+                    </iterate>
+                </with>
+            </enablement>
+        </renameParticipant>
+        <renameParticipant
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidPackageRenameParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidPackageRenameParticipant"
             name="Android Rename Package Participant">
             <enablement>
@@ -1176,7 +1202,7 @@
     </extension>
     <extension point="org.eclipse.ltk.core.refactoring.moveParticipants">
         <moveParticipant
-            class="com.android.ide.eclipse.adt.internal.refactoring.core.AndroidTypeMoveParticipant"
+            class="com.android.ide.eclipse.adt.internal.refactorings.core.AndroidTypeMoveParticipant"
             id="com.android.ide.eclipse.adt.internal.refactoring.core.androidTypeMoveParticipant"
             name="Android Move Type Participant">
             <enablement>

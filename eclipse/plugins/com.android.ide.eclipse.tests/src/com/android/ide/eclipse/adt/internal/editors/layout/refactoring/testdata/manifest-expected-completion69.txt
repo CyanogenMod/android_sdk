@@ -1,4 +1,5 @@
 Code completion in manifest.xml for <uses-sdk android:minSdkVersion="^11" />:
+17 : API 17: Android 4.2 (Jelly Bean)
 16 : API 16: Android 4.1 (Jelly Bean)
 15 : API 15: Android 4.0.3 (IceCreamSandwich)
 14 : API 14: Android 4.0 (IceCreamSandwich)
@@ -15,13 +16,3 @@ Code completion in manifest.xml for <uses-sdk android:minSdkVersion="^11" />:
 3 : API 3: Android 1.5 (Cupcake)
 2 : API 2: Android 1.1
 1 : API 1: Android 1.0
-@string/
-@android:
-@+id/
-@anim/
-@animator/
-@color/
-@drawable/
-@id/
-@layout/
-@style/

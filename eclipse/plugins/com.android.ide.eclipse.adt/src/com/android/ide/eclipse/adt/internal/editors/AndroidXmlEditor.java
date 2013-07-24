@@ -25,6 +25,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceXmlTextAction;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -41,6 +42,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.text.BadLocationException;
@@ -802,7 +805,16 @@ public abstract class AndroidXmlEditor extends FormEditor {
      */
     private void createTextEditor() {
         try {
-            mTextEditor = new StructuredTextEditor();
+            mTextEditor = new StructuredTextEditor() {
+                @Override
+                protected void createActions() {
+                    super.createActions();
+
+                    Action action = new RenameResourceXmlTextAction(mTextEditor);
+                    action.setActionDefinitionId(IJavaEditorActionDefinitionIds.RENAME_ELEMENT);
+                    setAction(IJavaEditorActionDefinitionIds.RENAME_ELEMENT, action);
+                }
+            };
             int index = addPage(mTextEditor, getEditorInput());
             mTextPageIndex = index;
             setPageText(index, mTextEditor.getTitle());
@@ -1058,7 +1070,12 @@ public abstract class AndroidXmlEditor extends FormEditor {
                                         end = begin + 1;
                                     }
 
-                                    reformatRegion(begin, end);
+                                    if (mFormatChildren
+                                         && node == node.getOwnerDocument().getDocumentElement()) {
+                                        reformatDocument();
+                                    } else {
+                                        reformatRegion(begin, end);
+                                    }
                                 }
                             }
                             mFormatNode = null;

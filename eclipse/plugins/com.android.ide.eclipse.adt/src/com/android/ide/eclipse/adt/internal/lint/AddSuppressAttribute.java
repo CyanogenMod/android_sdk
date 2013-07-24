@@ -17,15 +17,19 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import static com.android.SdkConstants.ATTR_IGNORE;
+import static com.android.SdkConstants.ATTR_TARGET_API;
 import static com.android.SdkConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.tools.lint.checks.ApiDetector;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -38,6 +42,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Fix for adding {@code tools:ignore="id"} attributes in XML files.
  */
@@ -47,14 +57,26 @@ class AddSuppressAttribute implements ICompletionProposal {
     private final IMarker mMarker;
     private final Element mElement;
     private final String mDescription;
+    /**
+     * Should it create a {@code tools:targetApi} attribute instead of a
+     * {@code tools:ignore} attribute? If so pass a non null API level
+     */
+    private final String mTargetApi;
 
-    private AddSuppressAttribute(AndroidXmlEditor editor, String id, IMarker marker,
-            Element element, String description) {
+
+    private AddSuppressAttribute(
+            @NonNull AndroidXmlEditor editor,
+            @NonNull String id,
+            @NonNull IMarker marker,
+            @NonNull Element element,
+            @NonNull String description,
+            @Nullable String targetApi) {
         mEditor = editor;
         mId = id;
         mMarker = marker;
         mElement = element;
         mDescription = description;
+        mTargetApi = targetApi;
     }
 
     @Override
@@ -84,7 +106,16 @@ class AddSuppressAttribute implements ICompletionProposal {
 
     @Override
     public void apply(IDocument document) {
-        AdtUtils.setToolsAttribute(mEditor, mElement, "Suppress Lint Warning", ATTR_IGNORE, mId,
+        String attribute;
+        String value;
+        if (mTargetApi != null) {
+            attribute = ATTR_TARGET_API;
+            value = mTargetApi;
+        } else {
+            attribute = ATTR_IGNORE;
+            value = mId;
+        }
+        AdtUtils.setToolsAttribute(mEditor, mElement, mDescription, attribute, value,
                 true /*reveal*/, true /*append*/);
 
         try {
@@ -92,7 +123,7 @@ class AddSuppressAttribute implements ICompletionProposal {
             // (so the user doesn't have to re-run lint just to see it disappear)
             mMarker.delete();
         } catch (CoreException e) {
-            AdtPlugin.log(e, "Could not add suppress annotation");
+            AdtPlugin.log(e, "Could not remove marker");
         }
     }
 
@@ -103,17 +134,17 @@ class AddSuppressAttribute implements ICompletionProposal {
      * @param editor the associated editor containing the marker
      * @param marker the marker to create fixes for
      * @param id the issue id
-     * @return a fix for this marker, or null if unable
+     * @return a list of fixes for this marker, possibly empty
      */
-    @Nullable
-    public static AddSuppressAttribute createFix(
+    @NonNull
+    public static List<AddSuppressAttribute> createFixes(
             @NonNull AndroidXmlEditor editor,
             @NonNull IMarker marker,
             @NonNull String id) {
         // This only applies to XML files:
         String fileName = marker.getResource().getName();
         if (!fileName.endsWith(DOT_XML)) {
-            return null;
+            return Collections.emptyList();
         }
 
         int offset = marker.getAttribute(IMarker.CHAR_START, -1);
@@ -127,7 +158,7 @@ class AddSuppressAttribute implements ICompletionProposal {
             node = DomUtilities.getNode(editor.getStructuredDocument(), offset);
         }
         if (node == null) {
-            return null;
+            return Collections.emptyList();
         }
         Document document = node.getOwnerDocument();
         while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
@@ -136,13 +167,41 @@ class AddSuppressAttribute implements ICompletionProposal {
         if (node == null) {
             node = document.getDocumentElement();
             if (node == null) {
-                return null;
+                return Collections.emptyList();
             }
         }
 
         String desc = String.format("Add ignore '%1$s\' to element", id);
         Element element = (Element) node;
-        return new AddSuppressAttribute(editor, id, marker, element, desc);
+        List<AddSuppressAttribute> fixes = Lists.newArrayListWithExpectedSize(2);
+        fixes.add(new AddSuppressAttribute(editor, id, marker, element, desc, null));
+
+        int api = -1;
+        if (id.equals(ApiDetector.UNSUPPORTED.getId())
+                || id.equals(ApiDetector.INLINED.getId())) {
+            String message = marker.getAttribute(IMarker.MESSAGE, null);
+            if (message != null) {
+                Pattern pattern = Pattern.compile("\\s(\\d+)\\s"); //$NON-NLS-1$
+                Matcher matcher = pattern.matcher(message);
+                if (matcher.find()) {
+                    api = Integer.parseInt(matcher.group(1));
+                    String targetApi;
+                    String buildCode = SdkVersionInfo.getBuildCode(api);
+                    if (buildCode != null) {
+                        targetApi = buildCode.toLowerCase(Locale.US);
+                        fixes.add(new AddSuppressAttribute(editor, id, marker, element,
+                                String.format("Add targetApi '%1$s\' to element", targetApi),
+                                targetApi));
+                    }
+                    targetApi = Integer.toString(api);
+                    fixes.add(new AddSuppressAttribute(editor, id, marker, element,
+                            String.format("Add targetApi '%1$s\' to element", targetApi),
+                            targetApi));
+                }
+            }
+        }
+
+        return fixes;
     }
 
     /**
@@ -170,7 +229,7 @@ class AddSuppressAttribute implements ICompletionProposal {
             node = node.getOwnerDocument().getDocumentElement();
             String desc = String.format("Add ignore '%1$s\' to element", id);
             Element element = (Element) node;
-            return new AddSuppressAttribute(editor, id, marker, element, desc);
+            return new AddSuppressAttribute(editor, id, marker, element, desc, null);
         }
 
         return null;

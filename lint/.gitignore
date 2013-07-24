@@ -1,4 +1,0 @@
-cli/bin
-libs/lint_api/bin
-libs/lint_checks/bin
-libs/lint_checks/tests/bin

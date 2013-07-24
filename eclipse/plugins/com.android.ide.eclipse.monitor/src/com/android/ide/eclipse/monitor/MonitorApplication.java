@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
@@ -57,12 +58,19 @@ public class MonitorApplication implements IApplication {
             // exit with return code -1
             return Integer.valueOf(-1);
         }
-        MonitorPlugin.getDefault().setSdkPath(sdkPath);
+        MonitorPlugin.getDefault().setSdkFolder(new File(sdkPath));
 
         // install platform tools if necessary
         ILogger sdkLog = NullLogger.getLogger();
         SdkManager manager = SdkManager.createManager(sdkPath, sdkLog);
         if (manager.getPlatformToolsVersion() == null) {
+            boolean install = MessageDialog.openQuestion(new Shell(display),
+                    "Monitor",
+                    "The platform tools package that provides adb is missing from your SDK installation. "
+                    + "Monitor requires this package to work properly. Would you like to install that package now?");
+            if (!install) {
+                return Integer.valueOf(-1);
+            }
             AdtUpdateDialog window = new AdtUpdateDialog(new Shell(display), sdkLog, sdkPath);
             window.installPlatformTools();
         }
@@ -114,24 +122,28 @@ public class MonitorApplication implements IApplication {
             return sdkLocation;
         }
 
+        // The monitor app should be located in "<sdk>/tools/lib/monitor-platform/"
+        // So see if the folder one level up from the install location is a valid SDK.
+        Location install = Platform.getInstallLocation();
+        if (install != null && install.getURL() != null) {
+            File libFolder = new File(install.getURL().getFile()).getParentFile();
+            if (libFolder != null) {
+                String toolsFolder = libFolder.getParent();
+                if (toolsFolder != null) {
+                    sdkLocation = new File(toolsFolder).getParent();
+                    if (isValidSdkLocation(sdkLocation)) {
+                        MonitorPlugin.getDdmsPreferenceStore().setLastSdkPath(sdkLocation);
+                        return sdkLocation;
+                    }
+                }
+
+            }
+        }
+
         // check for the last used SDK
         sdkLocation = MonitorPlugin.getDdmsPreferenceStore().getLastSdkPath();
         if (isValidSdkLocation(sdkLocation)) {
             return sdkLocation;
-        }
-
-        // The monitor app should be located in "<sdk>/tools/monitor/"
-        // So see if the folder one level up from the install location is a valid SDK.
-        Location install = Platform.getInstallLocation();
-        if (install != null && install.getURL() != null) {
-            String toolsFolder = new File(install.getURL().getFile()).getParent();
-            if (toolsFolder != null) {
-                sdkLocation = new File(toolsFolder).getParent();
-                if (isValidSdkLocation(sdkLocation)) {
-                    MonitorPlugin.getDdmsPreferenceStore().setLastSdkPath(sdkLocation);
-                    return sdkLocation;
-                }
-            }
         }
 
         // if nothing else works, prompt the user
@@ -152,7 +164,7 @@ public class MonitorApplication implements IApplication {
             return false;
         }
 
-        SdkToolsLocator locator = new SdkToolsLocator(sdkLocation);
+        SdkToolsLocator locator = new SdkToolsLocator(new File(sdkLocation));
         return locator.isValidInstallation() == SdkInstallStatus.VALID;
     }
 

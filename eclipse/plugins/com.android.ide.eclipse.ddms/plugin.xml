@@ -5,6 +5,7 @@
    <extension-point id="debuggerConnector" name="%extension-point.name.Debugger_Connector" schema="schema/debuggerConnector.exsd"/>
    <extension-point id="sourceRevealer" name="%extension-point.name.Source_Revealer" schema="schema/sourceRevealer.exsd"/>
    <extension-point id="traceviewLauncher" name="%extension-point.name.TreeView_Laucher" schema="schema/traceviewLauncher.exsd"/>
+   <extension-point id="clientAction" name="%extension-point.name.ClientAction" schema="schema/clientAction.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
@@ -85,6 +86,13 @@
             icon="icons/networkstats.png"
             id="com.android.ide.eclipse.ddms.views.NetworkStatsView"
             name="%view.name.Network_Stats"
+            restorable="true">
+      </view>
+      <view
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.SysInfoView"
+            id="com.android.ide.eclipse.ddms.views.SysInfoView"
+            name="%view.name.SysInfo"
             restorable="true">
       </view>
    </extension>

@@ -21,7 +21,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler;
 import com.android.ide.eclipse.adt.AdtPlugin.CheckSdkErrorHandler.Solution;
 import com.android.ide.eclipse.adt.Messages;
-import com.android.sdklib.internal.repository.packages.FullRevision;
+import com.android.sdklib.repository.FullRevision;
 import com.android.sdklib.repository.PkgProps;
 
 import org.osgi.framework.Constants;
@@ -49,7 +49,7 @@ public final class VersionCheck {
     /**
      * The minimum version of the SDK Tools that this version of ADT requires.
      */
-    private final static FullRevision MIN_TOOLS_REV = new FullRevision(20);
+    private final static FullRevision MIN_TOOLS_REV = new FullRevision(22, 0, 0, 0);
 
     /**
      * Pattern to get the minimum plugin version supported by the SDK. This is read from

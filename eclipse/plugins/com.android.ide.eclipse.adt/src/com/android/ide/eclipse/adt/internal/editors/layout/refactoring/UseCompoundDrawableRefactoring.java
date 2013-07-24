@@ -42,10 +42,10 @@ import static com.android.SdkConstants.VALUE_VERTICAL;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -353,13 +353,10 @@ public class UseCompoundDrawableRefactoring extends VisualRefactoring {
             }
         }
 
-        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(formatPrefs, XmlFormatStyle.LAYOUT,
-                null /*lineSeparator*/);
-        StringBuilder sb = new StringBuilder(300);
-        printer.prettyPrint(-1, tempDocument, null, null, sb, false /*openTagOnly*/);
-        String xml = sb.toString();
-
+        String xml = EclipseXmlPrettyPrinter.prettyPrint(
+                tempDocument.getDocumentElement(),
+                EclipseXmlFormatPreferences.create(),
+                XmlFormatStyle.LAYOUT, null, false);
 
         TextEdit replace = new ReplaceEdit(mSelectionStart, mSelectionEnd - mSelectionStart, xml);
         rootEdit.addChild(replace);

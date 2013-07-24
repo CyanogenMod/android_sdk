@@ -44,6 +44,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintRunner;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
@@ -260,6 +261,9 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
             if (input instanceof FileEditorInput) {
                 FileEditorInput fileInput = (FileEditorInput)input;
                 editedFile = fileInput.getFile();
+                if (!editedFile.isAccessible()) {
+                    return;
+                }
             } else {
                 AdtPlugin.log(IStatus.ERROR,
                         "Input is not of type FileEditorInput: %1$s",  //$NON-NLS-1$
@@ -753,7 +757,8 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
     @Override
     public String delegateGetPartName() {
         IEditorInput editorInput = getEditor().getEditorInput();
-        if (editorInput instanceof IFileEditorInput) {
+        if (!AdtPrefs.getPrefs().isSharedLayoutEditor()
+              && editorInput instanceof IFileEditorInput) {
             IFileEditorInput fileInput = (IFileEditorInput) editorInput;
             IFile file = fileInput.getFile();
             IContainer parent = file.getParent();
@@ -910,6 +915,7 @@ public class LayoutEditorDelegate extends CommonXmlDelegate
         if (mGraphicalEditor != null) {
             mGraphicalEditor.onTargetChange();
             mGraphicalEditor.reloadPalette();
+            mGraphicalEditor.getCanvasControl().syncPreviewMode();
         }
     }
 

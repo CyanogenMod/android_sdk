@@ -1,9 +1,9 @@
 package ${packageName};
 
-<#if minApi < 14>import android.annotation.TargetApi;</#if>
+<#if minApiLevel < 14>import android.annotation.TargetApi;</#if>
 import android.app.ActionBar;
 import android.os.Bundle;
-<#if minApi < 14>import android.content.Context;
+<#if minApiLevel < 14>import android.content.Context;
 import android.os.Build;</#if>
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -26,7 +26,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.OnNa
     private static final String STATE_SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
 
@@ -43,7 +43,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.OnNa
         actionBar.setListNavigationCallbacks(
                 // Specify a SpinnerAdapter to populate the dropdown list.
                 new ArrayAdapter<String>(
-                        <#if minApi gte 14>actionBar.getThemedContext()<#else>getActionBarThemedContextCompat()</#if>,
+                        <#if minApiLevel gte 14>actionBar.getThemedContext()<#else>getActionBarThemedContextCompat()</#if>,
                         android.R.layout.simple_list_item_1,
                         android.R.id.text1,
                         new String[] {
@@ -54,7 +54,7 @@ public class ${activityClass} extends FragmentActivity implements ActionBar.OnNa
                 this);
     }
 
-    <#if minApi < 14>
+    <#if minApiLevel < 14>
     /**
      * Backward-compatible version of {@link ActionBar#getThemedContext()} that
      * simply returns the {@link android.app.Activity} if

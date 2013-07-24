@@ -18,11 +18,15 @@ package com.android.ide.common.resources.platform;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.DOT_XML;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.mock.Mocks;
+import com.android.io.IAbstractFolder;
+import com.android.io.IAbstractResource;
 import com.android.resources.ResourceType;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
@@ -30,6 +34,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+
+import junit.framework.TestCase;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -42,8 +48,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class AttributeInfoTest extends TestCase {
@@ -66,7 +70,10 @@ public class AttributeInfoTest extends TestCase {
         assertTrue(info.isValid("true", null, null));
         assertTrue(info.isValid("false", null, null));
         assertFalse(info.isValid("", null, null));
-        assertFalse(info.isValid("TRUE", null, null));
+        assertTrue(info.isValid("TRUE", null, null));
+        assertTrue(info.isValid("True", null, null));
+        assertTrue(info.isValid("FALSE", null, null));
+        assertTrue(info.isValid("False", null, null));
     }
 
     public void testIsValidInteger() throws Exception {
@@ -156,6 +163,7 @@ public class AttributeInfoTest extends TestCase {
         assertTrue(info.isValid("@animator/foo", null, null));
         assertTrue(info.isValid("@anim/foo", null, null));
         assertTrue(info.isValid("?android:attr/textAppearanceMedium", null, null));
+        assertTrue(info.isValid("?textAppearanceMedium", null, null));
 
         assertFalse(info.isValid("", null, null));
         assertFalse(info.isValid("foo", null, null));
@@ -178,8 +186,8 @@ public class AttributeInfoTest extends TestCase {
         assertTrue(info.isValid("left", null, null));
         assertTrue(info.isValid("top", null, null));
         assertTrue(info.isValid("left|top", null, null));
+        assertTrue(info.isValid("", null, null));
 
-        assertFalse(info.isValid("", null, null));
         assertFalse(info.isValid("other", null, null));
         assertFalse(info.isValid("50", null, null));
     }
@@ -219,11 +227,14 @@ public class AttributeInfoTest extends TestCase {
     }
 
     public void testResourcesExist() throws Exception {
+        IAbstractFolder folder = Mocks.createAbstractFolder(
+                SdkConstants.FD_RESOURCES, new IAbstractResource[0]);
+
         AttributeInfo info = new AttributeInfo("test", Format.REFERENCE_SET);
-        TestResourceRepository projectResources = new TestResourceRepository(false);
+        TestResourceRepository projectResources = new TestResourceRepository(folder,false);
         projectResources.addResource(ResourceType.STRING, "mystring");
         projectResources.addResource(ResourceType.DIMEN, "mydimen");
-        TestResourceRepository frameworkResources = new TestResourceRepository(true);
+        TestResourceRepository frameworkResources = new TestResourceRepository(folder, true);
         frameworkResources.addResource(ResourceType.LAYOUT, "mylayout");
 
         assertTrue(info.isValid("@string/mystring", null, null));
@@ -247,8 +258,8 @@ public class AttributeInfoTest extends TestCase {
     private class TestResourceRepository extends ResourceRepository {
         private Multimap<ResourceType, String> mResources = ArrayListMultimap.create();
 
-        protected TestResourceRepository(boolean isFrameworkRepository) {
-            super(isFrameworkRepository);
+        protected TestResourceRepository(IAbstractFolder resFolder, boolean isFrameworkRepository) {
+            super(resFolder, isFrameworkRepository);
         }
 
         void addResource(ResourceType type, String name) {

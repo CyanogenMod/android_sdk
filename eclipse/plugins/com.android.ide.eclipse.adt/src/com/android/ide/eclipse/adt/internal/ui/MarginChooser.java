@@ -15,14 +15,10 @@
  */
 package com.android.ide.eclipse.adt.internal.ui;
 
-import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceType;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -219,19 +215,13 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
             // Button pressed - open resource chooser
             if (event.widget instanceof Button) {
                 Button button = (Button) event.widget;
+                Text text = (Text) button.getData(PROP_TEXTFIELD);
 
                 // Open a resource chooser dialog for specified resource type.
-                IProject project = mEditor.getProject();
-                ProjectResources projectRepository = ResourceManager.getInstance()
-                        .getProjectResources(project);
-                ResourceRepository frameworkRepository = mTargetData.getFrameworkResources();
-                ResourceChooser dlg = new ResourceChooser(project, ResourceType.DIMEN,
-                        projectRepository, frameworkRepository, getShell());
-                dlg.setResourceResolver(mEditor.getResourceResolver());
-                Text text = (Text) button.getData(PROP_TEXTFIELD);
-                dlg.setCurrentResource(text.getText().trim());
-                if (dlg.open() == Window.OK) {
-                    text.setText(dlg.getCurrentResource());
+                ResourceChooser chooser = ResourceChooser.create(mEditor, ResourceType.DIMEN)
+                        .setCurrentResource(text.getText().trim());
+                if (chooser.open() == Window.OK) {
+                    text.setText(chooser.getCurrentResource());
                 }
             }
         }

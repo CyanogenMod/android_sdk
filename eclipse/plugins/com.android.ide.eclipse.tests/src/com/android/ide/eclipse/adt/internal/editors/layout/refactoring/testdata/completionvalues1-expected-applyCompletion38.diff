@@ -1,4 +1,4 @@
 Code completion in completionvalues1.xml for            c^ selecting center:
-<            c^
----
->            center^
+@@ -16 +16
+-            c^
++            center^

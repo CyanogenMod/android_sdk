@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
+import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_CONSTRAINTS;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DEFAULT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_HELP;
@@ -26,6 +27,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.ApplicationInfoPage;
 import com.android.resources.ResourceFolderType;
@@ -33,7 +36,10 @@ import com.android.resources.ResourceType;
 import com.google.common.base.Splitter;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.fieldassist.ControlDecoration;
 import org.eclipse.swt.widgets.Control;
@@ -146,6 +152,9 @@ class Parameter {
         }
     }
 
+    /** The template defining the parameter */
+    public final TemplateMetadata template;
+
     /** The type of parameter */
     @NonNull
     public final Type type;
@@ -208,7 +217,8 @@ class Parameter {
     /** Project associated with this validator */
     private IProject mValidatorProject;
 
-    Parameter(@NonNull Element parameter) {
+    Parameter(@NonNull TemplateMetadata template, @NonNull Element parameter) {
+        this.template = template;
         element = parameter;
 
         String typeName = parameter.getAttribute(TemplateHandler.ATTR_TYPE);
@@ -244,7 +254,12 @@ class Parameter {
         }
     }
 
-    Parameter(@NonNull Type type, @NonNull String id, @NonNull String initialValue) {
+    Parameter(
+            @NonNull TemplateMetadata template,
+            @NonNull Type type,
+            @NonNull String id,
+            @NonNull String initialValue) {
+        this.template = template;
         this.type = type;
         this.id = id;
         this.value = initialValue;
@@ -265,7 +280,7 @@ class Parameter {
     }
 
     @Nullable
-    public IInputValidator getValidator(@Nullable IProject project) {
+    public IInputValidator getValidator(@Nullable final IProject project) {
         if (mNoValidator) {
             return null;
         }
@@ -339,6 +354,37 @@ class Parameter {
                         }
                         if (status != null && !status.isOK()) {
                             return status.getMessage();
+                        }
+
+                        // Uniqueness
+                        if (project != null && constraints.contains(Constraint.UNIQUE)) {
+                            try {
+                                // Determine the package.
+                                // If there is a package info
+
+                                IJavaProject p = BaseProjectHelper.getJavaProject(project);
+                                if (p != null) {
+                                    String fqcn = newText;
+                                    if (fqcn.indexOf('.') == -1) {
+                                        String pkg = null;
+                                        Parameter parameter = template.getParameter(
+                                                ATTR_PACKAGE_NAME);
+                                        if (parameter != null && parameter.value != null) {
+                                            pkg = parameter.value.toString();
+                                        } else {
+                                            pkg = ManifestInfo.get(project).getPackage();
+                                        }
+                                        fqcn = pkg.isEmpty() ? newText : pkg + '.' + newText;
+                                    }
+
+                                    IType t = p.findType(fqcn);
+                                    if (t != null && t.exists()) {
+                                        return String.format("%1$s already exists", newText);
+                                    }
+                                }
+                            } catch (CoreException e) {
+                                AdtPlugin.log(e, null);
+                            }
                         }
 
                         return null;

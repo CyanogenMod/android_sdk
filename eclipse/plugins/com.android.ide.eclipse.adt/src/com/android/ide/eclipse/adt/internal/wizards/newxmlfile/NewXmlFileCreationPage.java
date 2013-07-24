@@ -304,6 +304,7 @@ class NewXmlFileCreationPage extends WizardPage {
                     if (SCROLL_VIEW.equals(root) || HORIZONTAL_SCROLL_VIEW.equals(root)) {
                         return "    <LinearLayout "         //$NON-NLS-1$
                             + getDefaultAttrs(project, root).replace('\n', ' ')
+                            + " android:orientation=\"vertical\"" //$NON-NLS-1$
                             + "></LinearLayout>\n";         //$NON-NLS-1$
                     }
                     return null;
@@ -733,6 +734,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
                 String[] folderSegments = targetWsFolderPath.split(RES_QUALIFIER_SEP);
                 if (folderSegments.length > 0) {
+                    mValues.configuration = FolderConfiguration.getConfig(folderSegments);
                     String folderName = folderSegments[0];
                     selectTypeFromFolder(folderName);
                 }

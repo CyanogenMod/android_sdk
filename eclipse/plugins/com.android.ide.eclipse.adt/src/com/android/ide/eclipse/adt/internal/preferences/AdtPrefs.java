@@ -17,9 +17,11 @@
 package com.android.ide.eclipse.adt.internal.preferences;
 
 
+import com.android.annotations.NonNull;
+import com.android.ide.common.xml.XmlAttributeSortOrder;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewMode;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
@@ -30,6 +32,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
 import java.io.File;
+import java.util.Locale;
 
 public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_SDK_DIR = AdtPlugin.PLUGIN_ID + ".sdk"; //$NON-NLS-1$
@@ -69,6 +72,10 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_LINT_SEVERITIES = AdtPlugin.PLUGIN_ID + ".lintSeverities"; //$NON-NLS-1$
     public final static String PREFS_FIX_LEGACY_EDITORS = AdtPlugin.PLUGIN_ID + ".fixLegacyEditors"; //$NON-NLS-1$
     public final static String PREFS_SHARED_LAYOUT_EDITOR = AdtPlugin.PLUGIN_ID + ".sharedLayoutEditor"; //$NON-NLS-1$
+    public final static String PREFS_PREVIEWS = AdtPlugin.PLUGIN_ID + ".previews"; //$NON-NLS-1$
+    public final static String PREFS_SKIP_LINT_LIBS = AdtPlugin.PLUGIN_ID + ".skipLintLibs"; //$NON-NLS-1$
+    public final static String PREFS_AUTO_PICK_TARGET = AdtPlugin.PLUGIN_ID + ".autoPickTarget"; //$NON-NLS-1$
+    public final static String PREFS_REFACTOR_IDS = AdtPlugin.PLUGIN_ID + ".refactorIds"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();
@@ -97,9 +104,12 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mFormatOnSave;
     private boolean mLintOnSave;
     private boolean mLintOnExport;
-    private AttributeSortOrder mAttributeSort;
+    private XmlAttributeSortOrder mAttributeSort;
     private boolean mSharedLayoutEditor;
+    private boolean mAutoPickTarget;
+    private RenderPreviewMode mPreviewMode = RenderPreviewMode.NONE;
     private int mPreferXmlEditor;
+    private boolean mSkipLibrariesFromLint;
 
     public static enum BuildVerbosity {
         /** Build verbosity "Always". Those messages are always displayed, even in silent mode */
@@ -226,11 +236,11 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
         if (property == null || PREFS_ATTRIBUTE_SORT.equals(property)) {
             String order = mStore.getString(PREFS_ATTRIBUTE_SORT);
-            mAttributeSort = AttributeSortOrder.LOGICAL;
-            if (AttributeSortOrder.ALPHABETICAL.key.equals(order)) {
-                mAttributeSort = AttributeSortOrder.ALPHABETICAL;
-            } else if (AttributeSortOrder.NO_SORTING.key.equals(order)) {
-                mAttributeSort = AttributeSortOrder.NO_SORTING;
+            mAttributeSort = XmlAttributeSortOrder.LOGICAL;
+            if (XmlAttributeSortOrder.ALPHABETICAL.key.equals(order)) {
+                mAttributeSort = XmlAttributeSortOrder.ALPHABETICAL;
+            } else if (XmlAttributeSortOrder.NO_SORTING.key.equals(order)) {
+                mAttributeSort = XmlAttributeSortOrder.NO_SORTING;
             }
         }
 
@@ -254,6 +264,25 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             mSharedLayoutEditor = mStore.getBoolean(PREFS_SHARED_LAYOUT_EDITOR);
         }
 
+        if (property == null || PREFS_AUTO_PICK_TARGET.equals(property)) {
+            mAutoPickTarget = mStore.getBoolean(PREFS_AUTO_PICK_TARGET);
+        }
+
+        if (property == null || PREFS_PREVIEWS.equals(property)) {
+            mPreviewMode = RenderPreviewMode.NONE;
+            String previewMode = mStore.getString(PREFS_PREVIEWS);
+            if (previewMode != null && !previewMode.isEmpty()) {
+                try {
+                    mPreviewMode = RenderPreviewMode.valueOf(previewMode.toUpperCase(Locale.US));
+                } catch (IllegalArgumentException iae) {
+                    // Ignore: Leave it as RenderPreviewMode.NONE
+                }
+            }
+        }
+
+        if (property == null || PREFS_SKIP_LINT_LIBS.equals(property)) {
+            mSkipLibrariesFromLint = mStore.getBoolean(PREFS_SKIP_LINT_LIBS);
+        }
     }
 
     /**
@@ -330,13 +359,13 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
     /**
      * Returns the sort order to be applied to the attributes (one of which can
-     * be {@link AttributeSortOrder#NO_SORTING}).
+     * be {@link com.android.ide.common.xml.XmlAttributeSortOrder#NO_SORTING}).
      *
      * @return the sort order to apply to the attributes
      */
-    public AttributeSortOrder getAttributeSort() {
+    public XmlAttributeSortOrder getAttributeSort() {
         if (mAttributeSort == null) {
-            return AttributeSortOrder.LOGICAL;
+            return XmlAttributeSortOrder.LOGICAL;
         }
         return mAttributeSort;
     }
@@ -344,7 +373,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     /**
      * Returns whether a space should be inserted before the closing {@code >}
      * character in open tags and before the closing {@code />} characters in
-     * empty tag. Note that the {@link XmlFormatStyle#RESOURCE} style overrides
+     * empty tag. Note that the {@link com.android.ide.common.xml.XmlFormatStyle#RESOURCE} style overrides
      * this setting to make it more compact for the {@code <item>} elements.
      *
      * @return true if an empty space should be inserted before {@code >} or
@@ -485,13 +514,15 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setDefault(PREFS_SPACE_BEFORE_CLOSE, true);
         store.setDefault(PREFS_LINT_ON_SAVE, true);
         store.setDefault(PREFS_LINT_ON_EXPORT, true);
+        store.setDefault(PREFS_AUTO_PICK_TARGET, true);
 
         // Defaults already handled; no need to write into map:
-        //store.setDefault(PREFS_ATTRIBUTE_SORT, AttributeSortOrder.LOGICAL.key);
+        //store.setDefault(PREFS_ATTRIBUTE_SORT, XmlAttributeSortOrder.LOGICAL.key);
         //store.setDefault(PREFS_USE_ECLIPSE_INDENT, false);
         //store.setDefault(PREVS_REMOVE_EMPTY_LINES, false);
         //store.setDefault(PREFS_FORMAT_ON_SAVE, false);
         //store.setDefault(PREFS_SHARED_LAYOUT_EDITOR, false);
+        //store.setDefault(PREFS_SKIP_LINT_LIBS, false);
 
         try {
             store.setDefault(PREFS_DEFAULT_DEBUG_KEYSTORE,
@@ -537,5 +568,80 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
             store.setValue(PREFS_PREFER_XML, xml);
         }
+    }
+
+    /**
+     * Gets the {@link RenderPreviewMode}
+     *
+     * @return the preview mode
+     */
+    @NonNull
+    public RenderPreviewMode getRenderPreviewMode() {
+        return mPreviewMode;
+    }
+
+    /**
+     * Sets the {@link RenderPreviewMode}
+     *
+     * @param previewMode the preview mode
+     */
+    public void setPreviewMode(@NonNull RenderPreviewMode previewMode) {
+        mPreviewMode = previewMode;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        if (previewMode != RenderPreviewMode.NONE) {
+            store.setValue(PREFS_PREVIEWS, previewMode.name().toLowerCase(Locale.US));
+        } else {
+            store.setToDefault(PREFS_PREVIEWS);
+        }
+    }
+
+    /**
+     * Sets whether auto-pick render target mode is enabled.
+     *
+     * @return whether the layout editor should automatically pick the best render target
+     */
+    public boolean isAutoPickRenderTarget() {
+        return mAutoPickTarget;
+    }
+
+    /**
+     * Sets whether auto-pick render target mode is enabled.
+     *
+     * @param autoPick if true, auto pick the best render target in the layout editor
+     */
+    public void setAutoPickRenderTarget(boolean autoPick) {
+        mAutoPickTarget = autoPick;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        if (autoPick) {
+            store.setToDefault(PREFS_AUTO_PICK_TARGET);
+        } else {
+            store.setValue(PREFS_AUTO_PICK_TARGET, autoPick);
+        }
+    }
+
+    /**
+     * Sets whether libraries should be excluded when running lint on a project
+     *
+     * @param exclude if true, exclude library projects
+     */
+    public void setSkipLibrariesFromLint(boolean exclude) {
+        if (exclude != mSkipLibrariesFromLint) {
+            mSkipLibrariesFromLint = exclude;
+            IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+            if (exclude) {
+                store.setValue(PREFS_SKIP_LINT_LIBS, true);
+            } else {
+                store.setToDefault(PREFS_SKIP_LINT_LIBS);
+            }
+        }
+    }
+
+    /**
+     * Returns whether libraries should be excluded when running lint on a project
+     *
+     * @return if true, exclude library projects
+     */
+    public boolean getSkipLibrariesFromLint() {
+        return mSkipLibrariesFromLint;
     }
 }

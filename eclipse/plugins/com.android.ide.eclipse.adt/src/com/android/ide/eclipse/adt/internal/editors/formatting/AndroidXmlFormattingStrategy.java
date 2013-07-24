@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findLineStart;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findTextStart;
 import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.SELECTOR_TAG;
@@ -27,12 +28,22 @@ import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG
 import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG_OPEN;
 
 import com.android.SdkConstants;
+import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatPreferences;
+import com.android.ide.common.xml.XmlFormatStyle;
+import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.resources.ResourceType;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -70,7 +81,7 @@ import java.util.Queue;
  * Formatter which formats XML content according to the established Android coding
  * conventions. It performs the format by computing the smallest set of DOM nodes
  * overlapping the formatted region, then it pretty-prints that XML region
- * using the {@link XmlPrettyPrinter}, and then it replaces the affected region
+ * using the {@link EclipseXmlPrettyPrinter}, and then it replaces the affected region
  * by the pretty-printed region.
  * <p>
  * This strategy is also used for delegation. If the user has chosen to use the
@@ -83,6 +94,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     private final Queue<IDocument> mDocuments = new LinkedList<IDocument>();
     private final LinkedList<TypedPosition> mPartitions = new LinkedList<TypedPosition>();
     private ContextBasedFormattingStrategy mDelegate = null;
+    /** False if document is known not to be in an Android project, null until initialized */
+    private Boolean mIsAndroid;
 
     /**
      * Creates a new {@link AndroidXmlFormattingStrategy}
@@ -91,7 +104,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     }
 
     private ContextBasedFormattingStrategy getDelegate() {
-        if (!AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
+        if (!AdtPrefs.getPrefs().getUseCustomXmlFormatter()
+                || mIsAndroid != null && !mIsAndroid.booleanValue()) {
             if (mDelegate == null) {
                 mDelegate = new XMLFormattingStrategy();
             }
@@ -158,7 +172,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
      * @param length the length of the text range to be formatted
      * @return a {@link TextEdit} which edits the model into a formatted document
      */
-    public static TextEdit format(IStructuredModel model, int start, int length) {
+    private static TextEdit format(IStructuredModel model, int start, int length) {
         int end = start + length;
 
         TextEdit edit = new MultiTextEdit();
@@ -258,6 +272,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         int initialDepth = 0;
         int replaceStart;
         int replaceEnd;
+        boolean endWithNewline = false;
         if (startNode == null || endNode == null) {
             // Process the entire document
             root = domDocument;
@@ -267,6 +282,11 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             endNode = root;
             replaceStart = 0;
             replaceEnd = document.getLength();
+            try {
+                endWithNewline = replaceEnd > 0 && document.getChar(replaceEnd - 1) == '\n';
+            } catch (BadLocationException e) {
+                // Can't happen
+            }
         } else {
             root = DomUtilities.getCommonAncestor(startNode, endNode);
             initialDepth = root != null ? DomUtilities.getDepth(root) - 1 : 0;
@@ -321,9 +341,10 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         }
 
         XmlFormatStyle style = guessStyle(model, domDocument);
-        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        XmlFormatPreferences prefs = EclipseXmlFormatPreferences.create();
         String delimiter = TextUtilities.getDefaultLineDelimiter(document);
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
+        XmlPrettyPrinter printer = new EclipseXmlPrettyPrinter(prefs, style, delimiter);
+        printer.setEndWithNewline(endWithNewline);
 
         if (indentationLevels != null) {
             printer.setIndentationLevels(indentationLevels);
@@ -360,7 +381,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
      * adjusted (for example to make the edit smaller if the beginning and/or end is
      * identical, and so on)
      */
-    private static ReplaceEdit createReplaceEdit(IStructuredDocument document, int replaceStart,
+    @VisibleForTesting
+    static ReplaceEdit createReplaceEdit(IDocument document, int replaceStart,
             int replaceEnd, String formatted, XmlFormatPreferences prefs) {
         // If replacing a node somewhere in the middle, start the replacement at the
         // beginning of the current line
@@ -399,7 +421,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             if (c == '\n') {
                 beginsWithNewline = true;
                 break;
-            } else if (!Character.isWhitespace(c)) {
+            } else if (!Character.isWhitespace(c)) { // \r is whitespace so is handled correctly
                 break;
             }
         }
@@ -411,6 +433,9 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
                         replaceStart = prevNewlineIndex;
                     }
                     prevNewlineIndex = index;
+                    if (index > 0 && document.getChar(index - 1) == '\r') {
+                        prevNewlineIndex--;
+                    }
                 } else if (!Character.isWhitespace(c)) {
                     break;
                 }
@@ -423,16 +448,16 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         }
 
         // Search forwards too
-        prevNewlineIndex = -1;
+        int nextNewlineIndex = -1;
         try {
             int max = document.getLength();
             for (index = replaceEnd; index < max; index++) {
                 char c = document.getChar(index);
                 if (c == '\n') {
-                    if (prevNewlineIndex != -1) {
-                        replaceEnd = prevNewlineIndex + 1;
+                    if (nextNewlineIndex != -1) {
+                        replaceEnd = nextNewlineIndex + 1;
                     }
-                    prevNewlineIndex = index;
+                    nextNewlineIndex = index;
                 } else if (!Character.isWhitespace(c)) {
                     break;
                 }
@@ -440,7 +465,6 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         } catch (BadLocationException e) {
             AdtPlugin.log(e, null);
         }
-
         boolean endsWithNewline = false;
         for (int i = formatted.length() - 1; i >= 0; i--) {
             char c = formatted.charAt(i);
@@ -452,8 +476,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             }
         }
 
-        if (prefs.removeEmptyLines && prevNewlineIndex != -1 && endsWithNewline) {
-            replaceEnd = prevNewlineIndex + 1;
+        if (prefs.removeEmptyLines && nextNewlineIndex != -1 && endsWithNewline) {
+            replaceEnd = nextNewlineIndex + 1;
         }
 
         // Figure out how much of the before and after strings are identical and narrow
@@ -503,7 +527,10 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     static XmlFormatStyle guessStyle(IStructuredModel model, Document domDocument) {
         // The "layout" style is used for most XML resource file types:
         // layouts, color-lists and state-lists, animations, drawables, menus, etc
-        XmlFormatStyle style = XmlFormatStyle.LAYOUT;
+        XmlFormatStyle style = XmlFormatStyle.get(domDocument);
+        if (style == XmlFormatStyle.FILE) {
+            style = XmlFormatStyle.LAYOUT;
+        }
 
         // The "resource" style is used for most value-based XML files:
         // strings, dimensions, booleans, colors, integers, plurals,
@@ -532,13 +559,57 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
                     String[] segments = resourceFolder.split("-"); //$NON-NLS-1$
                     ResourceType type = ResourceType.getEnum(segments[0]);
                     if (type != null) {
-                        style = XmlFormatStyle.get(type);
+                        style = EclipseXmlPrettyPrinter.get(type);
                     }
                 }
             }
         }
 
         return style;
+    }
+
+    private Boolean isAndroid(IDocument document) {
+        if (mIsAndroid == null) {
+            // Look up the corresponding IResource for this document. This isn't
+            // readily available, so take advantage of the structured model's base location
+            // string and convert it to an IResource to look up its project.
+            if (document instanceof IStructuredDocument) {
+                IStructuredDocument structuredDocument = (IStructuredDocument) document;
+                IModelManager modelManager = StructuredModelManager.getModelManager();
+
+                IStructuredModel model = modelManager.getModelForRead(structuredDocument);
+                if (model != null) {
+                    String location = model.getBaseLocation();
+                    model.releaseFromRead();
+                    if (location != null) {
+                        if (!location.endsWith(ANDROID_MANIFEST_XML)
+                                && !location.contains("/res/")) { //$NON-NLS-1$
+                            // See if it looks like a foreign document
+                            IWorkspace workspace = ResourcesPlugin.getWorkspace();
+                            IWorkspaceRoot root = workspace.getRoot();
+                            IResource member = root.findMember(location);
+                            if (member.exists()) {
+                                IProject project = member.getProject();
+                                if (project.isAccessible() &&
+                                        !BaseProjectHelper.isAndroidProject(project)) {
+                                    mIsAndroid = false;
+                                    return false;
+                                }
+                            }
+                        }
+                        // Ignore Maven POM files even in Android projects
+                        if (location.endsWith("/pom.xml")) { //$NON-NLS-1$
+                            mIsAndroid = false;
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            mIsAndroid = true;
+        }
+
+        return mIsAndroid.booleanValue();
     }
 
     @Override
@@ -563,6 +634,15 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         IDocument document = (IDocument) context.getProperty(CONTEXT_MEDIUM);
         mPartitions.offer(partition);
         mDocuments.offer(document);
+
+        if (!isAndroid(document)) {
+            // It's some foreign type of project: use default
+            // formatter
+            delegate = getDelegate();
+            if (delegate != null) {
+                delegate.formatterStarts(context);
+            }
+        }
     }
 
     @Override

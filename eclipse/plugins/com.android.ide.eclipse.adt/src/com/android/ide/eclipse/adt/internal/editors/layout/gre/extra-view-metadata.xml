@@ -293,11 +293,13 @@
             class="android.widget.ImageView"
             topAttrs="src,scaleType"
             resize="scaled"
+            render="skip"
             relatedTo="ImageButton,VideoView" />
         <view
             class="android.widget.ImageButton"
             topAttrs="src,background,style"
             resize="scaled"
+            render="skip"
             relatedTo="Button,ImageView" />
         <view
             class="android.widget.Gallery"
@@ -393,6 +395,10 @@
         <view
             class="android.view.ViewStub"
             topAttrs="layout,inflatedId,visibility"
+            render="skip" />
+        <view
+            class="view"
+            topAttrs="class"
             render="skip" />
         <view
             class="android.gesture.GestureOverlayView"

@@ -19,14 +19,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
-import com.android.resources.NightMode;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.resources.ResourceType;
-import com.android.resources.UiMode;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.devices.Device;
-import com.android.sdklib.devices.State;
 
 import java.util.Map;
 
@@ -34,31 +30,13 @@ import java.util.Map;
  * Interface implemented by clients who embed a {@link ConfigurationChooser}.
  */
 public interface ConfigurationClient {
-    /** The {@link FolderConfiguration} in the configuration has changed */
-    public static final int CHANGED_FOLDER        = 1 << 0;
-    /** The {@link Device} in the configuration has changed */
-    public static final int CHANGED_DEVICE        = 1 << 1;
-    /** The {@link State} in the configuration has changed */
-    public static final int CHANGED_DEVICE_CONFIG = 1 << 2;
-    /** The theme in the configuration has changed */
-    public static final int CHANGED_THEME         = 1 << 3;
-    /** The locale in the configuration has changed */
-    public static final int CHANGED_LOCALE        = 1 << 4;
-    /** The rendering {@link IAndroidTarget} in the configuration has changed */
-    public static final int CHANGED_RENDER_TARGET = 1 << 5;
-    /** The {@link NightMode} in the configuration has changed */
-    public static final int CHANGED_NIGHT_MODE = 1 << 6;
-    /** The {@link UiMode} in the configuration has changed */
-    public static final int CHANGED_UI_MODE = 1 << 7;
-
-    /** Everything has changed */
-    public static final int CHANGED_ALL = 0xFFFF;
-
     /**
      * The configuration is about to be changed.
      *
-     * @param flags details about what changed; consult the {@code CHANGED_} flags
-     *   such as {@link #CHANGED_DEVICE}, {@link #CHANGED_LOCALE}, etc.
+     * @param flags details about what changed; consult the {@code CFG_} flags
+     *            in {@link Configuration} such as
+     *            {@link Configuration#CFG_DEVICE},
+     *            {@link Configuration#CFG_LOCALE}, etc.
      */
     void aboutToChange(int flags);
 
@@ -70,8 +48,9 @@ public interface ConfigurationClient {
      * file to edit the new configuration -- and the current configuration
      * should go back to editing the state prior to this change.
      *
-     * @param flags details about what changed; consult the {@code CHANGED_} flags
-     *   such as {@link #CHANGED_DEVICE}, {@link #CHANGED_LOCALE}, etc.
+     * @param flags details about what changed; consult the {@code CFG_} flags
+     *            such as {@link Configuration#CFG_DEVICE},
+     *            {@link Configuration#CFG_LOCALE}, etc.
      * @return true if the change was accepted, false if it was rejected.
      */
     boolean changed(int flags);
@@ -139,4 +118,12 @@ public interface ConfigurationClient {
      * @param fqcn the fully qualified class name for the associated activity context
      */
     void setActivity(@NonNull String fqcn);
+
+    /**
+     * Returns the associated layout canvas, if any
+     *
+     * @return the canvas, if any
+     */
+    @Nullable
+    LayoutCanvas getCanvas();
 }

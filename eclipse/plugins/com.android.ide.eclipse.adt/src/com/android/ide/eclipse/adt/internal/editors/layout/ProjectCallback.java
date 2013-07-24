@@ -18,11 +18,13 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
 import static com.android.SdkConstants.CALENDAR_VIEW;
+import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.SdkConstants.FQCN_GRID_VIEW;
 import static com.android.SdkConstants.FQCN_SPINNER;
 import static com.android.SdkConstants.GRID_VIEW;
 import static com.android.SdkConstants.LIST_VIEW;
+import static com.android.SdkConstants.SPINNER;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 
@@ -49,18 +51,22 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectClassLoader
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -139,6 +145,11 @@ public final class ProjectCallback extends LegacyCallback {
             Object[] constructorParameters)
             throws ClassNotFoundException, Exception {
         mUsed = true;
+
+        if (className == null) {
+            // Just make a plain <View> if you specify <view> without a class= attribute.
+            className = CLASS_VIEW;
+        }
 
         // look for a cached version
         Class<?> clazz = mLoadedClasses.get(className);
@@ -454,12 +465,15 @@ public final class ProjectCallback extends LegacyCallback {
             ContextPullParser parser = new ContextPullParser(this, xml);
             try {
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                parser.setInput(new FileInputStream(xml), "UTF-8"); //$NON-NLS-1$
+                String xmlText = Files.toString(xml, Charsets.UTF_8);
+                parser.setInput(new StringReader(xmlText));
                 return parser;
             } catch (XmlPullParserException e) {
                 AdtPlugin.log(e, null);
             } catch (FileNotFoundException e) {
                 // Shouldn't happen since we check isFile() above
+            } catch (IOException e) {
+                AdtPlugin.log(e, null);
             }
         }
 
@@ -560,12 +574,19 @@ public final class ProjectCallback extends LegacyCallback {
     }
 
     @Override
-    public AdapterBinding getAdapterBinding(final ResourceReference adapterView, final Object adapterCookie,
-            final Object viewObject) {
+    public AdapterBinding getAdapterBinding(final ResourceReference adapterView,
+            final Object adapterCookie, final Object viewObject) {
         // Look for user-recorded preference for layout to be used for previews
         if (adapterCookie instanceof UiViewElementNode) {
             UiViewElementNode uiNode = (UiViewElementNode) adapterCookie;
             AdapterBinding binding = LayoutMetadata.getNodeBinding(viewObject, uiNode);
+            if (binding != null) {
+                return binding;
+            }
+        } else if (adapterCookie instanceof Map<?,?>) {
+            @SuppressWarnings("unchecked")
+            Map<String, String> map = (Map<String, String>) adapterCookie;
+            AdapterBinding binding = LayoutMetadata.getNodeBinding(viewObject, map);
             if (binding != null) {
                 return binding;
             }
@@ -598,7 +619,7 @@ public final class ProjectCallback extends LegacyCallback {
         if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_EXPANDABLE_LIST_ITEM,
                     true /* isFramework */, 1));
-        } else if (listFqcn.equals(FQCN_SPINNER)) {
+        } else if (listFqcn.equals(SPINNER)) {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_SPINNER_ITEM,
                     true /* isFramework */, 1));
         } else {

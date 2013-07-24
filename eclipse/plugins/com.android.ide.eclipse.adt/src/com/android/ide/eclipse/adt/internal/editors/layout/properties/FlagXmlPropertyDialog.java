@@ -82,6 +82,11 @@ implements IStructuredContentProvider, ICheckStateListener, SelectionListener, K
         mTable = mViewer.getTable();
         mTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
+        Composite workaround = PropertyFactory.addWorkaround(container);
+        if (workaround != null) {
+            workaround.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, 1, 1));
+        }
+
         mViewer.setContentProvider(this);
         mViewer.setInput(mFlags);
 

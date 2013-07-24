@@ -2,15 +2,15 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Android Development Toolkit
 Bundle-SymbolicName: com.android.ide.eclipse.adt;singleton:=true
-Bundle-Version: 21.0.0.qualifier
+Bundle-Version: 22.0.0.qualifier
 Bundle-ClassPath: .,
  libs/sdkuilib.jar,
  libs/ninepatch.jar,
  libs/freemarker-2.3.19.jar,
- libs/rule_api.jar,
- libs/assetstudio.jar,
- libs/lint_api.jar,
- libs/lint_checks.jar,
+ libs/rule-api.jar,
+ libs/asset-studio.jar,
+ libs/lint-api.jar,
+ libs/lint-checks.jar,
  libs/lombok-ast-0.2.jar,
  libs/asm-4.0.jar,
  libs/asm-tree-4.0.jar,
@@ -18,7 +18,7 @@ Bundle-ClassPath: .,
  libs/propertysheet.jar,
  libs/ant-glob.jar,
  libs/swtmenubar.jar,
- libs/manifmerger.jar
+ libs/manifest-merger.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin
 Bundle-Vendor: The Android Open Source Project
 Require-Bundle: com.android.ide.eclipse.base,
@@ -58,7 +58,6 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.common.layout;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.layout.grid;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.layout.relative;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.common.rendering.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.resources.platform;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal;x-friends:="com.android.ide.eclipse.tests",
@@ -104,8 +103,7 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.eclipse.adt.internal.preferences;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.project;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.properties;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.internal.refactoring.changes;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.internal.refactoring.core;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.internal.refactorings.core;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.refactorings.extractstring;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.refactorings.renamepackage;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.resources;x-friends:="com.android.ide.eclipse.tests",
@@ -113,6 +111,7 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.eclipse.adt.internal.sdk;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.sourcelookup;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.ui;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.internal.utils;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.welcome;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.actions;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.export;x-friends:="com.android.ide.eclipse.tests",
@@ -120,11 +119,8 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.eclipse.adt.internal.wizards.newxmlfile;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.templates;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.io;x-friends:="com.android.ide.eclipse.tests",
- com.android.layoutlib.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.manifmerger;x-friends:="com.android.ide.eclipse.tests",
- com.android.menubar;x-friends:="com.android.ide.eclipse.tests",
  com.android.ninepatch;x-friends:="com.android.ide.eclipse.tests",
- com.android.resources;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.repository;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.repository.core;x-friends:="com.android.ide.eclipse.tests",
  com.android.sdkuilib.internal.repository.icons;x-friends:="com.android.ide.eclipse.tests",
@@ -136,7 +132,6 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.tools.lint.checks;x-friends:="com.android.ide.eclipse.tests",
  com.android.tools.lint.client.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.tools.lint.detector.api;x-friends:="com.android.ide.eclipse.tests",
- com.android.util;x-friends:="com.android.ide.eclipse.tests",
  freemarker.cache;x-friends:="com.android.ide.eclipse.tests",
  freemarker.template;x-friends:="com.android.ide.eclipse.tests",
  org.kxml2.io;x-friends:="com.android.ide.eclipse.tests",

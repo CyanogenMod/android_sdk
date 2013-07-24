@@ -119,16 +119,19 @@ ColorBuffer::ColorBuffer() :
     m_warYInvertBug(false)
 {
 #if __APPLE__
-    // On Macs running OS X 10.6 and 10.7 with Intel HD Graphics 3000, some
-    // screens or parts of the screen are displayed upside down. The exact
-    // conditions/sequence that triggers this aren't known yet; I haven't
-    // been able to reproduce it in a standalone test. This way of enabling the
+    // On Macs running OS X 10.6 and 10.7 with Intel HD Graphics 3000 or 4000,
+    // some screens or parts of the screen are displayed upside down. The exact
+    // conditions/sequence that triggers this aren't known yet; I haven't been
+    // able to reproduce it in a standalone test. This way of enabling the
     // workaround will break if it is a driver bug (rather than a bug in this
-    // code which works by accident elsewhere) and Apple/Intel release a fix for
-    // it. Running a standalone test to detect the problem at runtime would be
-    // more robust.
-    if (strstr((const char*)s_gl.glGetString(GL_RENDERER), "Intel HD Graphics 3000"))
+    // code which works by accident elsewhere) and Apple/Intel release a fix
+    // for it. Running a standalone test to detect the problem at runtime would
+    // be more robust.
+    const char* renderer = (const char*)s_gl.glGetString(GL_RENDERER);
+    if (strstr(renderer, "Intel HD Graphics 3000") ||
+        strstr(renderer, "Intel HD Graphics 4000")) {
         m_warYInvertBug = true;
+    }
 #endif
 }
 

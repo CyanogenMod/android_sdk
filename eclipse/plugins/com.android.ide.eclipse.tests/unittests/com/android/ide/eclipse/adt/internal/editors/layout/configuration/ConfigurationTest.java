@@ -18,12 +18,12 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.ide.common.resources.configuration.LanguageQualifier.FAKE_LANG_VALUE;
 import static com.android.ide.common.resources.configuration.RegionQualifier.FAKE_REGION_VALUE;
 
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.resources.Density;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
+import com.android.sdklib.devices.Screen;
 import com.android.utils.StdLogger;
 
 import java.lang.reflect.Constructor;
@@ -49,8 +49,10 @@ public class ConfigurationTest extends TestCase {
         configuration.setTheme("@style/Theme");
         assertEquals("@style/Theme", configuration.getTheme());
 
-        DeviceManager deviceManager = new DeviceManager(new StdLogger(StdLogger.Level.VERBOSE));
-        List<Device> devices = deviceManager.getDefaultDevices();
+        DeviceManager deviceManager = DeviceManager.createInstance(
+                                                        null /*osSdkPath*/,
+                                                        new StdLogger(StdLogger.Level.VERBOSE));
+        List<Device> devices = deviceManager.getDevices(DeviceManager.DEFAULT_DEVICES);
         assertNotNull(devices);
         assertTrue(devices.size() > 0);
         configuration.setDevice(devices.get(0), false);
@@ -97,8 +99,43 @@ public class ConfigurationTest extends TestCase {
                 configuration.toPersistentString());
 
         assertEquals(Density.MEDIUM, configuration.getDensity());
-        assertEquals(145.0f, configuration.getXDpi(), 0.001);
-        assertEquals(145.0f, configuration.getYDpi(), 0.001);
-        assertEquals(new Rect(0, 0, 320, 480), configuration.getScreenBounds());
+        Screen screen = configuration.getDevice().getDefaultHardware().getScreen();
+        assertEquals(145.0f, screen.getXdpi(), 0.001);
+        assertEquals(145.0f, screen.getYdpi(), 0.001);
+    }
+
+    public void testCopy() throws Exception {
+        Configuration configuration = createConfiguration();
+        assertNotNull(configuration);
+        configuration.setTheme("@style/Theme");
+        assertEquals("@style/Theme", configuration.getTheme());
+        DeviceManager deviceManager = DeviceManager.createInstance(
+                                            null /*osSdkPath*/,
+                                            new StdLogger(StdLogger.Level.VERBOSE));
+        List<Device> devices = deviceManager.getDevices(DeviceManager.DEFAULT_DEVICES);
+        assertNotNull(devices);
+        assertTrue(devices.size() > 0);
+        configuration.setDevice(devices.get(0), false);
+        configuration.setActivity("foo.bar.FooActivity");
+        configuration.setTheme("@android:style/Theme.Holo.Light");
+        Locale locale = Locale.create(new LanguageQualifier("nb"));
+        configuration.setLocale(locale, false /* skipSync */);
+
+        Configuration copy = Configuration.copy(configuration);
+        assertEquals(locale, copy.getLocale());
+        assertEquals("foo.bar.FooActivity", copy.getActivity());
+        assertEquals("@android:style/Theme.Holo.Light", copy.getTheme());
+        assertEquals(devices.get(0), copy.getDevice());
+
+        // Make sure edits to master does not affect the child
+        configuration.setLocale(Locale.ANY, false);
+        configuration.setTheme("@android:style/Theme.Holo");
+        configuration.setDevice(devices.get(1), true);
+
+        assertTrue(copy.getFullConfig().getLanguageQualifier().equals(locale.language));
+        assertEquals(locale, copy.getLocale());
+        assertEquals("foo.bar.FooActivity", copy.getActivity());
+        assertEquals("@android:style/Theme.Holo.Light", copy.getTheme());
+        assertEquals(devices.get(0), copy.getDevice());
     }
 }

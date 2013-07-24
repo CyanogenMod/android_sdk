@@ -29,13 +29,13 @@ import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.EclipseXmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -54,7 +54,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -295,6 +294,10 @@ public abstract class VisualRefactoring extends Refactoring {
         return args;
     }
 
+    IFile getFile() {
+        return mFile;
+    }
+
     // ---- Shared functionality ----
 
 
@@ -304,8 +307,7 @@ public abstract class VisualRefactoring extends Refactoring {
 
         try {
             // Duplicate the current state into the newly created file
-            QualifiedName qname = ConfigurationChooser.NAME_CONFIG_STATE;
-            String state = AdtPlugin.getFileProperty(leavingFile, qname);
+            String state = ConfigurationDescription.getDescription(leavingFile);
 
             // TODO: Look for a ".NoTitleBar.Fullscreen" theme version of the current
             // theme to show.
@@ -1310,8 +1312,8 @@ public abstract class VisualRefactoring extends Refactoring {
         //int end = actual.length() - distanceFromEnd;
         //int length = end - start;
         //TextEdit format = AndroidXmlFormattingStrategy.format(model, start, length);
-        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
-        String formatted = XmlPrettyPrinter.prettyPrint(actual, formatPrefs, style,
+        EclipseXmlFormatPreferences formatPrefs = EclipseXmlFormatPreferences.create();
+        String formatted = EclipseXmlPrettyPrinter.prettyPrint(actual, formatPrefs, style,
                 null /*lineSeparator*/);
 
 

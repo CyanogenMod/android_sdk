@@ -20,7 +20,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
-import com.android.ide.eclipse.tests.SdkTestCase;
+import com.android.ide.eclipse.tests.SdkLoadingTestCase;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IMarker;
@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  * execution there
  *
  */
-public class SampleProjectTest extends SdkTestCase {
+public class SampleProjectTest extends SdkLoadingTestCase {
 
     private static final Logger sLogger = Logger.getLogger(SampleProjectTest.class.getName());
 

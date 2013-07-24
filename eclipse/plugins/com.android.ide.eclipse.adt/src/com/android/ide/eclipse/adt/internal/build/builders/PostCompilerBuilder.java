@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
@@ -314,14 +316,15 @@ public class PostCompilerBuilder extends BaseBuilder {
                     IJavaProject referencedJavaProject = referencedJavaProjects.get(i);
                     delta = getDelta(referencedJavaProject.getProject());
                     if (delta != null) {
+                        IProject referencedProject = referencedJavaProject.getProject();
                         PatternBasedDeltaVisitor visitor = new PatternBasedDeltaVisitor(
-                                project, referencedJavaProject.getProject(),
+                                project, referencedProject,
                                 "POST:RefedProject");
 
-                        ChangedFileSet javaResCfs = ChangedFileSetHelper.getJavaResCfs(project);
+                        ChangedFileSet javaResCfs = ChangedFileSetHelper.getJavaResCfs(referencedProject);
                         visitor.addSet(javaResCfs);
 
-                        ChangedFileSet bytecodeCfs = ChangedFileSetHelper.getByteCodeCfs(project);
+                        ChangedFileSet bytecodeCfs = ChangedFileSetHelper.getByteCodeCfs(referencedProject);
                         visitor.addSet(bytecodeCfs);
 
                         delta.accept(visitor);
@@ -340,17 +343,19 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // Top level check to make sure the build can move forward. Only do this after recording
             // delta changes.
-            abortOnBadSetup(javaProject);
+            abortOnBadSetup(javaProject, projectState);
+
+            // Get the output stream. Since the builder is created for the life of the
+            // project, they can be kept around.
+            if (mOutStream == null) {
+                mOutStream = new AndroidPrintStream(project, null /*prefix*/,
+                        AdtPlugin.getOutStream());
+                mErrStream = new AndroidPrintStream(project, null /*prefix*/,
+                        AdtPlugin.getOutStream());
+            }
 
             // remove older packaging markers.
             removeMarkersFromContainer(javaProject.getProject(), AdtConstants.MARKER_PACKAGING);
-
-            if (androidOutputFolder == null) {
-                // mark project and exit
-                markProject(AdtConstants.MARKER_PACKAGING, Messages.Failed_To_Get_Output,
-                        IMarker.SEVERITY_ERROR);
-                return allRefProjects;
-            }
 
             // finished with the common init and tests. Special case of the library.
             if (isLibrary) {
@@ -366,8 +371,10 @@ public class PostCompilerBuilder extends BaseBuilder {
                 if (DEBUG_LOG) {
                     AdtPlugin.log(IStatus.INFO, "%s running crunch!", project.getName());
                 }
-                BuildHelper helper = new BuildHelper(project,
+                BuildHelper helper = new BuildHelper(project, mBuildToolInfo,
                         mOutStream, mErrStream,
+                        false /*jumbo mode doesn't matter here*/,
+                        false /*dex merger doesn't matter here*/,
                         true /*debugMode*/,
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);
@@ -468,20 +475,21 @@ public class PostCompilerBuilder extends BaseBuilder {
                 ic.refreshLocal(IResource.DEPTH_ONE, monitor);
             }
 
-            // Get the DX output stream. Since the builder is created for the life of the
-            // project, they can be kept around.
-            if (mOutStream == null) {
-                mOutStream = new AndroidPrintStream(project, null /*prefix*/,
-                        AdtPlugin.getOutStream());
-                mErrStream = new AndroidPrintStream(project, null /*prefix*/,
-                        AdtPlugin.getOutStream());
-            }
-
             // we need to test all three, as we may need to make the final package
             // but not the intermediary ones.
             if (mPackageResources || mConvertToDex || mBuildFinalPackage) {
-                BuildHelper helper = new BuildHelper(project,
+                String forceJumboStr = projectState.getProperty(
+                        AdtConstants.DEX_OPTIONS_FORCEJUMBO);
+                Boolean jumbo = Boolean.valueOf(forceJumboStr);
+
+                String dexMergerStr = projectState.getProperty(
+                        AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
+                Boolean dexMerger = Boolean.valueOf(dexMergerStr);
+
+                BuildHelper helper = new BuildHelper(project, mBuildToolInfo,
                         mOutStream, mErrStream,
+                        jumbo.booleanValue(),
+                        dexMerger.booleanValue(),
                         true /*debugMode*/,
                         AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE,
                         mResourceMarker);
@@ -635,6 +643,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                             Messages.ApkBuilder_Update_or_Execute_manually_s,
                             e.getCommandLine());
 
+                    AdtPlugin.log(e, msg);
+
                     return allRefProjects;
                 } catch (ApkCreationException e) {
                     String eMessage = e.getMessage();
@@ -643,6 +653,8 @@ public class PostCompilerBuilder extends BaseBuilder {
                     String msg = String.format(Messages.Final_Archive_Error_s, eMessage);
                     BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING, msg,
                             IMarker.SEVERITY_ERROR);
+
+                    AdtPlugin.log(e, msg);
                 } catch (AndroidLocationException e) {
                     String eMessage = e.getMessage();
 
@@ -650,6 +662,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     String msg = String.format(Messages.Final_Archive_Error_s, eMessage);
                     BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING, msg,
                             IMarker.SEVERITY_ERROR);
+                    AdtPlugin.log(e, msg);
                 } catch (NativeLibInJarException e) {
                     String msg = e.getMessage();
 
@@ -663,6 +676,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     AdtPlugin.printErrorToConsole(project, msg);
                     BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING, msg,
                             IMarker.SEVERITY_ERROR);
+                    AdtPlugin.log(e, msg);
                 } catch (DuplicateFileException e) {
                     String msg1 = String.format(
                             "Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
@@ -901,8 +915,10 @@ public class PostCompilerBuilder extends BaseBuilder {
     }
 
     @Override
-    protected void abortOnBadSetup(IJavaProject javaProject) throws AbortBuildException {
-        super.abortOnBadSetup(javaProject);
+    protected void abortOnBadSetup(
+            @NonNull IJavaProject javaProject,
+            @Nullable ProjectState projectState) throws AbortBuildException, CoreException {
+        super.abortOnBadSetup(javaProject, projectState);
 
         IProject iProject = getProject();
 

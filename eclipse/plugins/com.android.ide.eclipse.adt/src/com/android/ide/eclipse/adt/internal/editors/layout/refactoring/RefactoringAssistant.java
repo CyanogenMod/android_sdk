@@ -20,8 +20,13 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceProcessor;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceWizard;
+import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceXmlTextAction;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
+import com.android.resources.ResourceType;
+import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
@@ -36,6 +41,7 @@ import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.ltk.core.refactoring.Refactoring;
+import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.graphics.Image;
@@ -100,6 +106,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         boolean isTagName = false;
         boolean isAttributeName = false;
         boolean isStylableAttribute = false;
+        Pair<ResourceType, String> resource = null;
         IStructuredModel model = null;
         try {
             model = xmlEditor.getModelForRead();
@@ -115,6 +122,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                     isValue = true;
                     if (value.startsWith("'@") || value.startsWith("\"@")) { //$NON-NLS-1$ //$NON-NLS-2$
                         isReferenceValue = true;
+                        resource = RenameResourceXmlTextAction.findResource(doc, offset);
                     }
                 } else if (type.equals(DOMRegionContext.XML_TAG_NAME)
                         || type.equals(DOMRegionContext.XML_TAG_OPEN)
@@ -132,6 +140,8 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                     // On the edge of an attribute name and an attribute value
                     isAttributeName = true;
                     isStylableAttribute = true;
+                } else if (type.equals(DOMRegionContext.XML_CONTENT)) {
+                    resource = RenameResourceXmlTextAction.findResource(doc, offset);
                 }
             }
         } finally {
@@ -141,7 +151,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         }
 
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
-        if (isTagName || isAttributeName || isValue) {
+        if (isTagName || isAttributeName || isValue || resource != null) {
             StructuredTextEditor structuredEditor = xmlEditor.getStructuredTextEditor();
             ISelectionProvider provider = structuredEditor.getSelectionProvider();
             ISelection selection = provider.getSelection();
@@ -173,6 +183,12 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                 if (isValue && !isReferenceValue) {
                     proposals.add(new RefactoringProposal(xmlEditor,
                             new ExtractStringRefactoring(file, xmlEditor, textSelection)));
+                } else if (resource != null) {
+                    RenameResourceProcessor processor = new RenameResourceProcessor(
+                            file.getProject(), resource.getFirst(),
+                            resource.getSecond(), null);
+                    RenameRefactoring refactoring = new RenameRefactoring(processor);
+                    proposals.add(new RefactoringProposal(xmlEditor, refactoring));
                 }
 
                 LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(xmlEditor);
@@ -275,6 +291,12 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
             } else if (mRefactoring instanceof ExtractStringRefactoring) {
                 wizard = new ExtractStringWizard((ExtractStringRefactoring) mRefactoring,
                         mEditor.getProject());
+            } else if (mRefactoring instanceof RenameRefactoring) {
+                RenameRefactoring refactoring = (RenameRefactoring) mRefactoring;
+                RenameResourceProcessor processor =
+                        (RenameResourceProcessor) refactoring.getProcessor();
+                ResourceType type = processor.getType();
+                wizard = new RenameResourceWizard((RenameRefactoring) mRefactoring, type, false);
             } else {
                 throw new IllegalArgumentException();
             }

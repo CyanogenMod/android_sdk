@@ -16,8 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.UNIT_DP;
 import static com.android.SdkConstants.UNIT_IN;
 import static com.android.SdkConstants.UNIT_MM;
@@ -44,6 +47,9 @@ import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.ui.ISharedImages;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -224,8 +230,10 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         // or their values).
 
         if (info.isInValue) {
-            computeAttributeValues(proposals, offset, parent, info.name, currentNode,
-                    wordPrefix, info.skipEndTag, info.replaceLength);
+            if (computeAttributeValues(proposals, offset, parent, info.name, currentNode,
+                    wordPrefix, info.skipEndTag, info.replaceLength)) {
+                return;
+            }
         }
 
         // Look up attribute proposals based on descriptors
@@ -461,14 +469,24 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             choices = UiResourceAttributeNode.computeResourceStringMatches(
                     mEditor, attributeDescriptor, value);
             attrInfo.skipEndTag = false;
+        } else if (value.startsWith(PREFIX_THEME_REF)
+                && !attributeInfo.getFormats().contains(Format.REFERENCE)) {
+            choices = UiResourceAttributeNode.computeResourceStringMatches(
+                    mEditor, attributeDescriptor, value);
+            attrInfo.skipEndTag = false;
         }
 
         return choices;
     }
 
-    protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
+    /**
+     * Compute attribute values. Return true if the complete set of values was
+     * added, so addition descriptor information should not be added.
+     */
+    protected boolean computeAttributeValues(List<ICompletionProposal> proposals, int offset,
             String parentTagName, String attributeName, Node node, String wordPrefix,
             boolean skipEndTag, int replaceLength) {
+        return false;
     }
 
     protected void computeTextValues(List<ICompletionProposal> proposals, int offset,
@@ -502,8 +520,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *
      * @return An ElementDescriptor[] or null.
      */
-    private Object[] getElementChoicesForTextNode(Node parentNode) {
-        Object[] choices = null;
+    protected ElementDescriptor[] getElementChoicesForTextNode(Node parentNode) {
+        ElementDescriptor[] choices = null;
         String parent;
         if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
             // We're editing a text node which parent is an element node. Limit
@@ -549,10 +567,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         Map<String, String> nsUriMap = new HashMap<String, String>();
+        boolean haveLayoutParams = false;
 
         for (Object choice : choices) {
             String keyword = null;
             String nsPrefix = null;
+            String nsUri = null;
             Image icon = null;
             String tooltip = null;
             if (choice instanceof ElementDescriptor) {
@@ -570,11 +590,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
                 // Get the namespace URI for the attribute. Note that some attributes
                 // do not have a namespace and thus return null here.
-                String nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
+                nsUri = ((AttributeDescriptor)choice).getNamespaceUri();
                 if (nsUri != null) {
                     nsPrefix = nsUriMap.get(nsUri);
                     if (nsPrefix == null) {
-                        nsPrefix = XmlUtils.lookupNamespacePrefix(currentNode, nsUri);
+                        nsPrefix = XmlUtils.lookupNamespacePrefix(currentNode, nsUri, false);
                         nsUriMap.put(nsUri, nsPrefix);
                     }
                 }
@@ -595,6 +615,10 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (isAttribute) {
                     icon = IconFactory.getInstance().getIcon(ATTRIBUTE_ICON_FILENAME);
                 }
+            } else if (choice instanceof IType) {
+                IType type = (IType) choice;
+                keyword = type.getFullyQualifiedName();
+                icon = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CUNIT);
             } else {
                 continue; // discard unknown choice
             }
@@ -646,6 +670,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     cursorPosition++;
                 }
 
+                if (nsPrefix != null &&
+                        keyword.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, nsPrefix.length())) {
+                    haveLayoutParams = true;
+                }
+
                 // For attributes, automatically insert ns:attribute="" and place the cursor
                 // inside the quotes.
                 // Special case for attributes: insert ="" stuff and locate caret inside ""
@@ -659,8 +688,40 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     icon,                               // Image image
                     displayString,                      // displayString
                     null,                               // IContextInformation contextInformation
-                    tooltip                             // String additionalProposalInfo
+                    tooltip,                            // String additionalProposalInfo
+                    nsPrefix,
+                    nsUri
                 ));
+            }
+        }
+
+        if (wordPrefix.length() > 0 && haveLayoutParams
+                && !wordPrefix.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
+            // Sort layout parameters to the front if we automatically inserted some
+            // that you didn't request. For example, you typed "width" and we match both
+            // "width" and "layout_width" - should match layout_width.
+            String nsPrefix = nsUriMap.get(ANDROID_URI);
+            if (nsPrefix == null) {
+                nsPrefix = PREFIX_ANDROID;
+            } else {
+                nsPrefix += ':';
+            }
+            if (!(wordPrefix.startsWith(nsPrefix)
+                    && wordPrefix.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, nsPrefix.length()))) {
+                int nextLayoutIndex = 0;
+                for (int i = 0, n = proposals.size(); i < n; i++) {
+                    ICompletionProposal proposal = proposals.get(i);
+                    String keyword = proposal.getDisplayString();
+                    if (keyword.startsWith(nsPrefix) &&
+                            keyword.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX, nsPrefix.length())
+                            && i != nextLayoutIndex) {
+                        // Swap to front
+                        ICompletionProposal temp = proposals.get(nextLayoutIndex);
+                        proposals.set(nextLayoutIndex, proposal);
+                        proposals.set(i, temp);
+                        nextLayoutIndex++;
+                    }
+                }
             }
         }
     }

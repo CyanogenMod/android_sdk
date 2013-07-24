@@ -99,6 +99,8 @@ int sdk_launcher() {
     if (!result) {
         dprintf("Program dir: %s\n", program_dir);
 
+        // SDK Manager.exe is installed by the Windows Installer just below
+        // the tools directory and needs to access tools\android.bat
         ret = CreateProcess(
                 NULL,                                       /* program path */
                 "tools\\android.bat sdk",                   /* command-line */
@@ -110,6 +112,24 @@ int sdk_launcher() {
                 program_dir,             /* use parent's starting directory */
                 &startup,                 /* startup info, i.e. std handles */
                 &pinfo);
+
+        if (!ret) {
+            dprintf("CreateProcess returned %d\n", ret);
+
+            // In the ADT bundle, SDK Manager.exe is located in the sdk folder
+            // and needs to access sdk\tools\android.bat
+            ret = CreateProcess(
+                    NULL,                                   /* program path */
+                    "sdk\\tools\\android.bat sdk",          /* command-line */
+                    NULL,              /* process handle is not inheritable */
+                    NULL,               /* thread handle is not inheritable */
+                    TRUE,                      /* yes, inherit some handles */
+                    CREATE_NO_WINDOW,            /* we don't want a console */
+                    NULL,                 /* use parent's environment block */
+                    program_dir,         /* use parent's starting directory */
+                    &startup,             /* startup info, i.e. std handles */
+                    &pinfo);
+        }
 
         dprintf("CreateProcess returned %d\n", ret);
 

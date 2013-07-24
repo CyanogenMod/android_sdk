@@ -36,6 +36,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import java.io.File;
+
 public class SdkLocationChooserDialog extends Dialog {
     private static final String TITLE = "Android Device Monitor";
     private static final String DEFAULT_MESSAGE = "Provide the path to the Android SDK";
@@ -96,7 +98,7 @@ public class SdkLocationChooserDialog extends Dialog {
     }
 
     private void validateInstall() {
-        SdkToolsLocator locator = new SdkToolsLocator(mTextBox.getText());
+        SdkToolsLocator locator = new SdkToolsLocator(new File(mTextBox.getText()));
         SdkInstallStatus status = locator.isValidInstallation();
         if (status.isValid()) {
             mStatusLabel.setText("");

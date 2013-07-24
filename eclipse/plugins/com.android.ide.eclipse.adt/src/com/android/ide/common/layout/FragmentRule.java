@@ -30,7 +30,7 @@ public class FragmentRule extends BaseViewRule {
     @Override
     public void onCreate(@NonNull INode node, @NonNull INode parent,
             @NonNull InsertType insertType) {
-        // When dropping a fragment tag, ask the user which layout to include.
+        // When dropping a fragment tag, ask the user which class to use.
         if (insertType == InsertType.CREATE) { // NOT InsertType.CREATE_PREVIEW
             String fqcn = mRulesEngine.displayFragmentSourceInput();
             if (fqcn != null) {

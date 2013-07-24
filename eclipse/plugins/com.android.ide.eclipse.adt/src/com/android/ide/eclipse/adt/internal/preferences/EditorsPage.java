@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.preferences;
 
-import static com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder.ALPHABETICAL;
-import static com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder.LOGICAL;
-import static com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder.NO_SORTING;
+import static com.android.ide.common.xml.XmlAttributeSortOrder.ALPHABETICAL;
+import static com.android.ide.common.xml.XmlAttributeSortOrder.LOGICAL;
+import static com.android.ide.common.xml.XmlAttributeSortOrder.NO_SORTING;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;

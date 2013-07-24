@@ -232,7 +232,10 @@ public class LayoutWindowCoordinator implements IPartListener2 {
      *
      * @param editor the editor to sync
      */
-    private void sync(GraphicalEditorPart editor) {
+    private void sync(@Nullable GraphicalEditorPart editor) {
+        if (editor == null) {
+            return;
+        }
         if (mEditorMaximized) {
             editor.showStructureViews(true /*outline*/, true /*properties*/, true /*layout*/);
         } else if (mOutlineOpen) {

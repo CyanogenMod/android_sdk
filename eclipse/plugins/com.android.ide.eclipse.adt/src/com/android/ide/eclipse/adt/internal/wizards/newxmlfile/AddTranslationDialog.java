@@ -20,12 +20,14 @@ import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LocaleManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderPreviewManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceType;
@@ -383,7 +385,7 @@ public class AddTranslationDialog extends Dialog implements ControlListener, Sel
             sb.append("    <string name=\"");  //$NON-NLS-1$
             sb.append(key);
             sb.append("\">");                  //$NON-NLS-1$
-            sb.append(value);
+            sb.append(ValueXmlHelper.escapeResourceString(value));
             sb.append("</string>\n");          //$NON-NLS-1$
         }
         sb.append("\n</resources>");           //$NON-NLS-1$
@@ -403,6 +405,7 @@ public class AddTranslationDialog extends Dialog implements ControlListener, Sel
             IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
             IFolder folder = root.getFolder(parent.getFullPath());
             manager.getResourceFolder(folder);
+            RenderPreviewManager.bumpRevision();
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
         }

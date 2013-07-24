@@ -55,8 +55,8 @@ public class ${activityClass} extends Activity {
     private TextView mLoginStatusMessageView;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         setContentView(R.layout.${layoutName});
         <#if parentActivityClass != "">

@@ -38,7 +38,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
-import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
@@ -59,12 +59,37 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/** Produces matches for configurations */
+/**
+ * Produces matches for configurations
+ * <p>
+ * See algorithm described here:
+ * http://developer.android.com/guide/topics/resources/providing-resources.html
+ */
 public class ConfigurationMatcher {
+    private static final boolean PREFER_RECENT_RENDER_TARGETS = true;
+
     private final ConfigurationChooser mConfigChooser;
+    private final Configuration mConfiguration;
+    private final IFile mEditedFile;
+    private final ProjectResources mResources;
+    private final boolean mUpdateUi;
 
     ConfigurationMatcher(ConfigurationChooser chooser) {
+        this(chooser, chooser.getConfiguration(), chooser.getEditedFile(),
+                chooser.getResources(), true);
+    }
+
+    ConfigurationMatcher(
+            @NonNull ConfigurationChooser chooser,
+            @NonNull Configuration configuration,
+            @Nullable IFile editedFile,
+            @Nullable ProjectResources resources,
+            boolean updateUi) {
         mConfigChooser = chooser;
+        mConfiguration = configuration;
+        mEditedFile = editedFile;
+        mResources = resources;
+        mUpdateUi = updateUi;
     }
 
     // ---- Finding matching configurations ----
@@ -118,14 +143,12 @@ public class ConfigurationMatcher {
      * @return true if the current edited file is the best match in the project for the
      * given config.
      */
-    boolean isCurrentFileBestMatchFor(FolderConfiguration config) {
-        ProjectResources resources = mConfigChooser.getResources();
-        IFile editedFile = mConfigChooser.getEditedFile();
-        ResourceFile match = resources.getMatchingFile(editedFile.getName(),
-                ResourceFolderType.LAYOUT, config);
+    public boolean isCurrentFileBestMatchFor(FolderConfiguration config) {
+        ResourceFile match = mResources.getMatchingFile(mEditedFile.getName(),
+                ResourceType.LAYOUT, config);
 
         if (match != null) {
-            return match.getFile().equals(editedFile);
+            return match.getFile().equals(mEditedFile);
         } else {
             // if we stop here that means the current file is not even a match!
             AdtPlugin.log(IStatus.ERROR, "Current file is not a match for the given config.");
@@ -149,9 +172,8 @@ public class ConfigurationMatcher {
         // check the device config (ie sans locale)
         boolean needConfigChange = true; // if still true, we need to find another config.
         boolean currentConfigIsCompatible = false;
-        Configuration configuration = mConfigChooser.getConfiguration();
-        State selectedState = configuration.getDeviceState();
-        FolderConfiguration editedConfig = configuration.getEditedConfig();
+        State selectedState = mConfiguration.getDeviceState();
+        FolderConfiguration editedConfig = mConfiguration.getEditedConfig();
         if (selectedState != null) {
             FolderConfiguration currentConfig = DeviceConfigHelper.getFolderConfig(selectedState);
             if (currentConfig != null && editedConfig.isMatchFor(currentConfig)) {
@@ -172,7 +194,7 @@ public class ConfigurationMatcher {
             // first look in the current device.
             State matchState = null;
             int localeIndex = -1;
-            Device device = configuration.getDevice();
+            Device device = mConfiguration.getDevice();
             if (device != null) {
                 mainloop: for (State state : device.getAllStates()) {
                     testConfig.set(DeviceConfigHelper.getFolderConfig(state));
@@ -196,12 +218,14 @@ public class ConfigurationMatcher {
             }
 
             if (matchState != null) {
-                configuration.setDeviceState(matchState, true);
+                mConfiguration.setDeviceState(matchState, true);
                 Locale locale = localeList.get(localeIndex);
-                configuration.setLocale(locale, true);
-                mConfigChooser.selectDeviceState(matchState);
-                mConfigChooser.selectLocale(locale);
-                configuration.syncFolderConfig();
+                mConfiguration.setLocale(locale, true);
+                if (mUpdateUi) {
+                    mConfigChooser.selectDeviceState(matchState);
+                    mConfigChooser.selectLocale(locale);
+                }
+                mConfiguration.syncFolderConfig();
             } else {
                 // no match in current device with any state/locale
                 // attempt to find another device that can display this
@@ -225,9 +249,8 @@ public class ConfigurationMatcher {
     void findAndSetCompatibleConfig(boolean favorCurrentConfig) {
         List<Locale> localeList = mConfigChooser.getLocaleList();
         List<Device> deviceList = mConfigChooser.getDeviceList();
-        Configuration configuration = mConfigChooser.getConfiguration();
-        FolderConfiguration editedConfig = configuration.getEditedConfig();
-        FolderConfiguration currentConfig = configuration.getFullConfig();
+        FolderConfiguration editedConfig = mConfiguration.getEditedConfig();
+        FolderConfiguration currentConfig = mConfiguration.getFullConfig();
 
         // list of compatible device/state/locale
         List<ConfigMatch> anyMatches = new ArrayList<ConfigMatch>();
@@ -316,7 +339,7 @@ public class ConfigurationMatcher {
                 }
 
                 // just display the warning
-                AdtPlugin.printErrorToConsole(mConfigChooser.getProject(),
+                AdtPlugin.printErrorToConsole(mEditedFile.getProject(),
                         String.format(
                                 "'%1$s' is not a best match for any device/locale combination.",
                                 editedConfig.toDisplayString()),
@@ -326,21 +349,23 @@ public class ConfigurationMatcher {
             } else if (anyMatches.size() > 0) {
                 // select the best device anyway.
                 ConfigMatch match = selectConfigMatch(anyMatches);
-                configuration.setDevice(match.device, true);
-                configuration.setDeviceState(match.state, true);
-                configuration.setLocale(localeList.get(match.bundle.localeIndex), true);
-                configuration.setUiMode(UiMode.getByIndex(match.bundle.dockModeIndex), true);
-                configuration.setNightMode(NightMode.getByIndex(match.bundle.nightModeIndex),
+                mConfiguration.setDevice(match.device, true);
+                mConfiguration.setDeviceState(match.state, true);
+                mConfiguration.setLocale(localeList.get(match.bundle.localeIndex), true);
+                mConfiguration.setUiMode(UiMode.getByIndex(match.bundle.dockModeIndex), true);
+                mConfiguration.setNightMode(NightMode.getByIndex(match.bundle.nightModeIndex),
                         true);
 
-                mConfigChooser.selectDevice(configuration.getDevice());
-                mConfigChooser.selectDeviceState(configuration.getDeviceState());
-                mConfigChooser.selectLocale(configuration.getLocale());
+                if (mUpdateUi) {
+                    mConfigChooser.selectDevice(mConfiguration.getDevice());
+                    mConfigChooser.selectDeviceState(mConfiguration.getDeviceState());
+                    mConfigChooser.selectLocale(mConfiguration.getLocale());
+                }
 
-                configuration.syncFolderConfig();
+                mConfiguration.syncFolderConfig();
 
                 // TODO: display a better warning!
-                AdtPlugin.printErrorToConsole(mConfigChooser.getProject(),
+                AdtPlugin.printErrorToConsole(mEditedFile.getProject(),
                         String.format(
                                 "'%1$s' is not a best match for any device/locale combination.",
                                 editedConfig.toDisplayString()),
@@ -357,17 +382,19 @@ public class ConfigurationMatcher {
             }
         } else {
             ConfigMatch match = selectConfigMatch(bestMatches);
-            configuration.setDevice(match.device, true);
-            configuration.setDeviceState(match.state, true);
-            configuration.setLocale(localeList.get(match.bundle.localeIndex), true);
-            configuration.setUiMode(UiMode.getByIndex(match.bundle.dockModeIndex), true);
-            configuration.setNightMode(NightMode.getByIndex(match.bundle.nightModeIndex), true);
+            mConfiguration.setDevice(match.device, true);
+            mConfiguration.setDeviceState(match.state, true);
+            mConfiguration.setLocale(localeList.get(match.bundle.localeIndex), true);
+            mConfiguration.setUiMode(UiMode.getByIndex(match.bundle.dockModeIndex), true);
+            mConfiguration.setNightMode(NightMode.getByIndex(match.bundle.nightModeIndex), true);
 
-            configuration.syncFolderConfig();
+            mConfiguration.syncFolderConfig();
 
-            mConfigChooser.selectDevice(configuration.getDevice());
-            mConfigChooser.selectDeviceState(configuration.getDeviceState());
-            mConfigChooser.selectLocale(configuration.getLocale());
+            if (mUpdateUi) {
+                mConfigChooser.selectDevice(mConfiguration.getDevice());
+                mConfigChooser.selectDeviceState(mConfiguration.getDeviceState());
+                mConfigChooser.selectLocale(mConfiguration.getLocale());
+            }
         }
     }
 
@@ -455,15 +482,24 @@ public class ConfigurationMatcher {
 
     private ConfigMatch selectConfigMatch(List<ConfigMatch> matches) {
         // API 11-13: look for a x-large device
-        int apiLevel = mConfigChooser.getProjectTarget().getVersion().getApiLevel();
-        if (apiLevel >= 11 && apiLevel < 14) {
-            // TODO: Maybe check the compatible-screen tag in the manifest to figure out
-            // what kind of device should be used for display.
-            Collections.sort(matches, new TabletConfigComparator());
-        } else {
-            // lets look for a high density device
-            Collections.sort(matches, new PhoneConfigComparator());
+        Comparator<ConfigMatch> comparator = null;
+        Sdk sdk = Sdk.getCurrent();
+        if (sdk != null) {
+            IAndroidTarget projectTarget = sdk.getTarget(mEditedFile.getProject());
+            if (projectTarget != null) {
+                int apiLevel = projectTarget.getVersion().getApiLevel();
+                if (apiLevel >= 11 && apiLevel < 14) {
+                    // TODO: Maybe check the compatible-screen tag in the manifest to figure out
+                    // what kind of device should be used for display.
+                    comparator = new TabletConfigComparator();
+                }
+            }
         }
+        if (comparator == null) {
+            // lets look for a high density device
+            comparator = new PhoneConfigComparator();
+        }
+        Collections.sort(matches, comparator);
 
         // Look at the currently active editor to see if it's a layout editor, and if so,
         // look up its configuration and if the configuration is in our match list,
@@ -473,7 +509,7 @@ public class ConfigurationMatcher {
         LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(activeEditor);
         if (delegate != null
                 // (Only do this when the two files are in the same project)
-                && delegate.getEditor().getProject() == mConfigChooser.getProject()) {
+                && delegate.getEditor().getProject() == mEditedFile.getProject()) {
             FolderConfiguration configuration = delegate.getGraphicalEditor().getConfiguration();
             if (configuration != null) {
                 for (ConfigMatch match : matches) {
@@ -490,7 +526,16 @@ public class ConfigurationMatcher {
 
     /** Return the default render target to use, or null if no strong preference */
     @Nullable
-    static IAndroidTarget findDefaultRenderTarget(@NonNull IProject project) {
+    static IAndroidTarget findDefaultRenderTarget(ConfigurationChooser chooser) {
+        if (PREFER_RECENT_RENDER_TARGETS) {
+            // Use the most recent target
+            List<IAndroidTarget> targetList = chooser.getTargetList();
+            if (!targetList.isEmpty()) {
+                return targetList.get(targetList.size() - 1);
+            }
+        }
+
+        IProject project = chooser.getProject();
         // Default to layoutlib version 5
         Sdk current = Sdk.getCurrent();
         if (current != null) {
@@ -636,9 +681,13 @@ public class ConfigurationMatcher {
         }
 
         // From the resources, look for a matching file
-        String name = chooser.getEditedFile().getName();
+        IFile editedFile = chooser.getEditedFile();
+        if (editedFile == null) {
+            return null;
+        }
+        String name = editedFile.getName();
         FolderConfiguration config = chooser.getConfiguration().getFullConfig();
-        ResourceFile match = resources.getMatchingFile(name, ResourceFolderType.LAYOUT, config);
+        ResourceFile match = resources.getMatchingFile(name, ResourceType.LAYOUT, config);
 
         if (match != null) {
             // In Eclipse, the match's file is always an instance of IFileWrapper

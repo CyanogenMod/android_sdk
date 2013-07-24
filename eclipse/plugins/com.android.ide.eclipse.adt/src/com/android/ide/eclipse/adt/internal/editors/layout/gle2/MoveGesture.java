@@ -383,7 +383,10 @@ public class MoveGesture extends DropGesture {
                     }
 
                     // Make sure we aren't removing the same nodes that are being added
-                    assert !added.contains(child);
+                    // No, that can happen when canceling out of a drop handler such as
+                    // when dropping an included layout, then canceling out of the
+                    // resource chooser.
+                    //assert !added.contains(child);
                 }
             }
         };
@@ -829,9 +832,7 @@ public class MoveGesture extends DropGesture {
             return;
         }
 
-        String rootFqcn = elements[0].getFqcn();
-
-        mCanvas.createDocumentRoot(rootFqcn);
+        mCanvas.createDocumentRoot(elements[0]);
     }
 
     /**

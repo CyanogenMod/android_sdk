@@ -40,6 +40,9 @@ public class CanvasTransform {
     /** Canvas image size (original, before zoom), in pixels. */
     private int mImgSize;
 
+    /** Full size being scrolled (after zoom), in pixels */
+    private int mFullSize;;
+
     /** Client size, in pixels. */
     private int mClientSize;
 
@@ -83,6 +86,11 @@ public class CanvasTransform {
         }
     }
 
+    /** Recomputes the scrollbar and view port settings */
+    public void refresh() {
+        resizeScrollbar();
+    }
+
     /**
      * Returns current scaling factor.
      *
@@ -110,14 +118,17 @@ public class CanvasTransform {
         return (int) (mImgSize * mScale);
     }
 
-    /** Changes the size of the canvas image and the client size. Recomputes scrollbars. */
-    public void setSize(int imgSize, int clientSize) {
+    /**
+     * Changes the size of the canvas image and the client size. Recomputes
+     * scrollbars.
+     *
+     * @param imgSize the size of the image being scaled
+     * @param fullSize the size of the full view area being scrolled
+     * @param clientSize the size of the view port
+     */
+    public void setSize(int imgSize, int fullSize, int clientSize) {
         mImgSize = imgSize;
-        setClientSize(clientSize);
-    }
-
-    /** Changes the size of the client size. Recomputes scrollbars. */
-    public void setClientSize(int clientSize) {
+        mFullSize = fullSize;
         mClientSize = clientSize;
         mScrollbar.setPageIncrement(clientSize);
         resizeScrollbar();
@@ -125,7 +136,7 @@ public class CanvasTransform {
 
     private void resizeScrollbar() {
         // scaled image size
-        int sx = (int) (mImgSize * mScale);
+        int sx = (int) (mScale * mFullSize);
 
         // Adjust margin such that for zoomed out views
         // we don't waste space (unless the viewport is
@@ -148,6 +159,11 @@ public class CanvasTransform {
             }
         } else {
             mMargin = DEFAULT_MARGIN;
+        }
+
+        if (mCanvas.getPreviewManager().hasPreviews()) {
+            // Make more room for the previews
+            mMargin = 2;
         }
 
         // actual client area is always reduced by the margins

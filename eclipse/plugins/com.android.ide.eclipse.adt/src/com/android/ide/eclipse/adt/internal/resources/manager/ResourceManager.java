@@ -49,7 +49,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -151,14 +150,14 @@ public final class ResourceManager {
     /**
      * Returns the resources of a project.
      * @param project The project
-     * @return a ProjectResources object or null if none was found.
+     * @return a ProjectResources object
      */
     public ProjectResources getProjectResources(IProject project) {
         synchronized (mMap) {
             ProjectResources resources = mMap.get(project);
 
             if (resources == null) {
-                resources = new ProjectResources(project);
+                resources = ProjectResources.create(project);
                 mMap.put(project, resources);
             }
 
@@ -253,7 +252,7 @@ public final class ResourceManager {
 
                             // if it doesn't exist, we create it.
                             if (resources == null) {
-                                resources = new ProjectResources(project);
+                                resources = ProjectResources.create(project);
                                 mMap.put(project, resources);
                             }
                         }
@@ -422,6 +421,15 @@ public final class ResourceManager {
             for (IResourceDelta delta : projectDeltas) {
                 if (delta.getResource() instanceof IProject) {
                     IProject project = (IProject) delta.getResource();
+
+                    try {
+                        if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
+                            continue;
+                        }
+                    } catch (CoreException e) {
+                        // only happens if the project is closed or doesn't exist.
+                    }
+
                     IdeScanningContext context =
                             new IdeScanningContext(getProjectResources(project), project, true);
 
@@ -482,16 +490,11 @@ public final class ResourceManager {
 
         FolderWrapper frameworkRes = new FolderWrapper(osResourcesPath);
         if (frameworkRes.exists()) {
-            FrameworkResources resources = new FrameworkResources();
+            FrameworkResources resources = new FrameworkResources(frameworkRes);
 
-            try {
-                resources.loadResources(frameworkRes);
-                resources.loadPublicResources(frameworkRes, AdtPlugin.getDefault());
-                return resources;
-            } catch (IOException e) {
-                // since we test that folders are folders, and files are files, this shouldn't
-                // happen. We can ignore it.
-            }
+            resources.loadResources();
+            resources.loadPublicResources(AdtPlugin.getDefault());
+            return resources;
         }
 
         return null;
@@ -503,60 +506,11 @@ public final class ResourceManager {
      */
     private void createProject(IProject project) {
         if (project.isOpen()) {
-            try {
-                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e1) {
-                // can't check the nature of the project? ignore it.
-                return;
-            }
-
-            IFolder resourceFolder = project.getFolder(SdkConstants.FD_RESOURCES);
-
-            ProjectResources projectResources;
             synchronized (mMap) {
-                projectResources = mMap.get(project);
+                ProjectResources projectResources = mMap.get(project);
                 if (projectResources == null) {
-                    projectResources = new ProjectResources(project);
+                    projectResources = ProjectResources.create(project);
                     mMap.put(project, projectResources);
-                }
-            }
-            IdeScanningContext context = new IdeScanningContext(projectResources, project, true);
-
-            if (resourceFolder != null && resourceFolder.exists()) {
-                try {
-                    IResource[] resources = resourceFolder.members();
-
-                    for (IResource res : resources) {
-                        if (res.getType() == IResource.FOLDER) {
-                            IFolder folder = (IFolder)res;
-                            ResourceFolder resFolder = projectResources.processFolder(
-                                    new IFolderWrapper(folder));
-
-                            if (resFolder != null) {
-                                // now we process the content of the folder
-                                IResource[] files = folder.members();
-
-                                for (IResource fileRes : files) {
-                                    if (fileRes.getType() == IResource.FILE) {
-                                        IFile file = (IFile)fileRes;
-
-                                        context.startScanning(file);
-
-                                        resFolder.processFile(new IFileWrapper(file),
-                                                ResourceHelper.getResourceDeltaKind(
-                                                        IResourceDelta.ADDED), context);
-
-                                        context.finishScanning(file);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (CoreException e) {
-                    // This happens if the project is closed or if the folder doesn't exist.
-                    // Since we already test for that, we can ignore this exception.
                 }
             }
         }

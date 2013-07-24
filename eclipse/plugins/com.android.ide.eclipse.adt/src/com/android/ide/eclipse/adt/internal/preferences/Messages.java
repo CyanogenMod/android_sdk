@@ -18,7 +18,15 @@ public class Messages extends NLS {
 
     public static String BuildPreferencePage_Custom_Keystore;
 
+    public static String BuildPreferencePage_Custom_Certificate_Fingerprint_MD5;
+
+    public static String BuildPreferencePage_Custom_Certificate_Fingerprint_SHA1;
+
     public static String BuildPreferencePage_Default_KeyStore;
+
+    public static String BuildPreferencePage_Default_Certificate_Fingerprint_MD5;
+
+    public static String BuildPreferencePage_Default_Certificate_Fingerprint_SHA1;
 
     public static String BuildPreferencePage_Normal;
 

@@ -15,15 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_BOTTOM;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_HORIZ;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_VERT;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_FILL_HORIZ;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_FILL_VERT;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_LEFT;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_TOP;
-import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_BACKGROUND;
 import static com.android.SdkConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.SdkConstants.ATTR_LAYOUT_ABOVE;
@@ -58,10 +50,16 @@ import static com.android.SdkConstants.VALUE_N_DP;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.SdkConstants.VALUE_VERTICAL;
 import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_BOTTOM;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_HORIZ;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_VERT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_FILL_HORIZ;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_FILL_VERT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_LEFT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_TOP;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
 
-
-import com.android.SdkConstants;
-import static com.android.SdkConstants.ANDROID_URI;
 import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;

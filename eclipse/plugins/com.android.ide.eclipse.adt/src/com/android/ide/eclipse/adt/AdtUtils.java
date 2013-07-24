@@ -18,15 +18,20 @@ package com.android.ide.eclipse.adt;
 
 import static com.android.SdkConstants.TOOLS_PREFIX;
 import static com.android.SdkConstants.TOOLS_URI;
+import static org.eclipse.ui.IWorkbenchPage.MATCH_INPUT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.PkgProps;
@@ -34,6 +39,10 @@ import com.android.utils.XmlUtils;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -47,6 +56,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
@@ -68,10 +78,16 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
+import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -80,6 +96,8 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -345,6 +363,47 @@ public class AdtUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Looks through the open editors and returns the editors that have the
+     * given file as input.
+     *
+     * @param file the file to search for
+     * @param restore whether editors should be restored (if they have an open
+     *            tab, but the editor hasn't been restored since the most recent
+     *            IDE start yet
+     * @return a collection of editors
+     */
+    @NonNull
+    public static Collection<IEditorPart> findEditorsFor(@NonNull IFile file, boolean restore) {
+        FileEditorInput input = new FileEditorInput(file);
+        List<IEditorPart> result = null;
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbenchWindow[] windows = workbench.getWorkbenchWindows();
+        for (IWorkbenchWindow window : windows) {
+            IWorkbenchPage[] pages = window.getPages();
+            for (IWorkbenchPage page : pages) {
+                IEditorReference[] editors = page.findEditors(input, null,  MATCH_INPUT);
+                if (editors != null) {
+                    for (IEditorReference reference : editors) {
+                        IEditorPart editor = reference.getEditor(restore);
+                        if (editor != null) {
+                            if (result == null) {
+                                result = new ArrayList<IEditorPart>();
+                            }
+                            result.add(editor);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (result == null) {
+            return Collections.emptyList();
+        }
+
+        return result;
     }
 
     /**
@@ -651,6 +710,23 @@ public class AdtUtils {
     }
 
     /**
+     * Returns the XML editor for the given editor part
+     *
+     * @param part the editor part to look up the editor for
+     * @return the editor or null if this part is not an XML editor
+     */
+    @Nullable
+    public static AndroidXmlEditor getXmlEditor(@NonNull IEditorPart part) {
+        if (part instanceof AndroidXmlEditor) {
+            return (AndroidXmlEditor) part;
+        } else if (part instanceof GraphicalEditorPart) {
+            ((GraphicalEditorPart) part).getEditorDelegate().getEditor();
+        }
+
+        return null;
+    }
+
+    /**
      * Sets the given tools: attribute in the given XML editor document, adding
      * the tools name space declaration if necessary, formatting the affected
      * document region, and optionally comma-appending to an existing value and
@@ -678,11 +754,11 @@ public class AdtUtils {
         editor.wrapUndoEditXmlModel(description, new Runnable() {
             @Override
             public void run() {
-                String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null);
+                String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI, null, true);
                 if (prefix == null) {
                     // Add in new prefix...
                     prefix = XmlUtils.lookupNamespacePrefix(element,
-                            TOOLS_URI, TOOLS_PREFIX);
+                            TOOLS_URI, TOOLS_PREFIX, true /*create*/);
                     if (value != null) {
                         // ...and ensure that the header is formatted such that
                         // the XML namespace declaration is placed in the right
@@ -740,41 +816,6 @@ public class AdtUtils {
     }
 
     /**
-     * Returns the applicable build code (for
-     * {@code android.os.Build.VERSION_CODES}) for the corresponding API level,
-     * or null if it's unknown.
-     *
-     * @param api the API level to look up a version code for
-     * @return the corresponding build code field name, or null
-     */
-    @Nullable
-    public static String getBuildCodes(int api) {
-        // See http://developer.android.com/reference/android/os/Build.VERSION_CODES.html
-        switch (api) {
-            case 1:  return "BASE"; //$NON-NLS-1$
-            case 2:  return "BASE_1_1"; //$NON-NLS-1$
-            case 3:  return "CUPCAKE"; //$NON-NLS-1$
-            case 4:  return "DONUT"; //$NON-NLS-1$
-            case 5:  return "ECLAIR"; //$NON-NLS-1$
-            case 6:  return "ECLAIR_0_1"; //$NON-NLS-1$
-            case 7:  return "ECLAIR_MR1"; //$NON-NLS-1$
-            case 8:  return "FROYO"; //$NON-NLS-1$
-            case 9:  return "GINGERBREAD"; //$NON-NLS-1$
-            case 10: return "GINGERBREAD_MR1"; //$NON-NLS-1$
-            case 11: return "HONEYCOMB"; //$NON-NLS-1$
-            case 12: return "HONEYCOMB_MR1"; //$NON-NLS-1$
-            case 13: return "HONEYCOMB_MR2"; //$NON-NLS-1$
-            case 14: return "ICE_CREAM_SANDWICH"; //$NON-NLS-1$
-            case 15: return "ICE_CREAM_SANDWICH_MR1"; //$NON-NLS-1$
-            case 16: return "JELLY_BEAN"; //$NON-NLS-1$
-            // If you add more versions here, also update #getAndroidName and
-            // LintConstants#HIGHEST_KNOWN_API
-        }
-
-        return null;
-    }
-
-    /**
      * Returns a string label for the given target, of the form
      * "API 16: Android 4.1 (Jelly Bean)".
      *
@@ -802,6 +843,97 @@ public class AdtUtils {
     }
 
     /**
+     * Sets the given tools: attribute in the given XML editor document, adding
+     * the tools name space declaration if necessary, and optionally
+     * comma-appending to an existing value.
+     *
+     * @param file the file associated with the element
+     * @param element the associated element
+     * @param description the description of the attribute (shown in the undo
+     *            event)
+     * @param name the name of the attribute
+     * @param value the attribute value
+     * @param appendValue if true, add this value as a comma separated value to
+     *            the existing attribute value, if any
+     */
+    public static void setToolsAttribute(
+            @NonNull final IFile file,
+            @NonNull final Element element,
+            @NonNull final String description,
+            @NonNull final String name,
+            @Nullable final String value,
+            final boolean appendValue) {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        if (modelManager == null) {
+            return;
+        }
+
+        try {
+            IStructuredModel model = null;
+            if (model == null) {
+                model = modelManager.getModelForEdit(file);
+            }
+            if (model != null) {
+                try {
+                    model.aboutToChangeModel();
+                    if (model instanceof IDOMModel) {
+                        IDOMModel domModel = (IDOMModel) model;
+                        Document doc = domModel.getDocument();
+                        if (doc != null && element.getOwnerDocument() == doc) {
+                            String prefix = XmlUtils.lookupNamespacePrefix(element, TOOLS_URI,
+                                    null, true);
+                            if (prefix == null) {
+                                // Add in new prefix...
+                                prefix = XmlUtils.lookupNamespacePrefix(element,
+                                        TOOLS_URI, TOOLS_PREFIX, true);
+                            }
+
+                            String v = value;
+                            if (appendValue && v != null) {
+                                String prev = element.getAttributeNS(TOOLS_URI, name);
+                                if (prev.length() > 0) {
+                                    v = prev + ',' + value;
+                                }
+                            }
+
+                            // Use the non-namespace form of set attribute since we can't
+                            // reference the namespace until the model has been reloaded
+                            if (v != null) {
+                                element.setAttribute(prefix + ':' + name, v);
+                            } else {
+                                element.removeAttribute(prefix + ':' + name);
+                            }
+                        }
+                    }
+                } finally {
+                    model.changedModel();
+                    String updated = model.getStructuredDocument().get();
+                    model.releaseFromEdit();
+                    model.save(file);
+
+                    // Must also force a save on disk since the above model.save(file) often
+                    // (always?) has no effect.
+                    ITextFileBufferManager manager = FileBuffers.getTextFileBufferManager();
+                    NullProgressMonitor monitor = new NullProgressMonitor();
+                    IPath path = file.getFullPath();
+                    manager.connect(path, LocationKind.IFILE, monitor);
+                    try {
+                        ITextFileBuffer buffer = manager.getTextFileBuffer(path,
+                                LocationKind.IFILE);
+                        IDocument currentDocument = buffer.getDocument();
+                        currentDocument.set(updated);
+                        buffer.commit(monitor, true);
+                    } finally {
+                        manager.disconnect(path, LocationKind.IFILE,  monitor);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            AdtPlugin.log(e, null);
+        }
+    }
+
+    /**
      * Returns the Android version and code name of the given API level
      *
      * @param api the api level
@@ -826,8 +958,9 @@ public class AdtUtils {
             case 14: return "API 14: Android 4.0 (IceCreamSandwich)";
             case 15: return "API 15: Android 4.0.3 (IceCreamSandwich)";
             case 16: return "API 16: Android 4.1 (Jelly Bean)";
-            // If you add more versions here, also update #getBuildCodes and
-            // LintConstants#HIGHEST_KNOWN_API
+            case 17: return "API 17: Android 4.2 (Jelly Bean)";
+            // If you add more versions here, also update LintUtils#getBuildCodes and
+            // SdkConstants#HIGHEST_KNOWN_API
 
             default: {
                 // Consult SDK manager to see if we know any more (later) names,
@@ -857,7 +990,7 @@ public class AdtUtils {
      * @return the highest known API number
      */
     public static int getHighestKnownApiLevel() {
-        return SdkConstants.HIGHEST_KNOWN_API;
+        return SdkVersionInfo.HIGHEST_KNOWN_API;
     }
 
     /**
@@ -1236,6 +1369,62 @@ public class AdtUtils {
     }
 
     /**
+     * Returns all resource variations for the given file
+     *
+     * @param file resource file, which should be an XML file in one of the
+     *            various resource folders, e.g. res/layout, res/values-xlarge, etc.
+     * @param includeSelf if true, include the file itself in the list,
+     *            otherwise exclude it
+     * @return a list of all the resource variations
+     */
+    public static List<IFile> getResourceVariations(@Nullable IFile file, boolean includeSelf) {
+        if (file == null) {
+            return Collections.emptyList();
+        }
+
+        // Compute the set of layout files defining this layout resource
+        List<IFile> variations = new ArrayList<IFile>();
+        String name = file.getName();
+        IContainer parent = file.getParent();
+        if (parent != null) {
+            IContainer resFolder = parent.getParent();
+            if (resFolder != null) {
+                String parentName = parent.getName();
+                String prefix = parentName;
+                int qualifiers = prefix.indexOf('-');
+
+                if (qualifiers != -1) {
+                    parentName = prefix.substring(0, qualifiers);
+                    prefix = prefix.substring(0, qualifiers + 1);
+                } else {
+                    prefix = prefix + '-';
+                }
+                try {
+                    for (IResource resource : resFolder.members()) {
+                        String n = resource.getName();
+                        if ((n.startsWith(prefix) || n.equals(parentName))
+                                && resource instanceof IContainer) {
+                            IContainer layoutFolder = (IContainer) resource;
+                            IResource r = layoutFolder.findMember(name);
+                            if (r instanceof IFile) {
+                                IFile variation = (IFile) r;
+                                if (!includeSelf && file.equals(variation)) {
+                                    continue;
+                                }
+                                variations.add(variation);
+                            }
+                        }
+                    }
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+        }
+
+        return variations;
+    }
+
+    /**
      * Returns whether the current thread is the UI thread
      *
      * @return true if the current thread is the UI thread
@@ -1286,5 +1475,109 @@ public class AdtUtils {
         }
 
         return s;
+    }
+
+    /**
+     * Looks up the {@link ResourceFolderType} corresponding to a given
+     * {@link ResourceType}: the folder where those resources can be found.
+     * <p>
+     * Note that {@link ResourceType#ID} is a special case: it can not just
+     * be defined in {@link ResourceFolderType#VALUES}, but it can also be
+     * defined inline via {@code @+id} in {@link ResourceFolderType#LAYOUT} and
+     * {@link ResourceFolderType#MENU} folders.
+     *
+     * @param type the resource type
+     * @return the corresponding resource folder type
+     */
+    @NonNull
+    public static ResourceFolderType getFolderTypeFor(@NonNull ResourceType type) {
+        switch (type) {
+            case ANIM:
+                return ResourceFolderType.ANIM;
+            case ANIMATOR:
+                return ResourceFolderType.ANIMATOR;
+            case ARRAY:
+                return ResourceFolderType.VALUES;
+            case COLOR:
+                return ResourceFolderType.COLOR;
+            case DRAWABLE:
+                return ResourceFolderType.DRAWABLE;
+            case INTERPOLATOR:
+                return ResourceFolderType.INTERPOLATOR;
+            case LAYOUT:
+                return ResourceFolderType.LAYOUT;
+            case MENU:
+                return ResourceFolderType.MENU;
+            case MIPMAP:
+                return ResourceFolderType.MIPMAP;
+            case RAW:
+                return ResourceFolderType.RAW;
+            case XML:
+                return ResourceFolderType.XML;
+            case ATTR:
+            case BOOL:
+            case DECLARE_STYLEABLE:
+            case DIMEN:
+            case FRACTION:
+            case ID:
+            case INTEGER:
+            case PLURALS:
+            case PUBLIC:
+            case STRING:
+            case STYLE:
+            case STYLEABLE:
+                return ResourceFolderType.VALUES;
+            default:
+                assert false : type;
+            return ResourceFolderType.VALUES;
+
+        }
+    }
+
+    /**
+     * Looks up the {@link ResourceType} defined in a given {@link ResourceFolderType}.
+     * <p>
+     * Note that for {@link ResourceFolderType#VALUES} there are many, many
+     * different types of resources that can be defined, so this method returns
+     * {@code null} for that scenario.
+     * <p>
+     * Note also that {@link ResourceType#ID} is a special case: it can not just
+     * be defined in {@link ResourceFolderType#VALUES}, but it can also be
+     * defined inline via {@code @+id} in {@link ResourceFolderType#LAYOUT} and
+     * {@link ResourceFolderType#MENU} folders.
+     *
+     * @param folderType the resource folder type
+     * @return the corresponding resource type, or null if {@code folderType} is
+     *         {@link ResourceFolderType#VALUES}
+     */
+    @Nullable
+    public static ResourceType getResourceTypeFor(@NonNull ResourceFolderType folderType) {
+        switch (folderType) {
+            case ANIM:
+                return ResourceType.ANIM;
+            case ANIMATOR:
+                return ResourceType.ANIMATOR;
+            case COLOR:
+                return ResourceType.COLOR;
+            case DRAWABLE:
+                return ResourceType.DRAWABLE;
+            case INTERPOLATOR:
+                return ResourceType.INTERPOLATOR;
+            case LAYOUT:
+                return ResourceType.LAYOUT;
+            case MENU:
+                return ResourceType.MENU;
+            case MIPMAP:
+                return ResourceType.MIPMAP;
+            case RAW:
+                return ResourceType.RAW;
+            case XML:
+                return ResourceType.XML;
+            case VALUES:
+                return null;
+            default:
+                assert false : folderType;
+                return null;
+        }
     }
 }

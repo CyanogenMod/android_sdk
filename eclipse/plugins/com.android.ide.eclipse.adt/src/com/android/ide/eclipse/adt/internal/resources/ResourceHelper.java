@@ -34,12 +34,14 @@ import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceDeltaKind;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
+import com.android.ide.common.resources.configuration.LayoutDirectionQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
@@ -127,6 +129,7 @@ public class ResourceHelper {
             sIconMap.put(NetworkCodeQualifier.class,        factory.getIcon("mnc")); //$NON-NLS-1$
             sIconMap.put(LanguageQualifier.class,           factory.getIcon("language")); //$NON-NLS-1$
             sIconMap.put(RegionQualifier.class,             factory.getIcon("region")); //$NON-NLS-1$
+            sIconMap.put(LayoutDirectionQualifier.class,    factory.getIcon("bidi")); //$NON-NLS-1$
             sIconMap.put(ScreenSizeQualifier.class,         factory.getIcon("size")); //$NON-NLS-1$
             sIconMap.put(ScreenRatioQualifier.class,        factory.getIcon("ratio")); //$NON-NLS-1$
             sIconMap.put(ScreenOrientationQualifier.class,  factory.getIcon("orientation")); //$NON-NLS-1$
@@ -175,39 +178,6 @@ public class ResourceHelper {
         }
 
         return null;
-    }
-
-    /**
-     * Return the resource type of the given url, and the resource name
-     *
-     * @param url the resource url to be parsed
-     * @return a pair of the resource type and the resource name
-     */
-    public static Pair<ResourceType,String> parseResource(String url) {
-        if (!url.startsWith(PREFIX_RESOURCE_REF)) {
-            return null;
-        }
-        int typeEnd = url.indexOf('/', 1);
-        if (typeEnd == -1) {
-            return null;
-        }
-        int nameBegin = typeEnd + 1;
-
-        // Skip @ and @+
-        int typeBegin = url.startsWith("@+") ? 2 : 1; //$NON-NLS-1$
-
-        int colon = url.lastIndexOf(':', typeEnd);
-        if (colon != -1) {
-            typeBegin = colon + 1;
-        }
-        String typeName = url.substring(typeBegin, typeEnd);
-        ResourceType type = ResourceType.getEnum(typeName);
-        if (type == null) {
-            return null;
-        }
-        String name = url.substring(nameBegin);
-
-        return Pair.of(type, name);
     }
 
     /**
@@ -279,7 +249,7 @@ public class ResourceHelper {
             return false;
         }
 
-        Pair<ResourceType,String> parsed = parseResource(resource);
+        Pair<ResourceType,String> parsed = ResourceRepository.parseResource(resource);
         if (parsed != null) {
             ResourceType type = parsed.getFirst();
             String name = parsed.getSecond();

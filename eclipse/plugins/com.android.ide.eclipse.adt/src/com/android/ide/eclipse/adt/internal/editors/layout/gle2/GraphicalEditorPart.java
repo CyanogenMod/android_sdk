@@ -30,8 +30,10 @@ import static com.android.SdkConstants.STRING_PREFIX;
 import static com.android.SdkConstants.VALUE_FILL_PARENT;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.AdtUtils.isUiThread;
-import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser.NAME_CONFIG_STATE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_DEVICE_STATE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_FOLDER;
+import static com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration.CFG_TARGET;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_EAST;
 import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.DOCK_WEST;
@@ -41,7 +43,6 @@ import static org.eclipse.wb.core.controls.flyout.IFlyoutPreferences.STATE_OPEN;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
@@ -71,6 +72,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationClient;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationDescription;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationMatcher;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
@@ -643,7 +645,7 @@ public class GraphicalEditorPart extends EditorPart
     // ---- Implements ConfigurationClient ----
     @Override
     public void aboutToChange(int flags) {
-        if ((flags & CHANGED_RENDER_TARGET) != 0) {
+        if ((flags & CFG_TARGET) != 0) {
             IAndroidTarget oldTarget = mConfigChooser.getConfiguration().getTarget();
             preRenderingTargetChangeCleanUp(oldTarget);
         }
@@ -671,8 +673,12 @@ public class GraphicalEditorPart extends EditorPart
         if (mEditorDelegate.getEditor().isCreatingPages()) {
             recomputeLayout();
         } else {
+            boolean affectsFileSelection = (flags & Configuration.MASK_FILE_ATTRS) != 0;
+            IFile best = null;
             // get the resources of the file's project.
-            IFile best = ConfigurationMatcher.getBestFileMatch(mConfigChooser);
+            if (affectsFileSelection) {
+                best = ConfigurationMatcher.getBestFileMatch(mConfigChooser);
+            }
             if (best != null) {
                 if (!best.equals(mEditedFile)) {
                     try {
@@ -682,12 +688,12 @@ public class GraphicalEditorPart extends EditorPart
 
                         boolean reuseEditor = AdtPrefs.getPrefs().isSharedLayoutEditor();
                         if (!reuseEditor) {
-                            String data = AdtPlugin.getFileProperty(best, NAME_CONFIG_STATE);
+                            String data = ConfigurationDescription.getDescription(best);
                             if (data == null) {
                                 // Not previously opened: duplicate the current state as
                                 // much as possible
                                 data = mConfigChooser.getConfiguration().toPersistentString();
-                                AdtPlugin.setFileProperty(best, NAME_CONFIG_STATE, data);
+                                ConfigurationDescription.setDescription(best, data);
                             }
                         }
 
@@ -710,7 +716,7 @@ public class GraphicalEditorPart extends EditorPart
                 // Even though the layout doesn't change, the config changed, and referenced
                 // resources need to be updated.
                 recomputeLayout();
-            } else {
+            } else if (affectsFileSelection) {
                 // display the error.
                 Configuration configuration = mConfigChooser.getConfiguration();
                 FolderConfiguration currentConfig = configuration.getFullConfig();
@@ -728,10 +734,15 @@ public class GraphicalEditorPart extends EditorPart
                         currentConfig.toDisplayString(),
                         currentConfig.getFolderName(ResourceFolderType.LAYOUT),
                         mEditedFile.getName());
+            } else {
+                // Something else changed, such as the theme - just recompute existing
+                // layout
+                mConfigChooser.saveConstraints();
+                recomputeLayout();
             }
         }
 
-        if ((flags & CHANGED_RENDER_TARGET) != 0) {
+        if ((flags & CFG_TARGET) != 0) {
             Configuration configuration = mConfigChooser.getConfiguration();
             IAndroidTarget target = configuration.getTarget();
             Sdk current = Sdk.getCurrent();
@@ -741,16 +752,18 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
-        if ((flags & (CHANGED_DEVICE | CHANGED_DEVICE_CONFIG)) != 0) {
+        if ((flags & (CFG_DEVICE | CFG_DEVICE_STATE)) != 0) {
             // When the device changes, zoom the view to fit, but only up to 100% (e.g. zoom
             // out to fit the content, or zoom back in if we were zoomed out more from the
             // previous view, but only up to 100% such that we never blow up pixels
             if (mActionBar.isZoomingAllowed()) {
-                getCanvasControl().setFitScale(true);
+                getCanvasControl().setFitScale(true,  true /*allowZoomIn*/);
             }
         }
 
         reloadPalette();
+
+        getCanvasControl().getPreviewManager().configurationChanged(flags);
 
         return true;
     }
@@ -872,6 +885,12 @@ public class GraphicalEditorPart extends EditorPart
         return mIncludedWithin;
     }
 
+    @Override
+    @Nullable
+    public LayoutCanvas getCanvas() {
+        return getCanvasControl();
+    }
+
     /**
      * Listens to target changed in the current project, to trigger a new layout rendering.
      */
@@ -906,7 +925,7 @@ public class GraphicalEditorPart extends EditorPart
                 IAndroidTarget target = currentSdk.getTarget(mEditedFile.getProject());
                 if (target != null) {
                     mConfigChooser.onSdkLoaded(target);
-                    changed(CHANGED_FOLDER | CHANGED_RENDER_TARGET);
+                    changed(CFG_FOLDER | CFG_TARGET);
                 }
             }
         }
@@ -1039,6 +1058,8 @@ public class GraphicalEditorPart extends EditorPart
             if (mNeedsRecompute) {
                 recomputeLayout();
             }
+
+            mCanvasViewer.getCanvas().syncPreviewMode();
         }
     }
 
@@ -1165,7 +1186,7 @@ public class GraphicalEditorPart extends EditorPart
         AndroidTargetData targetData = mConfigChooser.onXmlModelLoaded();
         updateCapabilities(targetData);
 
-        changed(CHANGED_FOLDER | CHANGED_RENDER_TARGET);
+        changed(CFG_FOLDER | CFG_TARGET);
     }
 
     /** Updates the capabilities for the given target data (which may be null) */
@@ -1253,6 +1274,7 @@ public class GraphicalEditorPart extends EditorPart
             }
 
             UiDocumentNode model = getModel();
+            LayoutCanvas canvas = mCanvasViewer.getCanvas();
             if (!ensureModelValid(model)) {
                 // Although we display an error, we still treat an empty document as a
                 // successful layout result so that we can drop new elements in it.
@@ -1260,7 +1282,7 @@ public class GraphicalEditorPart extends EditorPart
                 // For that purpose, create a special LayoutScene that has no image,
                 // no root view yet indicates success and then update the canvas with it.
 
-                mCanvasViewer.getCanvas().setSession(
+                canvas.setSession(
                         new StaticRenderSession(
                                 Result.Status.SUCCESS.createResult(),
                                 null /*rootViewInfo*/, null /*image*/),
@@ -1278,6 +1300,8 @@ public class GraphicalEditorPart extends EditorPart
 
                 IProject project = mEditedFile.getProject();
                 renderWithBridge(project, model, layoutLib);
+
+                canvas.getPreviewManager().renderPreviews();
             }
         } finally {
             // no matter the result, we are done doing the recompute based on the latest
@@ -1307,15 +1331,6 @@ public class GraphicalEditorPart extends EditorPart
      */
     public LayoutLibrary getLayoutLibrary() {
         return getReadyLayoutLib(false /*displayError*/);
-    }
-
-    /**
-     * Returns the current bounds of the Android device screen, in canvas control pixels.
-     *
-     * @return the bounds of the screen, never null
-     */
-    public Rect getScreenBounds() {
-        return mConfigChooser.getConfiguration().getScreenBounds();
     }
 
     /**
@@ -1435,7 +1450,7 @@ public class GraphicalEditorPart extends EditorPart
                 }
 
             } else if (displayError) { // target == null
-                displayError("The project target is not set.");
+                displayError("The project target is not set. Right click project, choose Properties | Android.");
             }
         } else if (displayError) { // currentSdk == null
             displayError("Eclipse is loading the SDK.\n%1$s will refresh automatically once the process is finished.",
@@ -1461,11 +1476,6 @@ public class GraphicalEditorPart extends EditorPart
         if (currentSdk == null) {
             return null;
         }
-
-        if (mConfigChooser.isDisposed()) {
-            return null;
-        }
-        assert isUiThread();
 
         // attempt to get a target from the configuration selector.
         IAndroidTarget renderingTarget = mConfigChooser.getConfiguration().getTarget();
@@ -1501,6 +1511,10 @@ public class GraphicalEditorPart extends EditorPart
     private boolean ensureModelValid(UiDocumentNode model) {
         // check there is actually a model (maybe the file is empty).
         if (model.getUiChildren().size() == 0) {
+            if (mEditorDelegate.getEditor().isCreatingPages()) {
+                displayError("Loading editor");
+                return false;
+            }
             displayError(
                     "No XML content. Please add a root view or layout to your document.");
             return false;
@@ -1513,7 +1527,6 @@ public class GraphicalEditorPart extends EditorPart
             LayoutLibrary layoutLib) {
         LayoutCanvas canvas = getCanvasControl();
         Set<UiElementNode> explodeNodes = canvas.getNodesToExplode();
-        Rect rect = getScreenBounds();
         RenderLogger logger = new RenderLogger(mEditedFile.getName());
         RenderingMode renderingMode = RenderingMode.NORMAL;
         // FIXME set the rendering mode using ViewRule or something.
@@ -1525,7 +1538,6 @@ public class GraphicalEditorPart extends EditorPart
 
         RenderSession session = RenderService.create(this)
             .setModel(model)
-            .setSize(rect.w, rect.h)
             .setLog(logger)
             .setRenderingMode(renderingMode)
             .setIncludedWithin(mIncludedWithin)
@@ -1565,7 +1577,7 @@ public class GraphicalEditorPart extends EditorPart
         } else if (missingClasses.size() > 0 || brokenClasses.size() > 0) {
             displayFailingClasses(missingClasses, brokenClasses, false);
             displayUserStackTrace(logger, true);
-        } else {
+        } else if (session != null) {
             // Nope, no missing or broken classes. Clear success, congrats!
             hideError();
 
@@ -1583,6 +1595,8 @@ public class GraphicalEditorPart extends EditorPart
                 job.setSystem(true);
                 job.schedule(3000); // 3 seconds
             }
+
+            mConfigChooser.ensureInitialized();
         }
 
         model.refreshUi();
@@ -2043,6 +2057,21 @@ public class GraphicalEditorPart extends EditorPart
                         "or fix the theme style references.\n\n");
             }
 
+            List<Throwable> trace = logger.getFirstTrace();
+            if (trace != null
+                    && trace.toString().contains(
+                            "java.lang.IndexOutOfBoundsException: Index: 2, Size: 2") //$NON-NLS-1$
+                    && mConfigChooser.getConfiguration().getDensity() == Density.TV) {
+                addBoldText(mErrorLabel,
+                        "It looks like you are using a render target where the layout library " +
+                        "does not support the tvdpi density.\n\n");
+                addText(mErrorLabel, "Please try either updating to " +
+                        "the latest available version (using the SDK manager), or if no updated " +
+                        "version is available for this specific version of Android, try using " +
+                        "a more recent render target version.\n\n");
+
+            }
+
             if (hasAaptErrors && logger.seenTagPrefix(LayoutLog.TAG_RESOURCES_PREFIX)) {
                 // Text will automatically be wrapped by the error widget so no reason
                 // to insert linebreaks in this error message:
@@ -2337,7 +2366,7 @@ public class GraphicalEditorPart extends EditorPart
                     @SuppressWarnings("restriction")
                     String id = BuildPathsPropertyPage.PROP_ID;
                     PreferencesUtil.createPropertyDialogOn(
-                            AdtPlugin.getDisplay().getActiveShell(),
+                            AdtPlugin.getShell(),
                             getProject(), id, null, null).open();
                     break;
                 case LINK_OPEN_CLASS:
@@ -2798,7 +2827,7 @@ public class GraphicalEditorPart extends EditorPart
         // Auto zoom the surface if you open or close flyout windows such as the palette
         // or the property/outline views
         if (newState == STATE_OPEN || newState == STATE_COLLAPSED && oldState == STATE_OPEN) {
-            getCanvasControl().setFitScale(true /*onlyZoomOut*/);
+            getCanvasControl().setFitScale(true /*onlyZoomOut*/, true /*allowZoomIn*/);
         }
 
         sDockingStateVersion++;

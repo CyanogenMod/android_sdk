@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
+import com.google.common.base.Charsets;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -35,8 +36,8 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /** Job which creates a new layout file for a given configuration */
 class CreateNewConfigJob extends Job {
@@ -64,19 +65,17 @@ class CreateNewConfigJob extends Job {
             IFolder res = (IFolder) mFromFile.getParent().getParent();
 
             IFolder newParentFolder = res.getFolder(folderName);
-            if (newParentFolder.exists()) {
-                // this should not happen since aapt would have complained
-                // before, but if one disables the automatic build, this could
-                // happen.
-                String message = String.format("File 'res/%1$s' already exists!",
-                        folderName);
+            AdtUtils.ensureExists(newParentFolder);
+            final IFile file = newParentFolder.getFile(mFromFile.getName());
+            if (file.exists()) {
+                String message = String.format("File 'res/%1$s/%2$s' already exists!",
+                        folderName, mFromFile.getName());
                 return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, message);
             }
 
-            AdtUtils.ensureExists(newParentFolder);
-            final IFile file = newParentFolder.getFile(mFromFile.getName());
-
-            InputStream input = mFromFile.getContents();
+            // Read current document contents instead of from file: mFromFile.getContents()
+            String text = mEditor.getEditorDelegate().getEditor().getStructuredDocument().get();
+            ByteArrayInputStream input = new ByteArrayInputStream(text.getBytes(Charsets.UTF_8));
             file.create(input, false, monitor);
             input.close();
 

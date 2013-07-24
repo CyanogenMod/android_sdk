@@ -24,6 +24,8 @@ import static com.android.SdkConstants.ATTR_SRC;
 import static com.android.SdkConstants.ATTR_TEXT;
 import static com.android.SdkConstants.DRAWABLE_PREFIX;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.VIEW;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.wst.xml.ui.internal.contentoutline.JFaceNodeLabelProvider;
@@ -43,6 +45,11 @@ class OutlineLabelProvider extends JFaceNodeLabelProvider {
         if (element instanceof Element) {
             Element e = (Element) element;
             String tagName = e.getTagName();
+            if (VIEW_TAG.equals(tagName)) {
+                // Can't have both view.png and View.png; issues on case sensitive vs
+                // case insensitive file systems
+                tagName = VIEW;
+            }
             IconFactory factory = IconFactory.getInstance();
             Image img = factory.getIcon(tagName, null);
             if (img != null) {

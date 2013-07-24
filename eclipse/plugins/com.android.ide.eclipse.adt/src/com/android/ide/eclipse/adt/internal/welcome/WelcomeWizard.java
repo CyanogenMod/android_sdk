@@ -41,16 +41,25 @@ import java.util.Set;
  */
 public class WelcomeWizard extends Wizard {
     private final DdmsPreferenceStore mStore;
+
     private WelcomeWizardPage mWelcomePage;
     private UsagePermissionPage mUsagePage;
+
+    private final boolean mShowWelcomePage;
+    private final boolean mShowUsagePage;
 
     /**
      * Creates a new {@link WelcomeWizard}
      *
      * @param store preferences for usage statistics collection etc
+     * @param showInstallSdkPage show page to install SDK's
+     * @param showUsageOptinPage show page to get user consent for usage data collection
      */
-    public WelcomeWizard(DdmsPreferenceStore store) {
+    public WelcomeWizard(DdmsPreferenceStore store, boolean showInstallSdkPage,
+            boolean showUsageOptinPage) {
         mStore = store;
+        mShowWelcomePage = showInstallSdkPage;
+        mShowUsagePage = showUsageOptinPage;
 
         setWindowTitle("Welcome to Android Development");
         ImageDescriptor image = AdtPlugin.getImageDescriptor("icons/android-64.png"); //$NON-NLS-1$
@@ -59,13 +68,15 @@ public class WelcomeWizard extends Wizard {
 
     @Override
     public void addPages() {
-        mWelcomePage = new WelcomeWizardPage();
-        addPage(mWelcomePage);
+        if (mShowWelcomePage) {
+            mWelcomePage = new WelcomeWizardPage();
+            addPage(mWelcomePage);
+        }
 
         // It's possible that the user has already run the command line tools
         // such as ddms and has agreed to usage statistics collection, but has never
         // run ADT which is why the wizard was opened. No need to ask again.
-        if (!mStore.isPingOptIn()) {
+        if (mShowUsagePage && !mStore.hasPingId()) {
             mUsagePage = new UsagePermissionPage();
             addPage(mUsagePage);
         }
@@ -96,37 +107,40 @@ public class WelcomeWizard extends Wizard {
             store.setPingOptIn(isUsageCollectionApproved);
         }
 
-        // Read out wizard settings immediately; we will perform the actual work
-        // after the wizard window has been taken down and it's too late to read the
-        // settings then
-        final File path = mWelcomePage.getPath();
-        final boolean installCommon = mWelcomePage.isInstallCommon();
-        final boolean installLatest = mWelcomePage.isInstallLatest();
-        final boolean createNew = mWelcomePage.isCreateNew();
+        if (mWelcomePage != null) {
+            // Read out wizard settings immediately; we will perform the actual work
+            // after the wizard window has been taken down and it's too late to read the
+            // settings then
+            final File path = mWelcomePage.getPath();
+            final boolean installCommon = mWelcomePage.isInstallCommon();
+            final boolean installLatest = mWelcomePage.isInstallLatest();
+            final boolean createNew = mWelcomePage.isCreateNew();
 
-        // Perform installation asynchronously since it takes a while.
-        getShell().getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (createNew) {
-                    try {
-                        Set<Integer> apiLevels = new HashSet<Integer>();
-                        if (installCommon) {
-                            apiLevels.add(8);
+            // Perform installation asynchronously since it takes a while.
+            getShell().getDisplay().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    if (createNew) {
+                        try {
+                            Set<Integer> apiLevels = new HashSet<Integer>();
+                            if (installCommon) {
+                                apiLevels.add(8);
+                            }
+                            if (installLatest) {
+                                apiLevels.add(AdtUpdateDialog.USE_MAX_REMOTE_API_LEVEL);
+                            }
+                            installSdk(path, apiLevels);
+                        } catch (Exception e) {
+                            AdtPlugin.logAndPrintError(e, "ADT Welcome Wizard",
+                                    "Installation failed");
                         }
-                        if (installLatest) {
-                            apiLevels.add(AdtUpdateDialog.USE_MAX_REMOTE_API_LEVEL);
-                        }
-                        installSdk(path, apiLevels);
-                    } catch (Exception e) {
-                        AdtPlugin.logAndPrintError(e, "ADT Welcome Wizard", "Installation failed");
                     }
-                }
 
-                // Set SDK path after installation since this will trigger a SDK refresh.
-                AdtPrefs.getPrefs().setSdkLocation(path);
-            }
-        });
+                    // Set SDK path after installation since this will trigger a SDK refresh.
+                    AdtPrefs.getPrefs().setSdkLocation(path);
+                }
+            });
+        }
 
         // The wizard always succeeds, even if installation fails or is aborted
         return true;

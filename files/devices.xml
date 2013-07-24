@@ -5,7 +5,7 @@
 
     <d:device>
         <d:name>Nexus One</d:name>
-        <d:manufacturer>HTC</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -14,7 +14,7 @@
                 <d:screen-ratio>long</d:screen-ratio>
                 <d:dimensions>
                     <d:x-dimension>480</d:x-dimension>
-                    <d:y-dimension>720</d:y-dimension>
+                    <d:y-dimension>800</d:y-dimension>
                 </d:dimensions>
                 <d:xdpi>254</d:xdpi>
                 <d:ydpi>254</d:ydpi>
@@ -80,7 +80,7 @@
     </d:device>
     <d:device>
         <d:name>Nexus S</d:name>
-        <d:manufacturer>Samsung</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -192,12 +192,8 @@
     </d:device>
 
     <d:device>
-        <d:name>
-            Galaxy Nexus
-        </d:name>
-        <d:manufacturer>
-            Samsung
-        </d:manufacturer>
+        <d:name>Galaxy Nexus</d:name>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -328,7 +324,7 @@
     </d:device>
     <d:device>
         <d:name>Nexus 7</d:name>
-        <d:manufacturer>Asus</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>large</d:screen-size>

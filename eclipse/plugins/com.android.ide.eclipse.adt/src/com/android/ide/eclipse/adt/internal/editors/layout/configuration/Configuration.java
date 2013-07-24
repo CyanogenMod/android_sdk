@@ -17,44 +17,84 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.api.Rect;
+import com.android.ide.common.rendering.api.Capability;
+import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.DeviceConfigHelper;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.NightModeQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
-import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
-import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
-import com.android.resources.ScreenOrientation;
+import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.State;
 import com.android.utils.Pair;
+import com.google.common.base.Objects;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A {@linkplain Configuration} is a selection of device, orientation, theme,
  * etc for use when rendering a layout.
  */
 public class Configuration {
+    /** The {@link FolderConfiguration} in change flags or override flags */
+    public static final int CFG_FOLDER       = 1 << 0;
+    /** The {@link Device} in change flags or override flags */
+    public static final int CFG_DEVICE       = 1 << 1;
+    /** The {@link State} in change flags or override flags */
+    public static final int CFG_DEVICE_STATE = 1 << 2;
+    /** The theme in change flags or override flags */
+    public static final int CFG_THEME        = 1 << 3;
+    /** The locale in change flags or override flags */
+    public static final int CFG_LOCALE       = 1 << 4;
+    /** The rendering {@link IAndroidTarget} in change flags or override flags */
+    public static final int CFG_TARGET       = 1 << 5;
+    /** The {@link NightMode} in change flags or override flags */
+    public static final int CFG_NIGHT_MODE   = 1 << 6;
+    /** The {@link UiMode} in change flags or override flags */
+    public static final int CFG_UI_MODE      = 1 << 7;
+    /** The {@link UiMode} in change flags or override flags */
+    public static final int CFG_ACTIVITY     = 1 << 8;
+
+    /** References all attributes */
+    public static final int MASK_ALL = 0xFFFF;
+
+    /** Attributes which affect which best-layout-file selection */
+    public static final int MASK_FILE_ATTRS =
+            CFG_DEVICE|CFG_DEVICE_STATE|CFG_LOCALE|CFG_TARGET|CFG_NIGHT_MODE|CFG_UI_MODE;
+
+    /** Attributes which affect rendering appearance */
+    public static final int MASK_RENDERING = MASK_FILE_ATTRS|CFG_THEME;
+
     /**
      * Setting name for project-wide setting controlling rendering target and locale which
      * is shared for all files
@@ -68,7 +108,7 @@ public class Configuration {
     private final static String SEP_LOCALE = "-";                  //$NON-NLS-1$
 
     @NonNull
-    protected final ConfigurationChooser mConfigChooser;
+    protected ConfigurationChooser mConfigChooser;
 
     /** The {@link FolderConfiguration} representing the state of the UI controls */
     @NonNull
@@ -113,6 +153,9 @@ public class Configuration {
     @NonNull
     private NightMode mNightMode = NightMode.NOTNIGHT;
 
+    /** The display name */
+    private String mDisplayName;
+
     /**
      * Creates a new {@linkplain Configuration}
      *
@@ -120,6 +163,30 @@ public class Configuration {
      */
     protected Configuration(@NonNull ConfigurationChooser chooser) {
         mConfigChooser = chooser;
+    }
+
+    /**
+     * Sets the associated configuration chooser
+     *
+     * @param chooser the chooser
+     */
+    void setChooser(@NonNull ConfigurationChooser chooser) {
+        // TODO: We should get rid of the binding between configurations
+        // and configuration choosers. This is currently needed because
+        // the choosers contain vital data such as the set of available
+        // rendering targets, the set of available locales etc, which
+        // also doesn't belong inside the configuration but is needed by it.
+        mConfigChooser = chooser;
+    }
+
+    /**
+     * Gets the associated configuration chooser
+     *
+     * @return the chooser
+     */
+    @NonNull
+    ConfigurationChooser getChooser() {
+        return mConfigChooser;
     }
 
     /**
@@ -131,6 +198,60 @@ public class Configuration {
     @NonNull
     public static Configuration create(@NonNull ConfigurationChooser chooser) {
         return new Configuration(chooser);
+    }
+
+    /**
+     * Creates a configuration suitable for the given file
+     *
+     * @param base the base configuration to base the file configuration off of
+     * @param file the file to look up a configuration for
+     * @return a suitable configuration
+     */
+    @NonNull
+    public static Configuration create(
+            @NonNull Configuration base,
+            @NonNull IFile file) {
+        Configuration configuration = copy(base);
+        ConfigurationChooser chooser = base.getChooser();
+        ProjectResources resources = chooser.getResources();
+        ConfigurationMatcher matcher = new ConfigurationMatcher(chooser, configuration, file,
+                resources, false);
+
+        ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(file);
+        configuration.mEditedConfig = new FolderConfiguration();
+        configuration.mEditedConfig.set(resFolder.getConfiguration());
+
+        matcher.adaptConfigSelection(true /*needBestMatch*/);
+        configuration.syncFolderConfig();
+
+        return configuration;
+    }
+
+    /**
+     * Creates a new {@linkplain Configuration} that is a copy from a different configuration
+     *
+     * @param original the original to copy from
+     * @return a new configuration copied from the original
+     */
+    @NonNull
+    public static Configuration copy(@NonNull Configuration original) {
+        Configuration copy = create(original.mConfigChooser);
+        copy.mFullConfig.set(original.mFullConfig);
+        if (original.mEditedConfig != null) {
+            copy.mEditedConfig = new FolderConfiguration();
+            copy.mEditedConfig.set(original.mEditedConfig);
+        }
+        copy.mTarget = original.getTarget();
+        copy.mTheme = original.getTheme();
+        copy.mDevice = original.getDevice();
+        copy.mState = original.getDeviceState();
+        copy.mActivity = original.getActivity();
+        copy.mLocale = original.getLocale();
+        copy.mUiMode = original.getUiMode();
+        copy.mNightMode = original.getNightMode();
+        copy.mDisplayName = original.getDisplayName();
+
+        return copy;
     }
 
     /**
@@ -211,6 +332,16 @@ public class Configuration {
     @Nullable
     public IAndroidTarget getTarget() {
         return mTarget;
+    }
+
+    /**
+     * Returns the display name to show for this configuration
+     *
+     * @return the display name, or null if none has been assigned
+     */
+    @Nullable
+    public String getDisplayName() {
+        return mDisplayName;
     }
 
     /**
@@ -359,6 +490,15 @@ public class Configuration {
     }
 
     /**
+     * Sets the display name to be shown for this configuration.
+     *
+     * @param displayName the new display name
+     */
+    public void setDisplayName(@Nullable String displayName) {
+        mDisplayName = displayName;
+    }
+
+    /**
      * Sets the night mode
      *
      * @param night the night mode
@@ -397,6 +537,7 @@ public class Configuration {
      */
     public void setTheme(String theme) {
         mTheme = theme;
+        checkThemePrefix();
     }
 
     /**
@@ -507,6 +648,67 @@ public class Configuration {
         return sb.toString();
     }
 
+    /** Returns the preferred theme, or null */
+    @Nullable
+    String computePreferredTheme() {
+        IProject project = mConfigChooser.getProject();
+        ManifestInfo manifest = ManifestInfo.get(project);
+
+        // Look up the screen size for the current state
+        ScreenSize screenSize = null;
+        Device device = getDevice();
+        if (device != null) {
+            List<State> states = device.getAllStates();
+            for (State state : states) {
+                FolderConfiguration folderConfig = DeviceConfigHelper.getFolderConfig(state);
+                if (folderConfig != null) {
+                    ScreenSizeQualifier qualifier = folderConfig.getScreenSizeQualifier();
+                    screenSize = qualifier.getValue();
+                    break;
+                }
+            }
+        }
+
+        // Look up the default/fallback theme to use for this project (which
+        // depends on the screen size when no particular theme is specified
+        // in the manifest)
+        String defaultTheme = manifest.getDefaultTheme(getTarget(), screenSize);
+
+        String preferred = defaultTheme;
+        if (getTheme() == null) {
+            // If we are rendering a layout in included context, pick the theme
+            // from the outer layout instead
+
+            String activity = getActivity();
+            if (activity != null) {
+                Map<String, String> activityThemes = manifest.getActivityThemes();
+                preferred = activityThemes.get(activity);
+            }
+            if (preferred == null) {
+                preferred = defaultTheme;
+            }
+            setTheme(preferred);
+        }
+
+        return preferred;
+    }
+
+    private void checkThemePrefix() {
+        if (mTheme != null && !mTheme.startsWith(PREFIX_RESOURCE_REF)) {
+            if (mTheme.isEmpty()) {
+                computePreferredTheme();
+                return;
+            }
+            ResourceRepository frameworkRes = mConfigChooser.getClient().getFrameworkResources();
+            if (frameworkRes != null
+                    && frameworkRes.hasResourceItem(ANDROID_STYLE_RESOURCE_PREFIX + mTheme)) {
+                mTheme = ANDROID_STYLE_RESOURCE_PREFIX + mTheme;
+            } else {
+                mTheme = STYLE_RESOURCE_PREFIX + mTheme;
+            }
+        }
+    }
+
     /**
      * Initializes a string previously created with
      * {@link #toPersistentString()}
@@ -555,6 +757,8 @@ public class Configuration {
                         } else if (mTheme.startsWith(MARKER_PROJECT)) {
                             mTheme = STYLE_RESOURCE_PREFIX
                                     + mTheme.substring(MARKER_PROJECT.length());
+                        } else {
+                            checkThemePrefix();
                         }
 
                         mUiMode = UiMode.getEnum(values[4]);
@@ -604,7 +808,7 @@ public class Configuration {
     @Nullable
     static Pair<Locale, IAndroidTarget> loadRenderState(ConfigurationChooser chooser) {
         IProject project = chooser.getProject();
-        if (!project.isAccessible()) {
+        if (project == null || !project.isAccessible()) {
             return null;
         }
 
@@ -629,24 +833,31 @@ public class Configuration {
                     }
                     locale = Locale.create(language, region);
 
-                    target = stringToTarget(chooser, values[1]);
-
-                    // See if we should "correct" the rendering target to a better version.
-                    // If you're using a pre-release version of the render target, and a
-                    // final release is available and installed, we should switch to that
-                    // one instead.
-                    if (target != null) {
-                        AndroidVersion version = target.getVersion();
-                        List<IAndroidTarget> targetList = chooser.getTargetList();
-                        if (version.getCodename() != null && targetList != null) {
-                            int targetApiLevel = version.getApiLevel() + 1;
-                            for (IAndroidTarget t : targetList) {
-                                if (t.getVersion().getApiLevel() == targetApiLevel
-                                        && t.isPlatform()) {
-                                    target = t;
-                                    break;
+                    if (AdtPrefs.getPrefs().isAutoPickRenderTarget()) {
+                        target = ConfigurationMatcher.findDefaultRenderTarget(chooser);
+                    } else {
+                        String targetString = values[1];
+                        target = stringToTarget(chooser, targetString);
+                        // See if we should "correct" the rendering target to a
+                        // better version. If you're using a pre-release version
+                        // of the render target, and a final release is
+                        // available and installed, we should switch to that
+                        // one instead.
+                        if (target != null) {
+                            AndroidVersion version = target.getVersion();
+                            List<IAndroidTarget> targetList = chooser.getTargetList();
+                            if (version.getCodename() != null && targetList != null) {
+                                int targetApiLevel = version.getApiLevel() + 1;
+                                for (IAndroidTarget t : targetList) {
+                                    if (t.getVersion().getApiLevel() == targetApiLevel
+                                            && t.isPlatform()) {
+                                        target = t;
+                                        break;
+                                    }
                                 }
                             }
+                        } else {
+                            target = ConfigurationMatcher.findDefaultRenderTarget(chooser);
                         }
                     }
                 }
@@ -654,7 +865,7 @@ public class Configuration {
                 return Pair.of(locale, target);
             }
 
-            return Pair.of(Locale.ANY, ConfigurationMatcher.findDefaultRenderTarget(project));
+            return Pair.of(Locale.ANY, ConfigurationMatcher.findDefaultRenderTarget(chooser));
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
         }
@@ -668,9 +879,12 @@ public class Configuration {
      */
     void saveRenderState() {
         IProject project = mConfigChooser.getProject();
+        if (project == null) {
+            return;
+        }
         try {
             // Generate a persistent string from locale+target
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(32);
             Locale locale = getLocale();
             if (locale != null) {
                 // locale[0]/[1] can be null sometimes when starting Eclipse
@@ -700,7 +914,7 @@ public class Configuration {
      * @return an id for the given target; never null
      */
     @NonNull
-    private static String targetToString(@NonNull IAndroidTarget target) {
+    public static String targetToString(@NonNull IAndroidTarget target) {
         return target.getFullName().replace(SEP, "");  //$NON-NLS-1$
     }
 
@@ -715,12 +929,36 @@ public class Configuration {
      * @return an {@link IAndroidTarget} that matches the given id, or null
      */
     @Nullable
-    private static IAndroidTarget stringToTarget(
+    public static IAndroidTarget stringToTarget(
             @NonNull ConfigurationChooser chooser,
             @NonNull String id) {
         List<IAndroidTarget> targetList = chooser.getTargetList();
         if (targetList != null && targetList.size() > 0) {
             for (IAndroidTarget target : targetList) {
+                if (id.equals(targetToString(target))) {
+                    return target;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns an {@link IAndroidTarget} that corresponds to the given id that was
+     * originally returned by {@link #targetToString}. May be null, if the platform is no
+     * longer available, or if the platform list has not yet been initialized.
+     *
+     * @param id the id that corresponds to the desired platform
+     * @return an {@link IAndroidTarget} that matches the given id, or null
+     */
+    @Nullable
+    public static IAndroidTarget stringToTarget(
+            @NonNull String id) {
+        Sdk currentSdk = Sdk.getCurrent();
+        if (currentSdk != null) {
+            IAndroidTarget[] targets = currentSdk.getTargets();
+            for (IAndroidTarget target : targets) {
                 if (id.equals(targetToString(target))) {
                     return target;
                 }
@@ -773,96 +1011,6 @@ public class Configuration {
     }
 
     /**
-     * Returns the current device xdpi.
-     *
-     * @return the x dpi as a float
-     */
-    public float getXDpi() {
-        Device device = getDevice();
-        if (device != null) {
-            State currState = getDeviceState();
-            if (currState == null) {
-                currState = device.getDefaultState();
-            }
-            float dpi = (float) currState.getHardware().getScreen().getXdpi();
-            if (!Float.isNaN(dpi)) {
-                return dpi;
-            }
-        }
-
-        // get the pixel density as the density.
-        return getDensity().getDpiValue();
-    }
-
-    /**
-     * Returns the current device ydpi.
-     *
-     * @return the y dpi as a float
-     */
-    public float getYDpi() {
-        Device device = getDevice();
-        if (device != null) {
-            State currState = getDeviceState();
-            if (currState == null) {
-                currState = device.getDefaultState();
-            }
-            float dpi = (float) currState.getHardware().getScreen().getYdpi();
-            if (!Float.isNaN(dpi)) {
-                return dpi;
-            }
-        }
-
-        // get the pixel density as the density.
-        return getDensity().getDpiValue();
-    }
-
-    /**
-     * Returns the bounds of the screen
-     *
-     * @return the screen bounds
-     */
-    public Rect getScreenBounds() {
-        return getScreenBounds(mFullConfig);
-    }
-
-    /**
-     * Gets the orientation from the given configuration
-     *
-     * @param config the configuration to look up
-     * @return the bounds
-     */
-    @NonNull
-    public static Rect getScreenBounds(FolderConfiguration config) {
-        // get the orientation from the given device config
-        ScreenOrientationQualifier qual = config.getScreenOrientationQualifier();
-        ScreenOrientation orientation = ScreenOrientation.PORTRAIT;
-        if (qual != null) {
-            orientation = qual.getValue();
-        }
-
-        // get the device screen dimension
-        ScreenDimensionQualifier qual2 = config.getScreenDimensionQualifier();
-        int s1, s2;
-        if (qual2 != null) {
-            s1 = qual2.getValue1();
-            s2 = qual2.getValue2();
-        } else {
-            s1 = 480;
-            s2 = 320;
-        }
-
-        switch (orientation) {
-            default:
-            case PORTRAIT:
-                return new Rect(0, 0, s2, s1);
-            case LANDSCAPE:
-                return new Rect(0, 0, s1, s2);
-            case SQUARE:
-                return new Rect(0, 0, s1, s1);
-        }
-    }
-
-    /**
      * Get the next cyclical state after the given state
      *
      * @param from the state to start with
@@ -884,8 +1032,27 @@ public class Configuration {
         return null;
     }
 
+    /**
+     * Returns true if this configuration supports the given rendering
+     * capability
+     *
+     * @param capability the capability to check
+     * @return true if the capability is supported
+     */
+    public boolean supports(Capability capability) {
+        IAndroidTarget target = getTarget();
+        if (target != null) {
+            return RenderService.supports(target, capability);
+        }
+
+        return false;
+    }
+
     @Override
     public String toString() {
-        return toPersistentString();
+        return Objects.toStringHelper(this.getClass())
+                .add("display", getDisplayName())                 //$NON-NLS-1$
+                .add("persistent", toPersistentString())          //$NON-NLS-1$
+                .toString();
     }
 }

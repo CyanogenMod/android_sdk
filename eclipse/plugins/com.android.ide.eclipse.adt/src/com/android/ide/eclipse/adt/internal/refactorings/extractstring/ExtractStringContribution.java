@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.eclipse.org/org/documents/epl-v10.php
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,11 +25,11 @@ import java.util.Map;
  * @see ExtractStringDescriptor
  */
 public class ExtractStringContribution extends RefactoringContribution {
-    
+
     /* (non-Javadoc)
      * @see org.eclipse.ltk.core.refactoring.RefactoringContribution#createDescriptor(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.util.Map, int)
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public RefactoringDescriptor createDescriptor(
             String id,
@@ -42,7 +42,7 @@ public class ExtractStringContribution extends RefactoringContribution {
         return new ExtractStringDescriptor(project, description, comment, arguments);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     @Override
     public Map retrieveArgumentMap(RefactoringDescriptor descriptor) {
         if (descriptor instanceof ExtractStringDescriptor) {

@@ -19,7 +19,9 @@ package com.android.ide.common.layout;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.FQCN_LINEAR_LAYOUT;
+import static com.android.SdkConstants.VALUE_VERTICAL;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -58,7 +60,8 @@ public class ScrollViewRule extends FrameLayoutRule {
             // Insert a default linear layout (which will in turn be registered as
             // a child of this node and the create child method above will set its
             // fill parent attributes, its id, etc.
-            node.appendChild(FQCN_LINEAR_LAYOUT);
+            INode linear = node.appendChild(FQCN_LINEAR_LAYOUT);
+            linear.setAttribute(ANDROID_URI, ATTR_ORIENTATION, VALUE_VERTICAL);
         }
     }
 

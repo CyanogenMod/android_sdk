@@ -89,5 +89,11 @@
          </actionSet>
       </perspectiveExtension>
    </extension>
+   <extension
+         point="com.android.ide.eclipse.ddms.clientAction">
+      <clientAction
+            class="com.android.ide.eclipse.gltrace.DeviceViewAction">
+      </clientAction>
+   </extension>
 
 </plugin>

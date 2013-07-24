@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
@@ -25,7 +26,9 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.google.common.collect.Sets;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -47,6 +50,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,6 +66,12 @@ public class RenderScriptProcessor extends SourceProcessor {
      * Single line llvm-rs-cc error: {@code <path>:<line>:<col>: <error>}
      */
     private static Pattern sLlvmPattern1 = Pattern.compile("^(.+?):(\\d+):(\\d+):\\s(.+)$"); //$NON-NLS-1$
+
+    private final static Set<String> EXTENSIONS = Sets.newHashSetWithExpectedSize(2);
+    static {
+        EXTENSIONS.add(SdkConstants.EXT_RS);
+        EXTENSIONS.add(SdkConstants.EXT_FS);
+    }
 
     private static class RsChangeHandler extends SourceChangeHandler {
 
@@ -85,29 +95,48 @@ public class RenderScriptProcessor extends SourceProcessor {
                 // remove the file name segment
                 relative = relative.removeLastSegments(1);
                 // add the file name of a Renderscript file.
-                relative = relative.append(file.getName().replaceAll(AdtConstants.RE_DEP_EXT,
-                        SdkConstants.DOT_RS));
+                relative = relative.append(file.getName().replaceAll(
+                        AdtConstants.RE_DEP_EXT, SdkConstants.DOT_RS));
 
-                // now look for a match in the source folders.
-                List<IPath> sourceFolders = BaseProjectHelper.getSourceClasspaths(
-                        processor.getJavaProject());
-                IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+                if (!findInSourceFolders(processor, genFolder, relative)) {
+                    // could be a FilterScript file?
+                    relative = file.getFullPath().makeRelativeTo(genFolder.getFullPath());
+                    // remove the file name segment
+                    relative = relative.removeLastSegments(1);
+                    // add the file name of a FilterScript file.
+                    relative = relative.append(file.getName().replaceAll(
+                            AdtConstants.RE_DEP_EXT, SdkConstants.DOT_FS));
 
-                for (IPath sourceFolderPath : sourceFolders) {
-                    IFolder sourceFolder = root.getFolder(sourceFolderPath);
-                    // we don't look in the 'gen' source folder as there will be no source in there.
-                    if (sourceFolder.exists() && sourceFolder.equals(genFolder) == false) {
-                        IFile sourceFile = sourceFolder.getFile(relative);
-                        SourceFileData data = processor.getFileData(sourceFile);
-                        if (data != null) {
-                            addFileToCompile(sourceFile);
-                            return true;
-                        }
+                    return findInSourceFolders(processor, genFolder, relative);
+                }
+
+                return true;
+            }
+
+            return r;
+        }
+
+        private boolean findInSourceFolders(SourceProcessor processor, IFolder genFolder,
+                IPath relative) {
+            // now look for a match in the source folders.
+            List<IPath> sourceFolders = BaseProjectHelper.getSourceClasspaths(
+                    processor.getJavaProject());
+            IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+
+            for (IPath sourceFolderPath : sourceFolders) {
+                IFolder sourceFolder = root.getFolder(sourceFolderPath);
+                // we don't look in the 'gen' source folder as there will be no source in there.
+                if (sourceFolder.exists() && sourceFolder.equals(genFolder) == false) {
+                    IFile sourceFile = sourceFolder.getFile(relative);
+                    SourceFileData data = processor.getFileData(sourceFile);
+                    if (data != null) {
+                        addFileToCompile(sourceFile);
+                        return true;
                     }
                 }
             }
 
-            return r;
+            return false;
         }
 
         @Override
@@ -116,13 +145,21 @@ public class RenderScriptProcessor extends SourceProcessor {
         }
     }
 
-    public RenderScriptProcessor(IJavaProject javaProject, IFolder genFolder) {
-        super(javaProject, genFolder, new RsChangeHandler());
+    private int mTargetApi = 11;
+
+    public RenderScriptProcessor(@NonNull IJavaProject javaProject,
+            @NonNull BuildToolInfo buildToolInfo, @NonNull IFolder genFolder) {
+        super(javaProject, buildToolInfo, genFolder, new RsChangeHandler());
+    }
+
+    public void setTargetApi(int targetApi) {
+        // make sure the target api value is good. Must be 11+ or llvm-rs-cc complains.
+        mTargetApi = targetApi < 11 ? 11 : targetApi;
     }
 
     @Override
-    protected String getExtension() {
-        return SdkConstants.EXT_RS;
+    protected Set<String> getExtensions() {
+        return EXTENSIONS;
     }
 
     @Override
@@ -130,10 +167,9 @@ public class RenderScriptProcessor extends SourceProcessor {
         return PROPERTY_COMPILE_RS;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int targetApi,
+            IProject project, IAndroidTarget projectTarget,
             List<IPath> sourceFolders, List<IFile> notCompiledOut,  List<File> libraryProjectsOut,
             IProgressMonitor monitor) throws CoreException {
 
@@ -146,27 +182,22 @@ public class RenderScriptProcessor extends SourceProcessor {
 
         int depIndex;
 
-        // make sure the target api value is good. Must be 11+ or llvm-rs-cc complains.
-        if (targetApi < 11) {
-            targetApi = 11;
-        }
-
         // create the command line
         String[] command = new String[15];
         int index = 0;
         command[index++] = quote(sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER
                 + SdkConstants.FN_RENDERSCRIPT);
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(projectTarget.getPath(IAndroidTarget.ANDROID_RS_CLANG));
+        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG));
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(projectTarget.getPath(IAndroidTarget.ANDROID_RS));
+        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS));
         command[index++] = "-p";   //$NON-NLS-1$
         command[index++] = quote(genFolder.getLocation().toOSString());
         command[index++] = "-o";   //$NON-NLS-1$
         command[index++] = quote(rawFolder.getLocation().toOSString());
 
         command[index++] = "-target-api";   //$NON-NLS-1$
-        command[index++] = Integer.toString(targetApi);
+        command[index++] = Integer.toString(mTargetApi);
 
         command[index++] = "-d";   //$NON-NLS-1$
         command[depIndex = index++] = null;

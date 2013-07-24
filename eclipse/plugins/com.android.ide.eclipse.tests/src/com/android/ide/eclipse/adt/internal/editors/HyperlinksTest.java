@@ -44,7 +44,9 @@ import org.eclipse.wst.xml.ui.internal.tabletree.XMLMultiPageEditorPart;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({
+        "restriction", "javadoc"
+})
 public class HyperlinksTest extends AdtProjectTest {
     @Override
     protected boolean testCaseNeedsUniqueProject() {
@@ -182,6 +184,12 @@ public class HyperlinksTest extends AdtProjectTest {
         // Check navigating to a theme resource
         checkXmlNavigation("navigation1.xml", "res/layout/navigation1.xml",
                 "?android:attr/alert^DialogStyle");
+    }
+
+    public void testNavigate16() throws Exception {
+        // Check navigating to a theme resource
+        checkXmlNavigation("navigation1.xml", "res/layout/navigation1.xml",
+                "?android:alert^DialogStyle");
     }
 
     // Left to test:

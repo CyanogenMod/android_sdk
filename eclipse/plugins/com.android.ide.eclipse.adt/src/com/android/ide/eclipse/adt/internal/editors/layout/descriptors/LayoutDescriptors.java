@@ -21,11 +21,13 @@ import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TAG;
+import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.SdkConstants.REQUEST_FOCUS;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_MERGE;
+import static com.android.SdkConstants.VIEW_TAG;
 
 import com.android.SdkConstants;
 import com.android.ide.common.api.IAttributeInfo.Format;
@@ -168,6 +170,14 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         newDescriptors.addAll(newLayouts);
         newDescriptors.addAll(newViews);
 
+        ViewElementDescriptor viewTag = createViewTag(frameLayoutAttrs);
+        newViews.add(viewTag);
+        newDescriptors.add(viewTag);
+
+        ViewElementDescriptor requestFocus = createRequestFocus();
+        newViews.add(requestFocus);
+        newDescriptors.add(requestFocus);
+
         // Link all layouts to everything else here.. recursively
         for (ViewElementDescriptor layoutDesc : newLayouts) {
             layoutDesc.setChildren(newDescriptors);
@@ -183,10 +193,6 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         }
 
         fixSuperClasses(infoDescMap);
-
-        ViewElementDescriptor requestFocus = createRequestFocus();
-        newViews.add(requestFocus);
-        newDescriptors.add(requestFocus);
 
         // The <merge> tag can only be a root tag, so it is added at the end.
         // It gets everything else as children but it is not made a child itself.
@@ -305,7 +311,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     }
 
     /**
-     * Creates a new <include> descriptor and adds it to the list of view descriptors.
+     * Creates a new {@code <include>} descriptor and adds it to the list of view descriptors.
      *
      * @param knownViews A list of view descriptors being populated. Also used to find the
      *   View descriptor and extract its layout attributes.
@@ -315,6 +321,18 @@ public final class LayoutDescriptors implements IDescriptorProvider {
 
         // Create the include custom attributes
         ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
+
+        // Find View and inherit all its layout attributes
+        AttributeDescriptor[] viewLayoutAttribs;
+        AttributeDescriptor[] viewAttributes = null;
+        ViewElementDescriptor viewDesc = findDescriptorByClass(SdkConstants.CLASS_VIEW);
+        if (viewDesc != null) {
+            viewAttributes = viewDesc.getAttributes();
+            attributes = new ArrayList<AttributeDescriptor>(viewAttributes.length + 1);
+            viewLayoutAttribs = viewDesc.getLayoutAttributes();
+        } else {
+            viewLayoutAttribs = new AttributeDescriptor[0];
+        }
 
         // Note that the "layout" attribute does NOT have the Android namespace
         DescriptorsUtils.appendAttribute(attributes,
@@ -326,18 +344,11 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 true,  //required
                 null); //overrides
 
-        DescriptorsUtils.appendAttribute(attributes,
-                null, //elementXmlName
-                ANDROID_URI, //nsUri
-                new AttributeInfo(
-                        "id",           //$NON-NLS-1$
-                        Format.REFERENCE_SET ),
-                true,  //required
-                null); //overrides
-
-        // Find View and inherit all its layout attributes
-        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(
-                SdkConstants.CLASS_VIEW);
+        if (viewAttributes != null) {
+            for (AttributeDescriptor descriptor : viewAttributes) {
+                attributes.add(descriptor);
+            }
+        }
 
         // Create the include descriptor
         ViewElementDescriptor desc = new ViewElementDescriptor(xmlName,
@@ -448,6 +459,37 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         }
 
         return descriptor;
+    }
+
+    /**
+     * Creates and returns a new {@code <view>} descriptor.
+     * @param viewLayoutAttribs The layout attributes to use for the new descriptor
+     * @param styleMap The style map provided by the SDK
+     */
+    private ViewElementDescriptor createViewTag(AttributeDescriptor[] viewLayoutAttribs) {
+        String xmlName = VIEW_TAG;
+
+        TextAttributeDescriptor classAttribute = new ClassAttributeDescriptor(
+                CLASS_VIEW,
+                ATTR_CLASS, null /* namespace */,
+                new AttributeInfo(ATTR_CLASS, Format.STRING_SET),
+                true /*mandatory*/)
+                .setTooltip("Supply the name of the view class to instantiate");
+
+        // Create the include descriptor
+        ViewElementDescriptor desc = new ViewElementDescriptor(xmlName,
+                xmlName, // ui_name
+                xmlName, // "class name"; the GLE only treats this as an element tag
+                "A view tag whose class attribute names the class to be instantiated", // tooltip
+                null,  // sdk_url
+                new AttributeDescriptor[] { // attributes
+                    classAttribute
+                },
+                viewLayoutAttribs,  // layout attributes
+                null,  // children
+                false  /* mandatory */);
+
+        return desc;
     }
 
     /**

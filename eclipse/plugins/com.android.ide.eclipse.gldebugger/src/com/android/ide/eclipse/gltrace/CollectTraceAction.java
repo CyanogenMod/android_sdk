@@ -25,6 +25,7 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
+import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 
 import org.eclipse.core.filesystem.EFS;
@@ -45,6 +46,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.ide.IDE;
 
 import java.io.DataInputStream;
@@ -122,6 +124,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         } catch (Exception e) {
             MessageDialog.openError(shell, "Setup GL Trace",
                     "Error while setting up port forwarding: " + e.getMessage());
+            return;
         }
 
         try {
@@ -146,7 +149,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         openInEditor(shell, traceOptions.traceDestination);
     }
 
-    private void openInEditor(Shell shell, String traceFilePath) {
+    public static void openInEditor(Shell shell, String traceFilePath) {
         final IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(traceFilePath));
         if (!fileStore.fetchInfo().exists()) {
             return;
@@ -161,6 +164,11 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         IWorkbenchPage page = window.getActivePage();
         if (page == null) {
             return;
+        }
+
+        try {
+            workbench.showPerspective("com.android.ide.eclipse.gltrace.perspective", window);
+        } catch (WorkbenchException e) {
         }
 
         // if there is a editor already open, then refresh its model
@@ -186,7 +194,8 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
      * @return if given trace file is already open, then a reference to that editor part,
      *         null otherwise
      */
-    private GLFunctionTraceViewer getOpenTraceViewer(IWorkbenchPage page, String traceFilePath) {
+    private static GLFunctionTraceViewer getOpenTraceViewer(IWorkbenchPage page,
+            String traceFilePath) {
         IEditorReference[] editorRefs = page.getEditorReferences();
         for (IEditorReference ref : editorRefs) {
             String id = ref.getId();
@@ -213,7 +222,8 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         return null;
     }
 
-    private void startTracing(Shell shell, TraceOptions traceOptions, int port) {
+    @SuppressWarnings("resource") // Closeables.closeQuietly
+    public static void startTracing(Shell shell, TraceOptions traceOptions, int port) {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(traceOptions.traceDestination, false);
@@ -233,6 +243,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
             MessageDialog.openError(shell,
                     "OpenGL Trace",
                     "Unable to connect to remote GL Trace Server: " + e.getMessage());
+            Closeables.closeQuietly(fos);
             return;
         }
 
@@ -247,6 +258,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
                     "OpenGL Trace",
                     "Unexpected error while setting trace options: " + e.getMessage());
             closeSocket(socket);
+            Closeables.closeQuietly(fos);
             return;
         }
 
@@ -265,7 +277,7 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         closeSocket(socket);
     }
 
-    private void closeSocket(Socket socket) {
+    private static void closeSocket(Socket socket) {
         try {
             socket.close();
         } catch (IOException e) {
@@ -362,12 +374,12 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
         }
     }
 
-    private void setupForwarding(IDevice device, int i)
+    public static void setupForwarding(IDevice device, int i)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         device.createForward(i, GLTRACE_UDS, DeviceUnixSocketNamespace.ABSTRACT);
     }
 
-    private void disablePortForwarding(IDevice device, int port) {
+    public static void disablePortForwarding(IDevice device, int port) {
         try {
             device.removeForward(port, GLTRACE_UDS, DeviceUnixSocketNamespace.ABSTRACT);
         } catch (Exception e) {

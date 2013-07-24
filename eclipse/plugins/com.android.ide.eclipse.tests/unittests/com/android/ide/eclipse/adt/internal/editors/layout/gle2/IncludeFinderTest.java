@@ -17,9 +17,11 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("javadoc")
 public class IncludeFinderTest extends TestCase {
     public void testEncodeDecode1() throws Exception {
         // Test ending with just a key
@@ -66,4 +68,61 @@ public class IncludeFinderTest extends TestCase {
         finder.setIncluded("baz", Collections.<String>emptyList(), false);
         assertEquals(Collections.emptyList(), finder.getIncludedBy("foo"));
     }
+
+    public void testFindIncludes() throws Exception {
+        String xml =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    android:layout_width=\"match_parent\"\n" +
+            "    android:layout_height=\"match_parent\"\n" +
+            "    android:orientation=\"vertical\" >\n" +
+            "\n" +
+            "    <RadioButton\n" +
+            "        android:id=\"@+id/radioButton1\"\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        android:text=\"RadioButton\" />\n" +
+            "\n" +
+            "    <include\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        layout=\"@layout/layout3\" />\n" +
+            "\n" +
+            "    <include\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        layout=\"@layout/layout4\" />\n" +
+            "\n" +
+            "</LinearLayout>";
+        List<String> includes = IncludeFinder.findIncludes(xml);
+        Collections.sort(includes);
+        assertEquals(Arrays.asList("layout3", "layout4"), includes);
+    }
+
+    public void testFindFragments() throws Exception {
+        String xml =
+            "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+            "    android:layout_width=\"match_parent\"\n" +
+            "    android:layout_height=\"match_parent\"\n" +
+            "    tools:context=\".MainActivity\" >\n" +
+            "\n" +
+            "    <fragment\n" +
+            "        android:id=\"@+id/fragment1\"\n" +
+            "        android:name=\"android.app.ListFragment\"\n" +
+            "        android:layout_width=\"wrap_content\"\n" +
+            "        android:layout_height=\"wrap_content\"\n" +
+            "        android:layout_alignParentLeft=\"true\"\n" +
+            "        android:layout_alignParentTop=\"true\"\n" +
+            "        android:layout_marginLeft=\"58dp\"\n" +
+            "        android:layout_marginTop=\"74dp\"\n" +
+            "        tools:layout=\"@layout/myfragment\" />\n" +
+            "\n" +
+            "</RelativeLayout>";
+        List<String> includes = IncludeFinder.findIncludes(xml);
+        Collections.sort(includes);
+        assertEquals(Arrays.asList("myfragment"), includes);
+    }
+
+
 }

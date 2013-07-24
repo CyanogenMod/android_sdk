@@ -6,7 +6,7 @@
 # $2: Optional build number. If present, will be appended to the date qualifier.
 #     The build number cannot contain spaces *nor* periods (dashes are ok.)
 # -z: Optional, prevents the final zip and leaves the udate-site directory intact.
-# -i: Optional, if present, the Google internal update site will be built. Otherwise, 
+# -i: Optional, if present, the Google internal update site will be built. Otherwise,
 #     the external site will be built
 # Workflow:
 # - make dx, ddms, ping
@@ -17,6 +17,8 @@
 # eventually both might merge as needed.
 
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
+
+PROG_DIR=$(dirname "$0")
 
 DEST_DIR=""
 BUILD_NUMBER=""
@@ -48,7 +50,7 @@ function die() {
 function check_params() {
   # This needs to run from the top android directory
   # Automatically CD to the top android directory, whatever its name
-  D=`dirname "$0"`
+  D="$PROG_DIR"
   cd "$D/../../../" && echo "Switched to directory $PWD"
 
   # The current Eclipse build has some Linux dependency in its config files
@@ -57,16 +59,18 @@ function check_params() {
   # Check dest dir exists
   [ -n "$DEST_DIR" ] || die "Usage: $0 <destination-directory> [build-number]"
   [ -d "$DEST_DIR" ] || die "Destination directory $DEST_DIR must exist."
-}
-
-function build_plugin {
-  sdk/eclipse/scripts/create_all_symlinks.sh
 
   # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format and the optional
   # build number.
   DATE=`date +v%Y%m%d%H%M`
   QUALIFIER="$DATE"
   [ -n "$BUILD_NUMBER" ] && QUALIFIER="${QUALIFIER}-${BUILD_NUMBER}"
+
+  return 0
+}
+
+function build_plugin() {
+  sdk/eclipse/scripts/create_all_symlinks.sh
 
   # Compute the final directory name and remove any leftovers from previous
   # runs if any.
@@ -106,6 +110,24 @@ function build_plugin {
   fi
 }
 
+function build_adt_ide() {
+  if [[ -z $INTERNAL_BUILD ]]; then
+    # This needs to run from the top android directory
+    D="$PROG_DIR"
+    cd "$D/../../../" && echo "Switched to directory $PWD"
+    for sc in */*/*/build_ide*.sh; do
+      if [[ -x $sc ]]; then
+        echo "RUNNING $sc from $PWD"
+        $sc "$DEST_DIR" "$QUALIFIER" "${BUILD_NUMBER:-$QUALIFIER}"
+      else
+        echo "WARNING: skipping non-exec $sc script"
+      fi
+    done
+  fi
+}
+
 get_params "$@"
 check_params
-build_plugin
+( build_plugin )
+( build_adt_ide )
+
