@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -238,7 +239,8 @@ public class RenderScriptProcessor extends SourceProcessor {
             command[index] = quote(osSourcePath);
 
             // launch the process
-            if (execLlvmRsCc(builder, project, command, sourceFile, verbose) == false) {
+            if (!execLlvmRsCc(builder, project, command, sourceFile, buildToolInfo.getLocation(),
+                    verbose)) {
                 // llvm-rs-cc failed. File should be marked. We add the file to the list
                 // of file that will need compilation again.
                 notCompiledOut.add(sourceFile);
@@ -258,7 +260,7 @@ public class RenderScriptProcessor extends SourceProcessor {
     }
 
     private boolean execLlvmRsCc(BaseBuilder builder, IProject project, String[] command,
-            IFile sourceFile, boolean verbose) {
+            IFile sourceFile, File buildToolRoot, boolean verbose) {
         // do the exec
         try {
             if (verbose) {
@@ -271,7 +273,15 @@ public class RenderScriptProcessor extends SourceProcessor {
                 AdtPlugin.printToConsole(project, cmd_line);
             }
 
-            Process p = Runtime.getRuntime().exec(command);
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Map<String, String> env = processBuilder.environment();
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                env.put("DYLD_LIBRARY_PATH", buildToolRoot.getAbsolutePath());
+            } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+                env.put("LD_LIBRARY_PATH", buildToolRoot.getAbsolutePath());
+            }
+
+            Process p = processBuilder.start();
 
             // list to store each line of stderr
             ArrayList<String> stdErr = new ArrayList<String>();
