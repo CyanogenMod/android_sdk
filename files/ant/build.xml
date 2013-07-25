@@ -480,7 +480,6 @@
         <property name="aidl" location="${android.build.tools.dir}/aidl${exe}" />
         <property name="aapt" location="${android.build.tools.dir}/aapt${exe}" />
         <property name="dx" location="${android.build.tools.dir}/dx${bat}" />
-        <property name="renderscript" location="${android.build.tools.dir}/llvm-rs-cc${exe}"/>
 
         <!-- Renderscript include Path -->
         <path id="android.renderscript.include.path">
@@ -662,7 +661,7 @@
             <echo level="info">Handling RenderScript files...</echo>
             <!-- set the rs target prop in case it hasn't been set. -->
             <property name="renderscript.target" value="${project.minSdkVersion}" />
-            <renderscript executable="${renderscript}"
+            <renderscript buildToolsRoot="${android.build.tools.dir}"
                     includePathRefId="android.renderscript.include.path"
                     genFolder="${gen.absolute.dir}"
                     resFolder="${out.res.absolute.dir}/raw"
