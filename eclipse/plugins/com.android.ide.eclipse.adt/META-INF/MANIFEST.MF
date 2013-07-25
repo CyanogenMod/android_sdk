@@ -134,14 +134,7 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.tools.lint.client.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.tools.lint.detector.api;x-friends:="com.android.ide.eclipse.tests",
  freemarker.cache;x-friends:="com.android.ide.eclipse.tests",
- freemarker.template;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.io;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.kdom;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap.syncml;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap.wml;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap.wv;x-friends:="com.android.ide.eclipse.tests",
- org.xmlpull.v1;x-friends:="com.android.ide.eclipse.tests"
+ freemarker.template;x-friends:="com.android.ide.eclipse.tests"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Import-Package: com.ibm.icu.text,
  org.eclipse.core.variables
