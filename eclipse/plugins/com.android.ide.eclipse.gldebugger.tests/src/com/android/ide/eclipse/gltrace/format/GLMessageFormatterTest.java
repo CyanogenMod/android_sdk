@@ -60,7 +60,7 @@ public class GLMessageFormatterTest {
         int arg2 = 10;
 
         GLMessage msg = constructGLMessage(null, Function.glBindBuffer,
-                createEnumDataType(arg1.value),
+                createEnumDataType((int)arg1.value),
                 createIntegerDataType(arg2));
 
         String expected = String.format("glBindBuffer(target = %s, buffer = %s)",
@@ -79,7 +79,7 @@ public class GLMessageFormatterTest {
         GLMessage msg = constructGLMessage(
                 createStringDataType(retValue),
                 Function.glGetString,
-                createEnumDataType(arg1.value));
+                createEnumDataType((int)arg1.value));
         String expected = String.format("%s(name = %s) = (const GLchar*) %s", Function.glGetString,
                 arg1.toString(), retValue);
         String actual = sGLMessageFormatter.formatGLMessage(msg);
@@ -132,7 +132,7 @@ public class GLMessageFormatterTest {
         //void, glGetActiveAttrib, GLenum* type
         GLMessage msg = constructGLMessage(null,
                 Function.glGetActiveAttrib,
-                createIntegerPointerDataType(GLEnum.GL_FLOAT_MAT4.value));
+                createIntegerPointerDataType((int)GLEnum.GL_FLOAT_MAT4.value));
 
         String expected = "glGetActiveAttrib(type = [GL_FLOAT_MAT4])";
         String actual = sGLMessageFormatter.formatGLMessage(msg);
