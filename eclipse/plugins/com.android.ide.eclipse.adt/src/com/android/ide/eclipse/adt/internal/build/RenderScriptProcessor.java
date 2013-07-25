@@ -184,15 +184,15 @@ public class RenderScriptProcessor extends SourceProcessor {
         // create the command line
         String[] command = new String[15];
         int index = 0;
-        command[index++] = quote(buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC));
+        command[index++] = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG));
+        command[index++] = buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG);
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS));
+        command[index++] = buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS);
         command[index++] = "-p";   //$NON-NLS-1$
-        command[index++] = quote(genFolder.getLocation().toOSString());
+        command[index++] = genFolder.getLocation().toOSString();
         command[index++] = "-o";   //$NON-NLS-1$
-        command[index++] = quote(rawFolder.getLocation().toOSString());
+        command[index++] = rawFolder.getLocation().toOSString();
 
         command[index++] = "-target-api";   //$NON-NLS-1$
         command[index++] = Integer.toString(mTargetApi);
