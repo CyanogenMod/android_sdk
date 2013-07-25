@@ -568,6 +568,14 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
     };
 
     private void launchSystrace(final IDevice device, final Shell parentShell) {
+        final File systraceAssets = new File(DdmsPlugin.getPlatformToolsFolder(), "systrace"); //$NON-NLS-1$
+        if (!systraceAssets.isDirectory()) {
+            MessageDialog.openError(parentShell, "Systrace",
+                    "Updated version of platform-tools (18.0.1 or greater) is required.\n"
+                    + "Please update your platform-tools using SDK Manager.");
+            return;
+        }
+
         SystraceVersionDetector detector = new SystraceVersionDetector(device);
         try {
             new ProgressMonitorDialog(parentShell).run(true, false, detector);
@@ -659,11 +667,12 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                     }
 
                     monitor.setTaskName("Saving trace information");
-                    File systraceAssets = new File(DdmsPlugin.getToolsFolder(), "systrace"); //$NON-NLS-1$
                     SystraceOutputParser parser = new SystraceOutputParser(
                             COMPRESS_DATA,
                             SystraceOutputParser.getJs(systraceAssets),
-                            SystraceOutputParser.getCss(systraceAssets));
+                            SystraceOutputParser.getCss(systraceAssets),
+                            SystraceOutputParser.getHtmlPrefix(systraceAssets),
+                            SystraceOutputParser.getHtmlSuffix(systraceAssets));
 
                     parser.parse(task.getAtraceOutput());
 

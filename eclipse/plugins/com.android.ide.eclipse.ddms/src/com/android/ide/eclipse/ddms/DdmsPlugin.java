@@ -490,6 +490,10 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         return sAdbLocation;
     }
 
+    public static File getPlatformToolsFolder() {
+        return new File(sAdbLocation).getParentFile();
+    }
+
     public static String getToolsFolder() {
         return sToolsFolder;
     }
