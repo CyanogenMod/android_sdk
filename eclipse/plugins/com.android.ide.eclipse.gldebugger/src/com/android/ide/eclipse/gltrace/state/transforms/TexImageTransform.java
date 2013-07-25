@@ -26,6 +26,8 @@ import com.google.common.primitives.UnsignedBytes;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 
 import javax.imageio.ImageIO;
 
@@ -99,6 +101,8 @@ public class TexImageTransform implements IStateTransform {
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            } catch (RuntimeException e) {
+                throw e;
             }
         }
 
@@ -186,6 +190,9 @@ public class TexImageTransform implements IStateTransform {
                 return subImageData;
             case GL_RGB:
                 return addAlphaChannel(subImageData, width, height);
+            case GL_RED:
+            case GL_GREEN:
+            case GL_BLUE:
             case GL_ALPHA:
                 return addRGBChannels(subImageData, width, height);
             case GL_LUMINANCE:
@@ -210,10 +217,23 @@ public class TexImageTransform implements IStateTransform {
             case GL_UNSIGNED_SHORT_5_5_5_1:
                 return convertShortToUnsigned(data, 0xf800, 11, 0x07c0, 6, 0x003e, 1, 0x1, 0,
                         true);
+            case GL_FLOAT:
+                return convertFloatToUnsigned(data);
             default:
                 return data;
         }
     }
+
+   private byte[] convertFloatToUnsigned(byte[] data) {
+       byte[] unsignedData = new byte[data.length];
+       ByteBuffer floatBuffer = ByteBuffer.wrap(data);
+       for (int i = 0; i < data.length / 4; i++) {
+           float v = floatBuffer.getFloat(i);
+           byte alpha = (byte)(v * 255);
+           unsignedData[i*4 + 3] = alpha;
+       }
+       return unsignedData;
+   }
 
    private byte[] convertShortToUnsigned(byte[] shortData,
            int rmask, int rshift,
