@@ -29,50 +29,11 @@ import java.util.zip.Inflater;
 public class SystraceOutputParser {
     private static final String TRACE_START = "TRACE:\n"; //$NON-NLS-1$
 
-    private static final String HTML_PREFIX = "<!DOCTYPE HTML>\n"
-            + "<html>\n"
-            + "<head i18n-values=\"dir:textdirection;\">\n"
-            + "<title>Android System Trace</title>\n"
-            + "%s\n"
-            + "%s\n"
-            + "<script language=\"javascript\">\n"
-            + "document.addEventListener('DOMContentLoaded', function() {\n"
-            + "  if (!linuxPerfData)\n"
-            + "    return;\n"
-            + "  var m = new tracing.Model(linuxPerfData);\n"
-            + "  var timelineViewEl = document.querySelector('.view');\n"
-            + "  tracing.ui.decorate(timelineViewEl, tracing.TimelineView);\n"
-            + "  timelineViewEl.model = m;\n"
-            + "  timelineViewEl.tabIndex = 1;\n"
-            + "  timelineViewEl.timeline.focusElement = timelineViewEl;\n"
-            + "});\n"
-            + "</script>\n"
-            + "<style>\n"
-            + "  .view {\n"
-            + "    overflow: hidden;\n"
-            + "    position: absolute;\n"
-            + "    top: 0;\n"
-            + "    bottom: 0;\n"
-            + "    left: 0;\n"
-            + "    right: 0;\n"
-            + "  }\n"
-            + "</style>\n"
-            + "</head>\n"
-            + "<body>\n"
-            + "  <div class=\"view\">\n"
-            + "  </div>\n"
-            + "  <script>\n"
-            + "  var linuxPerfData = \"\\\n";
-
-    private static final String HTML_SUFFIX =
-              "           dummy-0000  [000] 0.0: 0: trace_event_clock_sync: parent_ts=0.0\\n\";\n"
-            + "  </script>\n"
-            + "</body>\n"
-            + "</html>\n";
-
     private final boolean mUncompress;
     private final String mJs;
     private final String mCss;
+    private final String mHtmlPrefix;
+    private final String mHtmlSuffix;
 
     private byte[] mAtraceOutput;
     private int mAtraceLength;
@@ -84,10 +45,13 @@ public class SystraceOutputParser {
      * @param systraceJs systrace javascript content
      * @param systraceCss systrace css content
      */
-    public SystraceOutputParser(boolean compressedStream, String systraceJs, String systraceCss) {
+    public SystraceOutputParser(boolean compressedStream, String systraceJs, String systraceCss,
+            String htmlPrefix, String htmlSuffix) {
         mUncompress = compressedStream;
         mJs = systraceJs;
         mCss = systraceCss;
+        mHtmlPrefix = htmlPrefix;
+        mHtmlSuffix = htmlSuffix;
     }
 
     /**
@@ -164,8 +128,8 @@ public class SystraceOutputParser {
 
         // each line should end with the characters \n\ followed by a newline
         String html_out = trace.replaceAll("\n", "\\\\n\\\\\n");
-        String header = String.format(HTML_PREFIX, mCss, mJs);
-        String footer = HTML_SUFFIX;
+        String header = String.format(mHtmlPrefix, mCss, mJs, "");
+        String footer = mHtmlSuffix;
         return header + html_out + footer;
     }
 
@@ -182,6 +146,22 @@ public class SystraceOutputParser {
         try {
             return String.format("<style type=\"text/css\">%s</style>",
                     Files.toString(new File(assetsFolder, "style.css"), Charsets.UTF_8));
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    public static String getHtmlPrefix(File assetsFolder) {
+        return getHtmlTemplate(assetsFolder, "prefix.html");
+    }
+
+    public static String getHtmlSuffix(File assetsFolder) {
+        return getHtmlTemplate(assetsFolder, "suffix.html");
+    }
+
+    private static String getHtmlTemplate(File assetsFolder, String htmlFileName) {
+        try {
+            return Files.toString(new File(assetsFolder, htmlFileName), Charsets.UTF_8);
         } catch (IOException e) {
             return "";
         }
