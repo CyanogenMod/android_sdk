@@ -209,9 +209,9 @@ public class GLState {
         IGLProperty blendSrcRgb = new GLEnumProperty(GLStateType.BLEND_SRC_RGB, GLEnum.GL_LINES);
         IGLProperty blendSrcAlpha = new GLEnumProperty(GLStateType.BLEND_SRC_ALPHA,
                 GLEnum.GL_LINES);
-        IGLProperty blendDstRgb = new GLEnumProperty(GLStateType.BLEND_DST_RGB, GLEnum.GL_POINTS);
+        IGLProperty blendDstRgb = new GLEnumProperty(GLStateType.BLEND_DST_RGB, GLEnum.GL_NONE);
         IGLProperty blendDstAlpha = new GLEnumProperty(GLStateType.BLEND_DST_ALPHA,
-                GLEnum.GL_POINTS);
+                GLEnum.GL_NONE);
         IGLProperty blendEquationRgb = new GLEnumProperty(GLStateType.BLEND_EQUATION_RGB,
                 GLEnum.GL_FUNC_ADD);
         IGLProperty blendEquationAlpha = new GLEnumProperty(GLStateType.BLEND_EQUATION_ALPHA,
@@ -260,12 +260,28 @@ public class GLState {
         IGLProperty textureUnitState = new GLListProperty(GLStateType.TEXTURE_UNITS,
                 perTextureUnitState, TEXTURE_UNIT_COUNT);
 
+        IGLProperty swizzleR = new GLEnumProperty(GLStateType.TEXTURE_SWIZZLE_R, GLEnum.GL_RED);
+        IGLProperty swizzleG = new GLEnumProperty(GLStateType.TEXTURE_SWIZZLE_G, GLEnum.GL_GREEN);
+        IGLProperty swizzleB = new GLEnumProperty(GLStateType.TEXTURE_SWIZZLE_B, GLEnum.GL_BLUE);
+        IGLProperty swizzleA = new GLEnumProperty(GLStateType.TEXTURE_SWIZZLE_A, GLEnum.GL_ALPHA);
         IGLProperty minFilter = new GLEnumProperty(GLStateType.TEXTURE_MIN_FILTER,
                 GLEnum.GL_NEAREST);
         IGLProperty magFilter = new GLEnumProperty(GLStateType.TEXTURE_MAG_FILTER,
                 GLEnum.GL_NEAREST);
         IGLProperty wrapS = new GLEnumProperty(GLStateType.TEXTURE_WRAP_S, GLEnum.GL_REPEAT);
         IGLProperty wrapT = new GLEnumProperty(GLStateType.TEXTURE_WRAP_T, GLEnum.GL_REPEAT);
+        IGLProperty wrapR = new GLEnumProperty(GLStateType.TEXTURE_WRAP_R, GLEnum.GL_REPEAT);
+        IGLProperty minLod = new GLFloatProperty(GLStateType.TEXTURE_MIN_LOD, Float.valueOf(-1000));
+        IGLProperty maxLod = new GLFloatProperty(GLStateType.TEXTURE_MAX_LOD, Float.valueOf(1000));
+        IGLProperty baseLevel = new GLIntegerProperty(GLStateType.TEXTURE_BASE_LEVEL, 0);
+        IGLProperty maxLevel = new GLIntegerProperty(GLStateType.TEXTURE_MAX_LEVEL, 1000);
+        IGLProperty cmpMode = new GLEnumProperty(GLStateType.TEXTURE_COMPARE_MODE, GLEnum.GL_NONE);
+        IGLProperty cmpFunc = new GLEnumProperty(GLStateType.TEXTURE_COMPARE_FUNC,
+                GLEnum.GL_LEQUAL);
+        IGLProperty immutableFormat = new GLBooleanProperty(GLStateType.TEXTURE_IMMUTABLE_FORMAT,
+                Boolean.FALSE);
+        IGLProperty immutableLevels = new GLIntegerProperty(GLStateType.TEXTURE_IMMUTABLE_LEVELS,
+                0);
 
         IGLProperty width = new GLIntegerProperty(GLStateType.TEXTURE_WIDTH, Integer.valueOf(-1));
         IGLProperty height = new GLIntegerProperty(GLStateType.TEXTURE_HEIGHT,
@@ -283,7 +299,14 @@ public class GLState {
                 perTextureLevelState, true);
 
         IGLProperty textureDefaultState = new GLCompositeProperty(GLStateType.PER_TEXTURE_STATE,
-                minFilter, magFilter, wrapS, wrapT, mipmapState);
+                swizzleR, swizzleG, swizzleB, swizzleA,
+                minFilter, magFilter,
+                wrapS, wrapT, wrapR,
+                minLod, maxLod,
+                baseLevel, maxLevel,
+                cmpMode, cmpFunc,
+                immutableFormat, immutableLevels,
+                mipmapState);
         GLSparseArrayProperty textures = new GLSparseArrayProperty(GLStateType.TEXTURES,
                 textureDefaultState);
         textures.add(0);
