@@ -193,6 +193,15 @@ public class TexImageTransform implements IStateTransform {
             case GL_RED:
             case GL_GREEN:
             case GL_BLUE:
+                // GL_RED, GL_GREEN and GL_BLUE are all supposed to fill those respective
+                // channels, but we assume that the programmers intent was to use GL_ALPHA in order
+                // to overcome the issue that GL_ALPHA cannot be used with float data.
+                if (mType != GLEnum.GL_FLOAT) {
+                    throw new RuntimeException();
+                } else {
+                    // fall through - assume that it is GL_ALPHA
+                }
+                //$FALL-THROUGH$
             case GL_ALPHA:
                 return addRGBChannels(subImageData, width, height);
             case GL_LUMINANCE:
