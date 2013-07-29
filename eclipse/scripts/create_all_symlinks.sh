@@ -180,7 +180,7 @@ CP_FILES="$CP_FILES @:$DDMS_DEST $DDMS_LIBS $DDMS_PREBUILTS"
 ### TEST ###
 
 TEST_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.tests"
-TEST_LIBS="make:easymock base:sdktestutils"
+TEST_LIBS="make:easymock base:testutils"
 TEST_PREBUILTS="prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar"
 
 LIBS="$LIBS $TEST_LIBS"
