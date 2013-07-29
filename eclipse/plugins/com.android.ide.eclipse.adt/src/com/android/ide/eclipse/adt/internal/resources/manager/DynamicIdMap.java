@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.resources.ResourceType;
-import com.android.sdklib.util.SparseArray;
 import com.android.util.Pair;
+import com.android.utils.SparseArray;
 
 import java.util.HashMap;
 import java.util.Map;

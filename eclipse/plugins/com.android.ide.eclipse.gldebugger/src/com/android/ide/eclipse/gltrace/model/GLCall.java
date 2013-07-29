@@ -19,7 +19,7 @@ package com.android.ide.eclipse.gltrace.model;
 import com.android.ide.eclipse.gltrace.GLProtoBuf;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
-import com.android.sdklib.util.SparseArray;
+import com.android.utils.SparseArray;
 
 import java.util.Collections;
 import java.util.List;
