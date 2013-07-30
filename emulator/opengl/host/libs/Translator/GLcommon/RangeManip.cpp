@@ -41,7 +41,8 @@ bool Range::rangeUnion(const Range& r,Range& rOut) const {
 }
 
 void RangeList::addRange(const Range& r) {
-    list.push_back(r);
+    if(r.getSize())
+        list.push_back(r);
 }
 
 void RangeList::addRanges(const RangeList& rl) {
