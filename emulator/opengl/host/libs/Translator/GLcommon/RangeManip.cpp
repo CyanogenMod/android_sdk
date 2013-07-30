@@ -35,7 +35,7 @@ bool Range::rangeUnion(const Range& r,Range& rOut) const {
     int size =  max_end - min_start;
     if(size) {
         rOut.setRange(min_start,max_end-min_start);
-        return false;
+        return true;
     }
     return false;
 }
