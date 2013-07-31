@@ -121,10 +121,10 @@ prebuilts/tools/common/proguard/proguard4.7/bin/retrace.sh     tools/proguard/bi
 prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  tools/proguard/ant/task.properties
 
 # Templates
-sdk/templates/projects                  tools/templates/projects
-sdk/templates/activities                tools/templates/activities
-sdk/templates/gradle                    tools/templates/gradle
-sdk/templates/other                     tools/templates/other
+tools/base/templates/projects                  tools/templates/projects
+tools/base/templates/activities                tools/templates/activities
+tools/base/templates/gradle                    tools/templates/gradle
+tools/base/templates/other                     tools/templates/other
 
 # SDK Controller
 sdk/apps/SdkController                  tools/apps/SdkController
