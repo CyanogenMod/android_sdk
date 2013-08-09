@@ -142,11 +142,20 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
 EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* srfc){
     EGLint width,height,hasMipmap,tmp;
     EGLint target,format;
+    GLenum glTexFormat = GL_RGBA, glTexTarget = GL_TEXTURE_2D;
     srfc->getDim(&width,&height,&tmp);
     srfc->getTexInfo(&format,&target);
+    switch (format) {
+    case EGL_TEXTURE_RGB:
+        glTexFormat = GL_RGB;
+        break;
+    case EGL_TEXTURE_RGBA:
+        glTexFormat = GL_RGBA;
+        break;
+    }
     srfc->getAttrib(EGL_MIPMAP_TEXTURE,&hasMipmap);
     EGLint maxMipmap = hasMipmap ? MAX_PBUFFER_MIPMAP_LEVEL:0;
-    return (EGLNativeSurfaceType)nsCreatePBuffer(target,format,maxMipmap,width,height);
+    return (EGLNativeSurfaceType)nsCreatePBuffer(glTexTarget,glTexFormat,maxMipmap,width,height);
 }
 
 bool releasePbuffer(EGLNativeDisplayType dis,EGLNativeSurfaceType pb) {
