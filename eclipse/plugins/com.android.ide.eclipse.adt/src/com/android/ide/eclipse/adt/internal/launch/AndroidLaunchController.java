@@ -524,7 +524,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                         public void run() {
                             Shell shell = display.getActiveShell();
                             if (MessageDialog.openQuestion(shell, "Android AVD Error",
-                                    "No compatible targets were found. Do you wish to a add new Android Virtual Device?")) {
+                                    "No compatible targets were found. Do you wish to add a new Android Virtual Device?")) {
                                 AvdManagerAction action = new AvdManagerAction();
                                 action.run(null /*action*/);
                                 searchAgain[0] = true;
