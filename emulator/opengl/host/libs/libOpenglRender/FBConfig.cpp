@@ -203,7 +203,9 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
     }
 #endif
 
-    s_egl.eglChooseConfig(dpy, newAttribs, matchedConfigs, nConfigs, &nConfigs);
+    if (!s_egl.eglChooseConfig(dpy, newAttribs, matchedConfigs, nConfigs, &nConfigs)) {
+        nConfigs = 0;
+    }
 
     delete[] newAttribs;
 
