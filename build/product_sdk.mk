@@ -32,5 +32,6 @@ PRODUCT_PACKAGES += \
 	mksdcard \
 	monitor \
 	fastboot \
+	heimdall \
 	emugen
 

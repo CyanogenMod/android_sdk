@@ -27,6 +27,8 @@
 
 subdirs += \
 	external/openssl \
+	external/heimdall \
+	external/libusbx \
 	external/qemu \
 	prebuilts/tools \
 	sdk/avdlauncher \
