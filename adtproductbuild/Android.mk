@@ -49,7 +49,7 @@ $(ADT_IDE_JAVA_TARGET) : $(TOPDIR)sdk/adtproductbuild/adt_eclipse_ide \
 	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/fbuild/plugins
 	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/pbuild/plugins
 	$(hide)mkdir -p $(dir $@)
-	$(hide)$(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
+	$(hide) $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
 	$(hide)cd $(TOPDIR)sdk/adtproductbuild && \
 		rm -f ../../$(ADT_IDE_BUILD_LOG) && mkdir -p ../../$(dir $(ADT_IDE_BUILD_LOG)) && \
 		( java -jar ../../external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/plugins/org.eclipse.equinox.launcher_1.1.0.v20100507.jar \
@@ -167,4 +167,3 @@ $(LOCAL_BUILT_MODULE) : $(ADT_IDE_MODULE_DEPS)
 
 endif
 endif
-
