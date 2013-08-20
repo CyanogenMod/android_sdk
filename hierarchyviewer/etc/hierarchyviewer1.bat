@@ -30,17 +30,17 @@ call lib\find_java.bat
 if not defined java_exe goto :EOF
 
 set jarfile=hierarchyviewer.jar
-set frameworkdir=
+set frameworkdir=.
 set libdir=
 
-if exist %frameworkdir%%jarfile% goto JarFileOk
-    set frameworkdir=lib\
+if exist %frameworkdir%\%jarfile% goto JarFileOk
+    set frameworkdir=lib
 
-if exist %frameworkdir%%jarfile% goto JarFileOk
-    set frameworkdir=..\framework\
+if exist %frameworkdir%\%jarfile% goto JarFileOk
+    set frameworkdir=..\framework
 
 :JarFileOk
 
-set jarpath=%frameworkdir%%jarfile%
+set jarpath=%frameworkdir%\%jarfile%
 
-call %java_exe% -Xmx512m -Djava.ext.dirs=%frameworkdir% -Dhierarchyviewer.adb= -jar %jarpath% %*
+call "%java_exe%" -Xmx512m "-Djava.ext.dirs=%frameworkdir%" -Dhierarchyviewer.adb= -jar %jarpath% %*

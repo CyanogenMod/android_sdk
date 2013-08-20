@@ -26,7 +26,7 @@ call lib\find_java.bat
 if not defined java_exe goto :EOF
 
 :QueryArch
-for /f %%a in ('%java_exe% -jar lib\archquery.jar') do set vmarch=%%a
+for /f "delims=" %%a in ('"%java_exe%" -jar lib\archquery.jar') do set vmarch=%%a
 
 start lib\monitor-%vmarch%\monitor
 
