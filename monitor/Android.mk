@@ -32,7 +32,7 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 			$(TOPDIR)sdk/monitor/build.properties \
 			$(MONITOR_DEPS)
 	@mkdir -p $(dir $@)
-	$(hide)$(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
+	$(hide) $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
 	$(hide)cd $(TOPDIR)sdk/monitor && \
 		rm -f ../../$(RCP_LOG_FILE) && mkdir -p ../../$(dir $(RCP_LOG_FILE)) && \
 		( java -jar ../../external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/plugins/org.eclipse.equinox.launcher_1.1.0.v20100507.jar \
