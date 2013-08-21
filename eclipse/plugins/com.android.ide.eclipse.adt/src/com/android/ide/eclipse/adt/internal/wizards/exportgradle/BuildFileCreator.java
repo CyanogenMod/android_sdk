@@ -132,12 +132,18 @@ public class BuildFileCreator {
             IPath workspaceLocation = workspaceRoot.getLocation();
 
             IPath relativePath = commonRoot.makeRelativeTo(workspaceLocation);
+            // if makeRelativePath to returns the same path, then commonRoot is not in the
+            // workspace.
             boolean rootInWorkspace = !relativePath.equals(commonRoot);
+            // we only care if the root is a workspace project. if it's the workspace folder itself,
+            // then the files won't be handled by the workspace.
+            rootInWorkspace = rootInWorkspace && relativePath.segmentCount() > 0;
 
             File settingsFile = new File(commonRoot.toFile(), SETTINGS_FILE);
 
             // more than one modules -> generate settings.gradle
             if (multiModules && rootInWorkspace) {
+
                 // Locate the settings.gradle file and add it to the changed files list
                 IPath settingsGradle = Path.fromOSString(settingsFile.getAbsolutePath());
 
