@@ -578,9 +578,7 @@ bool FrameBuffer::flushWindowSurfaceColorBuffer(HandleType p_surface)
         return false;
     }
 
-    (*w).second->flushColorBuffer();
-
-    return true;
+    return (*w).second->flushColorBuffer();
 }
 
 bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
