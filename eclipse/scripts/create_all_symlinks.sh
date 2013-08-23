@@ -316,23 +316,24 @@ done
 MAKE_TARGETS="$NEW_TARGETS"
 unset NEW_TARGETS
 
+if [[ -z $ONLY_COPY_DEPS ]]; then
+  if [[ -n $MAKE_TARGETS ]]; then
+    ( # Make sure we have lunch sdk-<something>
+      if [[ ! "$TARGET_PRODUCT" ]]; then
+        warn "## TARGET_PRODUCT is not set, running build/envsetup.sh"
+        . build/envsetup.sh
+        warn "## lunch sdk-eng"
+        lunch sdk-eng
+      fi
 
-if [[ -n $MAKE_TARGETS ]]; then
-  ( # Make sure we have lunch sdk-<something>
-    if [[ ! "$TARGET_PRODUCT" ]]; then
-      warn "## TARGET_PRODUCT is not set, running build/envsetup.sh"
-      . build/envsetup.sh
-      warn "## lunch sdk-eng"
-      lunch sdk-eng
-    fi
+      J="4"
+      [[ $(uname) == "Darwin" ]] && J=$(sysctl hw.ncpu | cut -d : -f 2 | tr -d ' ')
+      [[ $(uname) == "Linux"  ]] && J=$(cat /proc/cpuinfo | grep processor | wc -l)
 
-    J="4"
-    [[ $(uname) == "Darwin" ]] && J=$(sysctl hw.ncpu | cut -d : -f 2 | tr -d ' ')
-    [[ $(uname) == "Linux"  ]] && J=$(cat /proc/cpuinfo | grep processor | wc -l)
-
-    warn "## Building libs: make -j$J $MAKE_TARGETS"
-    make -j${J} $MAKE_TARGETS
-  )
+      warn "## Building libs: make -j$J $MAKE_TARGETS"
+      make -j${J} $MAKE_TARGETS
+    )
+  fi
 fi
 
 # --- Copy resulting files ---
