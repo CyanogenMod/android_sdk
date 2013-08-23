@@ -13,6 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 #include "FrameBuffer.h"
 #include "NativeSubWindow.h"
 #include "FBConfig.h"
@@ -20,14 +21,14 @@
 #include "GLDispatch.h"
 #include "GL2Dispatch.h"
 #include "ThreadInfo.h"
-#include <stdio.h>
 #include "TimeUtils.h"
+#include <stdio.h>
 
 FrameBuffer *FrameBuffer::s_theFrameBuffer = NULL;
 HandleType FrameBuffer::s_nextHandle = 0;
 
 #ifdef WITH_GLES2
-static const char *getGLES2ExtensionString(EGLDisplay p_dpy)
+static char* getGLES2ExtensionString(EGLDisplay p_dpy)
 {
     EGLConfig config;
     EGLSurface surface;
@@ -74,10 +75,9 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy)
         return NULL;
     }
 
-    const char *extString = (const char *)s_gl2.glGetString(GL_EXTENSIONS);
-    if (!extString) {
-        extString = "";
-    }
+    // the string pointer may become invalid when the context is destroyed
+    const char* s = (const char*)s_gl2.glGetString(GL_EXTENSIONS);
+    char* extString = strdup(s ? s : "");
 
     s_egl.eglMakeCurrent(p_dpy, NULL, NULL, NULL);
     s_egl.eglDestroyContext(p_dpy, ctx);
@@ -153,7 +153,7 @@ bool FrameBuffer::initialize(int width, int height)
     // if GLES2 plugin has loaded - try to make GLES2 context and
     // get GLES2 extension string
     //
-    const char *gl2Extensions = NULL;
+    char* gl2Extensions = NULL;
 #ifdef WITH_GLES2
     if (fb->m_caps.hasGL2) {
         gl2Extensions = getGLES2ExtensionString(fb->m_eglDisplay);
@@ -187,6 +187,7 @@ bool FrameBuffer::initialize(int width, int height)
     if (!s_egl.eglChooseConfig(fb->m_eglDisplay, configAttribs,
                                &fb->m_eglConfig, 1, &n)) {
         ERR("Failed on eglChooseConfig\n");
+        free(gl2Extensions);
         delete fb;
         return false;
     }
@@ -201,6 +202,7 @@ bool FrameBuffer::initialize(int width, int height)
                                               glContextAttribs);
     if (fb->m_eglContext == EGL_NO_CONTEXT) {
         printf("Failed to create Context 0x%x\n", s_egl.eglGetError());
+        free(gl2Extensions);
         delete fb;
         return false;
     }
@@ -218,6 +220,7 @@ bool FrameBuffer::initialize(int width, int height)
                                                glContextAttribs);
     if (fb->m_pbufContext == EGL_NO_CONTEXT) {
         printf("Failed to create Pbuffer Context 0x%x\n", s_egl.eglGetError());
+        free(gl2Extensions);
         delete fb;
         return false;
     }
@@ -238,6 +241,7 @@ bool FrameBuffer::initialize(int width, int height)
                                                   pbufAttribs);
     if (fb->m_pbufSurface == EGL_NO_SURFACE) {
         printf("Failed to create pbuf surface for FB 0x%x\n", s_egl.eglGetError());
+        free(gl2Extensions);
         delete fb;
         return false;
     }
@@ -245,6 +249,7 @@ bool FrameBuffer::initialize(int width, int height)
     // Make the context current
     if (!fb->bind_locked()) {
         ERR("Failed to make current\n");
+        free(gl2Extensions);
         delete fb;
         return false;
     }
@@ -259,8 +264,10 @@ bool FrameBuffer::initialize(int width, int height)
     }
 
     if (fb->m_caps.hasGL2 && has_gl_oes_image) {
-        has_gl_oes_image &= (strstr(gl2Extensions, "GL_OES_EGL_image") != NULL);
+        has_gl_oes_image &= strstr(gl2Extensions, "GL_OES_EGL_image") != NULL;
     }
+    free(gl2Extensions);
+    gl2Extensions = NULL;
 
     const char *eglExtensions = s_egl.eglQueryString(fb->m_eglDisplay,
                                                      EGL_EXTENSIONS);
