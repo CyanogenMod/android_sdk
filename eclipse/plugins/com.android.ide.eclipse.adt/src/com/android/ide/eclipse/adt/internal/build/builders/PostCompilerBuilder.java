@@ -371,7 +371,9 @@ public class PostCompilerBuilder extends BaseBuilder {
                 if (DEBUG_LOG) {
                     AdtPlugin.log(IStatus.INFO, "%s running crunch!", project.getName());
                 }
-                BuildHelper helper = new BuildHelper(project, mBuildToolInfo,
+                BuildHelper helper = new BuildHelper(
+                        projectState,
+                        mBuildToolInfo,
                         mOutStream, mErrStream,
                         false /*jumbo mode doesn't matter here*/,
                         false /*dex merger doesn't matter here*/,
@@ -486,7 +488,9 @@ public class PostCompilerBuilder extends BaseBuilder {
                         AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
                 Boolean dexMerger = Boolean.valueOf(dexMergerStr);
 
-                BuildHelper helper = new BuildHelper(project, mBuildToolInfo,
+                BuildHelper helper = new BuildHelper(
+                        projectState,
+                        mBuildToolInfo,
                         mOutStream, mErrStream,
                         jumbo.booleanValue(),
                         dexMerger.booleanValue(),

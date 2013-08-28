@@ -1187,6 +1187,7 @@ public final class Sdk  {
 
                     // get the current target and build tools
                     IAndroidTarget oldTarget = state.getTarget();
+                    boolean oldRsSupportMode = state.getRenderScriptSupportMode();
 
                     // get the current library flag
                     boolean wasLibrary = state.isLibrary();
@@ -1216,7 +1217,8 @@ public final class Sdk  {
                     }
 
                     // apply the new target if needed.
-                    if (newTarget != oldTarget) {
+                    if (newTarget != oldTarget ||
+                            oldRsSupportMode != state.getRenderScriptSupportMode()) {
                         IJavaProject javaProject = BaseProjectHelper.getJavaProject(
                                 file.getProject());
                         if (javaProject != null) {

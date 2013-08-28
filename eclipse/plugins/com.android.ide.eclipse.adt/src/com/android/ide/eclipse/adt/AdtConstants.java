@@ -94,9 +94,19 @@ public class AdtConstants {
     /** Absolute path of the resource folder, e.g. "/res".<br> This is a workspace path. */
     public final static String WS_RESOURCES = WS_SEP + SdkConstants.FD_RESOURCES;
 
-    /** Absolute path of the crunch cache folder, e.g. "/bin/res".<br> This is a workspace path. */
-    public final static String WS_CRUNCHCACHE = WS_SEP + SdkConstants.FD_OUTPUT
-                                                       + WS_SEP + SdkConstants.FD_RESOURCES;
+    public final static String FD_CRUNCH = "crunch";  //$NON-NLS-1$
+    public final static String FD_BC = "bc";  //$NON-NLS-1$
+
+    /** Path of crunch cache folder relative to the output folder.<br> This is a workspace path. */
+    public final static String WS_BIN_RELATIVE_CRUNCHCACHE = SdkConstants.FD_RESOURCES
+                                                                + WS_SEP + FD_CRUNCH;
+
+    /** Path of bc output folder relative to the output folder.<br> This is a workspace path. */
+    public final static String WS_BIN_RELATIVE_BC = SdkConstants.FD_RESOURCES
+                                                        + WS_SEP + FD_BC;
+
+    /** Path of rs libs output folder relative to the output folder.<br> This is a workspace path. */
+    public final static String WS_BIN_RELATIVE_RS_LIBS = SdkConstants.FD_RS_LIBS;
 
     /** Absolute path of the resource folder, e.g. "/assets".<br> This is a workspace path. */
     public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;

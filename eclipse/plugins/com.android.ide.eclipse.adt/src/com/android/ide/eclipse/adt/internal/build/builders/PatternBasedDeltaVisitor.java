@@ -90,11 +90,11 @@ class PatternBasedDeltaVisitor implements IResourceDeltaVisitor {
 
         } else if (resource.getType() == IResource.FILE) {
             IPath path = resource.getFullPath().makeRelativeTo(mDeltaProject.getFullPath());
+            String pathStr = path.toString();
 
             // FIXME: no need to loop through all the sets once they have all said they need something (return false below and above)
             for (ChangedFileSet set : mSets) {
                 // FIXME: should ignore sets that have already returned true.
-                String pathStr = path.toString();
 
                 if (set.isInput(pathStr, path)) {
                     mResults.put(set, Boolean.TRUE);
