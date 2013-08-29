@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="libs/bcpkix-jdk15on-1.48.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/bcprov-jdk15on-1.48.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/dvlib.jar" sourcepath="/dvlib"/>
 	<classpathentry exported="true" kind="lib" path="libs/common.jar" sourcepath="/common"/>
 	<classpathentry exported="true" kind="lib" path="libs/commons-codec-1.4.jar"/>
