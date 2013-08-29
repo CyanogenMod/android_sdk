@@ -259,6 +259,15 @@ public final class ProjectState {
         return mProperties.getProperty(ProjectProperties.PROPERTY_BUILD_TOOLS);
     }
 
+    public boolean getRenderScriptSupportMode() {
+        String supportModeValue = mProperties.getProperty(ProjectProperties.PROPERTY_RS_SUPPORT);
+        if (supportModeValue != null) {
+            return Boolean.parseBoolean(supportModeValue);
+        }
+
+        return false;
+    }
+
     public static class LibraryDifference {
         public boolean removed = false;
         public boolean added = false;

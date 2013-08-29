@@ -19,14 +19,17 @@ package com.android.ide.eclipse.adt.internal.project;
 import static com.android.ide.eclipse.adt.AdtConstants.CONTAINER_DEPENDENCIES;
 
 import com.android.SdkConstants;
+import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.build.JarListSanitizer;
 import com.android.sdklib.build.JarListSanitizer.DifferentLibException;
 import com.android.sdklib.build.JarListSanitizer.Sha1Exception;
+import com.android.sdklib.build.RenderScriptProcessor;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -306,60 +309,88 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
         final Set<File> jarFiles = new HashSet<File>();
         final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
-        // check if the project has a valid target.
-        final ProjectState state = Sdk.getProjectState(iProject);
-        if (state == null) {
-            // getProjectState should already have logged an error. Just bail out.
+        AdtPlugin plugin = AdtPlugin.getDefault();
+        if (plugin == null) { // This is totally weird, but I've seen it happen!
             return null;
         }
 
-        // annotations support for older version of android
-        if (state.getTarget() != null && state.getTarget().getVersion().getApiLevel() <= 15) {
-            File annotationsJar = new File(Sdk.getCurrent().getSdkLocation(),
-                    SdkConstants.FD_TOOLS + File.separator + SdkConstants.FD_SUPPORT +
-                    File.separator + SdkConstants.FN_ANNOTATIONS_JAR);
+        synchronized (Sdk.getLock()) {
+            boolean sdkIsLoaded = plugin.getSdkLoadStatus() == LoadStatus.LOADED;
 
-            jarFiles.add(annotationsJar);
-        }
-
-        // process all the libraries
-
-        List<IProject> libProjects = state.getFullLibraryProjects();
-        for (IProject libProject : libProjects) {
-            // get the project output
-            IFolder outputFolder = BaseProjectHelper.getAndroidOutputFolder(libProject);
-
-            if (outputFolder != null) { // can happen when closing/deleting a library)
-                IFile jarIFile = outputFolder.getFile(libProject.getName().toLowerCase() +
-                       SdkConstants.DOT_JAR);
-
-                // get the source folder for the library project
-                List<IPath> srcs = BaseProjectHelper.getSourceClasspaths(libProject);
-                // find the first non-derived source folder.
-                IPath sourceFolder = null;
-                for (IPath src : srcs) {
-                    IFolder srcFolder = workspaceRoot.getFolder(src);
-                    if (srcFolder.isDerived() == false) {
-                        sourceFolder = src;
-                        break;
-                    }
-                }
-
-                // we can directly add a CPE for this jar as there's no risk of a duplicate.
-                IClasspathEntry entry = JavaCore.newLibraryEntry(
-                        jarIFile.getLocation(),
-                        sourceFolder, // source attachment path
-                        null,         // default source attachment root path.
-                        true /*isExported*/);
-
-                entries.add(entry);
+            // check if the project has a valid target.
+            final ProjectState state = Sdk.getProjectState(iProject);
+            if (state == null) {
+                // getProjectState should already have logged an error. Just bail out.
+                return null;
             }
+
+            // annotations support for older version of android
+            if (state.getTarget() != null && state.getTarget().getVersion().getApiLevel() <= 15) {
+                File annotationsJar = new File(Sdk.getCurrent().getSdkLocation(),
+                        SdkConstants.FD_TOOLS + File.separator + SdkConstants.FD_SUPPORT +
+                        File.separator + SdkConstants.FN_ANNOTATIONS_JAR);
+
+                jarFiles.add(annotationsJar);
+            }
+
+            if (state.getRenderScriptSupportMode()) {
+                if (!sdkIsLoaded) {
+                    return null;
+                }
+                BuildToolInfo buildToolInfo = state.getBuildToolInfo();
+                if (buildToolInfo == null) {
+                    buildToolInfo = Sdk.getCurrent().getLatestBuildTool();
+
+                    if (buildToolInfo == null) {
+                        return null;
+                    }
+
+                    File renderScriptSupportJar = RenderScriptProcessor.getSupportJar(
+                            buildToolInfo.getLocation().getAbsolutePath());
+
+                    jarFiles.add(renderScriptSupportJar);
+                }
+            }
+
+            // process all the libraries
+
+            List<IProject> libProjects = state.getFullLibraryProjects();
+            for (IProject libProject : libProjects) {
+                // get the project output
+                IFolder outputFolder = BaseProjectHelper.getAndroidOutputFolder(libProject);
+
+                if (outputFolder != null) { // can happen when closing/deleting a library)
+                    IFile jarIFile = outputFolder.getFile(libProject.getName().toLowerCase() +
+                           SdkConstants.DOT_JAR);
+
+                    // get the source folder for the library project
+                    List<IPath> srcs = BaseProjectHelper.getSourceClasspaths(libProject);
+                    // find the first non-derived source folder.
+                    IPath sourceFolder = null;
+                    for (IPath src : srcs) {
+                        IFolder srcFolder = workspaceRoot.getFolder(src);
+                        if (srcFolder.isDerived() == false) {
+                            sourceFolder = src;
+                            break;
+                        }
+                    }
+
+                    // we can directly add a CPE for this jar as there's no risk of a duplicate.
+                    IClasspathEntry entry = JavaCore.newLibraryEntry(
+                            jarIFile.getLocation(),
+                            sourceFolder, // source attachment path
+                            null,         // default source attachment root path.
+                            true /*isExported*/);
+
+                    entries.add(entry);
+                }
+            }
+
+            entries.addAll(convertJarsToClasspathEntries(iProject, jarFiles));
+
+            return allocateContainer(javaProject, entries, new Path(CONTAINER_DEPENDENCIES),
+                    "Android Dependencies");
         }
-
-        entries.addAll(convertJarsToClasspathEntries(iProject, jarFiles));
-
-        return allocateContainer(javaProject, entries, new Path(CONTAINER_DEPENDENCIES),
-                "Android Dependencies");
     }
 
     private static IClasspathContainer allocateContainer(IJavaProject javaProject,

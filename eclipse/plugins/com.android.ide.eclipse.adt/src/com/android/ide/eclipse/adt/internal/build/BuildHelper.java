@@ -25,6 +25,7 @@ import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.BuildToolInfo;
@@ -35,6 +36,7 @@ import com.android.sdklib.build.ApkBuilder.JarStatus;
 import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
+import com.android.sdklib.build.RenderScriptProcessor;
 import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
@@ -107,6 +109,8 @@ public class BuildHelper {
     private static final String COMMAND_PACKAGE = "package"; //$NON-NLS-1$
 
     @NonNull
+    private final ProjectState mProjectState;
+    @NonNull
     private final IProject mProject;
     @NonNull
     private final BuildToolInfo mBuildToolInfo;
@@ -144,13 +148,14 @@ public class BuildHelper {
      * @param verbose
      * @throws CoreException
      */
-    public BuildHelper(@NonNull IProject project,
+    public BuildHelper(@NonNull ProjectState projectState,
             @NonNull BuildToolInfo buildToolInfo,
             @NonNull AndroidPrintStream outStream,
             @NonNull AndroidPrintStream errStream,
             boolean forceJumbo, boolean disableDexMerger, boolean debugMode,
             boolean verbose, ResourceMarker resMarker) throws CoreException {
-        mProject = project;
+        mProjectState = projectState;
+        mProject = projectState.getProject();
         mBuildToolInfo = buildToolInfo;
         mOutStream = outStream;
         mErrStream = errStream;
@@ -177,7 +182,8 @@ public class BuildHelper {
         resPaths.add(resFolder.getLocation().toOSString());
 
         // Get the output folder where the cache is stored.
-        IFolder cacheFolder = mProject.getFolder(AdtConstants.WS_CRUNCHCACHE);
+        IFolder binFolder = BaseProjectHelper.getAndroidOutputFolder(mProject);
+        IFolder cacheFolder = binFolder.getFolder(AdtConstants.WS_BIN_RELATIVE_CRUNCHCACHE);
         String cachePath = cacheFolder.getLocation().toOSString();
 
         /* For crunching, we don't need the osManifestPath, osAssetsPath, or the configFilter
@@ -219,9 +225,13 @@ public class BuildHelper {
         }
 
         // need to figure out some path before we can execute aapt;
+        IFolder binFolder = BaseProjectHelper.getAndroidOutputFolder(mProject);
 
         // get the cache folder
-        IFolder cacheFolder = mProject.getFolder(AdtConstants.WS_CRUNCHCACHE);
+        IFolder cacheFolder = binFolder.getFolder(AdtConstants.WS_BIN_RELATIVE_CRUNCHCACHE);
+
+        // get the BC folder
+        IFolder bcFolder = binFolder.getFolder(AdtConstants.WS_BIN_RELATIVE_BC);
 
         // get the resource folder
         IFolder resFolder = mProject.getFolder(AdtConstants.WS_RESOURCES);
@@ -244,6 +254,7 @@ public class BuildHelper {
 
             // png cache folder first.
             addFolderToList(osResPaths, cacheFolder);
+            addFolderToList(osResPaths, bcFolder);
 
             // regular res folder next.
             osResPaths.add(resLocation.toOSString());
@@ -252,8 +263,13 @@ public class BuildHelper {
             if (libProjects != null) {
                 for (IProject lib : libProjects) {
                     // png cache folder first
-                    IFolder libCacheFolder = lib.getFolder(AdtConstants.WS_CRUNCHCACHE);
+                    IFolder libBinFolder = BaseProjectHelper.getAndroidOutputFolder(lib);
+
+                    IFolder libCacheFolder = libBinFolder.getFolder(AdtConstants.WS_BIN_RELATIVE_CRUNCHCACHE);
                     addFolderToList(osResPaths, libCacheFolder);
+
+                    IFolder libBcFolder = libBinFolder.getFolder(AdtConstants.WS_BIN_RELATIVE_BC);
+                    addFolderToList(osResPaths, libBcFolder);
 
                     // regular res folder next.
                     IFolder libResFolder = lib.getFolder(AdtConstants.WS_RESOURCES);
@@ -450,6 +466,23 @@ public class BuildHelper {
                     libFolder.getType() == IResource.FOLDER) {
                 // get a File for the folder.
                 apkBuilder.addNativeLibraries(libFolder.getLocation().toFile());
+            }
+
+            // next the native libraries for the renderscript support mode.
+            if (mProjectState.getRenderScriptSupportMode()) {
+                IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(mProject);
+                IResource rsLibFolder = androidOutputFolder.getFolder(
+                        AdtConstants.WS_BIN_RELATIVE_RS_LIBS);
+                File rsLibFolderFile = rsLibFolder.getLocation().toFile();
+                if (rsLibFolderFile.isDirectory()) {
+                    apkBuilder.addNativeLibraries(rsLibFolderFile);
+                }
+
+                File rsLibs = RenderScriptProcessor.getSupportNativeLibFolder(
+                        mBuildToolInfo.getLocation().getAbsolutePath());
+                if (rsLibs.isDirectory()) {
+                    apkBuilder.addNativeLibraries(rsLibs);
+                }
             }
 
             // write the native libraries for the library projects.
