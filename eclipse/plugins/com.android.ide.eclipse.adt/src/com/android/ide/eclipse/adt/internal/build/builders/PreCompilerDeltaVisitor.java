@@ -22,12 +22,12 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.SourceChangeHandler;
-import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder.BaseDeltaVisitor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -40,7 +40,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -93,22 +93,18 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
     private final List<IPath> mSourceFolders;
     private boolean mIsGenSourceFolder = false;
 
-    private final List<SourceChangeHandler> mSourceChangeHandlers =
-        new ArrayList<SourceChangeHandler>();
+    private final List<SourceChangeHandler> mSourceChangeHandlers = Lists.newArrayList();
     private final IWorkspaceRoot mRoot;
 
     private IFolder mAndroidOutputFolder;
 
     public PreCompilerDeltaVisitor(BaseBuilder builder, List<IPath> sourceFolders,
-            List<SourceProcessor> processors) {
+            SourceChangeHandler... handlers) {
         super(builder);
         mSourceFolders = sourceFolders;
         mRoot = ResourcesPlugin.getWorkspace().getRoot();
 
-        for (SourceProcessor processor : processors) {
-            SourceChangeHandler handler = processor.getChangeHandler();
-            mSourceChangeHandlers.add(handler);
-        }
+        mSourceChangeHandlers.addAll(Arrays.asList(handlers));
 
         mAndroidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(builder.getProject());
     }
@@ -296,7 +292,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
 
                 if (outputWarning) {
                     if (kind == IResourceDelta.REMOVED) {
-                        // We pring an error just so that it's red, but it's just a warning really.
+                        // We print an error just so that it's red, but it's just a warning really.
                         String msg = String.format(Messages.s_Removed_Recreating_s, fileName);
                         AdtPlugin.printErrorToConsole(mBuilder.getProject(), msg);
                     } else if (kind == IResourceDelta.CHANGED) {
@@ -354,9 +350,6 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                         mBuilder.getProject(), message);
             }
 
-            for (SourceChangeHandler handler : mSourceChangeHandlers) {
-                handler.handleResourceFile((IFile)resource, kind);
-            }
             // If it's an XML resource, check the syntax
             if (SdkConstants.EXT_XML.equalsIgnoreCase(ext) && kind != IResourceDelta.REMOVED) {
                 // check xml Validity

@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 
 import java.util.ArrayList;
@@ -81,13 +82,16 @@ class ChangedFileSetHelper {
      * @return a ChangeFileSet
      */
     static ChangedFileSet getResCfs(@NonNull IProject project) {
+        // generated res is inside the project's android output folder
+        String path = getRelativeAndroidOut(project);
+
         ChangedFileSet set = new ChangedFileSet(
                 "resources",                                                       //$NON-NLS-1$
                 SdkConstants.FD_RES + "/**",                                       //$NON-NLS-1$
-                SdkConstants.FD_ASSETS + "/**");                                   //$NON-NLS-1$
+                SdkConstants.FD_ASSETS + "/**",                                    //$NON-NLS-1$
+                path + '/' + AdtConstants.WS_BIN_RELATIVE_BC + "/**");             //$NON-NLS-1$
 
         // output file is based on the project's android output folder
-        String path = getRelativeAndroidOut(project);
         set.setOutput(path + '/' + AdtConstants.FN_RESOURCES_AP_);
 
         return set;
@@ -180,14 +184,17 @@ class ChangedFileSetHelper {
         return set;
     }
 
+    private static String getRelativePath(@NonNull IProject project, @NonNull IResource resource) {
+        return resource.getFullPath().makeRelativeTo(project.getFullPath()).toString();
+    }
+
     private static String getRelativeAndroidOut(@NonNull IProject project) {
         IFolder folder = BaseProjectHelper.getAndroidOutputFolder(project);
-        return folder.getFullPath().makeRelativeTo(project.getFullPath()).toString();
+        return getRelativePath(project, folder);
     }
 
     private static String getRelativeJavaCOut(@NonNull IProject project) {
         IFolder folder = BaseProjectHelper.getJavaOutputFolder(project);
-        return folder.getFullPath().makeRelativeTo(project.getFullPath()).toString();
+        return getRelativePath(project, folder);
     }
-
 }

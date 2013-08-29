@@ -51,6 +51,7 @@ import com.android.io.StreamException;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 
 import org.eclipse.core.commands.Command;
@@ -123,6 +124,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -153,8 +155,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     private LoadStatus mSdkLoadedStatus = LoadStatus.LOADING;
     /** Project to update once the SDK is loaded.
      * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
-    private final ArrayList<IJavaProject> mPostLoadProjectsToResolve =
-            new ArrayList<IJavaProject>();
+    private final Set<IJavaProject> mPostLoadProjectsToResolve = Sets.newHashSet();
     /** Project to check validity of cache vs actual once the SDK is loaded.
      * Any access MUST be in a synchronized(mPostLoadProjectsToResolve) block */
     private final ArrayList<IJavaProject> mPostLoadProjectsToCheck = new ArrayList<IJavaProject>();

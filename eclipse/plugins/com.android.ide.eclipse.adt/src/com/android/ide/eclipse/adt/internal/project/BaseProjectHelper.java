@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -77,8 +78,9 @@ public final class BaseProjectHelper {
      * @param javaProject
      * @return a list of path relative to the workspace root.
      */
+    @NonNull
     public static List<IPath> getSourceClasspaths(IJavaProject javaProject) {
-        ArrayList<IPath> sourceList = new ArrayList<IPath>();
+        List<IPath> sourceList = Lists.newArrayList();
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
             for (IClasspathEntry e : classpaths) {
@@ -87,6 +89,7 @@ public final class BaseProjectHelper {
                 }
             }
         }
+
         return sourceList;
     }
 
@@ -507,6 +510,7 @@ public final class BaseProjectHelper {
      * @param project the {@link IProject}
      * @return an IFolder item or null.
      */
+    @Nullable
     public final static IFolder getAndroidOutputFolder(IProject project) {
         try {
             if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {

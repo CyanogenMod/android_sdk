@@ -63,7 +63,7 @@ public abstract class SourceProcessor {
     private final IJavaProject mJavaProject;
     private BuildToolInfo mBuildToolInfo;
     private final IFolder mGenFolder;
-    private final SourceChangeHandler mDeltaVisitor;
+    private final DefaultSourceChangeHandler mDeltaVisitor;
 
     /** List of source files pending compilation at the next build */
     private final List<IFile> mToCompile = new ArrayList<IFile>();
@@ -89,9 +89,11 @@ public abstract class SourceProcessor {
         return path;
     }
 
-    protected SourceProcessor(@NonNull IJavaProject javaProject,
-            @NonNull BuildToolInfo buildToolInfo, @NonNull IFolder genFolder,
-            @NonNull SourceChangeHandler deltaVisitor) {
+    protected SourceProcessor(
+            @NonNull IJavaProject javaProject,
+            @NonNull BuildToolInfo buildToolInfo,
+            @NonNull IFolder genFolder,
+            @NonNull DefaultSourceChangeHandler deltaVisitor) {
         mJavaProject = javaProject;
         mBuildToolInfo = buildToolInfo;
         mGenFolder = genFolder;
@@ -117,9 +119,11 @@ public abstract class SourceProcessor {
         }
     }
 
-    protected SourceProcessor(@NonNull IJavaProject javaProject,
-            @NonNull BuildToolInfo buildToolInfo, @NonNull IFolder genFolder) {
-        this(javaProject, buildToolInfo, genFolder, new SourceChangeHandler());
+    protected SourceProcessor(
+            @NonNull IJavaProject javaProject,
+            @NonNull BuildToolInfo buildToolInfo,
+            @NonNull IFolder genFolder) {
+        this(javaProject, buildToolInfo, genFolder, new DefaultSourceChangeHandler());
     }
 
     public void setBuildToolInfo(BuildToolInfo buildToolInfo) {
@@ -173,7 +177,7 @@ public abstract class SourceProcessor {
         return mFiles.values();
     }
 
-    public final SourceChangeHandler getChangeHandler() {
+    public final DefaultSourceChangeHandler getChangeHandler() {
         return mDeltaVisitor;
     }
 
@@ -414,7 +418,7 @@ public abstract class SourceProcessor {
      * delta visitor
      * @param visitor the delta visitor.
      */
-    private void mergeFileModifications(SourceChangeHandler visitor) {
+    private void mergeFileModifications(DefaultSourceChangeHandler visitor) {
         Set<IFile> toRemove = visitor.getRemovedFiles();
         Set<IFile> toCompile = visitor.getFilesToCompile();
 

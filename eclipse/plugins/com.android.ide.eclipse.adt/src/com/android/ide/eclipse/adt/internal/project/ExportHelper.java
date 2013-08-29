@@ -143,7 +143,9 @@ public final class ExportHelper {
                         "No Build Tools installed in the SDK."));
             }
 
-            BuildHelper helper = new BuildHelper(project, buildToolInfo,
+            BuildHelper helper = new BuildHelper(
+                    projectState,
+                    buildToolInfo,
                     fakeStream, fakeStream,
                     jumbo.booleanValue(),
                     dexMerger.booleanValue(),
