@@ -746,7 +746,8 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
 
             if (data.hasFeature(ClientData.FEATURE_PROFILING)) {
                 mTracingAction.setEnabled(true);
-                if (data.getMethodProfilingStatus() == MethodProfilingStatus.ON) {
+                if (data.getMethodProfilingStatus() == MethodProfilingStatus.TRACER_ON
+                        || data.getMethodProfilingStatus() == MethodProfilingStatus.SAMPLER_ON) {
                     mTracingAction
                             .setToolTipText(Messages.DeviceView_Stop_Method_Profiling_Tooltip);
                     mTracingAction.setText(Messages.DeviceView_Stop_Method_Profiling);
