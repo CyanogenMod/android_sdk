@@ -166,4 +166,16 @@ public class Locale {
             .addValue(region.getValue())
             .toString();
     }
+
+    /**
+     * Returns the locale formatted as language-region. If region is not set,
+     * language is returned. If language is not set, empty string is returned.
+     */
+    public String toLocaleId() {
+        // Return lang-reg only if both lang and reg are present. Else return
+        // lang.
+        return hasLanguage() && hasRegion() ?
+                language.getValue() + "-" + region.getValue()
+                : hasLanguage() ? language.getValue() : "";
+    }
 }

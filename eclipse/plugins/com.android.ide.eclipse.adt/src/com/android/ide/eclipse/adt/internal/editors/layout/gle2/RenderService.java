@@ -43,6 +43,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.UiElementPullParser;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configuration;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationChooser;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Locale;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
@@ -90,6 +91,7 @@ public class RenderService {
     private final LayoutLibrary mLayoutLib;
     private final IImageFactory mImageFactory;
     private final HardwareConfigHelper mHardwareConfigHelper;
+    private final Locale mLocale;
 
     // The following fields are optional or configurable using the various chained
     // setters:
@@ -124,6 +126,7 @@ public class RenderService {
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
+        mLocale = config.getLocale();
     }
 
     private RenderService(GraphicalEditorPart editor,
@@ -146,6 +149,7 @@ public class RenderService {
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
         mMinSdkVersion = editor.getMinSdkVersion();
         mTargetSdkVersion = editor.getTargetSdkVersion();
+        mLocale = configuration.getLocale();
     }
 
     /**
@@ -415,10 +419,17 @@ public class RenderService {
         // same session
         params.setExtendedViewInfoMode(true);
 
+        params.setLocale(mLocale.toLocaleId());
+
+        ManifestInfo manifestInfo = ManifestInfo.get(mProject);
+        try {
+            params.setRtlSupport(manifestInfo.isRtlSupported());
+        } catch (Exception e) {
+            // ignore.
+        }
         if (!mShowDecorations) {
             params.setForceNoDecor();
         } else {
-            ManifestInfo manifestInfo = ManifestInfo.get(mProject);
             try {
                 params.setAppLabel(manifestInfo.getApplicationLabel());
                 params.setAppIcon(manifestInfo.getApplicationIcon());
