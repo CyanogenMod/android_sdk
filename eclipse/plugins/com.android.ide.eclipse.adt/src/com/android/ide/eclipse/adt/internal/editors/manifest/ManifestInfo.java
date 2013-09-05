@@ -24,12 +24,14 @@ import static com.android.xml.AndroidManifest.ATTRIBUTE_LABEL;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_SUPPORTS_RTL;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSION;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_THEME;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.xml.AndroidManifest.NODE_USES_SDK;
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.REFERENCES;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -116,6 +118,7 @@ public class ManifestInfo {
     private int mTargetSdk;
     private String mApplicationIcon;
     private String mApplicationLabel;
+    private boolean mApplicationSupportsRtl;
 
     /**
      * Qualified name for the per-project non-persistent property storing the
@@ -206,6 +209,7 @@ public class ManifestInfo {
         mPackage = ""; //$NON-NLS-1$
         mApplicationIcon = null;
         mApplicationLabel = null;
+        mApplicationSupportsRtl = false;
 
         Document document = null;
         try {
@@ -242,6 +246,10 @@ public class ManifestInfo {
                 }
                 if (application.hasAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL)) {
                     mApplicationLabel = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL);
+                }
+                if (SdkConstants.VALUE_TRUE.equals(application.getAttributeNS(NS_RESOURCES,
+                        ATTRIBUTE_SUPPORTS_RTL))) {
+                    mApplicationSupportsRtl = true;
                 }
 
                 String defaultTheme = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_THEME);
@@ -385,6 +393,15 @@ public class ManifestInfo {
         return mApplicationLabel;
     }
 
+    /**
+     * Returns true if the application has RTL support.
+     *
+     * @return true if the application has RTL support.
+     */
+    public boolean isRtlSupported() {
+        sync();
+        return mApplicationSupportsRtl;
+    }
     /**
      * Returns the target SDK version
      *
