@@ -592,7 +592,7 @@ class TemplateHandler {
                             if (relativePath != null && !relativePath.isEmpty()) {
                                 mOpen.add(relativePath);
                             }
-                        } else if (!name.equals("recipe")) { //$NON-NLS-1$
+                        } else if (!name.equals("recipe") && !name.equals(TAG_DEPENDENCY)) { //$NON-NLS-1$
                             System.err.println("WARNING: Unknown template directive " + name);
                         }
                     } catch (Exception e) {
