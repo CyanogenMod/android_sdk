@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -85,7 +84,6 @@ public final class DexWrapper {
             Class<?> consoleClass = loader.loadClass(DEX_CONSOLE);
             Class<?> argClass = loader.loadClass(DEX_ARGS);
 
-            loader.close();
             try {
                 // now get the fields/methods we need
                 mRunMethod = mainClass.getMethod(MAIN_RUN, argClass);
@@ -114,9 +112,6 @@ public final class DexWrapper {
             return createErrorStatus(
                     String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
         } catch (ClassNotFoundException e) {
-            return createErrorStatus(
-                    String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
-        } catch (IOException e) {
             return createErrorStatus(
                     String.format(Messages.DexWrapper_Failed_to_load_s, osFilepath), e);
         }
