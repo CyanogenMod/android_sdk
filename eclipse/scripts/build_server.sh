@@ -64,7 +64,8 @@ function check_params() {
   # Qualifier is "v" followed by date/time in YYYYMMDDHHSS format, an optional "preview"
   # tag and the optional build number.
   DATE=`date +v%Y%m%d%H%M`
-  QUALIFIER="${DATE}-$ADT_PREVIEW"
+  local preview="${ADT_PREVIEW:+-}${ADT_PREVIEW}"
+  QUALIFIER="${DATE}${preview}"
   [ -n "$BUILD_NUMBER" ] && QUALIFIER="${QUALIFIER}-${BUILD_NUMBER}"
 
   return 0
