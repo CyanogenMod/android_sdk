@@ -51,7 +51,7 @@ public final class VersionCheck {
     /**
      * The minimum version of the SDK Tools that this version of ADT requires.
      */
-    private final static FullRevision MIN_TOOLS_REV = new FullRevision(22, 0, 0, 0);
+    private final static FullRevision MIN_TOOLS_REV = new FullRevision(22, 2, 1, 0);
 
     /**
      * Pattern to get the minimum plugin version supported by the SDK. This is read from
