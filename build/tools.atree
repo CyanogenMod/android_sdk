@@ -24,7 +24,7 @@
 
 prebuilts/devtools/tools/lib                        tools/lib
 # manual copy of lombok-ast for now
-prebuilts/tools/common/lombok-ast/lombok-ast-0.2.1.jar tools/lib/lombok-ast-0.2.1.jar
+prebuilts/tools/common/lombok-ast/lombok-ast-0.2.1.jar tools/lib/lombok-ast.jar
 prebuilts/tools/common/lombok-ast/LICENSE.txt       tools/lib/lombok-ast-NOTICE.txt
 
 prebuilts/devtools/tools/android                    tools/android
