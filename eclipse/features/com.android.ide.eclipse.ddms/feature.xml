@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.ddms"
       label="Android DDMS"
-      version="22.2.0.qualifier"
+      version="22.2.1.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.ddms">
 
