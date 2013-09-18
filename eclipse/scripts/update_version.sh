@@ -28,7 +28,12 @@ NEW="${NEW//./\.}\.qualifier"
 
 # Now find the same files but this time use sed to replace in-place with
 # the new pattern. Old files get backuped with the .old extension.
-grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i "" "s/$OLD/$NEW/g"
+if [[ $(uname) == "Linux" ]]; then
+  grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i  "s/$OLD/$NEW/g"
+else
+  # sed on Mac doesn't handle -i the same way as on Linux
+  grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i ""  "s/$OLD/$NEW/g"
+fi
 
 echo "Remaining instances of $REALOLD"
 # do another grep for older version without the qualifier. We don't
