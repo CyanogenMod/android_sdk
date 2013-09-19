@@ -1,5 +1,12 @@
 Change log for Android SDK Tools.
 
+Revision 22.2.1:
+- Emergency fix to new project templates.
+
+Revision 22.2.0:
+
+Revision 22:
+
 Revision 20:
 - Ant build system:
 - Ant build system:
