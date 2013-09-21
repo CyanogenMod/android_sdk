@@ -34,8 +34,8 @@ import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceDeltaKind;
-import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
+import com.android.ide.common.resources.ResourceUrl;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -249,10 +249,13 @@ public class ResourceHelper {
             return false;
         }
 
-        Pair<ResourceType,String> parsed = ResourceRepository.parseResource(resource);
+        ResourceUrl parsed = ResourceUrl.parse(resource);
         if (parsed != null) {
-            ResourceType type = parsed.getFirst();
-            String name = parsed.getSecond();
+            if (parsed.framework) {
+                return false;
+            }
+            ResourceType type = parsed.type;
+            String name = parsed.name;
 
             // Make sure the name is valid
             ResourceNameValidator validator =

@@ -41,7 +41,6 @@ import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
-import static com.android.ide.common.resources.ResourceRepository.parseResource;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
@@ -54,6 +53,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.ResourceUrl;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -226,12 +226,9 @@ public class Hyperlinks {
             return !ATTR_ID.equals(attribute.getLocalName());
         }
 
-        Pair<ResourceType,String> resource = parseResource(value);
+        ResourceUrl resource = ResourceUrl.parse(value);
         if (resource != null) {
-            ResourceType type = resource.getFirst();
-            if (type != null) {
-                return true;
-            }
+            return true;
         }
 
         return false;
@@ -1130,7 +1127,7 @@ public class Hyperlinks {
             }
         }
 
-        Pair<ResourceType,String> resource = parseResource(url);
+        ResourceUrl resource = ResourceUrl.parse(url);
         if (resource == null) {
             String androidStyle = ANDROID_STYLE_RESOURCE_PREFIX;
             if (url.startsWith(ANDROID_PREFIX)) {
@@ -1163,18 +1160,16 @@ public class Hyperlinks {
      */
     @Nullable
     public static IHyperlink[] getResourceLinks(@Nullable IRegion range, @NonNull String url,
-            @NonNull IProject project,  @Nullable FolderConfiguration configuration) {
+            @Nullable IProject project,  @Nullable FolderConfiguration configuration) {
         List<IHyperlink> links = new ArrayList<IHyperlink>();
 
-        Pair<ResourceType,String> resource = parseResource(url);
-        if (resource == null || resource.getFirst() == null) {
+        ResourceUrl resource = ResourceUrl.parse(url);
+        if (resource == null) {
             return null;
         }
-        ResourceType type = resource.getFirst();
-        String name = resource.getSecond();
-
-        boolean isFramework = url.startsWith(ANDROID_PREFIX)
-                || url.startsWith(ANDROID_THEME_PREFIX);
+        ResourceType type = resource.type;
+        String name = resource.name;
+        boolean isFramework = resource.framework;
         if (project == null) {
             // Local reference *within* a framework
             isFramework = true;
@@ -1479,6 +1474,7 @@ public class Hyperlinks {
     }
 
     /** Returns the project applicable to this hyperlink detection */
+    @Nullable
     private static IProject getProject() {
         IFile file = AdtUtils.getActiveFile();
         if (file != null) {
