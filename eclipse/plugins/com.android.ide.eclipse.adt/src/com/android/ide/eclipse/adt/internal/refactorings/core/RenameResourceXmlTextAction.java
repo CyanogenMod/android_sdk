@@ -25,7 +25,7 @@ import static com.android.SdkConstants.TAG_ITEM;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.ResourceUrl;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
@@ -33,7 +33,6 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceType;
-import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -108,15 +107,15 @@ public final class RenameResourceXmlTextAction extends Action {
             return;
         }
 
-        Pair<ResourceType, String> resource = findResource(document, selection.getOffset());
+        ResourceUrl resource = findResource(document, selection.getOffset());
 
         if (resource == null) {
             resource = findItemDefinition(document, selection.getOffset());
         }
 
         if (resource != null) {
-            ResourceType type = resource.getFirst();
-            String name = resource.getSecond();
+            ResourceType type = resource.type;
+            String name = resource.name;
             Shell shell = mEditor.getSite().getShell();
             boolean canClear = false;
 
@@ -176,7 +175,7 @@ public final class RenameResourceXmlTextAction extends Action {
      * @return a resource pair, or null if not found
      */
     @Nullable
-    public static Pair<ResourceType,String> findResource(@NonNull IDocument document, int offset) {
+    public static ResourceUrl findResource(@NonNull IDocument document, int offset) {
         try {
             int max = document.getLength();
             if (offset >= max) {
@@ -220,7 +219,7 @@ public final class RenameResourceXmlTextAction extends Action {
                         return null;
                     }
 
-                    return ResourceRepository.parseResource(url);
+                    return ResourceUrl.parse(url);
                 }
             }
         } catch (BadLocationException e) {
@@ -238,7 +237,7 @@ public final class RenameResourceXmlTextAction extends Action {
      * Searches for an item definition around the caret, such as
      * {@code   <string name="foo">My String</string>}
      */
-    private Pair<ResourceType, String> findItemDefinition(IDocument document, int offset) {
+    private ResourceUrl findItemDefinition(IDocument document, int offset) {
         Node node = DomUtilities.getNode(document, offset);
         if (node == null) {
             return null;
@@ -264,7 +263,7 @@ public final class RenameResourceXmlTextAction extends Action {
         }
         ResourceType type = ResourceType.getEnum(typeString);
         if (type != null) {
-            return Pair.of(type, name);
+            return ResourceUrl.create(type, name, false, false);
         }
 
         return null;

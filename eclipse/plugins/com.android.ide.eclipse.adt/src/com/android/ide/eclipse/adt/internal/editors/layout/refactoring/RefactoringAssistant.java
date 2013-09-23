@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import com.android.ide.common.resources.ResourceUrl;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
@@ -26,7 +27,6 @@ import com.android.ide.eclipse.adt.internal.refactorings.core.RenameResourceXmlT
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.resources.ResourceType;
-import com.android.utils.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
@@ -106,7 +106,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         boolean isTagName = false;
         boolean isAttributeName = false;
         boolean isStylableAttribute = false;
-        Pair<ResourceType, String> resource = null;
+        ResourceUrl resource = null;
         IStructuredModel model = null;
         try {
             model = xmlEditor.getModelForRead();
@@ -185,8 +185,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                             new ExtractStringRefactoring(file, xmlEditor, textSelection)));
                 } else if (resource != null) {
                     RenameResourceProcessor processor = new RenameResourceProcessor(
-                            file.getProject(), resource.getFirst(),
-                            resource.getSecond(), null);
+                            file.getProject(), resource.type, resource.name, null);
                     RenameRefactoring refactoring = new RenameRefactoring(processor);
                     proposals.add(new RefactoringProposal(xmlEditor, refactoring));
                 }
