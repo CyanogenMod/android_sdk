@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.refactorings.core;
 
+import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceType;
-import com.android.utils.Pair;
 
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -31,25 +31,29 @@ public class RenameResourceXmlTextActionTest extends TestCase {
         checkWord("^@bogus", null);
         checkWord("@bo^gus", null);
         checkWord("bogus@^", null);
-        checkWord("  @string/nam^e ", Pair.of(ResourceType.STRING, "name"));
-        checkWord("@string/nam^e ", Pair.of(ResourceType.STRING, "name"));
-        checkWord("\"^@string/name ", Pair.of(ResourceType.STRING, "name"));
-        checkWord("^@string/name ", Pair.of(ResourceType.STRING, "name"));
-        checkWord("\n^@string/name ", Pair.of(ResourceType.STRING, "name"));
-        checkWord("\n^@string/name(", Pair.of(ResourceType.STRING, "name"));
-        checkWord("\n^@string/name;", Pair.of(ResourceType.STRING, "name"));
-        checkWord("\n^@string/name5", Pair.of(ResourceType.STRING, "name5"));
-        checkWord("\n@string/name5^", Pair.of(ResourceType.STRING, "name5"));
-        checkWord("\n@string/name5^(", Pair.of(ResourceType.STRING, "name5"));
-        checkWord("\n@stri^ng/name5(", Pair.of(ResourceType.STRING, "name5"));
-        checkWord("\n@string^/name5(", Pair.of(ResourceType.STRING, "name5"));
-        checkWord("\n@string/^name5(", Pair.of(ResourceType.STRING, "name5"));
+        checkWord("  @string/nam^e ", getUrl(ResourceType.STRING, "name"));
+        checkWord("@string/nam^e ", getUrl(ResourceType.STRING, "name"));
+        checkWord("\"^@string/name ", getUrl(ResourceType.STRING, "name"));
+        checkWord("^@string/name ", getUrl(ResourceType.STRING, "name"));
+        checkWord("\n^@string/name ", getUrl(ResourceType.STRING, "name"));
+        checkWord("\n^@string/name(", getUrl(ResourceType.STRING, "name"));
+        checkWord("\n^@string/name;", getUrl(ResourceType.STRING, "name"));
+        checkWord("\n^@string/name5", getUrl(ResourceType.STRING, "name5"));
+        checkWord("\n@string/name5^", getUrl(ResourceType.STRING, "name5"));
+        checkWord("\n@string/name5^(", getUrl(ResourceType.STRING, "name5"));
+        checkWord("\n@stri^ng/name5(", getUrl(ResourceType.STRING, "name5"));
+        checkWord("\n@string^/name5(", getUrl(ResourceType.STRING, "name5"));
+        checkWord("\n@string/^name5(", getUrl(ResourceType.STRING, "name5"));
         checkWord("\n@string^name5(", null);
         checkWord("\n@strings^/name5(", null);
-        checkWord("\n@+id/^myid(", Pair.of(ResourceType.ID, "myid"));
-        checkWord("\n?a^ttr/foo\"", Pair.of(ResourceType.ATTR, "foo"));
-        checkWord("\n?f^oo\"", Pair.of(ResourceType.ATTR, "foo"));
-        checkWord("\n^?foo\"", Pair.of(ResourceType.ATTR, "foo"));
+        checkWord("\n@+id/^myid(", getUrl(ResourceType.ID, "myid"));
+        checkWord("\n?a^ttr/foo\"", getUrl(ResourceType.ATTR, "foo"));
+        checkWord("\n?f^oo\"", getUrl(ResourceType.ATTR, "foo"));
+        checkWord("\n^?foo\"", getUrl(ResourceType.ATTR, "foo"));
+    }
+
+    private static ResourceUrl getUrl(ResourceType type, String name) {
+        return ResourceUrl.create(type, name, false, false);
     }
 
     public void testClassNames() throws Exception {
@@ -89,7 +93,7 @@ public class RenameResourceXmlTextActionTest extends TestCase {
         assertEquals(expectedClassName, className);
     }
 
-    private void checkWord(String contents, Pair<ResourceType, String> expectedResource)
+    private void checkWord(String contents, ResourceUrl expectedResource)
             throws Exception {
         int cursor = contents.indexOf('^');
         assertTrue("Must set cursor position with ^ in " + contents, cursor != -1);
@@ -100,8 +104,7 @@ public class RenameResourceXmlTextActionTest extends TestCase {
 
         IDocument document = new Document();
         document.replace(0, 0, contents);
-        Pair<ResourceType, String> resource =
-                RenameResourceXmlTextAction.findResource(document, cursor);
+        ResourceUrl resource = RenameResourceXmlTextAction.findResource(document, cursor);
         assertEquals(expectedResource, resource);
     }
 }
