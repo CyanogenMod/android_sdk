@@ -33,6 +33,7 @@ extern "C"{
 
 int   getNumPixelFormats();
 void* getPixelFormat(int i);
+int   getPixelFormatDefinitionAlpha(int i);
 void  getPixelFormatAttrib(void* pixelFormat,int attrib,int* val);
 void* nsCreateContext(void* format,void* share);
 void  nsWindowMakeCurrent(void* context,void* nativeWin);

@@ -75,6 +75,34 @@ void* getPixelFormat(int i){
     return [[NSOpenGLPixelFormat alloc] initWithAttributes:attrib_lists[i]];
 }
 
+int getPixelFormatDefinitionAlpha(int i) {
+    int size;
+    NSOpenGLPixelFormatAttribute** attrib_lists = getPixelFormatsAttributes(&size);
+    NSOpenGLPixelFormatAttribute* attribs = attrib_lists[i];
+    while (*attribs) {
+        switch (*attribs) {
+        // These are the ones that take a value, according to the current
+        // NSOpenGLPixelFormat docs
+        case NSOpenGLPFAAuxBuffers:
+        case NSOpenGLPFAColorSize:
+        case NSOpenGLPFADepthSize:
+        case NSOpenGLPFAStencilSize:
+        case NSOpenGLPFAAccumSize:
+        case NSOpenGLPFARendererID:
+        case NSOpenGLPFAScreenMask:
+            attribs += 2;
+            break;
+        case NSOpenGLPFAAlphaSize:
+            return attribs[1];
+            break;
+        // All other attributes are boolean attributes that don't take a value
+        default:
+            attribs++;
+        }
+    }
+    return 0;
+}
+
 void getPixelFormatAttrib(void* pixelFormat,int attrib,int* val){
     NSOpenGLPixelFormat *frmt = (NSOpenGLPixelFormat *)pixelFormat;
     [frmt getValues:val forAttribute:attrib forVirtualScreen:0];
