@@ -121,7 +121,9 @@ $(5): $(ADT_IDE_JAVA_TARGET)
 	  $(4)/eclipse/plugins/com.android.ide.eclipse.adt.package_*/about.mappings && \
 	sed -i -e 's/org.eclipse.platform.ide/com.android.ide.eclipse.adt.package.product/g' \
 	       -e 's/org.eclipse.platform/com.android.ide.eclipse.adt.package/g' \
-	  $(4)/eclipse/configuration/config.ini
+	  $(4)/eclipse/configuration/config.ini && \
+	echo "-XX:MaxPermSize=512M" >> \
+	  $(4)/eclipse/$(if $(filter macosx.cocoa,$(1)),Eclipse.app/Contents/MacOS/)eclipse.ini
 	$(hide)cd $(4) && zip -9rq ../$(notdir $(5)) eclipse
 ifneq (,$(ADT_IDE_DEST_DIR))
 $(ADT_IDE_DEST_DIR)/$(notdir $(5)): $(5)
