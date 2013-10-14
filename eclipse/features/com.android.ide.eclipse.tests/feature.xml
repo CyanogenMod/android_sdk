@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.tests"
       label="ADT Tests"
-      version="22.2.1.qualifier"
+      version="22.3.qualifier"
       provider-name="The Android Open Source Project">
 
    <copyright>
