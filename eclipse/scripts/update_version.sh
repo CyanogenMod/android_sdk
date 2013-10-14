@@ -2,7 +2,6 @@
 
 OLD="$1"
 NEW="$2"
-REALOLD="$1"
 
 # sanity check in input args
 if [ -z "$OLD" ] || [ -z "$NEW" ]; then
@@ -22,22 +21,48 @@ if [ `basename "$PWD"` != "eclipse" ]; then
     exit 1
 fi
 
+
+function replace() {
+  if [[ -f "$1" ]]; then
+    echo "### Change $SED_OLD => $SED_NEW in $1"
+    if [[ $(uname) == "Linux" ]]; then
+      sed -i  "s/$SED_OLD/$SED_NEW/g" "$1"
+    else
+      # sed on Mac doesn't handle -i the same way as on Linux
+      sed -i ""  "s/$SED_OLD/$SED_NEW/g" "$1"
+    fi
+  fi
+}
+
+# ---1--- Change Eclipse's qualified version numbers
 # quote dots for regexps
-OLD="${OLD//./\.}\.qualifier"
-NEW="${NEW//./\.}\.qualifier"
+SED_OLD="${OLD//./\.}\.qualifier"
+SED_NEW="${NEW//./\.}\.qualifier"
 
-# Now find the same files but this time use sed to replace in-place with
-# the new pattern. Old files get backuped with the .old extension.
-if [[ $(uname) == "Linux" ]]; then
-  grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i  "s/$OLD/$NEW/g"
-else
-  # sed on Mac doesn't handle -i the same way as on Linux
-  grep -rl "$OLD" * | grep -E "\.xml$|\.MF$" | xargs -n 1 sed -i ""  "s/$OLD/$NEW/g"
-fi
+for i in $(grep -rl "$OLD" * | grep -E "\.xml$|\.MF$"); do
+  if [[ -f "$i" && $(basename "$i") != "build.xml" ]]; then
+    replace "$i"
+  fi
+done
 
-echo "Remaining instances of $REALOLD"
+# ---2--- Change unqualified version numbers in specific files
+SED_OLD="${OLD//./\.}"
+SED_NEW="${NEW//./\.}"
+for i in plugins/com.android.ide.eclipse.adt.package/ide.product \
+         plugins/com.android.ide.eclipse.monitor/monitor.product \
+         plugins/com.android.ide.eclipse.monitor/plugin.properties; do
+  if grep -qs "$OLD" "$i"; then
+    replace "$i"
+  fi
+done
+
 # do another grep for older version without the qualifier. We don't
 # want to replace those automatically as it could be something else.
-# Printing out occurence helps find ones to update manually.
-grep -r "$REALOLD" *
+# Printing out occurence helps find ones to update manually, but exclude
+# some known useless files.
+echo
+echo "#### ----------------"
+echo "#### Remaining instances of $OLD"
+echo
+grep -r "$OLD" * | grep -v -E "/build.xml:|/javaCompiler\.\.\.args:"
 
