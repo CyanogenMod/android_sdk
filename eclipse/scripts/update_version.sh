@@ -21,6 +21,13 @@ if [ `basename "$PWD"` != "eclipse" ]; then
     exit 1
 fi
 
+# sanity check the new version number
+if [[ "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "## Version $NEW: seems valid."
+else
+  echo "## Version $NEW: does not conform to major.mino.micro format."
+  exit 1
+fi
 
 function replace() {
   if [[ -f "$1" ]]; then
