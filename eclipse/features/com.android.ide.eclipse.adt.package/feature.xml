@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt.package"
       label="ADT Package"
-      version="22.3.qualifier"
+      version="22.3.0.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt.package">
 
