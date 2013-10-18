@@ -251,7 +251,16 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
                         }
                         data = readZipData(zis, (int)entrySize);
                     }
-                    loaded_class = defineAndCacheClass(className, data);
+                    try {
+                        loaded_class = defineAndCacheClass(className, data);
+                    } catch (NoClassDefFoundError error) {
+                        if (error.getMessage().startsWith("java/")) {
+                            // Can't define these; we just need to stop
+                            // iteration here
+                            continue;
+                        }
+                        throw error;
+                    }
                 }
 
                 for (Class<?> superClass = loaded_class.getSuperclass();
