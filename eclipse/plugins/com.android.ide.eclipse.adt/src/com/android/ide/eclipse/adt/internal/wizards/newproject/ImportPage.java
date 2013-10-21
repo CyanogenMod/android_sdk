@@ -206,6 +206,11 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
         mCheckboxTableViewer.refresh();
         mCheckboxTableViewer.setAllChecked(true);
 
+        updateValidity();
+        validatePage();
+    }
+
+    private void updateValidity(){
         List<ImportedProject> selected = new ArrayList<ImportedProject>();
         List<ImportedProject> disabled = new ArrayList<ImportedProject>();
         for (ImportedProject project : mProjectPaths) {
@@ -230,7 +235,6 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
         mCheckboxTableViewer.setCheckedElements(selected.toArray());
         mCheckboxTableViewer.refresh();
         mCheckboxTableViewer.getTable().setFocus();
-        validatePage();
     }
 
     private List<ImportedProject> searchForProjects(File dir) {
@@ -485,6 +489,7 @@ class ImportPage extends WizardPage implements SelectionListener, IStructuredCon
             ImportedProject project = (ImportedProject) element;
             project.setProjectName(value.toString());
             mCheckboxTableViewer.update(element, null);
+            updateValidity();
             validatePage();
         }
 
