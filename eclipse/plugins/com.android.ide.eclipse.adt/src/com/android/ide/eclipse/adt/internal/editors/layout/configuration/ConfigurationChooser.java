@@ -37,6 +37,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.resources.LocaleManager;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
@@ -248,7 +249,7 @@ public class ConfigurationChooser extends Composite
         ToolBar rightToolBar = toolBar;
 
         mLocaleCombo = new ToolItem(rightToolBar, SWT.DROP_DOWN);
-        mLocaleCombo.setImage(LocaleManager.getGlobeIcon());
+        mLocaleCombo.setImage(FlagManager.getGlobeIcon());
         mLocaleCombo.setToolTipText("Locale to use when rendering layouts in Eclipse");
 
         @SuppressWarnings("unused")
@@ -1131,7 +1132,7 @@ public class ConfigurationChooser extends Composite
             return locale.getFlagImage();
         }
 
-        return LocaleManager.getGlobeIcon();
+        return FlagManager.getGlobeIcon();
     }
 
     private void selectConfiguration(FolderConfiguration fileConfig) {

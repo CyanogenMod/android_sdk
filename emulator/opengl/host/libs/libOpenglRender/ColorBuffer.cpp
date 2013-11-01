@@ -170,7 +170,7 @@ void ColorBuffer::subUpdate(int x, int y, int width, int height, GLenum p_format
 
 bool ColorBuffer::blitFromCurrentReadBuffer()
 {
-    RenderThreadInfo *tInfo = getRenderThreadInfo();
+    RenderThreadInfo *tInfo = RenderThreadInfo::get();
     if (!tInfo->currContext.Ptr()) {
         // no Current context
         return false;
@@ -188,16 +188,16 @@ bool ColorBuffer::blitFromCurrentReadBuffer()
         s_gl2.glGenTextures(1,&tmpTex);
         s_gl2.glBindTexture(GL_TEXTURE_2D, tmpTex);
         s_gl2.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_blitEGLImage);
-        s_gl2.glCopyTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat,
-                               0, 0, m_width, m_height, 0);
+        s_gl2.glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0,
+                                  m_width, m_height);
     }
     else {
         s_gl.glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexBind);
         s_gl.glGenTextures(1,&tmpTex);
         s_gl.glBindTexture(GL_TEXTURE_2D, tmpTex);
         s_gl.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_blitEGLImage);
-        s_gl.glCopyTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat,
-                              0, 0, m_width, m_height, 0);
+        s_gl.glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0,
+                                 m_width, m_height);
     }
 
 
@@ -257,7 +257,7 @@ bool ColorBuffer::blitFromCurrentReadBuffer()
 bool ColorBuffer::bindToTexture()
 {
     if (m_eglImage) {
-        RenderThreadInfo *tInfo = getRenderThreadInfo();
+        RenderThreadInfo *tInfo = RenderThreadInfo::get();
         if (tInfo->currContext.Ptr()) {
 #ifdef WITH_GLES2
             if (tInfo->currContext->isGL2()) {
@@ -278,7 +278,7 @@ bool ColorBuffer::bindToTexture()
 bool ColorBuffer::bindToRenderbuffer()
 {
     if (m_eglImage) {
-        RenderThreadInfo *tInfo = getRenderThreadInfo();
+        RenderThreadInfo *tInfo = RenderThreadInfo::get();
         if (tInfo->currContext.Ptr()) {
 #ifdef WITH_GLES2
             if (tInfo->currContext->isGL2()) {

@@ -30,11 +30,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 public class StateTransformFactory {
     private static final String TEXTURE_DATA_FILE_PREFIX = "tex";   //$NON-NLS-1$
     private static final String TEXTURE_DATA_FILE_SUFFIX = ".dat";  //$NON-NLS-1$
+    private static EnumSet<GLEnum> sTexParameterPnameValues;
 
     /** Construct a list of transformations to be applied for the provided OpenGL call. */
     public static List<IStateTransform> getTransformsFor(GLMessage msg) {
@@ -937,7 +939,7 @@ public class StateTransformFactory {
     private static List<IStateTransform> transformsForGlActiveTexture(GLMessage msg) {
         // void glActiveTexture(GLenum texture);
         GLEnum texture = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
-        Integer textureIndex = Integer.valueOf(texture.value - GLEnum.GL_TEXTURE0.value);
+        Integer textureIndex = Integer.valueOf((int)(texture.value - GLEnum.GL_TEXTURE0.value));
         IStateTransform transform = new PropertyChangeTransform(
                 GLPropertyAccessor.makeAccessor(msg.getContextId(),
                                                 GLStateType.TEXTURE_STATE,
@@ -1075,10 +1077,28 @@ public class StateTransformFactory {
         GLEnum pname = GLEnum.valueOf(msg.getArgs(1).getIntValue(0));
         GLEnum pvalue = GLEnum.valueOf(msg.getArgs(2).getIntValue(0));
 
-        if (pname != GLEnum.GL_TEXTURE_MIN_FILTER
-                && pname != GLEnum.GL_TEXTURE_MAG_FILTER
-                && pname != GLEnum.GL_TEXTURE_WRAP_S
-                && pname != GLEnum.GL_TEXTURE_WRAP_T) {
+        if (sTexParameterPnameValues == null) {
+            GLEnum[] pnameValues = new GLEnum[] {
+                    GLEnum.GL_TEXTURE_BASE_LEVEL,
+                    GLEnum.GL_TEXTURE_COMPARE_FUNC,
+                    GLEnum.GL_TEXTURE_COMPARE_MODE,
+                    GLEnum.GL_TEXTURE_MIN_FILTER,
+                    GLEnum.GL_TEXTURE_MAG_FILTER,
+                    GLEnum.GL_TEXTURE_MIN_LOD,
+                    GLEnum.GL_TEXTURE_MAX_LOD,
+                    GLEnum.GL_TEXTURE_MAX_LEVEL,
+                    GLEnum.GL_TEXTURE_SWIZZLE_R,
+                    GLEnum.GL_TEXTURE_SWIZZLE_G,
+                    GLEnum.GL_TEXTURE_SWIZZLE_B,
+                    GLEnum.GL_TEXTURE_SWIZZLE_A,
+                    GLEnum.GL_TEXTURE_WRAP_S,
+                    GLEnum.GL_TEXTURE_WRAP_T,
+                    GLEnum.GL_TEXTURE_WRAP_R
+            };
+            sTexParameterPnameValues = EnumSet.copyOf(Arrays.asList(pnameValues));
+        }
+
+        if (!sTexParameterPnameValues.contains(pname)) {
             throw new IllegalArgumentException(
                     String.format("Unsupported parameter (%s) for glTexParameter()", pname));
         }

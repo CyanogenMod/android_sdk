@@ -32,38 +32,31 @@
             name="startupForegroundColor"
             value="999999" />
          <property
-               name="windowImages"
-               value="icons/adt16.png,icons/adt32.png,icons/adt48.png">
+            name="windowImages"
+            value="icons/adt16.png,icons/adt32.png,icons/adt48.png">
+         </property>
+         <property
+            name="cssTheme"
+            value="org.eclipse.e4.ui.css.theme.e4_default">
+         </property>
+         <property
+            name="applicationCSSResources"
+            value="platform:/plugin/org.eclipse.platform/images/">
          </property>
       </product>
    </extension>
    <extension
          point="org.eclipse.ui.intro">
       <intro
-            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
+            class="com.android.ide.eclipse.adt.internal.AdtIntro"
             icon="icons/adt16.png"
-            id="org.eclipse.intro.minimal"
+            id="com.android.ide.eclipse.adt.intro"
             label="Android IDE"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.intro.config">
-      <config
-            content="introcontent.xml"
-            id="org.eclipse.intro.minimal.config"
-            introId="org.eclipse.intro.minimal">
-         <presentation
-               home-page-id="root"
-               standby-page-id="standby">
-            <implementation
-                  kind="html">
-            </implementation>
-         </presentation>
-      </config>
    </extension>
    <extension
          point="org.eclipse.ui.intro">
       <introProductBinding
-            introId="org.eclipse.intro.minimal"
+            introId="com.android.ide.eclipse.adt.intro"
             productId="com.android.ide.eclipse.adt.package.product">
       </introProductBinding>
    </extension>

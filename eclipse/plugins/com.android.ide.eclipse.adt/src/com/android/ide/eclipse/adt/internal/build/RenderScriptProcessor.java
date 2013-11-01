@@ -24,7 +24,6 @@ import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -50,6 +49,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -173,8 +173,6 @@ public class RenderScriptProcessor extends SourceProcessor {
             List<IPath> sourceFolders, List<IFile> notCompiledOut,  List<File> libraryProjectsOut,
             IProgressMonitor monitor) throws CoreException {
 
-        String sdkOsPath = Sdk.getCurrent().getSdkLocation();
-
         IFolder genFolder = getGenFolder();
 
         IFolder rawFolder = project.getFolder(
@@ -182,19 +180,20 @@ public class RenderScriptProcessor extends SourceProcessor {
 
         int depIndex;
 
+        BuildToolInfo buildToolInfo = getBuildToolInfo();
+
         // create the command line
         String[] command = new String[15];
         int index = 0;
-        command[index++] = quote(sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER
-                + SdkConstants.FN_RENDERSCRIPT);
+        command[index++] = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG));
+        command[index++] = buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG);
         command[index++] = "-I";   //$NON-NLS-1$
-        command[index++] = quote(getBuildToolInfo().getPath(BuildToolInfo.PathId.ANDROID_RS));
+        command[index++] = buildToolInfo.getPath(BuildToolInfo.PathId.ANDROID_RS);
         command[index++] = "-p";   //$NON-NLS-1$
-        command[index++] = quote(genFolder.getLocation().toOSString());
+        command[index++] = genFolder.getLocation().toOSString();
         command[index++] = "-o";   //$NON-NLS-1$
-        command[index++] = quote(rawFolder.getLocation().toOSString());
+        command[index++] = rawFolder.getLocation().toOSString();
 
         command[index++] = "-target-api";   //$NON-NLS-1$
         command[index++] = Integer.toString(mTargetApi);
@@ -240,7 +239,8 @@ public class RenderScriptProcessor extends SourceProcessor {
             command[index] = quote(osSourcePath);
 
             // launch the process
-            if (execLlvmRsCc(builder, project, command, sourceFile, verbose) == false) {
+            if (!execLlvmRsCc(builder, project, command, sourceFile, buildToolInfo.getLocation(),
+                    verbose)) {
                 // llvm-rs-cc failed. File should be marked. We add the file to the list
                 // of file that will need compilation again.
                 notCompiledOut.add(sourceFile);
@@ -260,7 +260,7 @@ public class RenderScriptProcessor extends SourceProcessor {
     }
 
     private boolean execLlvmRsCc(BaseBuilder builder, IProject project, String[] command,
-            IFile sourceFile, boolean verbose) {
+            IFile sourceFile, File buildToolRoot, boolean verbose) {
         // do the exec
         try {
             if (verbose) {
@@ -273,7 +273,15 @@ public class RenderScriptProcessor extends SourceProcessor {
                 AdtPlugin.printToConsole(project, cmd_line);
             }
 
-            Process p = Runtime.getRuntime().exec(command);
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Map<String, String> env = processBuilder.environment();
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                env.put("DYLD_LIBRARY_PATH", buildToolRoot.getAbsolutePath());
+            } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+                env.put("LD_LIBRARY_PATH", buildToolRoot.getAbsolutePath());
+            }
+
+            Process p = processBuilder.start();
 
             // list to store each line of stderr
             ArrayList<String> stdErr = new ArrayList<String>();

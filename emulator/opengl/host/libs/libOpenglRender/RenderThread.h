@@ -25,7 +25,7 @@ class RenderThread : public osUtils::Thread
 {
 public:
     static RenderThread *create(IOStream *p_stream);
-
+    virtual ~RenderThread();
     bool isFinished() const { return m_finished; }
 
 private:

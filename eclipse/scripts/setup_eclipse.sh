@@ -45,7 +45,7 @@ BASE_DIR="$1"
 [[ -n "$1" ]] || die "Usage: $0 <dest-dir>"
 
 # URL for Eclipse Linux RCP.
-DOWNLOAD_URL="http://download.eclipse.org/technology/epp/downloads/release/helios/SR2/eclipse-rcp-helios-SR2-linux-gtk-x86_64.tar.gz"
+DOWNLOAD_URL="http://archive.eclipse.org/technology/epp/downloads/release/helios/SR2/eclipse-rcp-helios-SR2-linux-gtk-x86_64.tar.gz"
 
 # URL for CDT
 CDT_DOWNLOAD_URL="http://download.eclipse.org/tools/cdt/releases/helios/dist/cdt-master-7.0.2.zip"

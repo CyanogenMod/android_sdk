@@ -59,7 +59,7 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.common.layout.grid;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.layout.relative;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.common.resources.platform;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt;x-friends:="com.android.ide.eclipse.tests,com.android.ide.eclipse.adt.package",
  com.android.ide.eclipse.adt.internal;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.actions;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.assetstudio;x-friends:="com.android.ide.eclipse.tests",
@@ -113,8 +113,9 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.ide.eclipse.adt.internal.ui;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.utils;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.welcome;x-friends:="com.android.ide.eclipse.tests",
- com.android.ide.eclipse.adt.internal.wizards.actions;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.internal.wizards.actions;x-friends:="com.android.ide.eclipse.tests,com.android.ide.eclipse.adt.package",
  com.android.ide.eclipse.adt.internal.wizards.export;x-friends:="com.android.ide.eclipse.tests",
+ com.android.ide.eclipse.adt.internal.wizards.exportgradle;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.newproject;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.newxmlfile;x-friends:="com.android.ide.eclipse.tests",
  com.android.ide.eclipse.adt.internal.wizards.templates;x-friends:="com.android.ide.eclipse.tests",
@@ -133,14 +134,9 @@ Export-Package: com.android.assetstudiolib;x-friends:="com.android.ide.eclipse.t
  com.android.tools.lint.client.api;x-friends:="com.android.ide.eclipse.tests",
  com.android.tools.lint.detector.api;x-friends:="com.android.ide.eclipse.tests",
  freemarker.cache;x-friends:="com.android.ide.eclipse.tests",
- freemarker.template;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.io;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.kdom;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap.syncml;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap.wml;x-friends:="com.android.ide.eclipse.tests",
- org.kxml2.wap.wv;x-friends:="com.android.ide.eclipse.tests",
- org.xmlpull.v1;x-friends:="com.android.ide.eclipse.tests"
+ freemarker.template;x-friends:="com.android.ide.eclipse.tests"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: com.ibm.icu.text,
+ org.eclipse.core.variables
 
 

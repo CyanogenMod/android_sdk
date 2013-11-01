@@ -46,6 +46,7 @@ import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 import com.android.ide.eclipse.ddms.systrace.ISystraceOptions;
 import com.android.ide.eclipse.ddms.systrace.ISystraceOptionsDialog;
 import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialogV1;
+import com.android.ide.eclipse.ddms.systrace.SystraceOptionsDialogV2;
 import com.android.ide.eclipse.ddms.systrace.SystraceOutputParser;
 import com.android.ide.eclipse.ddms.systrace.SystraceTask;
 import com.android.ide.eclipse.ddms.systrace.SystraceVersionDetector;
@@ -89,6 +90,8 @@ import org.eclipse.ui.part.ViewPart;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -565,6 +568,14 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
     };
 
     private void launchSystrace(final IDevice device, final Shell parentShell) {
+        final File systraceAssets = new File(DdmsPlugin.getPlatformToolsFolder(), "systrace"); //$NON-NLS-1$
+        if (!systraceAssets.isDirectory()) {
+            MessageDialog.openError(parentShell, "Systrace",
+                    "Updated version of platform-tools (18.0.1 or greater) is required.\n"
+                    + "Please update your platform-tools using SDK Manager.");
+            return;
+        }
+
         SystraceVersionDetector detector = new SystraceVersionDetector(device);
         try {
             new ProgressMonitorDialog(parentShell).run(true, false, detector);
@@ -577,10 +588,20 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
             return;
         }
 
-        final ISystraceOptionsDialog dlg =
-                (detector.getVersion() == SystraceVersionDetector.SYSTRACE_V1) ?
-                        new SystraceOptionsDialogV1(parentShell) :
-                            new SystraceOptionsDialogV2(parentShell, detector.getTags());
+        final ISystraceOptionsDialog dlg;
+        if (detector.getVersion() == SystraceVersionDetector.SYSTRACE_V1) {
+            dlg = new SystraceOptionsDialogV1(parentShell);
+        } else {
+            Client[] clients = device.getClients();
+            List<String> apps = new ArrayList<String>(clients.length);
+            for (int i = 0; i < clients.length; i++) {
+                String name = clients[i].getClientData().getClientDescription();
+                if (name != null && !name.isEmpty()) {
+                    apps.add(name);
+                }
+            }
+            dlg = new SystraceOptionsDialogV2(parentShell, detector.getTags(), apps);
+        }
 
         if (dlg.open() != SystraceOptionsDialogV1.OK) {
             return;
@@ -646,11 +667,12 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                     }
 
                     monitor.setTaskName("Saving trace information");
-                    File systraceAssets = new File(DdmsPlugin.getToolsFolder(), "systrace"); //$NON-NLS-1$
                     SystraceOutputParser parser = new SystraceOutputParser(
                             COMPRESS_DATA,
                             SystraceOutputParser.getJs(systraceAssets),
-                            SystraceOutputParser.getCss(systraceAssets));
+                            SystraceOutputParser.getCss(systraceAssets),
+                            SystraceOutputParser.getHtmlPrefix(systraceAssets),
+                            SystraceOutputParser.getHtmlSuffix(systraceAssets));
 
                     parser.parse(task.getAtraceOutput());
 

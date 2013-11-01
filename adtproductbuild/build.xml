@@ -1,7 +1,15 @@
 <project name="com.android.eclipse.rcp.build" default="build">
+
+    <!-- Set QUALIFIER to ADT_IDE_QUALIFIER if defined, otherwise use a date timestamp. -->
     <tstamp>
-        <format property="QUALIFIER" pattern="yyyy-M-d-H-m"/>
+        <format property="defaultQualifier" pattern="yyyyMMddHHmm"/>
     </tstamp>
+
+    <condition property="QUALIFIER" value="v${defaultQualifier}" else="${ADT_IDE_QUALIFIER}">
+        <equals arg1="${ADT_IDE_QUALIFIER}" arg2="" />
+    </condition>
+
+    <echo message="## ADT IDE Build Qualifier: ${QUALIFIER}"/>
 
     <!-- Root of Android Source Tree -->
     <property name="ANDROID_SRC" location="../../" />
@@ -76,6 +84,16 @@
         </copy>
     </target>
 
+    <property name="GooglePlayTranslation.zip" value="${ANDROID_SRC}/tools/vendor/google/TranslationPluginForEclipse/ADT_Translation_Manager_plugin.zip" />
+    <available file="${GooglePlayTranslation.zip}" property="translation.plugin.present" />
+
+    <!-- Add localization plugin to the list of features if necessary -->
+    <target name="update-features" if="translation.plugin.present">
+        <replace file="${productBuildDir}/features/com.android.ide.eclipse.adt.package/feature.xml"
+                 token='!--import feature="com.google.i18n.inkstone.eclipse.localization" --'
+                 value='import feature="com.google.i18n.inkstone.eclipse.localization" /' />
+    </target>
+
     <!-- create target platform -->
     <target name="create-target">
         <mkdir dir="${targetDir}" />
@@ -93,8 +111,12 @@
         <unzip src="${targetSrcDir}/egit/org.eclipse.egit.repository-2.2.0.201212191850-r.zip" dest="${targetDir}/repos/egit" overwrite="false" />
     </target>
 
+    <target name="create-translation-target" if="translation.plugin.present">
+         <unzip src="${GooglePlayTranslation.zip}" dest="${targetDir}/repos/tpe" overwrite="false" />
+    </target>
+
     <!-- Launch pde build to build the adtpackage product -->
-    <target name="feature-build" depends="copy_srcs, create-target">
+    <target name="feature-build" depends="copy_srcs, update-features, create-target, create-translation-target">
         <java classname="org.eclipse.equinox.launcher.Main" fork="true" failonerror="true">
             <arg value="-application" />
             <arg value="org.eclipse.ant.core.antRunner" />
@@ -138,6 +160,7 @@
             <arg value="-DrepoBaseLocation=${targetDir}/repos/" />
             <arg value="-DtransformedRepoLocation=${targetDir}/transformedRepos/" />
             <arg value="-Dconfigs=${buildconfigs}" />
+            <arg value="-DforceContextQualifier=${QUALIFIER}" />
             <classpath>
                 <pathelement location="${equinox.launcher}" />
             </classpath>

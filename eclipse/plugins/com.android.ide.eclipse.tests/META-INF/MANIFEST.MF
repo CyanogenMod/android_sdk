@@ -9,7 +9,7 @@ Require-Bundle: org.junit
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: kxml2-2.3.0.jar,
  .,
- sdktestutils.jar,
+ testutils.jar,
  layoutlib.jar,
  lint-api.jar,
  lint-checks.jar,

@@ -6,6 +6,7 @@
 #
 # Expected env vars:
 # ADT_IDE_DEST_DIR:  existing directory where to copy the IDE zip files.
+# ADT_IDE_QUALIFIER: a root qualifier to incorporate before the build timestamp in plugins.
 # ADT_IDE_ZIP_QUALIFIER: either a date or build number to incorporate in the zip names.
 
 # Expose the ADT Eclipse IDE build only for the SDK when building adt_eclipse_ide
@@ -48,7 +49,7 @@ $(ADT_IDE_JAVA_TARGET) : $(TOPDIR)sdk/adtproductbuild/adt_eclipse_ide \
 	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/fbuild/plugins
 	$(hide)rm -rf $(TOPDIR)out/host/eclipse/adtproduct/pbuild/plugins
 	$(hide)mkdir -p $(dir $@)
-	$(hide)$(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
+	$(hide) $(TOPDIR)sdk/eclipse/scripts/create_all_symlinks.sh -c
 	$(hide)cd $(TOPDIR)sdk/adtproductbuild && \
 		rm -f ../../$(ADT_IDE_BUILD_LOG) && mkdir -p ../../$(dir $(ADT_IDE_BUILD_LOG)) && \
 		( java -jar ../../external/eclipse-basebuilder/basebuilder-3.6.2/org.eclipse.releng.basebuilder/plugins/org.eclipse.equinox.launcher_1.1.0.v20100507.jar \
@@ -56,6 +57,7 @@ $(ADT_IDE_JAVA_TARGET) : $(TOPDIR)sdk/adtproductbuild/adt_eclipse_ide \
 			-application org.eclipse.ant.core.antRunner \
 			-configuration ../../out/host/eclipse/adtproduct/ant-configuration \
 			-data ../../out/host/eclipse/adtproduct/ant-workspace \
+			-DADT_IDE_QUALIFIER=$(ADT_IDE_QUALIFIER) \
 			2>&1 && \
 		  mv -f ../../$(ADT_IDE_BUILD_LOG) ../../$(ADT_IDE_BUILD_LOG).1 ) \
 		| tee ../../$(ADT_IDE_BUILD_LOG) \
@@ -165,4 +167,3 @@ $(LOCAL_BUILT_MODULE) : $(ADT_IDE_MODULE_DEPS)
 
 endif
 endif
-

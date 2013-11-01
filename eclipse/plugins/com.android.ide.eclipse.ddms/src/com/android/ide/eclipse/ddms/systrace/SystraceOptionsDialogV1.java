@@ -347,7 +347,7 @@ public class SystraceOptionsDialogV1 extends TitleAreaDialog implements ISystrac
         if (mAmTagBtn.getSelection()) mOptions.enableTag(SystraceOptions.TAG_AM);
         if (mSyncTagBtn.getSelection()) mOptions.enableTag(SystraceOptions.TAG_SYNC);
         if (mAudioTagBtn.getSelection()) mOptions.enableTag(SystraceOptions.TAG_AUDIO);
-        if (mViewTagBtn.getSelection()) mOptions.enableTag(SystraceOptions.TAG_VIDEO);
+        if (mVideoTagBtn.getSelection()) mOptions.enableTag(SystraceOptions.TAG_VIDEO);
         if (mCameraTagBtn.getSelection()) mOptions.enableTag(SystraceOptions.TAG_CAMERA);
 
         // save current selections to be restored if the dialog is invoked again
@@ -366,7 +366,7 @@ public class SystraceOptionsDialogV1 extends TitleAreaDialog implements ISystrac
         sAmTag = mAmTagBtn.getSelection();
         sSyncTag = mSyncTagBtn.getSelection();
         sAudioTag = mAudioTagBtn.getSelection();
-        sViewTag = mViewTagBtn.getSelection();
+        sVideoTag = mVideoTagBtn.getSelection();
         sCameraTag = mCameraTagBtn.getSelection();
 
         super.okPressed();

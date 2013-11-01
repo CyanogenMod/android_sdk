@@ -581,6 +581,10 @@
             class="com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer"
             id="com.android.ide.eclipse.adt.LIBRARIES">
         </classpathContainerInitializer>
+        <classpathContainerInitializer
+            class="com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer"
+            id="com.android.ide.eclipse.adt.DEPENDENCIES">
+        </classpathContainerInitializer>
     </extension>
     <extension point="org.eclipse.jdt.ui.classpathContainerPage">
         <classpathContainerPage
@@ -600,6 +604,22 @@
             icon="icons/android.png"
             id="com.android.ide.eclipse.adt.project.ExportWizard"
             name="Export Android Application">
+        </wizard>
+    </extension>
+    <extension point="org.eclipse.ui.exportWizards">
+        <category
+            id="com.android.ide.eclipse.wizards.category"
+            name="Android">
+        </category>
+        <wizard
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.exportgradle.GradleExportWizard"
+            icon="icons/gradle.png"
+            id="com.android.ide.eclipse.adt.project.ExportGradleWizard"
+            name="Generate Gradle build files">
+            <selection
+                class="org.eclipse.jdt.core.IJavaProject">
+            </selection>
         </wizard>
     </extension>
     <extension point="org.eclipse.ui.commands">
@@ -731,6 +751,14 @@
             symbolicFontName="org.eclipse.wst.sse.ui.textfont">
             <contentTypeBinding contentTypeId="com.android.ide.eclipse.adt.binaryXml">
             </contentTypeBinding>
+        </editor>
+        <editor
+            class="com.android.ide.eclipse.adt.internal.editors.draw9patch.Draw9PatchEditor"
+            contributorClass="com.android.ide.eclipse.adt.internal.editors.common.CommonActionContributor"
+            icon="icons/android_file.png"
+            id="draw9patchplugin.editors.Draw9PatchEditor"
+            name="Android Draw 9-patch Editor"
+            extensions="9.png">
         </editor>
     </extension>
     <extension point="org.eclipse.ui.views">

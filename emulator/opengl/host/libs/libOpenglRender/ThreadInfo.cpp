@@ -13,41 +13,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 #include "ThreadInfo.h"
-
-#ifdef __linux__
-
-static __thread RenderThreadInfo *tinfo = NULL;
-
-RenderThreadInfo *getRenderThreadInfo()
-{
-    if (!tinfo) {
-        tinfo = new RenderThreadInfo();
-    }
-    return tinfo;
-}
-
-#else
-
 #include <cutils/threads.h>
+
 static thread_store_t s_tls = THREAD_STORE_INITIALIZER;
 
-static void tlsDestruct(void *ptr)
-{
-    if (ptr) {
-        RenderThreadInfo *ti = (RenderThreadInfo *)ptr;
-        delete ti;
-    }
+RenderThreadInfo::RenderThreadInfo() {
+    thread_store_set(&s_tls, this, NULL);
 }
 
-RenderThreadInfo *getRenderThreadInfo()
-{
-    RenderThreadInfo *ti = (RenderThreadInfo *)thread_store_get(&s_tls);
-    if (!ti) {
-        ti = new RenderThreadInfo();
-        thread_store_set(&s_tls, ti, tlsDestruct);
-    }
-    return ti;
+RenderThreadInfo::~RenderThreadInfo() {
 }
-#endif
 
+RenderThreadInfo* RenderThreadInfo::get() {
+    return (RenderThreadInfo*)thread_store_get(&s_tls);
+}

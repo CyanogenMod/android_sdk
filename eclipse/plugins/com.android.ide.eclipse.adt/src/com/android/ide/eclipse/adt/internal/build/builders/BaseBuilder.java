@@ -43,6 +43,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -338,6 +339,8 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
             mBuildToolInfo = sdk.getLatestBuildTool();
 
             if (mBuildToolInfo == null) {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, iProject,
+                        "No \"Build Tools\" package available; use SDK Manager to install one.");
                 throw new AbortBuildException();
             } else {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, iProject,
@@ -473,6 +476,7 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
 
     protected void launchJob(Job newJob) {
         newJob.setPriority(Job.BUILD);
+        newJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
         newJob.schedule();
     }
 }

@@ -21,6 +21,7 @@
 #include "GLDispatch.h"
 #include "GL2Dispatch.h"
 #include "EGLDispatch.h"
+#include "FrameBuffer.h"
 
 #define STREAM_BUFFER_SIZE 4*1024*1024
 
@@ -29,6 +30,11 @@ RenderThread::RenderThread() :
     m_stream(NULL),
     m_finished(false)
 {
+}
+
+RenderThread::~RenderThread()
+{
+    delete m_stream;
 }
 
 RenderThread *RenderThread::create(IOStream *p_stream)
@@ -45,12 +51,13 @@ RenderThread *RenderThread::create(IOStream *p_stream)
 
 int RenderThread::Main()
 {
-    RenderThreadInfo * tInfo = getRenderThreadInfo();
+    RenderThreadInfo tInfo;
+
     //
     // initialize decoders
     //
-    tInfo->m_glDec.initGL( gl_dispatch_get_proc_func, NULL );
-    tInfo->m_gl2Dec.initGL( gl2_dispatch_get_proc_func, NULL );
+    tInfo.m_glDec.initGL( gl_dispatch_get_proc_func, NULL );
+    tInfo.m_gl2Dec.initGL( gl2_dispatch_get_proc_func, NULL );
     initRenderControlContext( &m_rcDec );
 
     ReadBuffer readBuf(m_stream, STREAM_BUFFER_SIZE);
@@ -109,7 +116,7 @@ int RenderThread::Main()
             //
             // try to process some of the command buffer using the GLESv1 decoder
             //
-            size_t last = tInfo->m_glDec.decode(readBuf.buf(), readBuf.validData(), m_stream);
+            size_t last = tInfo.m_glDec.decode(readBuf.buf(), readBuf.validData(), m_stream);
             if (last > 0) {
                 progress = true;
                 readBuf.consume(last);
@@ -118,7 +125,7 @@ int RenderThread::Main()
             //
             // try to process some of the command buffer using the GLESv2 decoder
             //
-            last = tInfo->m_gl2Dec.decode(readBuf.buf(), readBuf.validData(), m_stream);
+            last = tInfo.m_gl2Dec.decode(readBuf.buf(), readBuf.validData(), m_stream);
             if (last > 0) {
                 progress = true;
                 readBuf.consume(last);
@@ -143,15 +150,11 @@ int RenderThread::Main()
     }
 
     //
-    // release the thread from any EGL context
-    // if bound to context.
+    // Release references to the current thread's context/surfaces if any
     //
-    EGLDisplay eglDpy = s_egl.eglGetCurrentDisplay();
-    if (eglDpy != EGL_NO_DISPLAY) {
-        s_egl.eglMakeCurrent(eglDpy, 
-                             EGL_NO_SURFACE,
-                             EGL_NO_SURFACE,
-                             EGL_NO_CONTEXT);
+    FrameBuffer::getFB()->bindContext(0, 0, 0);
+    if (tInfo.currContext || tInfo.currDrawSurf || tInfo.currReadSurf) {
+        fprintf(stderr, "ERROR: RenderThread exiting with current context/surfaces\n");
     }
 
     //

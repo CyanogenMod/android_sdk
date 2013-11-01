@@ -14,28 +14,31 @@
 # limitations under the License.
 #
 
+##############################################################################
+# Tools Component
+##############################################################################
+
 #
 # These are the files that comprise the tools component of the SDK.
 #
 
-prebuilts/devtools/tools/lib                  tools/lib
+prebuilts/devtools/tools/lib                        tools/lib
+# manual copy of lombok-ast for now
+prebuilts/tools/common/lombok-ast/lombok-ast-0.2.1.jar tools/lib/lombok-ast-0.2.1.jar
+prebuilts/tools/common/lombok-ast/LICENSE.txt       tools/lib/lombok-ast-NOTICE.txt
 
-prebuilts/devtools/tools/android              tools/android
-prebuilts/devtools/tools/draw9patch           tools/draw9patch
-prebuilts/devtools/tools/ddms                 tools/ddms
-prebuilts/devtools/tools/hierarchyviewer      tools/hierarchyviewer
-prebuilts/devtools/tools/jobb                 tools/jobb
-prebuilts/devtools/tools/lint                 tools/lint
-prebuilts/devtools/tools/monkeyrunner         tools/monkeyrunner
-prebuilts/devtools/tools/traceview            tools/traceview
-prebuilts/devtools/tools/uiautomatorviewer    tools/uiautomatorviewer
+prebuilts/devtools/tools/android                    tools/android
+prebuilts/devtools/tools/draw9patch                 tools/draw9patch
+prebuilts/devtools/tools/ddms                       tools/ddms
+prebuilts/devtools/tools/hierarchyviewer            tools/hierarchyviewer
+prebuilts/devtools/tools/jobb                       tools/jobb
+prebuilts/devtools/tools/lint                       tools/lint
+prebuilts/devtools/tools/monkeyrunner               tools/monkeyrunner
+prebuilts/devtools/tools/traceview                  tools/traceview
+prebuilts/devtools/tools/uiautomatorviewer          tools/uiautomatorviewer
 
-prebuilts/devtools/notices/NOTICE.txt         tols/NOTICE.txt
+prebuilts/devtools/notices/NOTICE.txt               tools/NOTICE.txt
 
-
-##############################################################################
-# Tools Component
-##############################################################################
 
 # version files for the SDK updater, from sdk.git
 sdk/files/tools_source.properties                   tools/source.properties
@@ -78,9 +81,10 @@ lib/lib64GLES_V2_translator${DLL_EXTENSION}   strip tools/lib/lib64GLES_V2_trans
 lib/lib64EGL_translator${DLL_EXTENSION}       strip tools/lib/lib64EGL_translator${DLL_EXTENSION}
 
 
-# sdk.git Ant templates for project build files
+# sdk.git Ant and gradle templates for project build files
 sdk/templates/build.template                        tools/lib/build.template
 sdk/templates/uibuild.template                      tools/lib/uibuild.template
+sdk/templates/build_gradle.template                 tools/lib/build_gradle.template
 sdk/files/proguard-project.txt                      tools/lib/proguard-project.txt
 sdk/files/proguard-android.txt                      tools/proguard/proguard-android.txt
 sdk/files/proguard-android-optimize.txt             tools/proguard/proguard-android-optimize.txt
@@ -97,9 +101,6 @@ external/qemu/android/avd/hardware-properties.ini   tools/lib/hardware-propertie
 
 # emacs support from sdk.git
 sdk/files/android.el tools/lib/android.el
-
-# Java Libraries for the tools
-sdk/apkbuilder/etc/apkbuilder                       tools/apkbuilder
 
 # 3rd Party java libraries
 framework/emmalib.jar                                                               tools/lib/emma_device.jar
@@ -120,23 +121,16 @@ prebuilts/tools/common/proguard/proguard4.7/bin/retrace.sh     tools/proguard/bi
 prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  tools/proguard/ant/task.properties
 
 # Templates
-sdk/templates/projects                  tools/templates/projects
-sdk/templates/activities                tools/templates/activities
-sdk/templates/other                     tools/templates/other
+tools/base/templates/projects                  tools/templates/projects
+tools/base/templates/activities                tools/templates/activities
+tools/base/templates/gradle                    tools/templates/gradle
+tools/base/templates/other                     tools/templates/other
 
 # SDK Controller
 sdk/apps/SdkController                  tools/apps/SdkController
 
 # tools specific support jar
 framework/annotations.jar               tools/support/annotations.jar
-
-# systrace
-external/chromium-trace/systrace.py     tools/systrace/systrace.py
-external/chromium-trace/script.js       tools/systrace/script.js
-external/chromium-trace/style.css       tools/systrace/style.css
-external/chromium-trace/LICENSE         tools/systrace/LICENSE
-external/chromium-trace/AUTHORS         tools/systrace/AUTHORS
-external/chromium-trace/NOTICE          tools/systrace/NOTICE
 
 # Misspelling databases for lint
 sdk/files/typos                         tools/support

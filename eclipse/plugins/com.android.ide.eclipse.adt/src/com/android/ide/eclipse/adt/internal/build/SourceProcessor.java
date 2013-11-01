@@ -80,6 +80,9 @@ public abstract class SourceProcessor {
      */
     public static String quote(String path) {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            if (path.endsWith(File.separator)) {
+                path = path.substring(0, path.length() -1);
+            }
             return "\"" + path + "\"";
         }
 
