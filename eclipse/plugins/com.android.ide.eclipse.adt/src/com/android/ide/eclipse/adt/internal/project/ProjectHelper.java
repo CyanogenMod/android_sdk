@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
 
 import org.eclipse.core.resources.ICommand;
@@ -437,7 +438,7 @@ public final class ProjectHelper {
         String compliance = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 
         // check it against a list of valid compliance level strings.
-        if (checkCompliance(compliance) == false) {
+        if (!checkCompliance(javaProject, compliance)) {
             // if we didn't find the proper compliance level, we return an error
             return Pair.of(COMPILER_COMPLIANCE_LEVEL, compliance);
         }
@@ -446,7 +447,7 @@ public final class ProjectHelper {
         String source = javaProject.getOption(JavaCore.COMPILER_SOURCE, true);
 
         // check it against a list of valid compliance level strings.
-        if (checkCompliance(source) == false) {
+        if (!checkCompliance(javaProject, source)) {
             // if we didn't find the proper compliance level, we return an error
             return Pair.of(COMPILER_COMPLIANCE_SOURCE, source);
         }
@@ -455,7 +456,7 @@ public final class ProjectHelper {
         String codeGen = javaProject.getOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, true);
 
         // check it against a list of valid compliance level strings.
-        if (checkCompliance(codeGen) == false) {
+        if (!checkCompliance(javaProject, codeGen)) {
             // if we didn't find the proper compliance level, we return an error
             return Pair.of(COMPILER_COMPLIANCE_CODEGEN_TARGET, codeGen);
         }
@@ -864,12 +865,23 @@ public final class ProjectHelper {
     /**
      * Checks a Java project compiler level option against a list of supported versions.
      * @param optionValue the Compiler level option.
-     * @return true if the option value is supproted.
+     * @return true if the option value is supported.
      */
-    private static boolean checkCompliance(String optionValue) {
+    private static boolean checkCompliance(@NonNull IJavaProject project, String optionValue) {
         for (String s : AdtConstants.COMPILER_COMPLIANCE) {
             if (s != null && s.equals(optionValue)) {
                 return true;
+            }
+        }
+
+        if (JavaCore.VERSION_1_7.equals(optionValue)) {
+            // Requires API 19
+            Sdk currentSdk = Sdk.getCurrent();
+            if (currentSdk != null) {
+                IAndroidTarget target = currentSdk.getTarget(project.getProject());
+                if (target != null && target.getVersion().getApiLevel() >= 19) {
+                    return true;
+                }
             }
         }
 

@@ -33,6 +33,10 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -144,9 +148,19 @@ public final class ProjectClassLoader extends ClassLoader {
             fis.close();
 
             if (data != null) {
-                Class<?> clazz = defineClass(null, data, 0, read);
-                if (clazz != null) {
-                    return clazz;
+                try {
+                    Class<?> clazz = defineClass(null, data, 0, read);
+                    if (clazz != null) {
+                        return clazz;
+                    }
+                } catch (UnsupportedClassVersionError e) {
+                    // Attempt to reload on lower version
+                    int maxVersion = 50; // JDK 1.6
+                    try {
+                        rewriteClass(data, maxVersion, 0);
+                    } catch (UnsupportedClassVersionError e2) {
+                        throw e; // throw *original* exception, not attempt to rewrite
+                    }
                 }
             }
         } catch (Exception e) {
@@ -154,6 +168,30 @@ public final class ProjectClassLoader extends ClassLoader {
         }
 
         return null;
+    }
+
+    /**
+     * Rewrites the given class to the given target class file version.
+     */
+    public static byte[] rewriteClass(byte[] classData, final int maxVersion, final int minVersion) {
+        assert maxVersion >= minVersion;
+        ClassWriter classWriter = new ClassWriter(0);
+        ClassVisitor classVisitor = new ClassVisitor(Opcodes.ASM4, classWriter) {
+            @Override
+            public void visit(int version, int access, String name, String signature,
+                    String superName, String[] interfaces) {
+                if (version > maxVersion) {
+                    version = maxVersion;
+                }
+                if (version < minVersion) {
+                    version = minVersion;
+                }
+                super.visit(version, access, name, signature, superName, interfaces);
+            }
+        };
+        ClassReader reader = new ClassReader(classData);
+        reader.accept(classVisitor, 0);
+        return classWriter.toByteArray();
     }
 
     /**
