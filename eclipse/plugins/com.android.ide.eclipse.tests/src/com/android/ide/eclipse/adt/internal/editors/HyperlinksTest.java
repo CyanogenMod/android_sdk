@@ -54,23 +54,22 @@ public class HyperlinksTest extends AdtProjectTest {
     }
 
     public void testFqnRegexp() throws Exception {
-        assertTrue(Hyperlinks.CLASS_PATTERN.matcher("com.android.Foo").matches());
-        assertTrue(Hyperlinks.CLASS_PATTERN.matcher("com.android.pk_g.Foo_Bar1").
-                matches());
-        assertTrue(Hyperlinks.CLASS_PATTERN.matcher("com.android.Foo$Inner").matches());
+        assertTrue(Hyperlinks.isViewClassName("com.android.Foo"));
+        assertTrue(Hyperlinks.isViewClassName("com.android.pk_g.Foo_Bar1"));
+        assertTrue(Hyperlinks.isViewClassName("com.android.Foo$Inner"));
 
         // Should we allow non-standard packages and class names?
         // For now, we're allowing it -- see how this works out in practice.
-        //assertFalse(XmlHyperlinkResolver.CLASS_PATTERN.matcher("Foo.bar").matches());
-        assertTrue(Hyperlinks.CLASS_PATTERN.matcher("Foo.bar").matches());
+        //assertFalse(XmlHyperlinkResolver.isViewClassName("Foo.bar"));
+        assertTrue(Hyperlinks.isViewClassName("Foo.bar"));
 
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher("LinearLayout").matches());
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher(".").matches());
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher(".F").matches());
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher("f.").matches());
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher("Foo").matches());
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher("com.android.1Foo").matches());
-        assertFalse(Hyperlinks.CLASS_PATTERN.matcher("1com.Foo").matches());
+        assertFalse(Hyperlinks.isViewClassName("LinearLayout"));
+        assertFalse(Hyperlinks.isViewClassName("."));
+        assertFalse(Hyperlinks.isViewClassName(".F"));
+        assertFalse(Hyperlinks.isViewClassName("f."));
+        assertFalse(Hyperlinks.isViewClassName("Foo"));
+        assertFalse(Hyperlinks.isViewClassName("com.android.1Foo"));
+        assertFalse(Hyperlinks.isViewClassName("1com.Foo"));
     }
 
     public void testNavigate1() throws Exception {

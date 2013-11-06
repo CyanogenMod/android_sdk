@@ -162,7 +162,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 
 /**
  * Class containing hyperlink resolvers for XML and Java files to jump to associated
@@ -184,10 +183,36 @@ public class Hyperlinks {
         // for the various inner classes that are actual hyperlink resolvers.
     }
 
-    /** Regular expression matching a FQCN for a view class */
+    /**
+     * Returns whether a string represents a valid fully qualified name for a view class.
+     * Does not check for existence.
+     */
     @VisibleForTesting
-    /* package */ static final Pattern CLASS_PATTERN = Pattern.compile(
-        "(([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)+\\.)+[a-zA-Z_\\$][a-zA-Z0-9_\\$]*"); //$NON-NLS-1$
+    static boolean isViewClassName(String name) {
+        int length = name.length();
+        if (length < 2 || name.indexOf('.') == -1) {
+            return false;
+        }
+
+        boolean lastWasDot = true;
+        for (int i = 0; i < length; i++) {
+            char c = name.charAt(i);
+            if (lastWasDot) {
+                if (!Character.isJavaIdentifierStart(c)) {
+                    return false;
+                }
+                lastWasDot = false;
+            } else {
+                if (c == '.') {
+                    lastWasDot = true;
+                } else if (!Character.isJavaIdentifierPart(c)) {
+                    return false;
+                }
+            }
+        }
+
+        return !lastWasDot;
+    }
 
     /** Determines whether the given attribute <b>name</b> is linkable */
     private static boolean isAttributeNameLink(XmlContext context) {
@@ -368,7 +393,7 @@ public class Hyperlinks {
         // If the element looks like a fully qualified class name (e.g. it's a custom view
         // element) offer it as a link
         String tag = context.getElement().getTagName();
-        return (tag.indexOf('.') != -1 && CLASS_PATTERN.matcher(tag).matches());
+        return isViewClassName(tag);
     }
 
     /** Returns the FQCN for a class declaration at the given context */
