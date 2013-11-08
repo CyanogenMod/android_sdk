@@ -35,13 +35,14 @@ bool Range::rangeUnion(const Range& r,Range& rOut) const {
     int size =  max_end - min_start;
     if(size) {
         rOut.setRange(min_start,max_end-min_start);
-        return false;
+        return true;
     }
     return false;
 }
 
 void RangeList::addRange(const Range& r) {
-    list.push_back(r);
+    if(r.getSize())
+        list.push_back(r);
 }
 
 void RangeList::addRanges(const RangeList& rl) {
