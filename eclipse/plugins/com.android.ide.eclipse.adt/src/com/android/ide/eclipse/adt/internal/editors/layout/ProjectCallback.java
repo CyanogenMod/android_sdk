@@ -30,6 +30,7 @@ import static com.android.SdkConstants.VIEW_INCLUDE;
 
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.RenderSecurityManager;
 import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.DataBindingItem;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
@@ -161,7 +162,20 @@ public final class ProjectCallback extends LegacyCallback {
 
         try {
             if (mLoader == null) {
-                mLoader = new ProjectClassLoader(mParentClassLoader, mProject);
+                // Allow creating class loaders during rendering; may be prevented by the
+                // RenderSecurityManager
+                RenderSecurityManager renderSecurityManager = RenderSecurityManager.getCurrent();
+                if (renderSecurityManager != null) {
+                  renderSecurityManager.setActive(false);
+                }
+                try {
+                  System.setSecurityManager(null);
+                  mLoader = new ProjectClassLoader(mParentClassLoader, mProject);
+                } finally {
+                  if (renderSecurityManager != null) {
+                    renderSecurityManager.setActive(true);
+                  }
+                }
             }
             clazz = mLoader.loadClass(className);
         } catch (Exception e) {
