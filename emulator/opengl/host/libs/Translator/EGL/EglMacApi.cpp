@@ -68,7 +68,15 @@ static EglConfig* pixelFormatToConfig(int index,int renderableType,EGLNativePixe
 
     getPixelFormatAttrib(*frmt,MAC_SAMPLES_PER_PIXEL,&samples);
     getPixelFormatAttrib(*frmt,MAC_COLOR_SIZE,&colorSize);
-    getPixelFormatAttrib(*frmt,MAC_ALPHA_SIZE,&alpha);
+    /* All configs can end up having an alpha channel even if none was requested.
+     * The default config chooser in GLSurfaceView will therefore not find any
+     * matching config. Thus, make sure alpha is zero (or at least signalled as
+     * zero to the calling EGL layer) for the configs where it was intended to
+     * be zero. */
+    if (getPixelFormatDefinitionAlpha(index) == 0)
+        alpha = 0;
+    else
+        getPixelFormatAttrib(*frmt,MAC_ALPHA_SIZE,&alpha);
     getPixelFormatAttrib(*frmt,MAC_DEPTH_SIZE,&depth);
     getPixelFormatAttrib(*frmt,MAC_STENCIL_SIZE,&stencil);
 
