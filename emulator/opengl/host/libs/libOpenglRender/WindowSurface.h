@@ -38,13 +38,13 @@ public:
     EGLSurface getEGLSurface() const { return m_eglSurface; }
 
     void setColorBuffer(ColorBufferPtr p_colorBuffer);
-    void flushColorBuffer();
+    bool flushColorBuffer();
     void bind(RenderContextPtr p_ctx, SurfaceBindType p_bindType);
 
 private:
     WindowSurface();
 
-    void blitToColorBuffer();  // copy pbuffer content with texload and blit
+    bool blitToColorBuffer();  // copy pbuffer content with texload and blit
     bool resizePbuffer(unsigned int p_width, unsigned int p_height);
 
 private:

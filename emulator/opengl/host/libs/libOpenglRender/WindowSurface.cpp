@@ -81,11 +81,12 @@ WindowSurface *WindowSurface::create(int p_config, int p_width, int p_height)
 //    previous attached color buffer is updated, if copy or blit should be done
 //    in order to update it - it is being done here.
 //
-void WindowSurface::flushColorBuffer()
+bool WindowSurface::flushColorBuffer()
 {
     if (m_attachedColorBuffer.Ptr() != NULL) {
-        blitToColorBuffer();
+        return blitToColorBuffer();
     }
+    return true;
 }
 
 //
@@ -140,14 +141,15 @@ void WindowSurface::bind(RenderContextPtr p_ctx, SurfaceBindType p_bindType)
 
 }
 
-void WindowSurface::blitToColorBuffer()
+bool WindowSurface::blitToColorBuffer()
 {
-    if (!m_width && !m_height) return;
+    if (!m_width && !m_height) return false;
 
     if (m_attachedColorBuffer->getWidth() != m_width ||
         m_attachedColorBuffer->getHeight() != m_height) {
         // XXX: should never happen - how this needs to be handled?
-        return;
+        fprintf(stderr, "Dimensions do not match\n");
+        return false;
     }
 
     //
@@ -157,9 +159,14 @@ void WindowSurface::blitToColorBuffer()
     EGLSurface prevReadSurf = s_egl.eglGetCurrentSurface(EGL_READ);
     EGLSurface prevDrawSurf = s_egl.eglGetCurrentSurface(EGL_DRAW);
     FrameBuffer *fb = FrameBuffer::getFB();
+    if (!m_drawContext.Ptr()) {
+        fprintf(stderr, "Draw context is NULL\n");
+        return false;
+    }
     if (!s_egl.eglMakeCurrent(fb->getDisplay(), m_eglSurface,
                               m_eglSurface, m_drawContext->getEGLContext())) {
-        return;
+        fprintf(stderr, "Error making draw context current\n");
+        return false;
     }
 
     m_attachedColorBuffer->blitFromCurrentReadBuffer();
@@ -167,12 +174,12 @@ void WindowSurface::blitToColorBuffer()
     // restore current context/surface
     s_egl.eglMakeCurrent(fb->getDisplay(), prevDrawSurf,
                          prevReadSurf, prevContext);
-
+    return true;
 }
 
 bool WindowSurface::resizePbuffer(unsigned int p_width, unsigned int p_height)
 {
-    if (m_eglSurface && 
+    if (m_eglSurface &&
         m_pbufWidth == p_width &&
         m_pbufHeight == p_height) {
         // no need to resize
