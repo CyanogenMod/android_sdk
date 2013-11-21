@@ -23,6 +23,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.HardwareConfigHelper;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.RenderSecurityManager;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.DrawableParams;
 import com.android.ide.common.rendering.api.HardwareConfig;
@@ -38,6 +39,7 @@ import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.ContextPullParser;
 import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.UiElementPullParser;
@@ -62,6 +64,7 @@ import org.eclipse.core.resources.IProject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -77,6 +80,8 @@ import java.util.Set;
  * Android layouts. This is a wrapper around the layout library.
  */
 public class RenderService {
+    private static final Object RENDERING_LOCK = new Object();
+
     /** Reference to the file being edited. Can also be used to access the {@link IProject}. */
     private final GraphicalEditorPart mEditor;
 
@@ -151,6 +156,23 @@ public class RenderService {
         mTargetSdkVersion = editor.getTargetSdkVersion();
         mLocale = configuration.getLocale();
     }
+
+    private RenderSecurityManager createSecurityManager() {
+        String projectPath = null;
+        String sdkPath = null;
+        if (RenderSecurityManager.RESTRICT_READS) {
+            projectPath = AdtUtils.getAbsolutePath(mProject).toFile().getPath();
+            Sdk sdk = Sdk.getCurrent();
+            sdkPath = sdk != null ? sdk.getSdkLocation() : null;
+        }
+        RenderSecurityManager securityManager = new RenderSecurityManager(sdkPath, projectPath);
+        securityManager.setLogger(AdtPlugin.getDefault());
+
+        // Make sure this is initialized before we attempt to use it from layoutlib
+        Toolkit.getDefaultToolkit();
+
+        return securityManager;
+      }
 
     /**
      * Returns true if this configuration supports the given rendering
@@ -445,15 +467,20 @@ public class RenderService {
         // set the Image Overlay as the image factory.
         params.setImageFactory(mImageFactory);
 
+        mProjectCallback.setLogger(mLogger);
+        mProjectCallback.setResourceResolver(mResourceResolver);
+        RenderSecurityManager securityManager = createSecurityManager();
         try {
-            mProjectCallback.setLogger(mLogger);
-            mProjectCallback.setResourceResolver(mResourceResolver);
-            return mLayoutLib.createSession(params);
+            securityManager.setActive(true);
+            synchronized (RENDERING_LOCK) {
+                return mLayoutLib.createSession(params);
+            }
         } catch (RuntimeException t) {
             // Exceptions from the bridge
             mLogger.error(null, t.getLocalizedMessage(), t, null);
             throw t;
         } finally {
+            securityManager.dispose();
             mProjectCallback.setLogger(null);
             mProjectCallback.setResourceResolver(null);
         }
@@ -553,10 +580,14 @@ public class RenderService {
         params.setForceNoDecor();
 
         RenderSession session = null;
+        mProjectCallback.setLogger(mLogger);
+        mProjectCallback.setResourceResolver(mResourceResolver);
+        RenderSecurityManager securityManager = createSecurityManager();
         try {
-            mProjectCallback.setLogger(mLogger);
-            mProjectCallback.setResourceResolver(mResourceResolver);
-            session = mLayoutLib.createSession(params);
+            securityManager.setActive(true);
+            synchronized (RENDERING_LOCK) {
+                session = mLayoutLib.createSession(params);
+            }
             if (session.getResult().isSuccess()) {
                 assert session.getRootViews().size() == 1;
                 ViewInfo root = session.getRootViews().get(0);
@@ -579,6 +610,7 @@ public class RenderService {
             mLogger.error(null, t.getLocalizedMessage(), t, null);
             throw t;
         } finally {
+            securityManager.dispose();
             mProjectCallback.setLogger(null);
             mProjectCallback.setResourceResolver(null);
             if (session != null) {

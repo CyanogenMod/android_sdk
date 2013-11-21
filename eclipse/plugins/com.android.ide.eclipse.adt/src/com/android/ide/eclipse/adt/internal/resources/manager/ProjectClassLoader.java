@@ -157,7 +157,8 @@ public final class ProjectClassLoader extends ClassLoader {
                     // Attempt to reload on lower version
                     int maxVersion = 50; // JDK 1.6
                     try {
-                        rewriteClass(data, maxVersion, 0);
+                        byte[] rewritten = rewriteClass(data, maxVersion, 0);
+                        return defineClass(null, rewritten, 0, rewritten.length);
                     } catch (UnsupportedClassVersionError e2) {
                         throw e; // throw *original* exception, not attempt to rewrite
                     }
