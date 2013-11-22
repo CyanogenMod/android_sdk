@@ -258,6 +258,7 @@ risky
 rollback
 rowspan
 rowspans
+sandbox
 sans
 scrollable
 scrollbar
