@@ -239,7 +239,9 @@ static int rcFlushWindowColorBuffer(uint32_t windowSurface)
     if (!fb) {
         return -1;
     }
-    fb->flushWindowSurfaceColorBuffer(windowSurface);
+    if (!fb->flushWindowSurfaceColorBuffer(windowSurface)) {
+        return -1;
+    }
     return 0;
 }
 
