@@ -108,10 +108,12 @@ public class RenderService {
     private Integer mOverrideBgColor;
     private boolean mShowDecorations = true;
     private Set<UiElementNode> mExpandNodes = Collections.<UiElementNode>emptySet();
+    private final Object mCredential;
 
     /** Use the {@link #create} factory instead */
-    private RenderService(GraphicalEditorPart editor) {
+    private RenderService(GraphicalEditorPart editor, Object credential) {
         mEditor = editor;
+        mCredential = credential;
 
         mProject = editor.getProject();
         LayoutCanvas canvas = editor.getCanvasControl();
@@ -135,8 +137,10 @@ public class RenderService {
     }
 
     private RenderService(GraphicalEditorPart editor,
-            Configuration configuration, ResourceResolver resourceResolver) {
+            Configuration configuration, ResourceResolver resourceResolver,
+            Object credential) {
         mEditor = editor;
+        mCredential = credential;
 
         mProject = editor.getProject();
         LayoutCanvas canvas = editor.getCanvasControl();
@@ -206,9 +210,20 @@ public class RenderService {
      * @return a {@link RenderService} which can perform rendering services
      */
     public static RenderService create(GraphicalEditorPart editor) {
-        RenderService renderService = new RenderService(editor);
+        // Delegate to editor such that it can pass its credential to the service
+        return editor.createRenderService();
+    }
 
-        return renderService;
+    /**
+     * Creates a new {@link RenderService} associated with the given editor.
+     *
+     * @param editor the editor to provide configuration data such as the render target
+     * @param credential the sandbox credential
+     * @return a {@link RenderService} which can perform rendering services
+     */
+    @NonNull
+    public static RenderService create(GraphicalEditorPart editor, Object credential) {
+        return new RenderService(editor, credential);
     }
 
     /**
@@ -221,9 +236,22 @@ public class RenderService {
      */
     public static RenderService create(GraphicalEditorPart editor,
             Configuration configuration, ResourceResolver resolver) {
-        RenderService renderService = new RenderService(editor, configuration, resolver);
+        // Delegate to editor such that it can pass its credential to the service
+        return editor.createRenderService(configuration, resolver);
+    }
 
-        return renderService;
+    /**
+     * Creates a new {@link RenderService} associated with the given editor.
+     *
+     * @param editor the editor to provide configuration data such as the render target
+     * @param configuration the configuration to use (and fallback to editor for the rest)
+     * @param resolver a resource resolver to use to look up resources
+     * @param credential the sandbox credential
+     * @return a {@link RenderService} which can perform rendering services
+     */
+    public static RenderService create(GraphicalEditorPart editor,
+            Configuration configuration, ResourceResolver resolver, Object credential) {
+        return new RenderService(editor, configuration, resolver, credential);
     }
 
     /**
@@ -471,7 +499,7 @@ public class RenderService {
         mProjectCallback.setResourceResolver(mResourceResolver);
         RenderSecurityManager securityManager = createSecurityManager();
         try {
-            securityManager.setActive(true);
+            securityManager.setActive(true, mCredential);
             synchronized (RENDERING_LOCK) {
                 return mLayoutLib.createSession(params);
             }
@@ -480,7 +508,7 @@ public class RenderService {
             mLogger.error(null, t.getLocalizedMessage(), t, null);
             throw t;
         } finally {
-            securityManager.dispose();
+            securityManager.dispose(mCredential);
             mProjectCallback.setLogger(null);
             mProjectCallback.setResourceResolver(null);
         }
@@ -584,7 +612,7 @@ public class RenderService {
         mProjectCallback.setResourceResolver(mResourceResolver);
         RenderSecurityManager securityManager = createSecurityManager();
         try {
-            securityManager.setActive(true);
+            securityManager.setActive(true, mCredential);
             synchronized (RENDERING_LOCK) {
                 session = mLayoutLib.createSession(params);
             }
@@ -610,7 +638,7 @@ public class RenderService {
             mLogger.error(null, t.getLocalizedMessage(), t, null);
             throw t;
         } finally {
-            securityManager.dispose();
+            securityManager.dispose(mCredential);
             mProjectCallback.setLogger(null);
             mProjectCallback.setResourceResolver(null);
             if (session != null) {

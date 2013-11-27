@@ -555,7 +555,7 @@ public class RenderPreview implements IJobChangeListener {
         } else {
             renderService.setModel(editor.getModel());
         }
-        RenderLogger log = new RenderLogger(getDisplayName());
+        RenderLogger log = editor.createRenderLogger(getDisplayName());
         renderService.setLog(log);
         RenderSession session = renderService.createRenderSession();
         Result render = session.render(1000);

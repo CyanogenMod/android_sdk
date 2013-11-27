@@ -83,12 +83,12 @@ public final class ProjectCallback extends LegacyCallback {
     private final IProject mProject;
     private final ClassLoader mParentClassLoader;
     private final ProjectResources mProjectRes;
+    private final Object mCredential;
     private boolean mUsed = false;
     private String mNamespace;
     private ProjectClassLoader mLoader = null;
     private LayoutLog mLogger;
     private LayoutLibrary mLayoutLib;
-
     private String mLayoutName;
     private ILayoutPullParser mLayoutEmbeddedParser;
     private ResourceResolver mResourceResolver;
@@ -99,13 +99,15 @@ public final class ProjectCallback extends LegacyCallback {
      * @param layoutLib The layout library this callback is going to be invoked from
      * @param projectRes the {@link ProjectResources} for the project.
      * @param project the project.
+     * @param credential the sandbox credential
      */
     public ProjectCallback(LayoutLibrary layoutLib,
-            ProjectResources projectRes, IProject project) {
+            ProjectResources projectRes, IProject project, Object credential) {
         mLayoutLib = layoutLib;
         mParentClassLoader = layoutLib.getClassLoader();
         mProjectRes = projectRes;
         mProject = project;
+        mCredential = credential;
     }
 
     public Set<String> getMissingClasses() {
@@ -164,17 +166,12 @@ public final class ProjectCallback extends LegacyCallback {
             if (mLoader == null) {
                 // Allow creating class loaders during rendering; may be prevented by the
                 // RenderSecurityManager
-                RenderSecurityManager renderSecurityManager = RenderSecurityManager.getCurrent();
-                if (renderSecurityManager != null) {
-                  renderSecurityManager.setActive(false);
-                }
+                boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
                 try {
                   System.setSecurityManager(null);
                   mLoader = new ProjectClassLoader(mParentClassLoader, mProject);
                 } finally {
-                  if (renderSecurityManager != null) {
-                    renderSecurityManager.setActive(true);
-                  }
+                    RenderSecurityManager.exitSafeRegion(token);
                 }
             }
             clazz = mLoader.loadClass(className);
