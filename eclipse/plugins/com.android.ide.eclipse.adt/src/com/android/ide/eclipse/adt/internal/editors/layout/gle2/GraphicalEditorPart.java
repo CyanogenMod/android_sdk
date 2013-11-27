@@ -288,6 +288,7 @@ public class GraphicalEditorPart extends EditorPart
     private FlyoutControlComposite mPaletteComposite;
     private PropertyFactory mPropertyFactory;
     private boolean mRenderedOnce;
+    private final Object mCredential = new Object();
 
     /**
      * Flags which tracks whether this editor is currently active which is set whenever
@@ -1527,11 +1528,43 @@ public class GraphicalEditorPart extends EditorPart
         return true;
     }
 
+    /**
+     * Creates a {@link RenderService} associated with this editor
+     * @return the render service
+     */
+    @NonNull
+    public RenderService createRenderService() {
+        return RenderService.create(this, mCredential);
+    }
+
+    /**
+     * Creates a {@link RenderLogger} associated with this editor
+     * @param name the name of the logger
+     * @return the new logger
+     */
+    @NonNull
+    public RenderLogger createRenderLogger(String name) {
+        return new RenderLogger(name, mCredential);
+    }
+
+    /**
+     * Creates a {@link RenderService} associated with this editor
+     *
+     * @param configuration the configuration to use (and fallback to editor for the rest)
+     * @param resolver a resource resolver to use to look up resources
+     * @return the render service
+     */
+    @NonNull
+    public RenderService createRenderService(Configuration configuration,
+            ResourceResolver resolver) {
+        return RenderService.create(this, configuration, resolver, mCredential);
+    }
+
     private void renderWithBridge(IProject iProject, UiDocumentNode model,
             LayoutLibrary layoutLib) {
         LayoutCanvas canvas = getCanvasControl();
         Set<UiElementNode> explodeNodes = canvas.getNodesToExplode();
-        RenderLogger logger = new RenderLogger(mEditedFile.getName());
+        RenderLogger logger = createRenderLogger(mEditedFile.getName());
         RenderingMode renderingMode = RenderingMode.NORMAL;
         // FIXME set the rendering mode using ViewRule or something.
         List<UiElementNode> children = model.getUiChildren();
@@ -1540,7 +1573,7 @@ public class GraphicalEditorPart extends EditorPart
             renderingMode = RenderingMode.V_SCROLL;
         }
 
-        RenderSession session = RenderService.create(this)
+        RenderSession session = RenderService.create(this, mCredential)
             .setModel(model)
             .setLog(logger)
             .setRenderingMode(renderingMode)
@@ -1653,7 +1686,8 @@ public class GraphicalEditorPart extends EditorPart
             ResourceManager resManager = ResourceManager.getInstance();
             IProject project = getProject();
             ProjectResources projectRes = resManager.getProjectResources(project);
-            mProjectCallback = new ProjectCallback(layoutLibrary, projectRes, project);
+            mProjectCallback = new ProjectCallback(layoutLibrary, projectRes, project,
+                    mCredential);
         } else if (reset) {
             // Also clears the set of missing/broken classes prior to rendering
             mProjectCallback.getMissingClasses().clear();

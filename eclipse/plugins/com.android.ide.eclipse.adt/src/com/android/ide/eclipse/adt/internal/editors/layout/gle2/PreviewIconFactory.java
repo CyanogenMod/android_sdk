@@ -267,7 +267,7 @@ public class PreviewIconFactory {
                     .setModel(model)
                     .setOverrideRenderSize(width, height)
                     .setRenderingMode(RenderingMode.FULL_EXPAND)
-                    .setLog(new RenderLogger("palette"))
+                    .setLog(editor.createRenderLogger("palette"))
                     .setOverrideBgColor(overrideBgColor)
                     .setDecorations(false)
                     .createRenderSession();
