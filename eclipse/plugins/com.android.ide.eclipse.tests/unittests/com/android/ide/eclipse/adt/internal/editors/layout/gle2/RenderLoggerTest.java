@@ -20,12 +20,12 @@ import junit.framework.TestCase;
 
 public class RenderLoggerTest extends TestCase {
     public void testLogger1() throws Exception {
-        RenderLogger l = new RenderLogger("foo");
+        RenderLogger l = new RenderLogger("foo", null);
         assertFalse(l.hasProblems());
     }
 
     public void testLogger2() throws Exception {
-        RenderLogger l = new RenderLogger("foo");
+        RenderLogger l = new RenderLogger("foo", null);
         assertFalse(l.hasProblems());
         l.fidelityWarning(null, "No perspective Transforms", null, null);
         l.fidelityWarning(null, "No GPS", null, null);
@@ -37,7 +37,7 @@ public class RenderLoggerTest extends TestCase {
     }
 
     public void testLogger3() throws Exception {
-        RenderLogger l = new RenderLogger("foo");
+        RenderLogger l = new RenderLogger("foo", null);
         assertFalse(l.hasProblems());
         l.error("timeout", "Sample Error", new RuntimeException(), null);
         l.warning("slow", "Sample warning", null);
@@ -56,7 +56,7 @@ public class RenderLoggerTest extends TestCase {
     }
 
     public void testLoggerSuppressWarnings() throws Exception {
-        RenderLogger l = new RenderLogger("foo");
+        RenderLogger l = new RenderLogger("foo", null);
         assertFalse(l.hasProblems());
         RenderLogger.ignoreFidelityWarning("No perspective Transforms");
         l.fidelityWarning(null, "No perspective Transforms", null, null);
@@ -68,7 +68,7 @@ public class RenderLoggerTest extends TestCase {
         assertFalse(l.seenTag("foo"));
         assertFalse(l.seenTag(null));
 
-        l = new RenderLogger("foo");
+        l = new RenderLogger("foo", null);
         assertFalse(l.hasProblems());
         RenderLogger.ignoreFidelityWarning("No perspective Transforms");
         RenderLogger.ignoreFidelityWarning("No GPS");

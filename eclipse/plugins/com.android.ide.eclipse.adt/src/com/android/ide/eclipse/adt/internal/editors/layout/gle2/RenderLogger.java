@@ -44,10 +44,12 @@ public class RenderLogger extends LayoutLog {
     private List<String> mTags;
     private List<Throwable> mTraces;
     private static Set<String> sIgnoredFidelityWarnings;
+    private final Object mCredential;
 
     /** Construct a logger for the given named layout */
-    RenderLogger(String name) {
+    RenderLogger(String name, Object credential) {
         mName = name;
+        mCredential = credential;
     }
 
     /**
@@ -311,10 +313,7 @@ public class RenderLogger extends LayoutLog {
     // Append the given message to the ADT log. Bypass the sandbox if necessary
     // such that we can write to the log file.
     private void appendToIdeLog(Throwable throwable, int severity, String description) {
-        RenderSecurityManager renderSecurityManager = RenderSecurityManager.getCurrent();
-        if (renderSecurityManager != null) {
-            renderSecurityManager.setActive(false);
-        }
+        boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
         try {
             if (throwable != null) {
                 AdtPlugin.log(throwable, "%1$s: %2$s", mName, description);
@@ -322,9 +321,7 @@ public class RenderLogger extends LayoutLog {
                 AdtPlugin.log(severity, "%1$s: %2$s", mName, description);
             }
         } finally {
-            if (renderSecurityManager != null) {
-                renderSecurityManager.setActive(true);
-            }
+            RenderSecurityManager.exitSafeRegion(token);
         }
     }
 }
