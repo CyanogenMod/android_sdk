@@ -283,8 +283,8 @@ fi
 # Otherwise we do a specific tools/base build on just the requested targets.
 
 if [[ -n "$GRADLE_SWT" ]]; then
-  echo "### Starting tools/base: gradlew publishLocal"
-  (cd tools/base && ./gradlew publishLocal)
+  echo "### Starting tools/base: gradlew assemble publishLocal"
+  (cd tools/base && ./gradlew assemble publishLocal)
 elif [[ -n "$GRADLE_BASE" ]]; then
   echo "### Starting tools/base: gradlew $GRADLE_BASE"
   (cd tools/base && ./gradlew $GRADLE_BASE)
