@@ -168,7 +168,6 @@ public final class ProjectCallback extends LegacyCallback {
                 // RenderSecurityManager
                 boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
                 try {
-                  System.setSecurityManager(null);
                   mLoader = new ProjectClassLoader(mParentClassLoader, mProject);
                 } finally {
                     RenderSecurityManager.exitSafeRegion(token);
