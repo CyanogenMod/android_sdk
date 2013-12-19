@@ -88,7 +88,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
     private Button mDeviceRadioButton;
     private Button mUseDeviceForFutureLaunchesCheckbox;
-    private static boolean sUseDeviceForFutureLaunchesValue = false;
+    private boolean mUseDeviceForFutureLaunches;
 
     private boolean mDisableAvdSelectionChange = false;
 
@@ -284,7 +284,8 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
     }
 
     public DeviceChooserDialog(Shell parent, DeviceChooserResponse response, String packageName,
-            IAndroidTarget projectTarget, AndroidVersion minApiVersion) {
+            IAndroidTarget projectTarget, AndroidVersion minApiVersion,
+            boolean useDeviceForFutureLaunches) {
         super(parent);
 
         mResponse = response;
@@ -292,6 +293,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         mProjectTarget = projectTarget;
         mMinApiVersion = minApiVersion;
         mSdk = Sdk.getCurrent();
+        mUseDeviceForFutureLaunches = useDeviceForFutureLaunches;
 
         AndroidDebugBridge.addDeviceChangeListener(this);
         loadImages();
@@ -339,15 +341,15 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         mUseDeviceForFutureLaunchesCheckbox = new Button(composite, SWT.CHECK);
-        mUseDeviceForFutureLaunchesCheckbox.setSelection(sUseDeviceForFutureLaunchesValue);
-        mResponse.setUseDeviceForFutureLaunches(sUseDeviceForFutureLaunchesValue);
+        mUseDeviceForFutureLaunchesCheckbox.setSelection(mUseDeviceForFutureLaunches);
+        mResponse.setUseDeviceForFutureLaunches(mUseDeviceForFutureLaunches);
         mUseDeviceForFutureLaunchesCheckbox.setText("Use same device for future launches");
         mUseDeviceForFutureLaunchesCheckbox.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                sUseDeviceForFutureLaunchesValue =
+                mUseDeviceForFutureLaunches =
                         mUseDeviceForFutureLaunchesCheckbox.getSelection();
-                mResponse.setUseDeviceForFutureLaunches(sUseDeviceForFutureLaunchesValue);
+                mResponse.setUseDeviceForFutureLaunches(mUseDeviceForFutureLaunches);
             }
         });
         mUseDeviceForFutureLaunchesCheckbox.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
