@@ -94,6 +94,12 @@ public class AndroidLaunchConfiguration {
      */
     public String mEmulatorCommandLine;
 
+    /** Flag indicating whether the same device should be used for future launches. */
+    public boolean mReuseLastUsedDevice = false;
+
+    /** Serial number of the device used in the last launch of this config. */
+    public String mLastUsedDevice = null;
+
     /**
      * Initialized the structure from an ILaunchConfiguration object.
      * @param config
@@ -107,6 +113,15 @@ public class AndroidLaunchConfiguration {
         }
 
         mTargetMode = parseTargetMode(config, mTargetMode);
+
+        try {
+            mReuseLastUsedDevice = config.getAttribute(
+                    LaunchConfigDelegate.ATTR_REUSE_LAST_USED_DEVICE, false);
+            mLastUsedDevice = config.getAttribute(
+                    LaunchConfigDelegate.ATTR_LAST_USED_DEVICE, (String)null);
+        } catch (CoreException e) {
+         // nothing to be done here, we'll use the default value
+        }
 
         try {
             mAvdName = config.getAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, mAvdName);
