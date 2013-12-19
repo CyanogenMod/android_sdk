@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.launch;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
@@ -361,12 +363,15 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *     the app (by api level), and launch on all the others.
          */
         IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
-        IDevice deviceUsedInLastLaunch = DeviceChoiceCache.get(
-                launch.getLaunchConfiguration().getName());
-        if (deviceUsedInLastLaunch != null) {
-            response.setDeviceToUse(deviceUsedInLastLaunch);
-            continueLaunch(response, project, launch, launchInfo, config);
-            return;
+        if (config.mReuseLastUsedDevice) {
+            // check to see if the last used device is still online
+            IDevice lastUsedDevice = getDeviceIfOnline(config.mLastUsedDevice,
+                    devices);
+            if (lastUsedDevice != null) {
+                response.setDeviceToUse(lastUsedDevice);
+                continueLaunch(response, project, launch, launchInfo, config);
+                return;
+            }
         }
 
         if (config.mTargetMode == TargetMode.AUTO) {
@@ -611,9 +616,11 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     DeviceChooserDialog dialog = new DeviceChooserDialog(
                             AdtPlugin.getShell(),
                             response, launchInfo.getPackageName(),
-                            desiredProjectTarget, minApiVersion);
+                            desiredProjectTarget, minApiVersion,
+                            config.mReuseLastUsedDevice);
                     if (dialog.open() == Dialog.OK) {
-                        DeviceChoiceCache.put(launch.getLaunchConfiguration().getName(), response);
+                        updateLaunchConfigWithLastUsedDevice(launch.getLaunchConfiguration(),
+                                response);
                         continueLaunch.set(true);
                     } else {
                         AdtPlugin.printErrorToConsole(project, "Launch canceled!");
@@ -1806,5 +1813,60 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             mWaitingForReadyEmulatorList.remove(launchInfo);
             mWaitingForDebuggerApplications.remove(launchInfo);
         }
+    }
+
+    public static void updateLaunchConfigWithLastUsedDevice(
+            ILaunchConfiguration launchConfiguration, DeviceChooserResponse response) {
+        try {
+            boolean configModified = false;
+            boolean reuse = launchConfiguration.getAttribute(
+                    LaunchConfigDelegate.ATTR_REUSE_LAST_USED_DEVICE, false);
+            String serial = launchConfiguration.getAttribute(
+                    LaunchConfigDelegate.ATTR_LAST_USED_DEVICE, (String)null);
+
+            ILaunchConfigurationWorkingCopy wc = launchConfiguration.getWorkingCopy();
+            if (reuse != response.useDeviceForFutureLaunches()) {
+                reuse = response.useDeviceForFutureLaunches();
+                wc.setAttribute(LaunchConfigDelegate.ATTR_REUSE_LAST_USED_DEVICE, reuse);
+                configModified = true;
+            }
+
+            if (reuse) {
+                String selected = getSerial(response);
+                if (selected != null && !selected.equalsIgnoreCase(serial)) {
+                    wc.setAttribute(LaunchConfigDelegate.ATTR_LAST_USED_DEVICE, selected);
+                    configModified = true;
+                }
+            }
+
+            if (configModified) {
+                wc.doSave();
+            }
+        } catch (CoreException e) {
+            // in such a case, users just won't see this setting take effect
+            return;
+        }
+    }
+
+    private static String getSerial(DeviceChooserResponse response) {
+        AvdInfo avd = response.getAvdToLaunch();
+        return (avd != null) ? avd.getName() : response.getDeviceToUse().getSerialNumber();
+    }
+
+    @Nullable
+    public static IDevice getDeviceIfOnline(@Nullable String serial,
+            @NonNull IDevice[] onlineDevices) {
+        if (serial == null) {
+            return null;
+        }
+
+        for (IDevice device : onlineDevices) {
+            if (serial.equals(device.getAvdName()) ||
+                    serial.equals(device.getSerialNumber())) {
+                return device;
+            }
+        }
+
+        return null;
     }
 }

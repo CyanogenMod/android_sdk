@@ -84,26 +84,17 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
 
     private Button mAutoTargetButton;
     private Button mManualTargetButton;
-
     private AvdSelector mPreferredAvdSelector;
-
     private Combo mSpeedCombo;
-
     private Combo mDelayCombo;
-
     private Group mEmulatorOptionsGroup;
-
     private Text mEmulatorCLOptions;
-
     private Button mWipeDataButton;
-
     private Button mNoBootAnimButton;
-
     private Label mPreferredAvdLabel;
-
     private IAndroidTarget mProjectTarget;
     private AndroidVersion mProjectMinApiVersion;
-
+    private Button mFutureLaunchesOnSameDevice;
     private boolean mSupportMultiDeviceLaunch;
     private Button mAllDevicesTargetButton;
     private Combo mDeviceTypeCombo;
@@ -256,6 +247,10 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mPreferredAvdSelector.setSelectionListener(listener);
         mDeviceTypeCombo.addSelectionListener(listener);
 
+        mFutureLaunchesOnSameDevice = new Button(targetModeGroup, SWT.CHECK);
+        mFutureLaunchesOnSameDevice.setText("Use same device for future launches");
+        mFutureLaunchesOnSameDevice.addSelectionListener(listener);
+
         // emulator size
         mEmulatorOptionsGroup = new Group(topComp, SWT.NONE);
         mEmulatorOptionsGroup.setText("Emulator launch parameters:");
@@ -280,13 +275,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         for (String[] speed : NETWORK_SPEEDS) {
             mSpeedCombo.add(speed[0]);
         }
-        mSpeedCombo.addSelectionListener(new SelectionAdapter() {
-            // called when selection changes
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                updateLaunchConfigurationDialog();
-            }
-        });
+        mSpeedCombo.addSelectionListener(listener);
         mSpeedCombo.pack();
 
         new Label(mEmulatorOptionsGroup, SWT.NONE).setText("Network Latency:");
@@ -296,13 +285,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         for (String[] delay : NETWORK_LATENCIES) {
             mDelayCombo.add(delay[0]);
         }
-        mDelayCombo.addSelectionListener(new SelectionAdapter() {
-            // called when selection changes
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                updateLaunchConfigurationDialog();
-            }
-        });
+        mDelayCombo.addSelectionListener(listener);
         mDelayCombo.pack();
 
         // wipe data option
@@ -312,12 +295,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = 2;
         mWipeDataButton.setLayoutData(gd);
-        mWipeDataButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                updateLaunchConfigurationDialog();
-            }
-        });
+        mWipeDataButton.addSelectionListener(listener);
 
         // no boot anim option
         mNoBootAnimButton = new Button(mEmulatorOptionsGroup, SWT.CHECK);
@@ -326,12 +304,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = 2;
         mNoBootAnimButton.setLayoutData(gd);
-        mNoBootAnimButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                updateLaunchConfigurationDialog();
-            }
-        });
+        mNoBootAnimButton.addSelectionListener(listener);
 
         // custom command line option for emulator
         l = new Label(mEmulatorOptionsGroup, SWT.NONE);
@@ -426,6 +399,15 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         mAllDevicesTargetButton.setSelection(multipleDevices);
 
         targetModeChanged();
+
+        boolean reuseLastUsedDevice;
+        try {
+            reuseLastUsedDevice = configuration.getAttribute(
+                    LaunchConfigDelegate.ATTR_REUSE_LAST_USED_DEVICE, false);
+        } catch (CoreException ex) {
+            reuseLastUsedDevice = false;
+        }
+        mFutureLaunchesOnSameDevice.setSelection(reuseLastUsedDevice);
 
         mDeviceTypeCombo.setEnabled(multipleDevices);
         if (multipleDevices) {
@@ -552,6 +534,8 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 getCurrentTargetMode().toString());
+        configuration.setAttribute(LaunchConfigDelegate.ATTR_REUSE_LAST_USED_DEVICE,
+                mFutureLaunchesOnSameDevice.getSelection());
         AvdInfo avd = mPreferredAvdSelector.getSelected();
         if (avd != null) {
             configuration.setAttribute(LaunchConfigDelegate.ATTR_AVD_NAME, avd.getName());

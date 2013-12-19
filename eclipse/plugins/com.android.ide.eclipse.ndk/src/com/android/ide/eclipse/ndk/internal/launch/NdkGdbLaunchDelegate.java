@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.ndk.internal.launch;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
@@ -30,7 +32,7 @@ import com.android.ide.common.xml.ManifestData;
 import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
-import com.android.ide.eclipse.adt.internal.launch.DeviceChoiceCache;
+import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchController;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog.DeviceChooserResponse;
 import com.android.ide.eclipse.adt.internal.launch.LaunchConfigDelegate;
@@ -93,7 +95,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         }
     }
 
-    public boolean doLaunch(ILaunchConfiguration config, String mode, ILaunch launch,
+    public boolean doLaunch(final ILaunchConfiguration config, String mode, ILaunch launch,
             IProgressMonitor monitor) throws CoreException {
         IProject project = null;
         ICProject cProject = CDebugUtils.getCProject(config);
@@ -151,9 +153,7 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
         if (devices.length == 1) {
             device = devices[0];
-        } else if (DeviceChoiceCache.get(configName) != null) {
-            device = DeviceChoiceCache.get(configName);
-        } else {
+        } else if ((device = getLastUsedDevice(config, devices)) == null) {
             final IAndroidTarget projectTarget = Sdk.getCurrent().getTarget(project);
             final DeviceChooserResponse response = new DeviceChooserResponse();
             final boolean continueLaunch[] = new boolean[] { false };
@@ -164,9 +164,10 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
                             AdtPlugin.getDisplay().getActiveShell(),
                             response,
                             manifestData.getPackage(),
-                            projectTarget, minSdkVersion);
+                            projectTarget, minSdkVersion, false /*** FIXME! **/);
                     if (dialog.open() == Dialog.OK) {
-                        DeviceChoiceCache.put(configName, response);
+                        AndroidLaunchController.updateLaunchConfigWithLastUsedDevice(config,
+                                response);
                         continueLaunch[0] = true;
                     }
                 };
@@ -341,12 +342,30 @@ public class NdkGdbLaunchDelegate extends GdbLaunchDelegate {
         }
 
         // update launch attributes based on device
-        config = performVariableSubstitutions(config, project, compatAbi, monitor);
+        ILaunchConfiguration config2 = performVariableSubstitutions(config, project, compatAbi,
+                monitor);
 
         // launch gdb
         monitor.setTaskName(Messages.NdkGdbLaunchDelegate_Action_LaunchHostGdb);
-        super.launch(config, mode, launch, monitor);
+        super.launch(config2, mode, launch, monitor);
         return true;
+    }
+
+    @Nullable
+    private IDevice getLastUsedDevice(ILaunchConfiguration config, @NonNull IDevice[] devices) {
+        try {
+            boolean reuse = config.getAttribute(LaunchConfigDelegate.ATTR_REUSE_LAST_USED_DEVICE,
+                    false);
+            if (!reuse) {
+                return null;
+            }
+
+            String serial = config.getAttribute(LaunchConfigDelegate.ATTR_LAST_USED_DEVICE,
+                    (String)null);
+            return AndroidLaunchController.getDeviceIfOnline(serial, devices);
+        } catch (CoreException e) {
+            return null;
+        }
     }
 
     private void pull(IDevice device, String remote, IPath solibFolder) throws
