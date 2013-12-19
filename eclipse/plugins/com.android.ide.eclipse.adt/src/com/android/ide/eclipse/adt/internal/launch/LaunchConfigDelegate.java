@@ -51,6 +51,14 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
     public static final String ATTR_TARGET_MODE = AdtPlugin.PLUGIN_ID + ".target"; //$NON-NLS-1$
     public static final TargetMode DEFAULT_TARGET_MODE = TargetMode.AUTO;
 
+    /** Flag indicating whether the last used device should be used for future launches. */
+    public static final String ATTR_REUSE_LAST_USED_DEVICE =
+            AdtPlugin.PLUGIN_ID + ".reuse.last.used.device"; //$NON-NLS-1$
+
+    /** Device on which the last launch happened. */
+    public static final String ATTR_LAST_USED_DEVICE =
+            AdtPlugin.PLUGIN_ID + ".last.used.device"; //$NON-NLS-1$
+
     /**
      * Launch action:
      * <ul>
