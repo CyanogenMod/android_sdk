@@ -134,7 +134,7 @@ BASE_PLUGIN_LIBS="base:common swt:sdkstats base:sdklib base:dvlib base:layoutlib
 BASE_PLUGIN_PREBUILTS="\
     prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar \
     prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.0/commons-compress-1.0.jar \
-    prebuilts/tools/common/m2/repository/com/google/guava/guava/13.0.1/guava-13.0.1.jar \
+    prebuilts/tools/common/m2/repository/com/google/guava/guava/15.0/guava-15.0.jar \
     prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar \
     prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4/commons-codec-1.4.jar \
     prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1/httpclient-4.1.1.jar \
