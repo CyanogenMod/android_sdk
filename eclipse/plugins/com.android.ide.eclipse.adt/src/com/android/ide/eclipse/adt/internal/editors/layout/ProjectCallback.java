@@ -197,7 +197,7 @@ public final class ProjectCallback extends LegacyCallback {
                 e = e.getCause();
             }
 
-            AdtPlugin.log(e, "%1$s failed to instantiate.", className); //$NON-NLS-1$
+            appendToIdeLog(e, "%1$s failed to instantiate.", className); //$NON-NLS-1$
 
             // Add the missing class to the list so that the renderer can print them later.
             if (mLogger instanceof RenderLogger) {
@@ -479,11 +479,11 @@ public final class ProjectCallback extends LegacyCallback {
                 parser.setInput(new StringReader(xmlText));
                 return parser;
             } catch (XmlPullParserException e) {
-                AdtPlugin.log(e, null);
+                appendToIdeLog(e, null);
             } catch (FileNotFoundException e) {
                 // Shouldn't happen since we check isFile() above
             } catch (IOException e) {
-                AdtPlugin.log(e, null);
+                appendToIdeLog(e, null);
             }
         }
 
@@ -648,4 +648,16 @@ public final class ProjectCallback extends LegacyCallback {
     public void setResourceResolver(ResourceResolver resolver) {
         mResourceResolver = resolver;
     }
+
+    // Append the given message to the ADT log. Bypass the sandbox if necessary
+    // such that we can write to the log file.
+    private void appendToIdeLog(Throwable exception, String format, Object ... args) {
+        boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
+        try {
+            AdtPlugin.log(exception, format, args);
+        } finally {
+            RenderSecurityManager.exitSafeRegion(token);
+        }
+    }
+
 }
