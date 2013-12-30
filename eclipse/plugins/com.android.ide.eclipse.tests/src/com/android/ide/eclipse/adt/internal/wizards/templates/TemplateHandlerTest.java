@@ -36,7 +36,7 @@ import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.checks.ManifestOrderDetector;
+import com.android.tools.lint.checks.ManifestDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
@@ -783,7 +783,7 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
                             return false;
                         }
 
-                        if (issue == ManifestOrderDetector.TARGET_NEWER) {
+                        if (issue == ManifestDetector.TARGET_NEWER) {
                             // Don't complain about targetSdk < latest: we're deliberately
                             // testing that (to make sure templates compile etc in compat
                             // mode)
