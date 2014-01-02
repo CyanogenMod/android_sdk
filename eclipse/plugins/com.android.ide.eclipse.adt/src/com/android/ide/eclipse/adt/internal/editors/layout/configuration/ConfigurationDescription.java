@@ -32,6 +32,7 @@ import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo.ActivityAttributes;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.NightMode;
@@ -50,7 +51,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.List;
-import java.util.Map;
 
 /** A description of a configuration, used for persistence */
 public class ConfigurationDescription {
@@ -349,8 +349,10 @@ public class ConfigurationDescription {
             // from the outer layout instead
 
             if (activity != null) {
-                Map<String, String> activityThemes = manifest.getActivityThemes();
-                preferred = activityThemes.get(activity);
+                ActivityAttributes attributes = manifest.getActivityAttributes(activity);
+                if (attributes != null) {
+                    preferred = attributes.getTheme();
+                }
             }
             if (preferred == null) {
                 preferred = defaultTheme;
