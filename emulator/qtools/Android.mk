@@ -6,7 +6,7 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-common_includes := external/qemu
+common_includes := external/qemu/include external/qemu
 common_cflags := -O0 -g
 
 include $(CLEAR_VARS)
