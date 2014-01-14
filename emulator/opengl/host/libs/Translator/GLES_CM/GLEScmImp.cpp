@@ -582,7 +582,7 @@ GL_API void GL_APIENTRY  glDrawElements( GLenum mode, GLsizei count, GLenum type
     GLESConversionArrays tmpArrs;
     if(ctx->isBindedBuffer(GL_ELEMENT_ARRAY_BUFFER)) { // if vbo is binded take the indices from the vbo
         const unsigned char* buf = static_cast<unsigned char *>(ctx->getBindedBuffer(GL_ELEMENT_ARRAY_BUFFER));
-        indices = buf+reinterpret_cast<uintptr_t>(elementsIndices);
+        indices = buf + SafeUIntFromPointer(elementsIndices);
     }
 
     ctx->setupArraysPointers(tmpArrs,0,count,type,indices,false);
@@ -994,9 +994,9 @@ GL_API void GL_APIENTRY  glGetPointerv( GLenum pname, void **params) {
     if(p) {
         if(p->isVBO())
         {
-            *params = (void*)(p->getBufferOffset());
+            *params = SafePointerFromUInt(p->getBufferOffset());
         }else{
-            *params = const_cast<void *>( p->getArrayData());
+            *params = const_cast<void *>(p->getArrayData());
         }
     } else {
         ctx->setGLerror(GL_INVALID_ENUM);
@@ -1652,7 +1652,7 @@ GL_API void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOE
 {
     GET_CTX();
     SET_ERROR_IF(!GLEScmValidate::textureTargetLimited(target),GL_INVALID_ENUM);
-    unsigned int imagehndl = ToTargetCompatibleHandle((uintptr_t)image);
+    unsigned int imagehndl = SafeUIntFromPointer(image);
     EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     if (img) {
         // Create the texture object in the underlying EGL implementation,
@@ -1688,7 +1688,7 @@ GL_API void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GL
 {
     GET_CTX();
     SET_ERROR_IF(target != GL_RENDERBUFFER_OES,GL_INVALID_ENUM);
-    unsigned int imagehndl = ToTargetCompatibleHandle((uintptr_t)image);
+    unsigned int imagehndl = SafeUIntFromPointer(image);
     EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     SET_ERROR_IF(!img,GL_INVALID_VALUE);
     SET_ERROR_IF(!ctx->shareGroup().Ptr(),GL_INVALID_OPERATION);

@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     int winY = 0;
     int winWidth = 320;
     int winHeight = 480;
-    FBNativeWindowType windowId = NULL;
+    FBNativeWindowType windowId = 0;
     int iWindowId  = 0;
 
     //

@@ -15,6 +15,8 @@
 */
 #include "osThread.h"
 
+#include <stdint.h>
+
 namespace osUtils {
 
 Thread::Thread() :
@@ -55,9 +57,8 @@ Thread::wait(int *exitStatus)
         return false;
     }
 
-    long long int ret=(long long int)retval;
     if (exitStatus) {
-        *exitStatus = (int)ret;
+        *exitStatus = (int)(uintptr_t)retval;
     }
     return true;
 }
@@ -87,7 +88,7 @@ Thread::thread_main(void *p_arg)
     self->m_exitStatus = ret;
     pthread_mutex_unlock(&self->m_lock);
 
-    return (void*)ret;
+    return (void*)(uintptr_t)ret;
 }
 
 } // of namespace osUtils
