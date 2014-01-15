@@ -38,6 +38,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
@@ -266,6 +267,7 @@ public class NewProjectWizard extends TemplateWizard {
         // Generate basic output skeleton
         Map<String, Object> paramMap = new HashMap<String, Object>();
         addProjectInfo(paramMap);
+        TemplateHandler.addDirectoryParameters(paramMap, getProject());
 
         return template.render(mProject, paramMap);
     }
@@ -357,6 +359,17 @@ public class NewProjectWizard extends TemplateWizard {
                 AdtPlugin.log(e, null);
             }
 
+            // Run finalizing actions
+            //        Display.getDefault().asyncExec(new Runnable() {
+            //            @Override
+            //            public void run() {
+            List<Runnable> finalizingTasks = getFinalizingActions();
+            for (Runnable r : finalizingTasks) {
+                r.run();
+            }
+            //            }
+            //        });
+
             return true;
         } catch (Exception ioe) {
             AdtPlugin.log(ioe, null);
@@ -391,6 +404,7 @@ public class NewProjectWizard extends TemplateWizard {
         // Ensure that activities created as part of a new project are marked as
         // launcher activities
         parameters.put(IS_LAUNCHER, true);
+        TemplateHandler.addDirectoryParameters(parameters, project);
 
         TemplateHandler activityTemplate = activityValues.getTemplateHandler();
         activityTemplate.setBackupMergedFiles(false);
@@ -411,6 +425,9 @@ public class NewProjectWizard extends TemplateWizard {
 
         List<String> filesToOpen = activityTemplate.getFilesToOpen();
         projectTemplate.getFilesToOpen().addAll(filesToOpen);
+
+        List<Runnable> finalizingActions = activityTemplate.getFinalizingActions();
+        projectTemplate.getFinalizingActions().addAll(finalizingActions);
     }
 
     private void addProjectInfo(Map<String, Object> parameters) {
@@ -422,5 +439,11 @@ public class NewProjectWizard extends TemplateWizard {
         parameters.put(ATTR_BUILD_API, mValues.target.getVersion().getApiLevel());
         parameters.put(ATTR_COPY_ICONS, !mValues.createIcon);
         parameters.putAll(mValues.parameters);
+    }
+
+    @Override
+    @NonNull
+    protected List<Runnable> getFinalizingActions() {
+        return mValues.template.getFinalizingActions();
     }
 }
