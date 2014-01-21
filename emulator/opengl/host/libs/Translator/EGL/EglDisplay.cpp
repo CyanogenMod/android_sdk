@@ -142,7 +142,7 @@ EglConfig* EglDisplay::getConfig(EGLConfig conf) {
 SurfacePtr EglDisplay::getSurface(EGLSurface surface) {
     android::Mutex::Autolock mutex(m_lock);
     /* surface is "key" in map<unsigned int, SurfacePtr>. */
-    unsigned int hndl = ToTargetCompatibleHandle((uintptr_t)surface);
+    unsigned int hndl = SafeUIntFromPointer(surface);
     SurfacesHndlMap::iterator it = m_surfaces.find(hndl);
     return it != m_surfaces.end() ?
                                   (*it).second :
@@ -152,7 +152,7 @@ SurfacePtr EglDisplay::getSurface(EGLSurface surface) {
 ContextPtr EglDisplay::getContext(EGLContext ctx) {
     android::Mutex::Autolock mutex(m_lock);
     /* ctx is "key" in map<unsigned int, ContextPtr>. */
-    unsigned int hndl = ToTargetCompatibleHandle((uintptr_t)ctx);
+    unsigned int hndl = SafeUIntFromPointer(ctx);
     ContextsHndlMap::iterator it = m_contexts.find(hndl);
     return it != m_contexts.end() ?
                                   (*it).second :
@@ -162,7 +162,7 @@ ContextPtr EglDisplay::getContext(EGLContext ctx) {
 bool EglDisplay::removeSurface(EGLSurface s) {
     android::Mutex::Autolock mutex(m_lock);
     /* s is "key" in map<unsigned int, SurfacePtr>. */
-    unsigned int hndl = ToTargetCompatibleHandle((uintptr_t)s);
+    unsigned int hndl = SafeUIntFromPointer(s);
     SurfacesHndlMap::iterator it = m_surfaces.find(hndl);
     if(it != m_surfaces.end()) {
         m_surfaces.erase(it);
@@ -191,7 +191,7 @@ bool EglDisplay::removeSurface(SurfacePtr s) {
 bool EglDisplay::removeContext(EGLContext ctx) {
     android::Mutex::Autolock mutex(m_lock);
     /* ctx is "key" in map<unsigned int, ContextPtr>. */
-    unsigned int hndl = ToTargetCompatibleHandle((uintptr_t)ctx);
+    unsigned int hndl = SafeUIntFromPointer(ctx);
     ContextsHndlMap::iterator it = m_contexts.find(hndl);
     if(it != m_contexts.end()) {
         m_contexts.erase(it);
@@ -295,7 +295,7 @@ EGLImageKHR EglDisplay::addImageKHR(ImagePtr img) {
 ImagePtr EglDisplay::getImage(EGLImageKHR img) {
     android::Mutex::Autolock mutex(m_lock);
     /* img is "key" in map<unsigned int, ImagePtr>. */
-    unsigned int hndl = ToTargetCompatibleHandle((uintptr_t)img);
+    unsigned int hndl = SafeUIntFromPointer(img);
     ImagesHndlMap::iterator i( m_eglImages.find(hndl) );
     return (i != m_eglImages.end()) ? (*i).second :ImagePtr(NULL);
 }
@@ -303,7 +303,7 @@ ImagePtr EglDisplay::getImage(EGLImageKHR img) {
 bool EglDisplay:: destroyImageKHR(EGLImageKHR img) {
     android::Mutex::Autolock mutex(m_lock);
     /* img is "key" in map<unsigned int, ImagePtr>. */
-    unsigned int hndl = ToTargetCompatibleHandle((uintptr_t)img);
+    unsigned int hndl = SafeUIntFromPointer(img);
     ImagesHndlMap::iterator i( m_eglImages.find(hndl) );
     if (i != m_eglImages.end())
     {
