@@ -19,7 +19,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES/gl.h>
-#include <SmartPtr.h>
+#include "emugl/common/smart_ptr.h"
 
 class ColorBuffer
 {
@@ -55,6 +55,6 @@ private:
     GLenum m_internalFormat;
 };
 
-typedef SmartPtr<ColorBuffer> ColorBufferPtr;
+typedef emugl::SmartPtr<ColorBuffer> ColorBufferPtr;
 
 #endif

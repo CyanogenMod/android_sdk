@@ -54,7 +54,7 @@ $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 # use Translator's egl/gles headers
 LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
 
-LOCAL_STATIC_LIBRARIES += libutils liblog
+LOCAL_STATIC_LIBRARIES += libemugl_common libutils libcutils liblog
 
 $(call emugl-export,CFLAGS,$(host_common_CFLAGS))
 
@@ -76,7 +76,7 @@ $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 # use Translator's egl/gles headers
 LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
 
-LOCAL_STATIC_LIBRARIES += lib64utils lib64log
+LOCAL_STATIC_LIBRARIES += lib64emugl_common lib64utils lib64cutils lib64log
 
 $(call emugl-export,CFLAGS,$(host_common_CFLAGS) -m64)
 

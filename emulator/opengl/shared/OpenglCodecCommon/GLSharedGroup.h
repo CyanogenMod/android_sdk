@@ -35,7 +35,7 @@
 #include <utils/String8.h>
 #include <utils/threads.h>
 #include "FixedBuffer.h"
-#include "SmartPtr.h"
+#include "emugl/common/smart_ptr.h"
 
 struct BufferData {
     BufferData();
@@ -138,6 +138,6 @@ public:
     void    unrefShaderData(GLuint shader);
 };
 
-typedef SmartPtr<GLSharedGroup> GLSharedGroupPtr; 
+typedef emugl::SmartPtr<GLSharedGroup> GLSharedGroupPtr; 
 
 #endif //_GL_SHARED_GROUP_H_
