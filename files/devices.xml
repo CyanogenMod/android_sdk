@@ -54,7 +54,7 @@
                 armeabi
             </d:abi>
             <d:dock> </d:dock>
-            <d:power-type>plugged-in</d:power-type>
+            <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
             <d:api-level>7-10</d:api-level>
@@ -136,7 +136,7 @@
                 armeabi
             </d:abi>
             <d:dock> </d:dock>
-            <d:power-type>plugged-in</d:power-type>
+            <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
             <d:api-level>9-16</d:api-level>
@@ -251,7 +251,7 @@
             <!--dock (car, desk, tv, none)-->
             <d:dock>
             </d:dock>
-            <!-- plugged in (never, charge, always) -->
+            <!-- power-type (battery, plugged-in) -->
             <d:power-type>battery</d:power-type>
         </d:hardware>
         <d:software>
