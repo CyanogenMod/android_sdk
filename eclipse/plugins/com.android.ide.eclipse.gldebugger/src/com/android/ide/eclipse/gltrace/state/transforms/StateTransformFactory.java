@@ -189,7 +189,13 @@ public class StateTransformFactory {
         int type = msg.getArgs(2).getIntValue(0);
         boolean normalized = msg.getArgs(3).getBoolValue(0);
         int stride = msg.getArgs(4).getIntValue(0);
-        int pointer = msg.getArgs(5).getIntValue(0);
+
+        long pointer;
+        if (msg.getArgs(5).getIntValueCount() > 0) {
+            pointer = msg.getArgs(5).getIntValue(0);
+        } else {
+            pointer = msg.getArgs(5).getInt64Value(0);
+        }
 
         List<IStateTransform> transforms = new ArrayList<IStateTransform>();
         transforms.add(new PropertyChangeTransform(
@@ -226,7 +232,7 @@ public class StateTransformFactory {
                                                 GLStateType.VERTEX_ATTRIB_ARRAY,
                                                 Integer.valueOf(index),
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_POINTER),
-                Integer.valueOf(pointer)));
+                Long.valueOf(pointer)));
         return transforms;
     }
 
