@@ -359,16 +359,10 @@ public class NewProjectWizard extends TemplateWizard {
                 AdtPlugin.log(e, null);
             }
 
-            // Run finalizing actions
-            //        Display.getDefault().asyncExec(new Runnable() {
-            //            @Override
-            //            public void run() {
             List<Runnable> finalizingTasks = getFinalizingActions();
             for (Runnable r : finalizingTasks) {
                 r.run();
             }
-            //            }
-            //        });
 
             return true;
         } catch (Exception ioe) {
