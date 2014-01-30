@@ -67,11 +67,17 @@ nav {
   position: fixed;
   left: 0;
   top: 0;
-  width: 224px;
-  height: 100%;
-  padding: 48px 0 48px 32px;
+  box-sizing: border-box;
+  width: 256px;
+  bottom: 0;
+  margin: 32px 0;
+  padding: 16px 0 16px 32px;
+  overflow-y: scroll;
   font-size: 14px;
   line-height: 16px;
+  border-top: 2px solid #eee;
+  border-bottom: 2px solid #eee;
+  border-right: 2px solid #eee;
 }
 
 nav span {
@@ -80,7 +86,6 @@ nav span {
   padding-left: 16px;
   padding-top: 4px;
   padding-bottom: 4px;
-  border-right: 2px solid #eee;
 }
 
 nav span:hover {
@@ -88,8 +93,8 @@ nav span:hover {
 }
 
 nav .selected > span {
-  background-color: rgba(51,181,229,0.05);
-  border-right: 2px solid #33b5e5;
+  background-color: #eee;
+  border-right: 2px solid #333;
 }
 
 nav > .item > span {
@@ -227,6 +232,27 @@ pre {
   border: 1px solid #ddd;
   padding: 24px;
   margin-bottom: 16px;
+}
+
+.deprecated,
+.deprecated h4,
+.deprecated pre,
+.deprecated code {
+  color: #a77 !important;
+}
+
+.deprecated h4 {
+}
+
+.deprecated h4:after {
+  border-radius: 2px;
+  text-decoration: none;
+  background-color: #a77;
+  padding: 4px 6px;
+  margin-left: 10px;
+  color: #fff;
+  font-size: 12px;
+  content: 'DEPRECATED';
 }
 
 /* print */

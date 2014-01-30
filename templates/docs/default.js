@@ -16,13 +16,14 @@
 
 $(document).ready(function() {
   prettyPrint();
+  preventParentScrolls('nav');
 
   var sluggify_ = function(s) {
     return (s || '').replace(/ /g, '-').replace(/[^\w-]/g, '').toLowerCase();
   };
 
   $('h2, h3, h4.includetoc').each(function() {
-    $(this).attr('id', 'toc_' + sluggify_($(this).data('toctitle') || $(this).text()));
+    $(this).attr('id', 'toc_' + sluggify_($(this).data('tocid') || $(this).data('toctitle') || $(this).text()));
     $(this).click(function() {
       smoothScrollToId($(this).attr('id'));
     });
@@ -101,7 +102,6 @@ function buildNav() {
     for (var i = headerPositionCache.length - 1; i >= 0; i--) {
       if (scrollTop >= headerPositionCache[i].top) {
         $('#' + headerPositionCache[i].id).addClass('selected');
-        console.log($('#' + headerPositionCache[i].id));
         break;
       }
     }
@@ -122,5 +122,34 @@ function smoothScrollToId(id) {
   var $target = $('#' + id);
   $('body').animate({ scrollTop: $target.offset().top }, 200, 'swing', function() {
     document.location.hash = id;
+  });
+}
+
+// Based on http://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element
+function preventParentScrolls($el) {
+  $($el).on('DOMMouseScroll mousewheel', function(ev) {
+    var $this = $(this),
+        scrollTop = this.scrollTop,
+        scrollHeight = this.scrollHeight,
+        height = $this.height(),
+        delta = (ev.type == 'DOMMouseScroll' ?
+            ev.originalEvent.detail * -40 :
+            ev.originalEvent.wheelDelta),
+        up = delta > 0;
+
+    if (!up && -delta > scrollHeight - height - scrollTop) {
+      // Scrolling down, but this will take us past the bottom.
+      $this.scrollTop(scrollHeight);
+    } else if (up && delta > scrollTop) {
+      // Scrolling up, but this will take us past the top.
+      $this.scrollTop(0);
+    } else {
+      $this.scrollTop(scrollTop - delta);
+    }
+
+    ev.stopPropagation();
+    ev.preventDefault();
+    ev.returnValue = false;
+    return false;
   });
 }
