@@ -17,12 +17,12 @@
 package com.android.ide.eclipse.gltrace.state;
 
 import com.android.ide.eclipse.gltrace.GLEnum;
-import com.android.ide.eclipse.gltrace.state.GLIntegerProperty.DisplayRadix;
+import com.android.ide.eclipse.gltrace.state.DisplayRadix;
 
 import java.util.Collections;
 
 public class GLState {
-    /** # of texture units modelled in the GL State. */
+    /** # of texture units modeled in the GL State. */
     public static final int TEXTURE_UNIT_COUNT = 16;
 
     /** # of vertex attributes */
@@ -56,7 +56,8 @@ public class GLState {
         stride     = new GLIntegerProperty(GLStateType.VERTEX_ATTRIB_ARRAY_STRIDE, 0);
         type       = new GLEnumProperty(GLStateType.VERTEX_ATTRIB_ARRAY_TYPE, GLEnum.GL_FLOAT);
         normalized = new GLBooleanProperty(GLStateType.VERTEX_ATTRIB_ARRAY_NORMALIZED, false);
-        pointer    = new GLIntegerProperty(GLStateType.VERTEX_ATTRIB_ARRAY_POINTER, 0);
+        pointer    = new GLLongProperty(GLStateType.VERTEX_ATTRIB_ARRAY_POINTER, 0L,
+                DisplayRadix.HEX);
 
         IGLProperty perVertexAttribArrayState = new GLCompositeProperty(
                 GLStateType.VERTEX_ATTRIB_ARRAY_COMPOSITE,
