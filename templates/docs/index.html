@@ -17,7 +17,7 @@
   -->
 <head>
   <meta charset="utf-8">
-  <title>ADT Template Format</title>
+  <title>Android IDE Template Format</title>
   <link rel="stylesheet" href="cssreset-min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold;Inconsolata" title="roboto">
   <link rel="stylesheet" href="prettify.css">
@@ -34,17 +34,14 @@
 
 <div id="page-content">
 
-<h1>ADT Template Format</h1>
+<h1>Android IDE Template Format</h1>
 <br>
 <dl style="margin:0">
-  <dt>Status</dt>
-  <dd style="margin:0">Draft</dd>
-
   <dt>Format Version</dt>
-  <dd style="margin:0">3</dd>
+  <dd style="margin:0">4</dd>
 
   <dt>Last Updated</dt>
-  <dd style="margin:0">8/30/2012</dd>
+  <dd style="margin:0">1/30/2014</dd>
 </dl>
 
 
@@ -78,7 +75,8 @@
 <pre class="prettyprint lang-xml">
 &lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
     &lt;application&gt;
-        &lt;activity android:name="<strong>.${activityClass}</strong>"
+        &lt;activity android:name="<strong>${packageName}.${activityClass}</strong>"
+            android:parentActivityName="<strong>${parentActivityClass}</strong>"
             android:label="@string/title_<strong>${activityToLayout(activityClass)}</strong>">
             <strong>&lt;#if parentActivityClass != ""&gt;</strong>
             &lt;meta-data android:name="android.support.PARENT_ACTIVITY"
@@ -99,8 +97,8 @@
 
 <ul>
   <li>The expression <code>${activityClass}</code> is bound to the value of the 'Activity Class' template parameter.</li>
-  <li>The expression <code>${activityToLayout(activityClass)}</code> uses the <code>activityToLayout</code> method built into ADT to convert an activity class such as <code>MyFooActivity</code> to <code>activity_my_foo</code>.</li>
-  <li>The <code>isLauncher</code> boolean variable and <code>parentActivityClass</code> string varaibles are bound to the values of the 'Launcher Activity' and 'Hierarchical Parent' template parameter, respectively.</li>
+  <li>The expression <code>${activityToLayout(activityClass)}</code> uses the <code>activityToLayout</code> method built into the template engine to convert an activity class such as <code>MyFooActivity</code> to <code>activity_my_foo</code>.</li>
+  <li>The <code>isLauncher</code> boolean variable and <code>parentActivityClass</code> string variables are bound to the values of the 'Launcher Activity' and 'Hierarchical Parent' template parameter, respectively.</li>
 </ul>
 
 
@@ -145,25 +143,19 @@
 
 <pre class="prettyprint lang-xml">
 &lt;!-- A template for a blank activity. Use template format
-     version 3, as described in this document. -->
+     version 4, as described in this document. -->
 &lt;template
-    format="3"
-    revision="1"
-    minApi="4"
-    minBuildApi="11"
-    name="New Blank Activity"
+    format="4"
+    revision="2"
+    minApi="7"
+    minBuildApi="16"
+    name="Blank Activity"
     description="Creates a new blank activity, with navigation."&gt;
-
-    &lt;!-- Indicate that the Android Support Library (r8) should be
-         added to the project, if it isn't already in the project. -->
-    &lt;dependency name="android-support-v4" revision="8" /&gt;
-
-    &lt;category value="Activities" /&gt;
 
     &lt;!-- A string parameter; the value is available to FreeMarker
          processed files (.ftl files) as ${activityName}. -->
     &lt;parameter
-        id="activityName"
+        id="activityClass"
         name="Activity Name"
         type="string"
         constraints="class|unique|nonempty"
@@ -175,17 +167,18 @@
         id="layoutName"
         name="Layout Name"
         type="string"
-        constraints="layout|unique"
+        constraints="layout|unique|nonempty"
         suggest="${activityToLayout(activityClass)}"
-        default="main"
+        default="activity_main"
         help="The name of the layout to create for the activity" /&gt;
 
     &lt;parameter
         id="navType"
         name="Navigation Type"
         type="enum"
-        default="none"&gt;
-        &lt;option id="none" default="true"&gt;None&lt;/option&gt;
+        default="none"
+        help="The type of navigation to use for the activity"&gt;
+        &lt;option id="none"&gt;None&lt;/option&gt;
         &lt;option id="tabs" minApi="11"&gt;Tabs&lt;/option&gt;
         &lt;option id="pager" minApi="11"&gt;Swipe Views&lt;/option&gt;
         &lt;option id="dropdown" minApi="11"&gt;Dropdown&lt;/option&gt;
@@ -217,7 +210,7 @@
 
 <dl>
   <dt><code>format</code></dt>
-  <dd>The template format version that this template adheres to. Should be <code>3</code>.</dd>
+  <dd>The template format version that this template adheres to. Should be <code>4</code>.</dd>
 
   <dt><code>revision</code></dt>
   <dd>Optional. The version of this template (which you can increment when updating the template), as an integer.</dd>
@@ -235,7 +228,10 @@
   <dd>Optional. The minimum build target (expressed as an API level) required for this template. The IDE will ensure that the target project is targeting an API level greater than or equal to this value before instantiating the template. This ensures that the template can safely use newer APIs (optionally guarded by runtime API level checks) without introducing compile-time errors into the target project.</dd>
 </dl>
 
+<div class="deprecated">
 <h4 class="includetoc">&lt;dependency&gt;</h4>
+
+<p>This tag is deprecated for use in <code>template.xml</code>. Use <a href="#toc_recipe_dependency"><code>&lt;dependency&gt;</code></a> in <code>recipe.xml.ftl</code> instead.</p>
 
 <p>Indicates that the template requires that a given library be present in the target project. If not present, the IDE will add the dependency to the project.</p>
 
@@ -249,7 +245,9 @@
   <dt><code>revision</code></dt>
   <dd>The minimum revision of the library required by this template.</dd>
 </dl>
+</div>
 
+<div class="deprecated">
 <h4 class="includetoc">&lt;category&gt;</h4>
 
 <p>The template type. This element is optional.</p>
@@ -262,6 +260,7 @@
     <li><code>UI Components</code></li>
   </ul></dd>
 </dl>
+</div>
 
 <h4 class="includetoc">&lt;parameter&gt;</h4>
 
@@ -282,6 +281,7 @@
     <li><code>nonempty</code> &mdash; the value must not be empty</li>
     <li><code>apilevel</code> &mdash; the value should represent a numeric API level</li>
     <li><code>package</code> &mdash; the value should represent a valid Java package name</li>
+    <li><code>app_package</code> &mdash; the value should represent a valid Android app package name</li>
     <li><code>class</code> &mdash; the value should represent a valid Java class name</li>
     <li><code>activity</code> &mdash; the value should represent a fully-qualified activity class name</li>
     <li><code>layout</code> &mdash; the value should represent a valid layout resource name</li>
@@ -331,6 +331,18 @@
 
 <p>The template 'preview' thumbnail will show <code>template_tabs.png</code> if the value of the <code>navType</code> template parameter is <code>tabs</code> and <code>template.png</code> otherwise.</p>
 
+<h4 class="includetoc">&lt;icons&gt;</h4>
+
+<p>States that the template would like the Asset Studio icon creation tool of the given type to run, and save the output icons with the given name.</p>
+
+<dl>
+  <dt><code>type</code></dt>
+  <dd>The type of icon wizard to create. Valid values are <code>notification</code>, <code>actionbar</code>, <code>launcher</code>.</dd>
+
+  <dt><code>name</code></dt>
+  <dd>The base icon name to output, e.g. <code>ic_stat_my_notification</code>.</dd>
+</dl>
+
 <h3>globals.xml.ftl</h3>
 
 <p>The optional globals XML file contains global variable definitions, for use in all FreeMarker processing jobs for this template.</p>
@@ -350,7 +362,7 @@
 
 <h3>recipe.xml.ftl</h3>
 
-<p>The recipe XML file contains the individual instructions that should be executed when generating code from this template. For example, you can copy certain files or directories (the copy instruction), optionally running the source files through FreeMarker (the instantiate instruction), and ask ADT to open a file in Eclipse after the code has been generated (the open instruction).</p>
+<p>The recipe XML file contains the individual instructions that should be executed when generating code from this template. For example, you can copy certain files or directories (the copy instruction), optionally running the source files through FreeMarker (the instantiate instruction), and ask the IDE to open a file after the code has been generated (the open instruction).</p>
 
 <p class="note"><strong>Note:</strong> The name of the recipe file is up to you, and is defined in <code>template.xml</code>. By convention, however, it's best to call it <code>recipe.xml.ftl</code>.</p>
 
@@ -360,57 +372,83 @@
 
 <pre class="prettyprint lang-xml">
 &lt;recipe&gt;
+    &lt;#if appCompat?has_content&gt;
+    &lt;dependency mavenUrl="com.android.support:appcompat-v7:+"/&gt;
+    &lt;/#if&gt;
+
     &lt;!-- runs FreeMarker, then copies from
-         [template-directory]/root/ to [output-directory]. --&gt;
-    &lt;instantiate from="AndroidManifest.xml.ftl" /&gt;
+         [template-directory]/root/ to [output-directory],
+         automatically creating directories as needed. --&gt;
+    &lt;merge from="AndroidManifest.xml.ftl"
+             to="${escapeXmlAttribute(manifestDir)}/AndroidManifest.xml" /&gt;
 
-    &lt;!-- automatically creates directories as needed --&gt;
-    &lt;copy from="res/drawable-hdpi" /&gt;
-    &lt;copy from="res/drawable-mdpi" /&gt;
-    &lt;copy from="res/drawable-xhdpi" /&gt;
-    &lt;copy from="res/values/dimens.xml" /&gt;
-    &lt;copy from="res/values/styles.xml" /&gt;
-    &lt;copy from="res/values-large/dimens.xml" /&gt;
-
+    &lt;!-- simply copy file, don't run FreeMarker --&gt;
+    &lt;copy from="res/drawable-mdpi"
+            to="${escapeXmlAttribute(resDir)}/res/drawable-mdpi" /&gt;
+    &lt;copy from="res/drawable-hdpi"
+            to="${escapeXmlAttribute(resDir)}/res/drawable-hdpi" /&gt;
+    &lt;copy from="res/drawable-xhdpi"
+            to="${escapeXmlAttribute(resDir)}/res/drawable-xhdpi" /&gt;
+    &lt;copy from="res/drawable-xxhdpi"
+            to="${escapeXmlAttribute(resDir)}/res/drawable-xxhdpi" /&gt;
     &lt;copy from="res/menu/main.xml"
-            to="res/menu/${activityNameLower}.xml" /&gt;
+            to="${escapeXmlAttribute(resDir)}/res/menu/${activityNameLower}.xml" /&gt;
 
-    &lt;instantiate from="res/values/strings.xml.ftl" /&gt;
+    &lt;!-- run FreeMarker and then merge with existing files --&gt;
+    &lt;merge from="res/values/dimens.xml"
+             to="${escapeXmlAttribute(resDir)}/res/values/dimens.xml" /&gt;
+    &lt;merge from="res/values-large/dimens.xml"
+             to="${escapeXmlAttribute(resDir)}/res/values-large/dimens.xml" /&gt;
+    &lt;merge from="res/values/styles.xml"
+             to="${escapeXmlAttribute(resDir)}/res/values/styles.xml" /&gt;
+    &lt;merge from="res/values/strings.xml.ftl"
+             to="${escapeXmlAttribute(resDir)}/res/values/strings.xml" /&gt;
 
     &lt;!-- Decide which layout to add --&gt;
     &lt;#if navType?contains("pager")&gt;
         &lt;instantiate
-            from="res/layout/activity_pager.xml.ftl"
-              to="res/layout/activity_${activityNameLower}.xml" /&gt;
+            from="${escapeXmlAttribute(resDir)}/res/layout/activity_pager.xml.ftl"
+              to="${escapeXmlAttribute(resDir)}/res/layout/activity_${activityNameLower}.xml" /&gt;
     &lt;#elseif navType == "tabs" || navType == "dropdown"&gt;
-        &lt;copy from="res/layout/activity_fragment_container.xml"
-                to="res/layout/activity_${activityNameLower}.xml" /&gt;
+        &lt;copy from="${escapeXmlAttribute(resDir)}/res/layout/activity_fragment_container.xml"
+                to="${escapeXmlAttribute(resDir)}/res/layout/activity_${activityNameLower}.xml" /&gt;
     &lt;#else&gt;
-        &lt;copy from="res/layout/activity_simple.xml"
-                to="res/layout/activity_${activityNameLower}.xml" /&gt;
+        &lt;copy from="${escapeXmlAttribute(resDir)}/res/layout/activity_simple.xml"
+                to="${escapeXmlAttribute(resDir)}/res/layout/activity_${activityNameLower}.xml" /&gt;
     &lt;/#if&gt;
 
     &lt;!-- Decide which activity code to add --&gt;
     &lt;#if navType == "none"&gt;
         &lt;instantiate from="src/app_package/SimpleActivity.java.ftl"
-                       to="${srcOut}/${activityClass}.java" /&gt;
+                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" /&gt;
     &lt;#elseif navType == "pager"&gt;
         &lt;instantiate from="src/app_package/PagerActivity.java.ftl"
-                       to="${srcOut}/${activityClass}.java" /&gt;
+                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" /&gt;
     &lt;#elseif navType == "tabs"&gt;
         &lt;instantiate from="src/app_package/TabsActivity.java.ftl"
-                       to="${srcOut}/${activityClass}.java" /&gt;
+                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" /&gt;
     &lt;#elseif navType == "dropdown"&gt;
         &lt;instantiate from="src/app_package/DropdownActivity.java.ftl"
-                       to="${srcOut}/${activityClass}.java" /&gt;
+                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" /&gt;
     &lt;/#if&gt;
 
-    &lt;!-- open the layout file when done --&gt;
-    &lt;open file="res/layout/${activityNameLower}.xml" /&gt;
+    &lt;!-- open the layout file and Java class when done --&gt;
+    &lt;open file="${escapeXmlAttribute(resDir)}/res/layout/${activityNameLower}.xml" /&gt;
+    &lt;open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" /&gt;
 &lt;/recipe&gt;
 </pre>
 
 <p>The instructions below are supported:</p>
+
+<h4 class="includetoc" data-tocid="recipe_dependency">&lt;dependency&gt;</h4>
+
+<p>Indicates that the template requires that a given library be present in the target project. If not present, the IDE will add the dependency to the project.</p>
+
+<dl>
+  <dt><code>mavenUrl</code></dt>
+  <dd>The maven coordinates of the library. For example,
+    <code>com.android.support:appcompat-v7:+</code></dd>
+</dl>
 
 <h4 class="includetoc">&lt;copy&gt;</h4>
 
@@ -426,11 +464,15 @@
 
 <h4 class="includetoc">&lt;merge&gt;</h4>
 
-<p>This instruction will be used to merge the contents of a source file into an existing file in the project. The most common use case for this will be to add components to the <code>AndroidManifest.xml</code> file of the destination project, or to merge resources such as strings into an existing <code>strings.xml</code> file.</p>
+<p>This instruction will run the source file through FreeMarker and then merge the contents of the output into an existing file in the project, or create a new file. The most common use case for this is to add components to the <code>AndroidManifest.xml</code> file of the destination project, or to merge resources such as strings into an existing <code>strings.xml</code> file.</p>
 
 <h4 class="includetoc">&lt;open&gt;</h4>
 
-<p>Instruct ADT to open the file created by the specified <code>file</code> argument in Eclipse after code generation is complete.</p>
+<p>Instruct the IDE to open the file created by the specified <code>file</code> argument after code generation is complete.</p>
+
+<h4 class="includetoc">&lt;mkdir&gt;</h4>
+
+<p>Ensures the directory provided in the <code>at</code> argument exists.</p>
 
 <h3>root/</h3>
 
@@ -441,7 +483,7 @@
 
 
 
-<h2>Extra Template Functions</h2>
+<h2>Built-in Template Functions</h2>
 
 <p>Several functions are available to FreeMarker expressions and files beyond the standard set of built-in FreeMarker functions. These are listed below.</p>
 
@@ -470,6 +512,16 @@
 
 <h4>See also</h4>
 <p><a href="#toc_underscoretocamelcase"><code>underscoreToCamelCase</code></a></p>
+
+<h3 data-toctitle="escapePropertyValue">string <em>escapePropertyValue</em>(string)</h3>
+
+<p>This function escapes a string, such as <code>foo=bar</code> such that it is suitable to be inserted in a Java <code>.properties</code> file as a property value, such as <code>foo\=bar</code>.</p>
+
+<h4>Arguments</h4>
+<dl>
+  <dt><code>str</code></dt>
+  <dd>The string, e.g. <code>foo=bar</code> to escape to a proper property value.</dd>
+</dl>
 
 <h3 data-toctitle="escapeXmlAttribute">string <em>escapeXmlAttribute</em>(string)</h3>
 
@@ -578,6 +630,64 @@
 
 <h4>See also</h4>
 <p><a href="#toc_camelcasetounderscore"><code>camelCaseToUnderscore</code></a></p>
+
+
+
+<h2>Built-in Template Parameters</h2>
+
+<p>Several parameters are available to FreeMarker expressions and files beyond <a href="#toc_parameter">those defined by the template</a>. These are listed below.</p>
+
+<h3>packageName</h3>
+
+<p>The Java-style Android package name for the project, e.g. <code>com.example.foo</code></p>
+
+<h3>isNewProject</h3>
+
+<p>A boolean indicating whether or not this template is being instantiated as part of a New Project flow.</p>
+
+<h3>minApi</h3>
+
+<p>The minimum API level the project supports. Note that this value could be a string so consider using <a href="#toc_minapilevel"><code>minApiLevel</code></a> instead.</p>
+
+<h3>minApiLevel</h3>
+
+<p>The minimum API level the project supports, guaranteed to be a number. This is generally used to guard the generation of code based on the project's API level, for example:</p>
+
+<pre>
+int drawableResourceId = android.R.layout.simple_list_item_<strong>&lt;#if minApiLevel gte 11&gt;</strong>activated_<strong>&lt;/#if&gt;</strong>_1;
+</pre>
+
+<h3>buildApi</h3>
+
+<p>The API level that the project is building against, guaranteed to be a number. This is generally used to guard the generation of code based on what version of the Android SDK the project is being built against, for example:</p>
+
+<pre>
+&lt;TextView android:layout_width="wrap_content"
+    android:layout_height="<strong>&lt;#if buildApi gte 8&gt;</strong>match_parent<strong>&lt;#else&gt;</strong>fill_parent<strong>&lt;/#if&gt;</strong>" /&gt;
+</pre>
+
+<h3>manifestDir</h3>
+
+<p>The target output directory for the <code>AndroidManifest.xml</code> file. This varies depending on the project's directory structure (Gradle-style or Ant-style).</p>
+
+<h3>srcDir</h3>
+
+<p>The target Java source root directory for the project. This varies depending on the project's directory structure (Gradle-style or Ant-style). It's common to concatenate the package name:</p>
+
+<pre>
+${srcDir}/${slashedPackageName(packageName)}
+</pre>
+
+<h4>See also</h4>
+<p><a href="#toc_slashedpackagename"><code>slashedPackageName</code></a></p>
+
+<h3>resDir</h3>
+
+<p>The target resource directory root (<code>res/</code> folder) for the project. This varies depending on the project's directory structure (Gradle-style or Ant-style).</p>
+
+
+
+
 
 <h2>Notes for Template Authors</h2>
 
