@@ -75,6 +75,7 @@ public class NewProjectWizard extends TemplateWizard {
     static final String CATEGORY_PROJECTS = "projects";            //$NON-NLS-1$
     static final String CATEGORY_ACTIVITIES = "activities";        //$NON-NLS-1$
     static final String CATEGORY_OTHER = "other";                  //$NON-NLS-1$
+    static final String ATTR_APP_COMPAT = "appCompat";             //$NON-NLS-1$
     /**
      * Reserved file name for the launcher icon, resolves to the xhdpi version
      *
@@ -268,6 +269,11 @@ public class NewProjectWizard extends TemplateWizard {
         Map<String, Object> paramMap = new HashMap<String, Object>();
         addProjectInfo(paramMap);
         TemplateHandler.addDirectoryParameters(paramMap, getProject());
+        // We don't know at this point whether the activity is going to need
+        // AppCompat so we just assume that it will.
+        if (mValues.createActivity) {
+            paramMap.put(ATTR_APP_COMPAT, true);
+        }
 
         return template.render(mProject, paramMap);
     }
