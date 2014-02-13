@@ -25,11 +25,13 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
+import com.android.sdklib.repository.descriptors.IdDisplay;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -271,7 +273,7 @@ public class ManifestInfoTest extends AdtProjectTest {
         }
 
         @Override
-        public String getDefaultSkin() {
+        public File getDefaultSkin() {
             return null;
         }
 
@@ -286,7 +288,7 @@ public class ManifestInfoTest extends AdtProjectTest {
         }
 
         @Override
-        public ISystemImage getSystemImage(String abiType) {
+        public ISystemImage getSystemImage(IdDisplay tag, String abiType) {
             return null;
         }
 
@@ -321,6 +323,12 @@ public class ManifestInfoTest extends AdtProjectTest {
         }
 
         @Override
+        public File getFile(int pathId) {
+          return null;
+        }
+
+
+        @Override
         public String[] getPlatformLibraries() {
             return null;
         }
@@ -351,7 +359,7 @@ public class ManifestInfoTest extends AdtProjectTest {
         }
 
         @Override
-        public String[] getSkins() {
+        public File[] getSkins() {
             return null;
         }
 
