@@ -22,10 +22,10 @@
 # Tools Component
 ##############################################################################
 
-# RCP Monitor.
-bin/monitor                                 tools/monitor
-eclipse/monitor-linux.gtk.x86/monitor       tools/lib/monitor-x86
-eclipse/monitor-linux.gtk.x86_64/monitor    tools/lib/monitor-x86_64
+# RCP Monitor. Temporarily disabled: See b/8992787
+#bin/monitor                                 tools/monitor
+#eclipse/monitor-linux.gtk.x86/monitor       tools/lib/monitor-x86
+#eclipse/monitor-linux.gtk.x86_64/monitor    tools/lib/monitor-x86_64
 
 
 # swt
