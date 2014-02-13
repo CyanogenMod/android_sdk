@@ -93,12 +93,13 @@ rm tools/zipalign
 bin/zipalign.exe                            strip tools/zipalign.exe
 
 # RCP Monitor. Remove linux stuff and replace by Windows files.
-rm tools/monitor
-rm tools/lib/monitor-x86
-rm tools/lib/monitor-x86_64
-sdk/monitor/monitor.bat                           tools/monitor.bat
-eclipse/monitor-win32.win32.x86/monitor           tools/lib/monitor-x86
-eclipse/monitor-win32.win32.x86_64/monitor        tools/lib/monitor-x86_64
+# Temporarily disabled: See b/8992787
+#rm tools/monitor
+#rm tools/lib/monitor-x86
+#rm tools/lib/monitor-x86_64
+#sdk/monitor/monitor.bat                           tools/monitor.bat
+#eclipse/monitor-win32.win32.x86/monitor           tools/lib/monitor-x86
+#eclipse/monitor-win32.win32.x86_64/monitor        tools/lib/monitor-x86_64
 
 
 # Copy the AVD & SDK Manager (aka avd/sdklauncher) to the root of the SDK as

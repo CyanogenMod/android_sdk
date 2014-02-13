@@ -47,7 +47,6 @@ subdirs += \
 	external/junit \
 	sdk/apkbuilder \
 	sdk/eclipse/scripts/rcp \
-	sdk/monitor \
 	sdk/testutils
 
 else
