@@ -22,9 +22,9 @@
 # Tools Component
 ##############################################################################
 
-# RCP Monitor.
-bin/monitor                                 tools/monitor
-eclipse/monitor-macosx.cocoa.x86_64/monitor tools/lib/monitor-x86_64
+# RCP Monitor. Temporarily disabled: See b/8992787
+#bin/monitor                                 tools/monitor
+#eclipse/monitor-macosx.cocoa.x86_64/monitor tools/lib/monitor-x86_64
 
 # swt
 prebuilts/tools/darwin-x86/swt/swt.jar tools/lib/x86/swt.jar

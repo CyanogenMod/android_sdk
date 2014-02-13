@@ -1,5 +1,13 @@
 # Copyright 2012 The Android Open Source Project
 
+# Temporarily disable building monitor
+# The current mechanism for building monitor using PDE build does
+# not work with Java7 on Macs. So building monitor is temporarily
+# disabled until we figure out how to build monitor using Tycho
+# and incorporate it into this build script.
+# See b/8992787
+ifeq (0,1)
+
 # Expose the Monitor RCP only for the SDK builds.
 ifneq (,$(is_sdk_build)$(filter sdk sdk_x86 sdk_mips,$(TARGET_PRODUCT)))
 
@@ -59,4 +67,5 @@ $(LOCAL_BUILT_MODULE) : $(TOPDIR)sdk/monitor/monitor \
 	fi
 	$(hide)$(ACP) -fp $(V) $(TOPDIR)sdk/monitor/monitor $@
 
+endif
 endif
