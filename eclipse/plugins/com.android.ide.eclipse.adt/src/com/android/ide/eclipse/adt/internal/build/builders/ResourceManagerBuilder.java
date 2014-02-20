@@ -24,7 +24,9 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
 
@@ -122,6 +124,19 @@ public class ResourceManagerBuilder extends BaseBuilder {
                     if (target != null && target.getVersion().getApiLevel() < 19) {
                         errorMessage = "Using 1.7 requires compiling with Android 4.4 " +
                                 "(KitKat); currently using " + target.getVersion();
+                    }
+
+                    ProjectState projectState = Sdk.getProjectState(project);
+                    if (projectState != null) {
+                        BuildToolInfo buildToolInfo = projectState.getBuildToolInfo();
+                        if (buildToolInfo == null) {
+                            buildToolInfo = currentSdk.getLatestBuildTool();
+                        }
+                        if (buildToolInfo != null && buildToolInfo.getRevision().getMajor() < 19) {
+                            errorMessage = "Using 1.7 requires using Android Build Tools " +
+                                    "version 19 or later; currently using " +
+                                    buildToolInfo.getRevision();
+                        }
                     }
                 }
             }
