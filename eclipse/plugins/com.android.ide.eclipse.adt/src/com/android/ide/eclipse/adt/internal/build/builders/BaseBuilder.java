@@ -35,6 +35,7 @@ import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.FullRevision;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
