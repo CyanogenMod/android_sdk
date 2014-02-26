@@ -184,6 +184,15 @@
         &lt;option id="dropdown" minApi="11"&gt;Dropdown&lt;/option&gt;
     &lt;/parameter&gt;
 
+    &lt;parameter
+        id="fragmentName"
+        name="Fragment Name"
+        type="string"
+        constraints="class|unique|nonempty"
+        default="MainFragment"
+        visibility="navType != 'none'"
+        help="The name of the fragment class to create" /&gt;
+
     &lt;!-- 512x512 PNG thumbnails. --&gt;
     &lt;thumbs&gt;
         &lt;!-- Default thumbnail. --&gt;
@@ -299,8 +308,11 @@
   <dt><code>default</code></dt>
   <dd>Optional. The default value for this parameter.</dd>
 
+  <dt><code>visibility</code></dt>
+  <dd>Optional. A FreeMarker expression that determines whether this parameter should be visible. The expression should evaluate to a boolean value (i.e. true or false).</dd>
+
   <dt><code>help</code></dt>
-  <dd>The help string to display to the user for this parameter.</dd>
+  <dd>Optional. The help string to display to the user for this parameter.</dd>
 
 </dl>
 
@@ -641,6 +653,10 @@
 <h3>packageName</h3>
 
 <p>The Java-style Android package name for the project, e.g. <code>com.example.foo</code></p>
+
+<h3>applicationPackage</h3>
+
+<p>Will be the application package (i.e. the package name declared in the app manifest) if the target package for this template is not the application package. Otherwise, this parameter will be empty.</p>
 
 <h3>isNewProject</h3>
 
