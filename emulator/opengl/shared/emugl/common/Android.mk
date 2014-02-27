@@ -8,6 +8,7 @@ LOCAL_PATH := $(call my-dir)
 commonSources := \
         lazy_instance.cpp \
         smart_ptr.cpp \
+        sockets.cpp \
         thread_store.cpp \
 
 host_commonSources := $(commonSources)
