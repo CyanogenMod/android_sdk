@@ -16,6 +16,7 @@
 #ifndef _GL_SHARED_GROUP_H_
 #define _GL_SHARED_GROUP_H_
 
+#include "emugl/common/id_to_object_map.h"
 #include "emugl/common/mutex.h"
 #include "emugl/common/pod_vector.h"
 #include "emugl/common/smart_ptr.h"
@@ -34,7 +35,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ErrorLog.h"
-#include <utils/KeyedVector.h>
 #include <utils/List.h>
 #include <utils/String8.h>
 #include "FixedBuffer.h"
@@ -101,13 +101,13 @@ struct ShaderData {
 
 class GLSharedGroup {
 private:
-    android::DefaultKeyedVector<GLuint, BufferData*> m_buffers;
-    android::DefaultKeyedVector<GLuint, ProgramData*> m_programs;
-    android::DefaultKeyedVector<GLuint, ShaderData*> m_shaders;
+    emugl::IdToObjectMap<BufferData> m_buffers;
+    emugl::IdToObjectMap<ProgramData> m_programs;
+    emugl::IdToObjectMap<ShaderData> m_shaders;
     mutable emugl::Mutex m_lock;
 
-    void refShaderDataLocked(ssize_t shaderIdx);
-    void unrefShaderDataLocked(ssize_t shaderIdx);
+    void refShaderDataLocked(GLuint shader);
+    void unrefShaderDataLocked(GLuint shader);
 
 public:
     GLSharedGroup();

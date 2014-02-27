@@ -16,23 +16,20 @@
 
 #include "GLSharedGroup.h"
 
-/**** KeyedVector utilities ****/
-
-template <typename T>
-static void clearObjectMap(android::DefaultKeyedVector<GLuint, T>& v) {
-    for (size_t i = 0; i < v.size(); i++)
-        delete v.valueAt(i);
-    v.clear();
-}
-
 /**** BufferData ****/
 
 BufferData::BufferData() : m_size(0) {};
+
 BufferData::BufferData(GLsizeiptr size, void * data) : m_size(size)
 {
-    void * buffer = NULL;
-    if (size>0) buffer = m_fixedBuffer.alloc(size);
-    if (data) memcpy(buffer, data, size);
+    void* buffer = NULL;
+
+    if (size > 0) {
+        buffer = m_fixedBuffer.alloc(size);
+        if (data) {
+            memcpy(buffer, data, size);
+        }
+    }
 }
 
 /**** ProgramData ****/
@@ -223,49 +220,32 @@ bool ProgramData::detachShader(GLuint shader)
 /***** GLSharedGroup ****/
 
 GLSharedGroup::GLSharedGroup() :
-    m_buffers(android::DefaultKeyedVector<GLuint, BufferData*>(NULL)),
-    m_programs(android::DefaultKeyedVector<GLuint, ProgramData*>(NULL)),
-    m_shaders(android::DefaultKeyedVector<GLuint, ShaderData*>(NULL))
-{
-}
+    m_buffers(), m_programs(), m_shaders() {}
 
-GLSharedGroup::~GLSharedGroup()
-{
-    m_buffers.clear();
-    m_programs.clear();
-    clearObjectMap(m_buffers);
-    clearObjectMap(m_programs);
-    clearObjectMap(m_shaders);
-}
+GLSharedGroup::~GLSharedGroup() {}
 
 BufferData * GLSharedGroup::getBufferData(GLuint bufferId)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    return m_buffers.valueFor(bufferId);
+    return m_buffers.get(bufferId);
 }
 
 void GLSharedGroup::addBufferData(GLuint bufferId, GLsizeiptr size, void * data)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    m_buffers.add(bufferId, new BufferData(size, data));
+    m_buffers.set(bufferId, new BufferData(size, data));
 }
 
 void GLSharedGroup::updateBufferData(GLuint bufferId, GLsizeiptr size, void * data)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ssize_t idx = m_buffers.indexOfKey(bufferId);
-    if (idx >= 0) {
-        delete m_buffers.valueAt(idx);
-        m_buffers.editValueAt(idx) = new BufferData(size, data);
-    } else {
-        m_buffers.add(bufferId, new BufferData(size, data));
-    }
+    m_buffers.set(bufferId, new BufferData(size, data));
 }
 
 GLenum GLSharedGroup::subUpdateBufferData(GLuint bufferId, GLintptr offset, GLsizeiptr size, void * data)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    BufferData * buf = m_buffers.valueFor(bufferId);
+    BufferData * buf = m_buffers.get(bufferId);
     if ((!buf) || (buf->m_size < offset+size) || (offset < 0) || (size<0)) return GL_INVALID_VALUE;
 
     //it's safe to update now
@@ -276,32 +256,20 @@ GLenum GLSharedGroup::subUpdateBufferData(GLuint bufferId, GLintptr offset, GLsi
 void GLSharedGroup::deleteBufferData(GLuint bufferId)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ssize_t idx = m_buffers.indexOfKey(bufferId);
-    if (idx >= 0) {
-        delete m_buffers.valueAt(idx);
-        m_buffers.removeItemsAt(idx);
-    }
+    ssize_t idx = m_buffers.remove(bufferId);
 }
 
 void GLSharedGroup::addProgramData(GLuint program)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData *pData = m_programs.valueFor(program);
-    if (pData)
-    {
-        m_programs.removeItem(program);
-        delete pData;
-    }
-
-    m_programs.add(program,new ProgramData());
+    m_programs.set(program, new ProgramData());
 }
 
 void GLSharedGroup::initProgramData(GLuint program, GLuint numIndexes)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData *pData = m_programs.valueFor(program);
-    if (pData)
-    {
+    ProgramData *pData = m_programs.get(program);
+    if (pData) {
         pData->initProgramData(numIndexes);
     }
 }
@@ -309,136 +277,133 @@ void GLSharedGroup::initProgramData(GLuint program, GLuint numIndexes)
 bool GLSharedGroup::isProgramInitialized(GLuint program)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    if (pData)
-    {
-        return pData->isInitialized();
-    }
-    return false;
+    ProgramData* pData = m_programs.get(program);
+    return pData && pData->isInitialized();
 }
 
 void GLSharedGroup::deleteProgramData(GLuint program)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData *pData = m_programs.valueFor(program);
-    if (pData)
-        delete pData;
-    m_programs.removeItem(program);
+    m_programs.remove(program);
 }
 
 void GLSharedGroup::attachShader(GLuint program, GLuint shader)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* programData = m_programs.valueFor(program);
-    ssize_t idx = m_shaders.indexOfKey(shader);
-    if (programData && idx >= 0) {
-        if (programData->attachShader(shader)) {
-            refShaderDataLocked(idx);
-        }
+    ProgramData* programData = m_programs.get(program);
+    if (programData && programData->attachShader(shader)) {
+        refShaderDataLocked(shader);
     }
 }
 
 void GLSharedGroup::detachShader(GLuint program, GLuint shader)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* programData = m_programs.valueFor(program);
-    ssize_t idx = m_shaders.indexOfKey(shader);
-    if (programData && idx >= 0) {
-        if (programData->detachShader(shader)) {
-            unrefShaderDataLocked(idx);
-        }
+    ProgramData* programData = m_programs.get(program);
+    if (programData && programData->detachShader(shader)) {
+        unrefShaderDataLocked(shader);
     }
 }
 
-void GLSharedGroup::setProgramIndexInfo(GLuint program, GLuint index, GLint base, GLint size, GLenum type, const char* name)
+void GLSharedGroup::setProgramIndexInfo(GLuint program,
+                                        GLuint index,
+                                        GLint base,
+                                        GLint size,
+                                        GLenum type,
+                                        const char* name)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    if (pData)
-    {
-        pData->setIndexInfo(index,base,size,type);
+    ProgramData* pData = m_programs.get(program);
+    if (!pData) {
+        return;
+    }
+    pData->setIndexInfo(index,base,size,type);
 
-        if (type == GL_SAMPLER_2D) {
-            size_t n = pData->getNumShaders();
-            for (size_t i = 0; i < n; i++) {
-                GLuint shaderId = pData->getShader(i);
-                ShaderData* shader = m_shaders.valueFor(shaderId);
-                if (!shader) continue;
-                ShaderData::StringList::iterator nameIter = shader->samplerExternalNames.begin();
-                ShaderData::StringList::iterator nameEnd  = shader->samplerExternalNames.end();
-                while (nameIter != nameEnd) {
-                    if (*nameIter == name) {
-                        pData->setIndexFlags(index, ProgramData::INDEX_FLAG_SAMPLER_EXTERNAL);
-                        break;
-                    }
-                    ++nameIter;
+    if (type == GL_SAMPLER_2D) {
+        size_t n = pData->getNumShaders();
+        for (size_t i = 0; i < n; i++) {
+            GLuint shaderId = pData->getShader(i);
+            ShaderData* shader = m_shaders.get(shaderId);
+            if (!shader) continue;
+            ShaderData::StringList::iterator nameIter =
+                    shader->samplerExternalNames.begin();
+            ShaderData::StringList::iterator nameEnd  =
+                    shader->samplerExternalNames.end();
+            while (nameIter != nameEnd) {
+                if (*nameIter == name) {
+                    pData->setIndexFlags(
+                            index,
+                            ProgramData::INDEX_FLAG_SAMPLER_EXTERNAL);
+                    break;
                 }
+                ++nameIter;
             }
         }
     }
 }
 
+
 GLenum GLSharedGroup::getProgramUniformType(GLuint program, GLint location)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    GLenum type=0;
-    if (pData)
-    {
-        type = pData->getTypeForLocation(location);
-    }
-    return type;
+    ProgramData* pData = m_programs.get(program);
+    return pData ? pData->getTypeForLocation(location) : 0;
 }
 
 bool  GLSharedGroup::isProgram(GLuint program)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    return (pData!=NULL);
+    ProgramData* pData = m_programs.get(program);
+    return (pData != NULL);
 }
 
 void GLSharedGroup::setupLocationShiftWAR(GLuint program)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
+    ProgramData* pData = m_programs.get(program);
     if (pData) pData->setupLocationShiftWAR();
 }
 
-GLint GLSharedGroup::locationWARHostToApp(GLuint program, GLint hostLoc, GLint arrIndex)
+GLint GLSharedGroup::locationWARHostToApp(GLuint program,
+                                          GLint hostLoc,
+                                          GLint arrIndex)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    if (pData) return pData->locationWARHostToApp(hostLoc, arrIndex);
-    else return hostLoc;
+    ProgramData* pData = m_programs.get(program);
+    return pData ? pData->locationWARHostToApp(hostLoc, arrIndex) : hostLoc;
 }
 
 GLint GLSharedGroup::locationWARAppToHost(GLuint program, GLint appLoc)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    if (pData) return pData->locationWARAppToHost(appLoc);
-    else return appLoc;
+    ProgramData* pData = m_programs.get(program);
+    return pData ? pData->locationWARAppToHost(appLoc) : appLoc;
 }
 
 bool GLSharedGroup::needUniformLocationWAR(GLuint program)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
-    if (pData) return pData->needUniformLocationWAR();
-    return false;
+    ProgramData* pData = m_programs.get(program);
+    return pData ? pData->needUniformLocationWAR() : false;
 }
 
-GLint GLSharedGroup::getNextSamplerUniform(GLuint program, GLint index, GLint* val, GLenum* target) const
+GLint GLSharedGroup::getNextSamplerUniform(GLuint program,
+                                           GLint index,
+                                           GLint* val,
+                                           GLenum* target) const
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
+    ProgramData* pData = m_programs.get(program);
     return pData ? pData->getNextSamplerUniform(index, val, target) : -1;
 }
 
-bool GLSharedGroup::setSamplerUniform(GLuint program, GLint appLoc, GLint val, GLenum* target)
+bool GLSharedGroup::setSamplerUniform(GLuint program,
+                                      GLint appLoc,
+                                      GLint val,
+                                      GLenum* target)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ProgramData* pData = m_programs.valueFor(program);
+    ProgramData* pData = m_programs.get(program);
     return pData ? pData->setSamplerUniform(appLoc, val, target) : false;
 }
 
@@ -446,44 +411,39 @@ bool GLSharedGroup::addShaderData(GLuint shader)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
     ShaderData* data = new ShaderData;
-    if (data) {
-        if (m_shaders.add(shader, data) < 0) {
-            delete data;
-            data = NULL;
-        }
-        data->refcount = 1;
-    }
-    return data != NULL;
+    data->refcount = 1;
+    m_shaders.set(shader, data);
+    return true;
 }
 
 ShaderData* GLSharedGroup::getShaderData(GLuint shader)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    return m_shaders.valueFor(shader);
+    ShaderData* data = m_shaders.get(shader);
+    if (data) {
+        data->refcount++;
+    }
+    return data;
 }
 
 void GLSharedGroup::unrefShaderData(GLuint shader)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ssize_t idx = m_shaders.indexOfKey(shader);
-    if (idx >= 0) {
-        unrefShaderDataLocked(idx);
+    unrefShaderDataLocked(shader);
+}
+
+void GLSharedGroup::refShaderDataLocked(GLuint shader)
+{
+    ShaderData* data = m_shaders.get(shader);
+    if (data) {
+        data->refcount++;
     }
 }
 
-void GLSharedGroup::refShaderDataLocked(ssize_t shaderIdx)
+void GLSharedGroup::unrefShaderDataLocked(GLuint shader)
 {
-    assert(shaderIdx >= 0 && shaderIdx <= m_shaders.size());
-    ShaderData* data = m_shaders.valueAt(shaderIdx);
-    data->refcount++;
-}
-
-void GLSharedGroup::unrefShaderDataLocked(ssize_t shaderIdx)
-{
-    assert(shaderIdx >= 0 && shaderIdx <= m_shaders.size());
-    ShaderData* data = m_shaders.valueAt(shaderIdx);
-    if (--data->refcount == 0) {
-        delete data;
-        m_shaders.removeItemsAt(shaderIdx);
+    ShaderData* data = m_shaders.get(shader);
+    if (data && --data->refcount == 0) {
+        m_shaders.remove(shader);
     }
 }

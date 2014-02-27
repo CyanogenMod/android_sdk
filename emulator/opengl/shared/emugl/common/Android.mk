@@ -6,6 +6,7 @@ LOCAL_PATH := $(call my-dir)
 ### emugl_common host library ###########################################
 
 commonSources := \
+        id_to_object_map.cpp \
         lazy_instance.cpp \
         pod_vector.cpp \
         smart_ptr.cpp \
@@ -27,6 +28,7 @@ $(call emugl-end-module)
 ### emugl_common_unittests ##############################################
 
 host_commonSources := \
+    id_to_object_map_unittest.cpp \
     lazy_instance_unittest.cpp \
     pod_vector_unittest.cpp \
     mutex_unittest.cpp \
