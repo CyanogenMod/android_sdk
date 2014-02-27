@@ -25,7 +25,6 @@ $(call emugl-begin-host-static-library,libOpenglCodecCommon)
 
 LOCAL_SRC_FILES := $(host_commonSources)
 
-$(call emugl-export,STATIC_LIBRARIES,libcutils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 $(call emugl-end-module)
 
@@ -35,7 +34,6 @@ $(call emugl-begin-host-static-library,lib64OpenglCodecCommon)
 
 LOCAL_SRC_FILES := $(host_commonSources)
 
-$(call emugl-export,STATIC_LIBRARIES,lib64cutils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 $(call emugl-export,CFLAGS,-m64)
 $(call emugl-end-module)
