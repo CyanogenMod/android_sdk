@@ -7,6 +7,7 @@ LOCAL_PATH := $(call my-dir)
 
 commonSources := \
         lazy_instance.cpp \
+        pod_vector.cpp \
         smart_ptr.cpp \
         sockets.cpp \
         thread_store.cpp \
@@ -27,6 +28,7 @@ $(call emugl-end-module)
 
 host_commonSources := \
     lazy_instance_unittest.cpp \
+    pod_vector_unittest.cpp \
     mutex_unittest.cpp \
     smart_ptr_unittest.cpp \
     thread_store_unittest.cpp \

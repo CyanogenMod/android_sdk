@@ -16,6 +16,10 @@
 #ifndef _GL_SHARED_GROUP_H_
 #define _GL_SHARED_GROUP_H_
 
+#include "emugl/common/mutex.h"
+#include "emugl/common/pod_vector.h"
+#include "emugl/common/smart_ptr.h"
+
 #define GL_API
 #ifndef ANDROID
 #define GL_APIENTRY
@@ -34,14 +38,12 @@
 #include <utils/List.h>
 #include <utils/String8.h>
 #include "FixedBuffer.h"
-#include "emugl/common/mutex.h"
-#include "emugl/common/smart_ptr.h"
 
 struct BufferData {
     BufferData();
     BufferData(GLsizeiptr size, void * data);
     GLsizeiptr  m_size;
-    FixedBuffer m_fixedBuffer;    
+    FixedBuffer m_fixedBuffer;
 };
 
 class ProgramData {
@@ -61,7 +63,7 @@ private:
     bool m_initialized;
     bool m_locShiftWAR;
 
-    android::Vector<GLuint> m_shaders;
+    emugl::PodVector<GLuint> m_shaders;
 
 public:
     enum {

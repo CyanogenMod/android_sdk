@@ -204,9 +204,7 @@ bool ProgramData::attachShader(GLuint shader)
             return false;
         }
     }
-    // AKA m_shaders.push_back(), but that has an ambiguous call to insertAt()
-    // due to the default parameters. This is the desired insertAt() overload.
-    m_shaders.insertAt(shader, m_shaders.size(), 1);
+    m_shaders.append(shader);
     return true;
 }
 
@@ -215,7 +213,7 @@ bool ProgramData::detachShader(GLuint shader)
     size_t n = m_shaders.size();
     for (size_t i = 0; i < n; i++) {
         if (m_shaders[i] == shader) {
-            m_shaders.removeAt(i);
+            m_shaders.remove(i);
             return true;
         }
     }
