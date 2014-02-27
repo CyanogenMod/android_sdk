@@ -35,8 +35,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ErrorLog.h"
-#include <utils/List.h>
-#include <utils/String8.h>
 #include "FixedBuffer.h"
 
 struct BufferData {
@@ -94,8 +92,10 @@ public:
 };
 
 struct ShaderData {
+#if 0  // TODO(digit): Undertand why this is never used?
     typedef android::List<android::String8> StringList;
     StringList samplerExternalNames;
+#endif
     int refcount;
 };
 

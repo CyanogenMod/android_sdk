@@ -16,6 +16,8 @@
 
 #include "GLSharedGroup.h"
 
+#include <string.h>
+
 /**** BufferData ****/
 
 BufferData::BufferData() : m_size(0) {};
@@ -325,6 +327,7 @@ void GLSharedGroup::setProgramIndexInfo(GLuint program,
             GLuint shaderId = pData->getShader(i);
             ShaderData* shader = m_shaders.get(shaderId);
             if (!shader) continue;
+#if 0  // TODO(digit): Understand why samplerExternalNames is always empty?
             ShaderData::StringList::iterator nameIter =
                     shader->samplerExternalNames.begin();
             ShaderData::StringList::iterator nameEnd  =
@@ -338,6 +341,7 @@ void GLSharedGroup::setProgramIndexInfo(GLuint program,
                 }
                 ++nameIter;
             }
+#endif
         }
     }
 }
