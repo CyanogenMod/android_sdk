@@ -17,12 +17,18 @@ host_commonSources := $(commonSources)
 
 $(call emugl-begin-host-static-library,libemugl_common)
 LOCAL_SRC_FILES := $(host_commonSources)
+$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/shared)
+$(call emugl-export,LDLIBS,-lstdc++)
 $(call emugl-end-module)
 
-$(call emugl-begin-host-static-library,lib64emugl_common)
-LOCAL_SRC_FILES := $(host_commonSources)
-$(call emugl-export,CFLAGS,-m64)
-$(call emugl-end-module)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-static-library,lib64emugl_common)
+    LOCAL_SRC_FILES := $(host_commonSources)
+    $(call emugl-export,CFLAGS,-m64 -fPIC)
+    $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/shared)
+    $(call emugl-export,LDLIBS,-lstdc++)
+    $(call emugl-end-module)
+endif
 
 
 ### emugl_common_unittests ##############################################
@@ -40,7 +46,9 @@ LOCAL_SRC_FILES := $(host_commonSources)
 $(call emugl-import,libemugl_common libemugl_gtest)
 $(call emugl-end-module)
 
-$(call emugl-begin-host-executable,emugl64_common_host_unittests)
-LOCAL_SRC_FILES := $(host_commonSources)
-$(call emugl-import,lib64emugl_common lib64emugl_gtest)
-$(call emugl-end-module)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-executable,emugl64_common_host_unittests)
+    LOCAL_SRC_FILES := $(host_commonSources)
+    $(call emugl-import,lib64emugl_common lib64emugl_gtest)
+    $(call emugl-end-module)
+endif

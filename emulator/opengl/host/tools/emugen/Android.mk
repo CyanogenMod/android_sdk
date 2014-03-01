@@ -1,15 +1,15 @@
-ifneq ($(HOST_OS),windows)
-
 LOCAL_PATH:=$(call my-dir)
 
 $(call emugl-begin-host-executable,emugen)
 
-    LOCAL_SRC_FILES := \
-        ApiGen.cpp \
-        EntryPoint.cpp \
-        main.cpp \
-        strUtils.cpp \
-        TypeFactory.cpp
+LOCAL_SRC_FILES := \
+    ApiGen.cpp \
+    EntryPoint.cpp \
+    main.cpp \
+    strUtils.cpp \
+    TypeFactory.cpp \
+
+LOCAL_HOST_BUILD := true
 
 $(call emugl-end-module)
 
@@ -17,10 +17,3 @@ $(call emugl-end-module)
 # protocol encoders/ decoders. This variable is used by other emugl modules.
 EMUGL_EMUGEN := $(LOCAL_BUILT_MODULE)
 
-else # windows build
-
-# on windows use the build host emugen executable
-# (that will be the linux exeutable when using mingw build)
-EMUGL_EMUGEN := $(BUILD_OUT_EXECUTABLES)/emugen
-
-endif
