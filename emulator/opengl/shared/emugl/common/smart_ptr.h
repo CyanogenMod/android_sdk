@@ -39,7 +39,7 @@ public:
     // Assignment operator, also increments the reference count.
     SmartPtrBase& operator=(const SmartPtrBase& other);
 
-    // Nothing happens in this constructor, the real work must be performed
+    // Nothing happens in this destructor, the real work must be performed
     // in subclasses.
     ~SmartPtrBase() {}
 
