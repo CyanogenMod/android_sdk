@@ -1339,7 +1339,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     && new File(aaptPath).exists()
                     && new File("/usr/bin/apt-get").exists()) {     //$NON-NLS-1$
                 markProject(AdtConstants.MARKER_ADT,
-                        "Hint: On 64-bit systems, make sure the 32-bit libraries are installed: sudo apt-get install ia32-libs",
+                        "Hint: On 64-bit systems, make sure the 32-bit libraries are installed: \"sudo apt-get install ia32-libs\" or on some systems, \"sudo apt-get install lib32z1\"",
                         IMarker.SEVERITY_ERROR);
                 // Note - this uses SEVERITY_ERROR even though it's really SEVERITY_INFO because
                 // we want this error message to show up adjacent to the aapt error message
