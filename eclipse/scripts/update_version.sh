@@ -55,9 +55,10 @@ done
 # ---2--- Change unqualified version numbers in specific files
 SED_OLD="${OLD//./\.}"
 SED_NEW="${NEW//./\.}"
-for i in plugins/com.android.ide.eclipse.adt.package/ide.product \
-         plugins/com.android.ide.eclipse.monitor/monitor.product \
-         plugins/com.android.ide.eclipse.monitor/plugin.properties; do
+for i in plugins/com.android.ide.eclipse.adt.package/ide.product   \
+         plugins/com.android.ide.eclipse.monitor/monitor.product   \
+         plugins/com.android.ide.eclipse.monitor/plugin.properties \
+         features/com.android.ide.eclipse.adt.package/feature.xml ; do
   if grep -qs "$OLD" "$i"; then
     replace "$i"
   fi
