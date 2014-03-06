@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.util.GrabProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
 import com.android.sdklib.util.GrabProcessOutput.Wait;
@@ -126,9 +127,15 @@ public class DexDumpAction implements IObjectActionDelegate {
                 return Status.OK_STATUS;
             }
 
-            String sdkOsPath = current.getSdkLocation();
-            File dexDumpFile = new File(new File(sdkOsPath, SdkConstants.FD_PLATFORM_TOOLS),
-                                        SdkConstants.FN_DEXDUMP);
+            BuildToolInfo buildToolInfo = current.getLatestBuildTool();
+            if (buildToolInfo == null) {
+                AdtPlugin.printErrorToConsole(project,
+                    "SDK missing build tools. Please install build tools using SDK Manager.");
+                return Status.OK_STATUS;
+            }
+
+            File buildToolsFolder = buildToolInfo.getLocation();
+            File dexDumpFile = new File(buildToolsFolder, SdkConstants.FN_DEXDUMP);
 
             IPath binPath = project.getFolder(SdkConstants.FD_OUTPUT).getLocation();
             if (binPath == null) {
