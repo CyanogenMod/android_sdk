@@ -5,17 +5,8 @@ $(call emugl-import,libOpenglRender event_injector)
 
 LOCAL_SRC_FILES := main.cpp
 
-PREBUILT := $(HOST_PREBUILT_TAG)
-LOCAL_SDL_CONFIG ?= prebuilts/tools/$(PREBUILT)/sdl/bin/sdl-config
-LOCAL_SDL_CFLAGS := $(shell $(LOCAL_SDL_CONFIG) --cflags)
-LOCAL_SDL_LDLIBS := $(filter-out %.a %.lib,$(shell $(LOCAL_SDL_CONFIG) --static-libs))
-
-LOCAL_CFLAGS += $(LOCAL_SDL_CFLAGS) -g -O0
-LOCAL_LDLIBS += $(LOCAL_SDL_LDLIBS)
-
-ifeq ($(HOST_OS),windows)
-LOCAL_LDLIBS += -lws2_32
-endif
+LOCAL_CFLAGS += $(EMUGL_SDL_CFLAGS) -g -O0
+LOCAL_LDLIBS += $(EMUGL_SDL_LDLIBS)
 
 LOCAL_STATIC_LIBRARIES += libSDL libSDLmain
 
