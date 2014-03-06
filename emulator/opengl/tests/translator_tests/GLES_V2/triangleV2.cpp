@@ -372,7 +372,7 @@ int main(int argc, char **argv)
     #ifdef _WIN32
         HWND   windowId = NULL;
     #elif __linux__
-        Window windowId = NULL;
+        Window windowId = 0;
     #elif __APPLE__
         void* windowId  = NULL;
     #endif

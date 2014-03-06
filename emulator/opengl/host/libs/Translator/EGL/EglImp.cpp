@@ -815,7 +815,7 @@ EGLAPI EGLContext EGLAPIENTRY eglGetCurrentContext(void) {
     if(dpy && ctx.Ptr()){
         // This double check is required because a context might still be current after it is destroyed - in which case
         // its handle should be invalid, that is EGL_NO_CONTEXT should be returned even though the context is current
-        EGLContext c = (EGLContext)ctx->getHndl();
+        EGLContext c = (EGLContext)SafePointerFromUInt(ctx->getHndl());
         if(dpy->getContext(c).Ptr())
         {
             return c;
@@ -839,7 +839,7 @@ EGLAPI EGLSurface EGLAPIENTRY eglGetCurrentSurface(EGLint readdraw) {
             // current after it is destroyed - in which case its handle should
             // be invalid, that is EGL_NO_SURFACE should be returned even
             // though the surface is current.
-            EGLSurface s = (EGLSurface)surface->getHndl();
+            EGLSurface s = (EGLSurface)SafePointerFromUInt(surface->getHndl());
             surface = dpy->getSurface(s);
             if(surface.Ptr())
             {
@@ -1033,13 +1033,13 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum ta
     ThreadInfo* thread  = getThreadInfo();
     ShareGroupPtr sg = thread->shareGroup;
     if (sg.Ptr() != NULL) {
-        unsigned int globalTexName = sg->getGlobalName(TEXTURE, (uintptr_t)buffer);
+        unsigned int globalTexName = sg->getGlobalName(TEXTURE, SafeUIntFromPointer(buffer));
         if (!globalTexName) return EGL_NO_IMAGE_KHR;
 
         ImagePtr img( new EglImage() );
         if (img.Ptr() != NULL) {
 
-            ObjectDataPtr objData = sg->getObjectData(TEXTURE, (uintptr_t)buffer);
+            ObjectDataPtr objData = sg->getObjectData(TEXTURE, SafeUIntFromPointer(buffer));
             if (!objData.Ptr()) return EGL_NO_IMAGE_KHR;
 
             TextureData *texData = (TextureData *)objData.Ptr();

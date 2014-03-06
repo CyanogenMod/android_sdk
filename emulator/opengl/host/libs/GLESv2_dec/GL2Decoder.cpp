@@ -19,6 +19,9 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+static inline void* SafePointerFromUInt(GLuint value) {
+  return (void*)(uintptr_t)value;
+}
 
 GL2Decoder::GL2Decoder()
 {
@@ -115,7 +118,7 @@ void GL2Decoder::s_glVertexAttribPointerOffset(void *self, GLuint indx, GLint si
                                                GLboolean normalized, GLsizei stride,  GLuint data)
 {
     GL2Decoder *ctx = (GL2Decoder *) self;
-    ctx->glVertexAttribPointer(indx, size, type, normalized, stride, (GLvoid *)data);
+    ctx->glVertexAttribPointer(indx, size, type, normalized, stride, SafePointerFromUInt(data));
 }
 
 
@@ -129,7 +132,7 @@ void GL2Decoder::s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GL
 void GL2Decoder::s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset)
 {
     GL2Decoder *ctx = (GL2Decoder *)self;
-    ctx->glDrawElements(mode, count, type, (void *)offset);
+    ctx->glDrawElements(mode, count, type, SafePointerFromUInt(offset));
 }
 
 void GL2Decoder::s_glShaderString(void *self, GLuint shader, const GLchar* string, GLsizei len)
