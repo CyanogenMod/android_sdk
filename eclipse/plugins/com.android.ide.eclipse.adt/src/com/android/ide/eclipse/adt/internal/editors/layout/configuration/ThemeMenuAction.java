@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import com.android.ide.eclipse.adt.internal.editors.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SubmenuAction;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo.ActivityAttributes;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.sdklib.IAndroidTarget;
 
@@ -41,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -180,30 +180,39 @@ class ThemeMenuAction extends SubmenuAction {
             case MENU_MANIFEST: {
                 IProject project = mConfigChooser.getEditedFile().getProject();
                 ManifestInfo manifest = ManifestInfo.get(project);
-                Map<String, String> activityThemes = manifest.getActivityThemes();
                 Configuration configuration = mConfigChooser.getConfiguration();
                 String activity = configuration.getActivity();
                 if (activity != null) {
-                    String theme = activityThemes.get(activity);
-                    if (theme != null) {
-                        addMenuItem(menu, theme, isSelectedTheme(theme));
+                    ActivityAttributes attributes = manifest.getActivityAttributes(activity);
+                    if (attributes != null) {
+                        String theme = attributes.getTheme();
+                        if (theme != null) {
+                            addMenuItem(menu, theme, isSelectedTheme(theme));
+                        }
                     }
                 }
 
                 String manifestTheme = manifest.getManifestTheme();
-                if (activityThemes.size() > 0 || manifestTheme != null) {
-                    Set<String> allThemes = new HashSet<String>(activityThemes.values());
-                    if (manifestTheme != null) {
-                        allThemes.add(manifestTheme);
+                boolean found = false;
+                Set<String> allThemes = new HashSet<String>();
+                if (manifestTheme != null) {
+                    found = true;
+                    allThemes.add(manifestTheme);
+                }
+                for (ActivityAttributes info : manifest.getActivityAttributesMap().values()) {
+                    if (info.getTheme() != null) {
+                        found = true;
+                        allThemes.add(info.getTheme());
                     }
-                    List<String> sorted = new ArrayList<String>(allThemes);
-                    Collections.sort(sorted);
-                    String current = configuration.getTheme();
-                    for (String theme : sorted) {
-                        boolean selected = theme.equals(current);
-                        addMenuItem(menu, theme, selected);
-                    }
-                } else {
+                }
+                List<String> sorted = new ArrayList<String>(allThemes);
+                Collections.sort(sorted);
+                String current = configuration.getTheme();
+                for (String theme : sorted) {
+                    boolean selected = theme.equals(current);
+                    addMenuItem(menu, theme, selected);
+                }
+                if (!found) {
                     addDisabledMessageItem("No themes are registered in the manifest");
                 }
                 break;
