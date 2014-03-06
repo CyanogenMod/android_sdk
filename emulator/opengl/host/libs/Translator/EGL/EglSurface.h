@@ -16,14 +16,15 @@
 #ifndef EGL_SURFACE_H
 #define EGL_SURFACE_H
 
+#include <map>
+
 #include <EGL/egl.h>
 #include <EGL/eglinternalplatform.h>
-#include <map>
-#include <GLcommon/SmartPtr.h>
+#include "emugl/common/smart_ptr.h"
 #include "EglConfig.h"
 
 class EglSurface;
-typedef  SmartPtr<EglSurface> SurfacePtr;
+typedef emugl::SmartPtr<EglSurface> SurfacePtr;
 
 class EglDisplay;
 
