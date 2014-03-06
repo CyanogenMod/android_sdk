@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Common Android Utilities
 Bundle-SymbolicName: com.android.ide.eclipse.base;singleton:=true
-Bundle-Version: 22.3.0.qualifier
+Bundle-Version: 22.6.0.qualifier
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
@@ -12,7 +12,7 @@ Bundle-ClassPath: .,
  libs/commons-codec-1.4.jar,
  libs/commons-compress-1.0.jar,
  libs/commons-logging-1.1.1.jar,
- libs/guava-13.0.1.jar,
+ libs/guava-15.0.jar,
  libs/httpclient-4.1.1.jar,
  libs/httpcore-4.1.jar,
  libs/httpmime-4.1.jar,

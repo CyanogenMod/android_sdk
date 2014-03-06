@@ -161,6 +161,8 @@ public class NewTemplateWizardState {
         parameters.put(IS_LIBRARY_PROJECT,
                 projectState != null ? projectState.isLibrary() : false);
 
+        TemplateHandler.addDirectoryParameters(parameters, project);
+
         List<Change> changes = getTemplateHandler().render(project, parameters);
 
         if (mIconState != null) {

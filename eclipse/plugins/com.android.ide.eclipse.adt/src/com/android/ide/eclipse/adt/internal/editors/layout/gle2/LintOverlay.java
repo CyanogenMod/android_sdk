@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.swt.graphics.GC;
@@ -28,8 +29,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.w3c.dom.Node;
 
 import java.util.Collection;
-
-import lombok.ast.libs.org.parboiled.google.collect.Lists;
 
 /**
  * The {@link LintOverlay} paints an icon over each view that contains at least one

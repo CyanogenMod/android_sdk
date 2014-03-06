@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.adt.package"
       label="ADT Package"
-      version="22.3.0.qualifier"
+      version="22.6.0.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.adt.package">
 
@@ -73,12 +73,12 @@
       <import plugin="org.eclipse.cdt.dsf.gdb.ui"/>
       <import plugin="org.eclipse.cdt.launch"/>
       <import feature="org.eclipse.egit" />
-      <import feature="com.android.ide.eclipse.ddms"            version="22.2.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.adt"             version="22.2.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.gldebugger"      version="22.2.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.hierarchyviewer" version="22.2.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.ndk"             version="22.2.0" match="greaterOrEqual" />
-      <import feature="com.android.ide.eclipse.traceview"       version="22.2.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.ddms"            version="22.6.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.adt"             version="22.6.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.gldebugger"      version="22.6.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.hierarchyviewer" version="22.6.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.ndk"             version="22.6.0" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.traceview"       version="22.6.0" match="greaterOrEqual" />
       <!-- 
            The build scripts will pull in the translation plugin if its plugin repository is accessible.
            The following line should remain without any modifications as the build script looks for
