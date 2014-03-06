@@ -30,7 +30,7 @@ public final class GLBooleanProperty extends GLAbstractAtomicProperty {
 
     @Override
     public boolean isDefault() {
-        return mDefaultValue == mCurrentValue;
+        return mDefaultValue != null & mDefaultValue.equals(mCurrentValue);
     }
 
     public void setValue(Boolean newValue) {
