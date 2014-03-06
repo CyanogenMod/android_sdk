@@ -30,6 +30,12 @@ endif
 #
 EMUGL_COMMON_CFLAGS := -DWITH_GLES2
 
+# Define EMUGL_BUILD_DEBUG=1 in your environment to build a
+# debug version of the EmuGL host binaries.
+ifneq (,$(strip $(EMUGL_BUILD_DEBUG)))
+EMUGL_COMMON_CFLAGS += -O0 -g -DEMUGL_DEBUG=1
+endif
+
 # Uncomment the following line if you want to enable debug traces
 # in the GLES emulation libraries.
 # EMUGL_COMMON_CFLAGS += -DEMUGL_DEBUG=1
@@ -59,6 +65,10 @@ include $(EMUGL_PATH)/common.mk
 # source files (see all emugl-gen-decoder/encoder in common.mk)
 #
 include $(EMUGL_PATH)/host/tools/emugen/Android.mk
+
+# Required by our units test.
+include $(EMUGL_PATH)/googletest.mk
+
 include $(EMUGL_PATH)/shared/emugl/common/Android.mk
 include $(EMUGL_PATH)/shared/OpenglOsUtils/Android.mk
 include $(EMUGL_PATH)/shared/OpenglCodecCommon/Android.mk
