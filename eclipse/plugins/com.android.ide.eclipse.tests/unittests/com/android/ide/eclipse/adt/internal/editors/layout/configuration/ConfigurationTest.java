@@ -27,6 +27,7 @@ import com.android.sdklib.devices.Screen;
 import com.android.utils.StdLogger;
 
 import java.lang.reflect.Constructor;
+import java.util.EnumSet;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -52,7 +53,7 @@ public class ConfigurationTest extends TestCase {
         DeviceManager deviceManager = DeviceManager.createInstance(
                                                         null /*osSdkPath*/,
                                                         new StdLogger(StdLogger.Level.VERBOSE));
-        List<Device> devices = deviceManager.getDevices(DeviceManager.DEFAULT_DEVICES);
+        List<Device> devices = deviceManager.getDevices(DeviceManager.DeviceFilter.DEFAULT);
         assertNotNull(devices);
         assertTrue(devices.size() > 0);
         configuration.setDevice(devices.get(0), false);
@@ -112,7 +113,7 @@ public class ConfigurationTest extends TestCase {
         DeviceManager deviceManager = DeviceManager.createInstance(
                                             null /*osSdkPath*/,
                                             new StdLogger(StdLogger.Level.VERBOSE));
-        List<Device> devices = deviceManager.getDevices(DeviceManager.DEFAULT_DEVICES);
+        List<Device> devices = deviceManager.getDevices(DeviceManager.DeviceFilter.DEFAULT);
         assertNotNull(devices);
         assertTrue(devices.size() > 0);
         configuration.setDevice(devices.get(0), false);
