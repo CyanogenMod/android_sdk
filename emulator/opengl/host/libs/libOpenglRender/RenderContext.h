@@ -16,12 +16,12 @@
 #ifndef _LIBRENDER_RENDERCONTEXT_H
 #define _LIBRENDER_RENDERCONTEXT_H
 
-#include "SmartPtr.h"
+#include "emugl/common/smart_ptr.h"
 #include <EGL/egl.h>
 #include "GLDecoderContextData.h"
 
 class RenderContext;
-typedef SmartPtr<RenderContext> RenderContextPtr;
+typedef emugl::SmartPtr<RenderContext> RenderContextPtr;
 
 class RenderContext
 {
