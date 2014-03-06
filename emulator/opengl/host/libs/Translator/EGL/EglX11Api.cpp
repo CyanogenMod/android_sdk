@@ -71,7 +71,7 @@ int ErrorHandler::errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event){
 }
 
 #define IS_SUCCESS(a) \
-        if(a != Success) return false;
+        if(a != Success) return 0;
 
 namespace EglOS {
 
@@ -193,7 +193,7 @@ bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
    int tmp;
    unsigned int utmp;
    ErrorHandler handler(dpy);
-   if(!XGetGeometry(dpy,pix ? pix->srfc() : NULL,&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
+   if(!XGetGeometry(dpy,pix ? pix->srfc() : 0,&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
    return handler.getLastError() == 0;
 }
 
@@ -260,7 +260,7 @@ bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLN
     bool retval = false;
     if (!ctx && !read && !draw) {
         // unbind
-        retval = glXMakeContextCurrent(dpy, NULL, NULL, NULL);
+        retval = glXMakeContextCurrent(dpy, 0, 0, NULL);
     }
     else if (ctx && read && draw) {
         retval = glXMakeContextCurrent(dpy,draw->native()->srfc(),read->native()->srfc(),ctx);

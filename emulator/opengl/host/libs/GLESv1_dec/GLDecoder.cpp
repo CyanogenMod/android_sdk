@@ -21,6 +21,10 @@
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
+static inline void* SafePointerFromUInt(GLuint value) {
+  return (void*)(uintptr_t)value;
+}
+
 GLDecoder::GLDecoder()
 {
     m_contextData = NULL;
@@ -88,43 +92,43 @@ int GLDecoder::s_glFinishRoundTrip(void *self)
 void GLDecoder::s_glVertexPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glVertexPointer(size, type, stride, (void *)offset);
+    ctx->glVertexPointer(size, type, stride, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glColorPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glColorPointer(size, type, stride, (void *)offset);
+    ctx->glColorPointer(size, type, stride, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glTexCoordPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glTexCoordPointer(size, type, stride, (void *) offset);
+    ctx->glTexCoordPointer(size, type, stride, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glNormalPointerOffset(void *self, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glNormalPointer(type, stride, (void *)offset);
+    ctx->glNormalPointer(type, stride, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glPointSizePointerOffset(void *self, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glPointSizePointerOES(type, stride, (void *)offset);
+    ctx->glPointSizePointerOES(type, stride, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glWeightPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glWeightPointerOES(size, type, stride, (void*)offset);
+    ctx->glWeightPointerOES(size, type, stride, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glMatrixIndexPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glMatrixIndexPointerOES(size, type, stride, (void*)offset);
+    ctx->glMatrixIndexPointerOES(size, type, stride, SafePointerFromUInt(offset));
 }
 
 
@@ -204,7 +208,7 @@ void GLDecoder::s_glMatrixIndexPointerData(void * self, GLint size, GLenum type,
 void GLDecoder::s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset)
 {
     GLDecoder *ctx = (GLDecoder *)self;
-    ctx->glDrawElements(mode, count, type, (void *)offset);
+    ctx->glDrawElements(mode, count, type, SafePointerFromUInt(offset));
 }
 
 void GLDecoder::s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen)
