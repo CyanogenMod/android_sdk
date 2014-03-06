@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
 
@@ -875,13 +876,27 @@ public final class ProjectHelper {
         }
 
         if (JavaCore.VERSION_1_7.equals(optionValue)) {
-            // Requires API 19
+            // Requires API 19 and buildTools 19
             Sdk currentSdk = Sdk.getCurrent();
             if (currentSdk != null) {
-                IAndroidTarget target = currentSdk.getTarget(project.getProject());
-                if (target != null && target.getVersion().getApiLevel() >= 19) {
-                    return true;
+                IProject p = project.getProject();
+                IAndroidTarget target = currentSdk.getTarget(p);
+                if (target == null || target.getVersion().getApiLevel() < 19) {
+                    return false;
                 }
+
+                ProjectState projectState = Sdk.getProjectState(p);
+                if (projectState != null) {
+                    BuildToolInfo buildToolInfo = projectState.getBuildToolInfo();
+                    if (buildToolInfo == null) {
+                        buildToolInfo = currentSdk.getLatestBuildTool();
+                    }
+                    if (buildToolInfo == null || buildToolInfo.getRevision().getMajor() < 19) {
+                        return false;
+                    }
+                }
+
+                return true;
             }
         }
 
