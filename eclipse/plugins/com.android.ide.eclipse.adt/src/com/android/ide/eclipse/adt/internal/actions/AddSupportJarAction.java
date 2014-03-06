@@ -93,6 +93,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
     private static final String ANDROID_SUPPORT_V4_JAR = "android-support-v4.jar"; //$NON-NLS-1$
     private static final String ANDROID_SUPPORT_V13_JAR = "android-support-v13.jar";//$NON-NLS-1$
     private static final String APPCOMPAT_V7_JAR = "android-support-v7-appcompat.jar";//$NON-NLS-1$
+    private static final String APP_COMPAT_LIB_NAME = "appcompat_v7";               //$NON-NLS-1$
     private ISelection mSelection;
 
     /**
@@ -310,6 +311,18 @@ public class AddSupportJarAction implements IObjectActionDelegate {
         final IJavaProject javaProject = JavaCore.create(project);
         if (javaProject != null) {
 
+            // Don't add in the library if it already exists
+            ProjectState state = Sdk.getProjectState(project);
+            ProjectPropertiesWorkingCopy copy = state.getProperties().makeWorkingCopy();
+            for (String property : copy.keySet()) {
+                if (property.startsWith(ProjectProperties.PROPERTY_LIB_REF)) {
+                    String libraryReference = copy.getProperty(property);
+                    if (libraryReference != null && libraryReference.contains(APP_COMPAT_LIB_NAME)) {
+                        return true;
+                    }
+                }
+            }
+
             File supportPath = getSupportPackageDir();
             if (!supportPath.isDirectory()) {
                 File path = installSupport(7);
@@ -331,7 +344,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
 
             // Create workspace copy of the project and add library dependency
             IProject libraryProject = createLibraryProject(libraryPath, project,
-                    "appcompat_v7", waitForFinish); // $NON-NLS-1$
+                    APP_COMPAT_LIB_NAME, waitForFinish);
             if (libraryProject != null) {
                 return addLibraryDependency(libraryProject, project, waitForFinish);
             }
@@ -460,7 +473,8 @@ public class AddSupportJarAction implements IObjectActionDelegate {
             ProjectState state = Sdk.getProjectState(project);
             String target = state.getProperties().getProperty(ProjectProperties.PROPERTY_TARGET);
             if (target != null && target.length() > 0) {
-                ProjectProperties properties = ProjectProperties.load(libraryPath.getPath(),
+                ProjectProperties properties = ProjectProperties.load(
+                        destDir.toLocalFile(EFS.NONE, new NullProgressMonitor()).getPath(),
                         PropertyType.PROJECT);
                 ProjectPropertiesWorkingCopy copy = properties.makeWorkingCopy();
                 copy.setProperty(ProjectProperties.PROPERTY_TARGET, target);
