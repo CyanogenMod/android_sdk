@@ -53,12 +53,12 @@ public:
 
     void storePointerData(unsigned int loc, void *data, size_t len) {
 
-        assert(loc < m_nLocations);
+        assert(loc < (unsigned)m_nLocations);
         m_pointerData[loc].alloc(len);
         memcpy(m_pointerData[loc].ptr(), data, len);
     }
     void *pointerData(unsigned int loc) {
-        assert(loc < m_nLocations);
+        assert(loc < (unsigned)m_nLocations);
         return m_pointerData[loc].ptr();
     }
 private:
