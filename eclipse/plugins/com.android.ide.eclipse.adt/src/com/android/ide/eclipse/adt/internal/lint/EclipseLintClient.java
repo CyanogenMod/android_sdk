@@ -759,6 +759,18 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
+    public int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node) {
+        IndexedRegion region = (IndexedRegion) node;
+        return region.getStartOffset();
+    }
+
+    @Override
+    public int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node) {
+        IndexedRegion region = (IndexedRegion) node;
+        return region.getEndOffset();
+    }
+
+    @Override
     public @NonNull Handle createLocationHandle(final @NonNull XmlContext context,
             final @NonNull Node node) {
         IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
