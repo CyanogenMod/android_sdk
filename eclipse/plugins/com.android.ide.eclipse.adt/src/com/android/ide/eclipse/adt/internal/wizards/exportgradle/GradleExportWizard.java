@@ -54,6 +54,7 @@ public class GradleExportWizard extends Wizard implements IExportWizard {
 
     @Override
     public void addPages() {
+        addPage(new ImportInsteadPage());
         mFirstPage = new ProjectSelectionPage(mBuilder);
         addPage(mFirstPage);
         mSecondPage = new ConfirmationPage(mBuilder);
