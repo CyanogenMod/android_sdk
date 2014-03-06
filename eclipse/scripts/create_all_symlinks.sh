@@ -134,7 +134,7 @@ BASE_PLUGIN_LIBS="base:common swt:sdkstats base:sdklib base:dvlib base:layoutlib
 BASE_PLUGIN_PREBUILTS="\
     prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar \
     prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.0/commons-compress-1.0.jar \
-    prebuilts/tools/common/m2/repository/com/google/guava/guava/13.0.1/guava-13.0.1.jar \
+    prebuilts/tools/common/m2/repository/com/google/guava/guava/15.0/guava-15.0.jar \
     prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar \
     prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.4/commons-codec-1.4.jar \
     prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1/httpclient-4.1.1.jar \
@@ -159,7 +159,7 @@ ADT_PREBUILTS="\
     prebuilts/tools/common/m2/repository/org/ow2/asm/asm/4.0/asm-4.0.jar \
     prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/4.0/asm-tree-4.0.jar \
     prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/4.0/asm-analysis-4.0.jar \
-    prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar"
+    prebuilts/tools/common/m2/repository/com/android/tools/external/lombok/lombok-ast/0.2.2/lombok-ast-0.2.2.jar"
 
 LIBS="$LIBS $ADT_LIBS"
 CP_FILES="$CP_FILES @:$ADT_DEST $ADT_LIBS $ADT_PREBUILTS"
