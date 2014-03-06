@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -35,12 +36,16 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.SwingUtilities;
 
 abstract class TemplateWizard extends Wizard implements INewWizard {
     private static final String PROJECT_LOGO_LARGE = "android-64"; //$NON-NLS-1$
@@ -144,6 +149,15 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
     protected abstract List<String> getFilesToOpen();
 
     /**
+     * Returns the list of files to open, which might be empty. This method will
+     * only be called <b>after</b> {@link #computeChanges()} has been called.
+     *
+     * @return a list of files to open
+     */
+    @NonNull
+    protected abstract List<Runnable> getFinalizingActions();
+
+    /**
      * Computes the changes to the {@link #getProject()} this template should
      * perform
      *
@@ -173,7 +187,6 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
         }
-
         return true;
     }
 
@@ -184,11 +197,12 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
             getContainer().run(true, false, new IRunnableWithProgress() {
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
-                        InterruptedException {
+                InterruptedException {
                     boolean ok = performFinish(monitor);
                     success.set(ok);
                 }
             });
+
         } catch (InvocationTargetException e) {
             AdtPlugin.log(e, null);
             return false;
@@ -200,7 +214,6 @@ abstract class TemplateWizard extends Wizard implements INewWizard {
         if (success.get()) {
             // Open the primary file/files
             NewTemplateWizard.openFiles(getProject(), getFilesToOpen(), mWorkbench);
-
             return true;
         } else {
             return false;
