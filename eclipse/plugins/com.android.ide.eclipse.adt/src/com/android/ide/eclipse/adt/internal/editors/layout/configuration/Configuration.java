@@ -39,6 +39,7 @@ import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo.ActivityAttributes;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -63,7 +64,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * A {@linkplain Configuration} is a selection of device, orientation, theme,
@@ -707,8 +707,10 @@ public class Configuration {
 
             String activity = getActivity();
             if (activity != null) {
-                Map<String, String> activityThemes = manifest.getActivityThemes();
-                preferred = activityThemes.get(activity);
+                ActivityAttributes attributes = manifest.getActivityAttributes(activity);
+                if (attributes != null) {
+                    preferred = attributes.getTheme();
+                }
             }
             if (preferred == null) {
                 preferred = defaultTheme;
