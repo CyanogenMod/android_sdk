@@ -101,8 +101,10 @@ void* SmartPtrBase::release() {
         mPtr = NULL;
         mRefCount = NULL;
 
-        if (old_refcount->decrement())
+        if (old_refcount->decrement()) {
+          delete old_refcount;
           return old_ptr;
+        }
     }
 
     return NULL;
