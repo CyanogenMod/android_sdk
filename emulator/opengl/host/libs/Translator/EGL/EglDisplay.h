@@ -21,12 +21,13 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <utils/threads.h>
-#include <GLcommon/SmartPtr.h>
+#include "emugl/common/smart_ptr.h"
 
 #include "EglConfig.h"
 #include "EglContext.h"
 #include "EglSurface.h"
 #include "EglWindowSurface.h"
+
 
 
 

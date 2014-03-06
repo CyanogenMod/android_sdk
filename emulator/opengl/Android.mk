@@ -16,7 +16,9 @@ EMUGL_PATH := $(call my-dir)
 # This is always set to a module's LOCAL_C_INCLUDES
 # See the definition of emugl-begin-module in common.mk
 #
-EMUGL_COMMON_INCLUDES := $(EMUGL_PATH)/host/include/libOpenglRender
+EMUGL_COMMON_INCLUDES := \
+    $(EMUGL_PATH)/host/include/libOpenglRender \
+    $(EMUGL_PATH)/shared
 
 ifeq ($(BUILD_STANDALONE_EMULATOR),true)
 EMUGL_COMMON_INCLUDES := $(EMUGL_PATH)/host/libs/Translator/include
@@ -57,6 +59,7 @@ include $(EMUGL_PATH)/common.mk
 # source files (see all emugl-gen-decoder/encoder in common.mk)
 #
 include $(EMUGL_PATH)/host/tools/emugen/Android.mk
+include $(EMUGL_PATH)/shared/emugl/common/Android.mk
 include $(EMUGL_PATH)/shared/OpenglOsUtils/Android.mk
 include $(EMUGL_PATH)/shared/OpenglCodecCommon/Android.mk
 

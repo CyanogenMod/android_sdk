@@ -19,10 +19,10 @@
 #include <map>
 #include <EGL/egl.h>
 #include <GLcommon/GLutils.h>
-#include <GLcommon/SmartPtr.h>
 #include <GLcommon/TranslatorIfaces.h>
 #include <GLcommon/objectNameManager.h>
 
+#include "emugl/common/smart_ptr.h"
 
 #include "EglConfig.h"
 #include "EglSurface.h"
@@ -30,7 +30,7 @@
 
 
 class EglContext;
-typedef  SmartPtr<EglContext> ContextPtr;
+typedef  emugl::SmartPtr<EglContext> ContextPtr;
 
 class EglDisplay;
 

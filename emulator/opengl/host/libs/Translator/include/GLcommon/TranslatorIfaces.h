@@ -74,8 +74,8 @@ struct EglImage
     unsigned int border;
 };
 
-typedef SmartPtr<EglImage> ImagePtr;
-typedef  std::map< unsigned int, ImagePtr>       ImagesHndlMap;
+typedef emugl::SmartPtr<EglImage> ImagePtr;
+typedef std::map< unsigned int, ImagePtr>       ImagesHndlMap;
 
 class GLEScontext;
 
