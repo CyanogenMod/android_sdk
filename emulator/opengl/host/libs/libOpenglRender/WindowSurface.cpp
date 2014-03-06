@@ -58,9 +58,6 @@ WindowSurface *WindowSurface::create(int p_config, int p_width, int p_height)
     }
     win->m_fbconf = fbconf;
 
-    FrameBuffer *fb = FrameBuffer::getFB();
-    const FrameBufferCaps &caps = fb->getCaps();
-
     //
     // Create a pbuffer to be used as the egl surface
     // for that window.
@@ -208,8 +205,6 @@ bool WindowSurface::resizePbuffer(unsigned int p_width, unsigned int p_height)
         s_egl.eglDestroySurface(fb->getDisplay(), m_eglSurface);
         m_eglSurface = NULL;
     }
-
-    const FrameBufferCaps &caps = fb->getCaps();
 
     //
     // Create pbuffer surface.
