@@ -413,7 +413,7 @@ public class SystraceOptionsDialogV1 extends TitleAreaDialog implements ISystrac
 
         @Override
         public String getTags() {
-            return mTag == 0 ? null : Integer.toHexString(mTag);
+            return mTag == 0 ? null : "0x" + Integer.toHexString(mTag);
         }
 
         @Override
