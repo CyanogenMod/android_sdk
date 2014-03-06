@@ -178,6 +178,8 @@ import org.eclipse.wb.internal.core.editor.structure.PageSiteComposite;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1855,6 +1857,44 @@ public class GraphicalEditorPart extends EditorPart
         if (throwable instanceof RenderSecurityException) {
             addActionLink(mErrorLabel, ActionLinkStyleRange.LINK_DISABLE_SANDBOX,
                     "\nTurn off custom view rendering sandbox\n");
+
+            StringBuilder builder = new StringBuilder(200);
+            String lastFailedPath = RenderSecurityManager.getLastFailedPath();
+            if (lastFailedPath != null) {
+                builder.append("Diagnostic info for ADT bug report:\n");
+                builder.append("Failed path: ").append(lastFailedPath).append('\n');
+                String tempDir = System.getProperty("java.io.tmpdir");
+                builder.append("Normal temp dir: ").append(tempDir).append('\n');
+                File normalized = new File(tempDir);
+                builder.append("Normalized temp dir: ").append(normalized.getPath()).append('\n');
+                try {
+                    builder.append("Canonical temp dir: ").append(normalized.getCanonicalPath())
+                    .append('\n');
+                } catch (IOException e) {
+                    // ignore
+                }
+                builder.append("os.name: ").append(System.getProperty("os.name")).append('\n');
+                builder.append("os.version: ").append(System.getProperty("os.version"));
+                builder.append('\n');
+                builder.append("java.runtime.version: ");
+                builder.append(System.getProperty("java.runtime.version"));
+            }
+            if (throwable.getMessage().equals("Unable to create temporary file")) {
+                String javaVersion = System.getProperty("java.version");
+                if (javaVersion.startsWith("1.7.0_")) {
+                    int version = Integer
+                            .parseInt(javaVersion.substring(javaVersion.indexOf('_') + 1));
+                    if (version > 0 && version < 45) {
+                        builder.append('\n');
+                        builder.append("Tip: This may be caused by using an older version " +
+                                "of JDK 1.7.0; try using at least 1.7.0_45 (you are using " +
+                                javaVersion + ")");
+                    }
+                }
+            }
+            if (builder.length() > 0) {
+                addText(mErrorLabel, builder.toString());
+            }
         }
 
         StackTraceElement[] frames = throwable.getStackTrace();
