@@ -23,6 +23,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.actions.AddSupportJarAction;
 import com.android.ide.eclipse.adt.internal.assetstudio.AssetType;
 import com.android.ide.eclipse.adt.internal.assetstudio.ConfigureAssetSetPage;
 import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardState;
@@ -271,8 +272,14 @@ public class NewProjectWizard extends TemplateWizard {
         TemplateHandler.addDirectoryParameters(paramMap, getProject());
         // We don't know at this point whether the activity is going to need
         // AppCompat so we just assume that it will.
-        if (mValues.createActivity) {
+        if (mValues.createActivity && mValues.minSdkLevel < 14) {
             paramMap.put(ATTR_APP_COMPAT, true);
+            getFinalizingActions().add(new Runnable() {
+                @Override
+                public void run() {
+                    AddSupportJarAction.installAppCompatLibrary(mProject, true);
+                }
+            });
         }
 
         return template.render(mProject, paramMap);
