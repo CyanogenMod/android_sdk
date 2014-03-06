@@ -27,9 +27,10 @@ host_commonSources := \
 
 $(call emugl-begin-host-executable,emugl_common_host_unittests)
 LOCAL_SRC_FILES := $(host_commonSources)
-LOCAL_C_INCLUDES += external/gtest/include
-LOCAL_LDFLAGS += -lpthread
-$(call emugl-export,STATIC_LIBRARIES, libemugl_common libgtest_host libgtest_main_host)
+$(call emugl-import,libemugl_common libemugl_gtest)
 $(call emugl-end-module)
 
-# TODO(digit): 64-bit version, once we have 64-bit gtest.
+$(call emugl-begin-host-executable,emugl64_common_host_unittests)
+LOCAL_SRC_FILES := $(host_commonSources)
+$(call emugl-import,lib64emugl_common lib64emugl_gtest)
+$(call emugl-end-module)
