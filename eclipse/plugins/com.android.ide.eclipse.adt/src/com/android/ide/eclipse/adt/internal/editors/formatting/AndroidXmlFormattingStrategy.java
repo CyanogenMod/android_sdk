@@ -559,6 +559,11 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
                     String[] segments = resourceFolder.split("-"); //$NON-NLS-1$
                     ResourceType type = ResourceType.getEnum(segments[0]);
                     if (type != null) {
+                        // <resources> files found in res/xml/ should be formatted as
+                        // resource files!
+                        if (type == ResourceType.XML && style == XmlFormatStyle.RESOURCE) {
+                            return style;
+                        }
                         style = EclipseXmlPrettyPrinter.get(type);
                     }
                 }
