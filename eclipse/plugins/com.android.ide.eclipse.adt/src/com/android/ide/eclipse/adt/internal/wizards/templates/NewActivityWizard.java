@@ -20,18 +20,25 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectW
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_MIN_API_LEVEL;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_PACKAGE_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewProjectWizard.ATTR_TARGET_API;
+import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 
 import com.android.annotations.NonNull;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ui.IWorkbench;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Set;
 
@@ -129,6 +136,20 @@ public class NewActivityWizard extends TemplateWizard {
         }
 
         return super.canFinish();
+    }
+
+    @Override
+    public boolean performFinish(IProgressMonitor monitor) throws InvocationTargetException {
+        boolean success = super.performFinish(monitor);
+
+        if (success) {
+	        List<Runnable> finalizingTasks = getFinalizingActions();
+	        for (Runnable r : finalizingTasks) {
+	            r.run();
+	        }
+	        return true;
+        }
+        return false;
     }
 
     @Override
