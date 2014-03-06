@@ -18,6 +18,7 @@
 #include "EGLDispatch.h"
 #include "GLDispatch.h"
 #include "ThreadInfo.h"
+#include "GLcommon/GLutils.h"
 #ifdef WITH_GLES2
 #include "GL2Dispatch.h"
 #endif
@@ -92,17 +93,19 @@ ColorBuffer *ColorBuffer::create(int p_width, int p_height,
     cb->m_internalFormat = texInternalFormat;
 
     if (fb->getCaps().has_eglimage_texture_2d) {
-        cb->m_eglImage = s_egl.eglCreateImageKHR(fb->getDisplay(),
-                                                 s_egl.eglGetCurrentContext(),
-                                                 EGL_GL_TEXTURE_2D_KHR,
-                                                 (EGLClientBuffer)cb->m_tex,
-                                                 NULL);
+        cb->m_eglImage = s_egl.eglCreateImageKHR(
+                fb->getDisplay(),
+                s_egl.eglGetCurrentContext(),
+                EGL_GL_TEXTURE_2D_KHR,
+                (EGLClientBuffer)SafePointerFromUInt(cb->m_tex),
+                NULL);
 
-        cb->m_blitEGLImage = s_egl.eglCreateImageKHR(fb->getDisplay(),
-                                                 s_egl.eglGetCurrentContext(),
-                                                 EGL_GL_TEXTURE_2D_KHR,
-                                                 (EGLClientBuffer)cb->m_blitTex,
-                                                 NULL);
+        cb->m_blitEGLImage = s_egl.eglCreateImageKHR(
+                fb->getDisplay(),
+                s_egl.eglGetCurrentContext(),
+                EGL_GL_TEXTURE_2D_KHR,
+                (EGLClientBuffer)SafePointerFromUInt(cb->m_blitTex),
+                NULL);
     }
 
     fb->unbind_locked();
