@@ -143,11 +143,11 @@ public class NewActivityWizard extends TemplateWizard {
         boolean success = super.performFinish(monitor);
 
         if (success) {
-	        List<Runnable> finalizingTasks = getFinalizingActions();
-	        for (Runnable r : finalizingTasks) {
-	            r.run();
-	        }
-	        return true;
+            List<Runnable> finalizingTasks = getFinalizingActions();
+            for (Runnable r : finalizingTasks) {
+                r.run();
+            }
+            return true;
         }
         return false;
     }
