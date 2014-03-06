@@ -51,68 +51,53 @@ abstract class BaseClasspathContainerInitializer extends ClasspathContainerIniti
                 AdtPlugin.printErrorToConsole(project, errorMessage);
             }
 
-            try {
-                BaseProjectHelper.markProject(project, markerType,
-                        errorMessage, IMarker.SEVERITY_ERROR, IMarker.PRIORITY_HIGH);
-            } catch (CoreException e) {
-                // In some cases, the workspace may be locked for modification when we
-                // pass here.
-                // We schedule a new job to put the marker after.
-                final String fmessage = errorMessage;
-                Job markerJob = new Job("Android SDK: Resolving error markers") {
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        try {
-                            BaseProjectHelper.markProject(project,
-                                    markerType,
-                                    fmessage, IMarker.SEVERITY_ERROR,
-                                    IMarker.PRIORITY_HIGH);
-                        } catch (CoreException e2) {
-                            AdtPlugin.log(e2, null);
-                            // Don't return e2.getStatus(); the job control will then produce
-                            // a popup with this error, which isn't very interesting for the
-                            // user.
-                        }
-
-                        return Status.OK_STATUS;
+            // Use a job to prevent requiring a workspace lock in this thread.
+            final String fmessage = errorMessage;
+            Job markerJob = new Job("Android SDK: Resolving error markers") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    try {
+                        BaseProjectHelper.markProject(project,
+                                markerType,
+                                fmessage, IMarker.SEVERITY_ERROR,
+                                IMarker.PRIORITY_HIGH);
+                    } catch (CoreException e2) {
+                        AdtPlugin.log(e2, null);
+                        // Don't return e2.getStatus(); the job control will then produce
+                        // a popup with this error, which isn't very interesting for the
+                        // user.
                     }
-                };
 
-                // build jobs are run after other interactive jobs
-                markerJob.setPriority(Job.BUILD);
-                markerJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
-                markerJob.schedule();
-            }
-        } else {
-            // no error, remove existing markers.
-            try {
-                if (project.isAccessible()) {
-                    project.deleteMarkers(markerType, true,
-                            IResource.DEPTH_INFINITE);
+                    return Status.OK_STATUS;
                 }
-            } catch (CoreException ce) {
-                // In some cases, the workspace may be locked for modification when we pass
-                // here, so we schedule a new job to put the marker after.
-                Job markerJob = new Job("Android SDK: Resolving error markers") {
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        try {
-                            if (project.isAccessible()) {
-                                project.deleteMarkers(markerType, true,
-                                        IResource.DEPTH_INFINITE);
-                            }
-                        } catch (CoreException e2) {
-                            AdtPlugin.log(e2, null);
+            };
+
+            // build jobs are run after other interactive jobs
+            markerJob.setPriority(Job.BUILD);
+            markerJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
+            markerJob.schedule();
+        } else {
+            // Use a job to prevent requiring a workspace lock in this thread.
+            Job markerJob = new Job("Android SDK: Resolving error markers") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    try {
+                        if (project.isAccessible()) {
+                            project.deleteMarkers(markerType, true,
+                                    IResource.DEPTH_INFINITE);
                         }
-
-                        return Status.OK_STATUS;
+                    } catch (CoreException e2) {
+                        AdtPlugin.log(e2, null);
                     }
-                };
 
-                // build jobs are run after other interactive jobs
-                markerJob.setPriority(Job.BUILD);
-                markerJob.schedule();
-            }
+                    return Status.OK_STATUS;
+                }
+            };
+
+            // build jobs are run after other interactive jobs
+            markerJob.setPriority(Job.BUILD);
+            markerJob.setRule(ResourcesPlugin.getWorkspace().getRoot());
+            markerJob.schedule();
         }
     }
 }

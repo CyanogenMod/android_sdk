@@ -87,7 +87,12 @@ public class AddSupportJarAction implements IObjectActionDelegate {
     private static final String FD_GRIDLAYOUT = "gridlayout";                      //$NON-NLS-1$
     private static final String FD_V7 = "v7";                                      //$NON-NLS-1$
     private static final String FD_V4 = "v4";                                      //$NON-NLS-1$
+    private static final String FD_V13 = "v13";                                    //$NON-NLS-1$
+    private static final String FD_APPCOMPAT = "appcompat";                        //$NON-NLS-1$
+    private static final String FD_LIBS = "libs";                                  //$NON-NLS-1$
     private static final String ANDROID_SUPPORT_V4_JAR = "android-support-v4.jar"; //$NON-NLS-1$
+    private static final String ANDROID_SUPPORT_V13_JAR = "android-support-v13.jar";//$NON-NLS-1$
+    private static final String APPCOMPAT_V7_JAR = "android-support-v7-appcompat.jar";//$NON-NLS-1$
     private ISelection mSelection;
 
     /**
@@ -238,7 +243,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
             }
         }
 
-       return -1;
+        return -1;
     }
 
     /**
@@ -278,7 +283,55 @@ public class AddSupportJarAction implements IObjectActionDelegate {
             }
 
             // Create workspace copy of the project and add library dependency
-            IProject libraryProject = createLibraryProject(libraryPath, project, waitForFinish);
+            IProject libraryProject = createLibraryProject(libraryPath, project,
+                    "gridlayout_v7", waitForFinish); //$NON-NLS-1$
+            if (libraryProject != null) {
+                return addLibraryDependency(libraryProject, project, waitForFinish);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Similar to {@link #install}, but rather than copy a jar into the given
+     * project, it creates a new library project in the workspace for the
+     * support library, and adds a library dependency on the newly
+     * installed library from the given project.
+     *
+     * @param project the project to add a dependency on the library to
+     * @param waitForFinish If true, block until the task has finished
+     * @return true if the installation was successful (or if
+     *         <code>waitForFinish</code> is false, if the installation is
+     *         likely to be successful - e.g. the user has at least agreed to
+     *         all installation prompts.)
+     */
+    public static boolean installAppCompatLibrary(final IProject project, boolean waitForFinish) {
+        final IJavaProject javaProject = JavaCore.create(project);
+        if (javaProject != null) {
+
+            File supportPath = getSupportPackageDir();
+            if (!supportPath.isDirectory()) {
+                File path = installSupport(7);
+                if (path == null) {
+                    return false;
+                }
+                assert path.equals(supportPath);
+            }
+            File libraryPath = new File(supportPath, FD_V7 + File.separator + FD_APPCOMPAT);
+            if (!libraryPath.isDirectory()) {
+                // Upgrade support package: it's out of date. The SDK manager will
+                // perform an upgrade to the latest version if the package is already installed.
+                File path = installSupport(-1);
+                if (path == null) {
+                    return false;
+                }
+                assert path.equals(libraryPath) : path;
+            }
+
+            // Create workspace copy of the project and add library dependency
+            IProject libraryProject = createLibraryProject(libraryPath, project,
+                    "appcompat_v7", waitForFinish); // $NON-NLS-1$
             if (libraryProject != null) {
                 return addLibraryDependency(libraryProject, project, waitForFinish);
             }
@@ -343,6 +396,25 @@ public class AddSupportJarAction implements IObjectActionDelegate {
     }
 
     /**
+     * Returns a path to the installed jar file for the support library,
+     * or null if it does not exist
+     *
+     * @return a path to the v13.jar or null
+     */
+    @Nullable
+    public static File getSupport13JarFile() {
+        File supportDir = getSupportPackageDir();
+        if (supportDir != null) {
+            File path = new File(supportDir, FD_V13 + File.separator + ANDROID_SUPPORT_V13_JAR);
+            if (path.exists()) {
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Creates a library project in the Eclipse workspace out of the grid layout project
      * in the SDK tree.
      *
@@ -354,6 +426,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
     private static IProject createLibraryProject(
             final File libraryPath,
             final IProject project,
+            final String libraryName,
             boolean waitForFinish) {
 
         // Install a new library into the workspace. This is a copy rather than
@@ -367,7 +440,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
             IWorkspaceRoot root = workspace.getRoot();
 
             String name = AdtUtils.getUniqueProjectName(
-                    "gridlayout_v7", "_"); //$NON-NLS-1$ //$NON-NLS-2$
+                    libraryName, "_"); //$NON-NLS-1$
             newProject = root.getProject(name);
             IProjectDescription description = workspace.newProjectDescription(name);
             String[] natures = new String[] { AdtConstants.NATURE_DEFAULT, JavaCore.NATURE_ID };
@@ -381,7 +454,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
             sourceDir.copy(destDir, EFS.OVERWRITE, null);
 
             // Make sure the src folder exists
-            destDir.getChild("src").mkdir(0, null /*monitor*/);
+            destDir.getChild(SdkConstants.SRC_FOLDER).mkdir(0, null /*monitor*/);
 
             // Set the android platform to the same level as the calling project
             ProjectState state = Sdk.getProjectState(project);
@@ -478,7 +551,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
                     return Status.OK_STATUS;
                 } catch (Exception e) {
                     return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,
-                                      "Failed", e); //$NON-NLS-1$
+                            "Failed", e); //$NON-NLS-1$
                 } finally {
                     if (monitor != null) {
                         monitor.done();

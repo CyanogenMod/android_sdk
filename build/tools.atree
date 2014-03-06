@@ -23,9 +23,7 @@
 #
 
 prebuilts/devtools/tools/lib                        tools/lib
-# manual copy of lombok-ast for now
-prebuilts/tools/common/lombok-ast/lombok-ast-0.2.1.jar tools/lib/lombok-ast.jar
-prebuilts/tools/common/lombok-ast/LICENSE.txt       tools/lib/lombok-ast-NOTICE.txt
+prebuilts/devtools/notices/NOTICE.txt               tools/NOTICE.txt
 
 prebuilts/devtools/tools/android                    tools/android
 prebuilts/devtools/tools/draw9patch                 tools/draw9patch
@@ -37,7 +35,6 @@ prebuilts/devtools/tools/monkeyrunner               tools/monkeyrunner
 prebuilts/devtools/tools/traceview                  tools/traceview
 prebuilts/devtools/tools/uiautomatorviewer          tools/uiautomatorviewer
 
-prebuilts/devtools/notices/NOTICE.txt               tools/NOTICE.txt
 
 
 # version files for the SDK updater, from sdk.git

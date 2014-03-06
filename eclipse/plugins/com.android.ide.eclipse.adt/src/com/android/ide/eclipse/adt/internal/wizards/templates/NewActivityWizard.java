@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtUtils;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
@@ -141,6 +142,13 @@ public class NewActivityWizard extends TemplateWizard {
     protected List<String> getFilesToOpen() {
         TemplateHandler activityTemplate = mActivityValues.getTemplateHandler();
         return activityTemplate.getFilesToOpen();
+    }
+
+    @Override
+    @NonNull
+    protected List<Runnable> getFinalizingActions() {
+        TemplateHandler activityTemplate = mActivityValues.getTemplateHandler();
+        return activityTemplate.getFinalizingActions();
     }
 
     @Override

@@ -29,6 +29,7 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.ApplicationInfoPa
 import com.android.ide.eclipse.adt.internal.wizards.newproject.ProjectNamePage;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.eclipse.core.resources.IResource;
@@ -62,8 +63,6 @@ import org.eclipse.swt.widgets.Text;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import lombok.ast.libs.org.parboiled.google.collect.Lists;
 
 /**
  * First wizard page in the "New Project From Template" wizard
