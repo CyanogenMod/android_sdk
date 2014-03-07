@@ -30,7 +30,6 @@ PRODUCT_PACKAGES += \
 	ant-glob \
 	annotations \
 	mksdcard \
-	monitor \
 	fastboot \
 	emugen
 
