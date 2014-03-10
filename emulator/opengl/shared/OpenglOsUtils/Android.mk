@@ -10,6 +10,7 @@ LOCAL_PATH := $(call my-dir)
 
 host_common_SRC_FILES := osDynLibrary.cpp
 host_common_LDLIBS :=
+host_common_INCLUDES := $(LOCAL_PATH)
 
 ifeq ($(HOST_OS),windows)
     host_common_SRC_FILES += \
@@ -29,15 +30,17 @@ endif
 
 ### 32-bit host library ####
 $(call emugl-begin-host-static-library,libOpenglOsUtils)
-    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    $(call emugl-export,C_INCLUDES,$(host_common_INCLUDES))
     LOCAL_SRC_FILES = $(host_common_SRC_FILES)
     $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
+    $(call emugl-import,libemugl_common)
 $(call emugl-end-module)
 
 ### 64-bit host library ####
 $(call emugl-begin-host-static-library,lib64OpenglOsUtils)
-    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    $(call emugl-export,C_INCLUDES,$(host_common_INCLUDES))
     LOCAL_SRC_FILES = $(host_common_SRC_FILES)
     $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
     $(call emugl-export,CFLAGS,-m64)
+    $(call emugl-import,lib64emugl_common)
 $(call emugl-end-module)
