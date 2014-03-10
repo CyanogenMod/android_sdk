@@ -19,7 +19,7 @@
 #include "RendererSurface.h"
 #include "RendererContext.h"
 #include "NativeWindowing.h"
-#include <utils/threads.h>
+#include "emugl/common/mutex.h"
 
 class RenderingThread;
 
@@ -57,6 +57,6 @@ private:
     NativeWindowing *m_nw;
     EGLDisplay m_dpy;
 
-    android::Mutex m_mutex; // single global mutex for the renderer class;
+    emugl::Mutex m_mutex; // single global mutex for the renderer class;
 };
 #endif
