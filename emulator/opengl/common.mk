@@ -28,6 +28,20 @@ emugl-begin-host-executable = $(call emugl-begin-module,$1,HOST_EXECUTABLE,HOST)
 _emugl_modules :=
 _emugl_HOST_modules :=
 
+ifeq ($(BUILD_STANDALONE_EMULATOR),true)
+define EMUGL_LOCAL_EXTRAS
+LOCAL_CC := $$(call my-host-tool,CC)
+LOCAL_CXX := $$(call my-host-tool,CXX)
+LOCAL_LD := $$(call my-host-tool,LD)
+LOCAL_AR := $$(call my-host-tool,AR)
+LOCAL_CFLAGS := $$(call my-host-tool,CFLAGS) $$(LOCAL_CFLAGS)
+LOCAL_LDFLAGS := $$(call my-host-tool,LDFLAGS) $$(LOCAL_LDFLAGS)
+LOCAL_LDLIBS := $$(LOCAL_LDLIBS) $$(call my-host-tool,LDLIBS)
+endef
+else  # BUILD_STANDALONE_EMULATOR != true
+EMUGL_LOCAL_EXTRAS =
+endif  # BUILD_STANDALONE_EMULATOR != true
+
 # do not use directly, see functions above instead
 emugl-begin-module = \
     $(eval include $(CLEAR_VARS)) \
@@ -35,14 +49,16 @@ emugl-begin-module = \
     $(eval LOCAL_MODULE_TAGS := $(if $3,,debug)) \
     $(eval LOCAL_MODULE_CLASS := $(patsubst HOST_%,%,$(patsubst %EXECUTABLE,%EXECUTABLES,$(patsubst %LIBRARY,%LIBRARIES,$2)))) \
     $(eval LOCAL_IS_HOST_MODULE := $(if $3,true,))\
-    $(eval LOCAL_C_INCLUDES := $(EMUGL_COMMON_INCLUDES)) \
-    $(eval LOCAL_CFLAGS := $(EMUGL_COMMON_CFLAGS)) \
+    $(eval LOCAL_C_INCLUDES += $(EMUGL_COMMON_INCLUDES)) \
+    $(eval LOCAL_CFLAGS += $(EMUGL_COMMON_CFLAGS)) \
+    $(eval LOCAL_LDLIBS += -lstdc++) \
     $(eval LOCAL_PRELINK_MODULE := false)\
     $(eval _EMUGL_INCLUDE_TYPE := $(BUILD_$2)) \
     $(call _emugl-init-module,$1,$2,$3)
 
 # Used to end a module definition, see function definitions above
 emugl-end-module = \
+    $(eval $(EMUGL_LOCAL_EXTRAS)) \
     $(eval include $(_EMUGL_INCLUDE_TYPE))\
     $(eval _EMUGL_INCLUDE_TYPE :=) \
     $(eval _emugl_$(_emugl_HOST)modules += $(_emugl_MODULE))\
@@ -118,7 +134,7 @@ _emugl-init-module = \
 # $2: Value(s) to append to the export
 emugl-export = \
     $(eval _emugl.$(_emugl_MODULE).export.$1 += $2)\
-    $(eval LOCAL_$1 := $2 $(LOCAL_$1))
+    $(eval LOCAL_$1 := $(LOCAL_$1) $2)
 
 emugl-export-outer = \
     $(eval _emugl.$(_emugl_MODULE).export.$1 += $2)
@@ -148,7 +164,7 @@ _emugl-module-import = \
             $(call _emugl-module-import,$(_sub))\
         )\
         $(foreach _type,$(EMUGL_EXPORT_TYPES),\
-            $(eval LOCAL_$(_type) := $(_emugl.$1.export.$(_type)) $(LOCAL_$(_type)))\
+            $(eval LOCAL_$(_type) := $(LOCAL_$(_type)) $(_emugl.$1.export.$(_type)))\
         )\
         $(if $(filter EXECUTABLE SHARED_LIBRARY,$(_emugl.$(_emugl_MODULE).type)),\
             $(if $(filter STATIC_LIBRARY,$(_emugl.$1.type)),\
