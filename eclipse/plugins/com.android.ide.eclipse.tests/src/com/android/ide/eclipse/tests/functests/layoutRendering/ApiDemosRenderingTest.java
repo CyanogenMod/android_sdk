@@ -18,6 +18,7 @@ package com.android.ide.eclipse.tests.functests.layoutRendering;
 
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.api.ActionBarCallback;
 import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.HardwareConfig;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
@@ -163,6 +164,11 @@ public class ApiDemosRenderingTest extends SdkLoadingTestCase {
         @Override
         public ILayoutPullParser getParser(ResourceValue layoutResource) {
             return null;
+        }
+
+        @Override
+        public ActionBarCallback getActionBarCallback() {
+            return new ActionBarCallback();
         }
     }
 

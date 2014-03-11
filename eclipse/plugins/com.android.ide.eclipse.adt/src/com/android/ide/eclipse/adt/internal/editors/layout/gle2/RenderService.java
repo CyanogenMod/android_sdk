@@ -51,6 +51,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo.ActivityAttributes;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -483,6 +484,18 @@ public class RenderService {
             try {
                 params.setAppLabel(manifestInfo.getApplicationLabel());
                 params.setAppIcon(manifestInfo.getApplicationIcon());
+                String activity = mEditor.getConfigurationChooser().getConfiguration().getActivity();
+                if (activity != null) {
+                    ActivityAttributes info = manifestInfo.getActivityAttributes(activity);
+                    if (info != null) {
+                        if (info.getLabel() != null) {
+                            params.setAppLabel(info.getLabel());
+                        }
+                        if (info.getIcon() != null) {
+                            params.setAppIcon(info.getIcon());
+                        }
+                    }
+                }
             } catch (Exception e) {
                 // ignore.
             }
