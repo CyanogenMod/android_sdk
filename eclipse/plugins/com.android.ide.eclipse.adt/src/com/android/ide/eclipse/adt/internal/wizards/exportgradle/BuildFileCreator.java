@@ -16,8 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.exportgradle;
 
+import static com.android.SdkConstants.GRADLE_LATEST_VERSION;
+import static com.android.SdkConstants.GRADLE_PLUGIN_LATEST_VERSION;
+import static com.android.SdkConstants.GRADLE_PLUGIN_NAME;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
@@ -27,6 +33,7 @@ import com.android.xml.AndroidManifest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IFile;
@@ -40,17 +47,22 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -66,7 +78,7 @@ public class BuildFileCreator {
     private static final String GRADLE_WRAPPER_LOCATION =
             "tools/templates/gradle/wrapper"; //$NON-NLS-1$
     static final String PLUGIN_CLASSPATH =
-            "classpath 'com.android.tools.build:gradle:0.5.+'"; //$NON-NLS-1$
+            "classpath '" + GRADLE_PLUGIN_NAME + GRADLE_PLUGIN_LATEST_VERSION + "'"; //$NON-NLS-1$
     static final String MAVEN_REPOSITORY = "mavenCentral()"; //$NON-NLS-1$
 
     private static final String[] GRADLE_WRAPPER_FILES = new String[] {
@@ -307,6 +319,10 @@ public class BuildFileCreator {
                 File src = new File(from, file);
                 dest.getParentFile().mkdirs();
                 new FileOp().copyFile(src, dest);
+
+                if (src.getName().equals(GRADLE_PROPERTIES)) {
+                    updateGradleDistributionUrl(GRADLE_LATEST_VERSION, dest);
+                }
                 dest.setExecutable(src.canExecute());
                 status.addFileStatus(ExportStatus.FileStatus.OK, dest);
             } catch (IOException e) {
@@ -377,6 +393,22 @@ public class BuildFileCreator {
         mBuildFile.append("    compileSdkVersion " + buildApi + "\n"); //$NON-NLS-1$
         mBuildFile.append("    buildToolsVersion \"" + toolsVersion + "\"\n"); //$NON-NLS-1$
         mBuildFile.append("\n"); //$NON-NLS-1$
+
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(projectState.getProject());
+            // otherwise we check source compatibility
+            String source = javaProject.getOption(JavaCore.COMPILER_SOURCE, true);
+            if (JavaCore.VERSION_1_7.equals(source)) {
+                mBuildFile.append(
+                        "    compileOptions {\n" + //$NON-NLS-1$
+                        "        sourceCompatibility JavaVersion.VERSION_1_7\n" + //$NON-NLS-1$
+                        "        targetCompatibility JavaVersion.VERSION_1_7\n" + //$NON-NLS-1$
+                        "    }\n" + //$NON-NLS-1$
+                        "\n"); //$NON-NLS-1$
+            }
+        } catch (CoreException e) {
+            // Ignore compliance level, go with default
+        }
     }
 
     /**
@@ -540,5 +572,69 @@ public class BuildFileCreator {
         }
 
         return confirmedFiles;
+    }
+
+    // -------------------------------------------------------------------------------
+    // Fix gradle wrapper version. This code is from GradleUtil in the Studio plugin:
+    // -------------------------------------------------------------------------------
+
+    private static final String GRADLE_PROPERTIES = "gradle-wrapper.properties";
+    private static final String GRADLEW_PROPERTIES_PATH =
+            "gradle" + File.separator + "wrapper" + File.separator + GRADLE_PROPERTIES;
+    private static final String GRADLEW_DISTRIBUTION_URL_PROPERTY_NAME = "distributionUrl";
+
+    @NonNull
+    private static File getGradleWrapperPropertiesFilePath(@NonNull File projectRootDir) {
+        return new File(projectRootDir, GRADLEW_PROPERTIES_PATH);
+    }
+
+    @Nullable
+    public static File findWrapperPropertiesFile(@NonNull File projectRootDir) {
+      File wrapperPropertiesFile = getGradleWrapperPropertiesFilePath(projectRootDir);
+      return wrapperPropertiesFile.isFile() ? wrapperPropertiesFile : null;
+    }
+
+    private static boolean updateGradleDistributionUrl(
+            @NonNull String gradleVersion,
+            @NonNull File propertiesFile) throws IOException {
+        Properties properties = loadGradleWrapperProperties(propertiesFile);
+        String gradleDistributionUrl = getGradleDistributionUrl(gradleVersion, false);
+        String property = properties.getProperty(GRADLEW_DISTRIBUTION_URL_PROPERTY_NAME);
+        if (property != null
+                && (property.equals(gradleDistributionUrl) || property
+                        .equals(getGradleDistributionUrl(gradleVersion, true)))) {
+            return false;
+        }
+        properties.setProperty(GRADLEW_DISTRIBUTION_URL_PROPERTY_NAME, gradleDistributionUrl);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(propertiesFile);
+            properties.store(out, null);
+            return true;
+        } finally {
+            Closeables.close(out, true);
+        }
+    }
+
+    @NonNull
+    private static Properties loadGradleWrapperProperties(@NonNull File propertiesFile)
+            throws IOException {
+        Properties properties = new Properties();
+        FileInputStream fileInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(propertiesFile);
+            properties.load(fileInputStream);
+            return properties;
+        } finally {
+            Closeables.close(fileInputStream, true);
+        }
+    }
+
+    @NonNull
+    private static String getGradleDistributionUrl(@NonNull String gradleVersion,
+            boolean binOnly) {
+        String suffix = binOnly ? "bin" : "all";
+        return String.format("http://services.gradle.org/distributions/gradle-%1$s-" + suffix
+                + ".zip", gradleVersion);
     }
 }
