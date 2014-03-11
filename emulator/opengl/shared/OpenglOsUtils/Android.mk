@@ -42,6 +42,7 @@ ifdef EMUGL_BUILD_64BITS
         $(call emugl-export,C_INCLUDES,$(host_common_INCLUDES))
         LOCAL_SRC_FILES = $(host_common_SRC_FILES)
         $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
+        $(call emugl-import,lib64emugl_common)
         $(call emugl-export,CFLAGS,-m64 -fPIC)
     $(call emugl-end-module)
 endif
