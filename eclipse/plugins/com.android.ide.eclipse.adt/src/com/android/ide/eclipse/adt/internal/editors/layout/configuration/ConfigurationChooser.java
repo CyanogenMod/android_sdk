@@ -58,6 +58,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorP
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo.ActivityAttributes;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -1586,8 +1587,11 @@ public class ConfigurationChooser extends Composite
 
         // See if there is a default theme assigned to this activity, and if so, use it
         ManifestInfo manifest = ManifestInfo.get(mEditedFile.getProject());
-        Map<String, String> activityThemes = manifest.getActivityThemes();
-        String preferred = activityThemes.get(activity);
+        String preferred = null;
+        ActivityAttributes attributes = manifest.getActivityAttributes(activity);
+        if (attributes != null) {
+            preferred = attributes.getTheme();
+        }
         if (preferred != null && !Objects.equal(preferred, mConfiguration.getTheme())) {
             // Yes, switch to it
             selectTheme(preferred);
