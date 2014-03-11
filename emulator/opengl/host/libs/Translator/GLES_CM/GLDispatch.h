@@ -17,7 +17,7 @@
 #define GLDISPATCHH
 
 #include <GLES/gl.h>
-#include <utils/threads.h>
+#include "emugl/common/mutex.h"
 
 #define GLAPIENTRY GL_APIENTRY
 
@@ -151,8 +151,8 @@ public:
     void (GLAPIENTRY *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
     void (GLAPIENTRY *glViewport) (GLint x, GLint y, GLsizei width, GLsizei height);
 private:
-    bool             m_isLoaded;
-    android::Mutex   m_lock;
+    bool           m_isLoaded;
+    emugl::Mutex   m_lock;
 };
 
 #endif

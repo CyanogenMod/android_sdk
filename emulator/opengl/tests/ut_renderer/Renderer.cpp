@@ -56,7 +56,7 @@ Renderer::Renderer()
 
 int Renderer::createSurface(RenderingThread *thread, const ClientHandle & handle)
 {
-    android::Mutex::Autolock(this->m_mutex);
+    emugl::Mutex::AutoLock(this->m_mutex);
 
     assert(m_surfaces.find(handle) == m_surfaces.end());
     if (handle.handle == 0) {
@@ -75,7 +75,7 @@ int Renderer::createSurface(RenderingThread *thread, const ClientHandle & handle
 
 int Renderer::destroySurface(RenderingThread *thread, const ClientHandle &handle)
 {
-    android::Mutex::Autolock(this->m_mutex);
+    emugl::Mutex::AutoLock(this->m_mutex);
 
     SurfaceMap::iterator i = m_surfaces.find(handle);
     if (i == m_surfaces.end()) {
@@ -90,7 +90,7 @@ int Renderer::destroySurface(RenderingThread *thread, const ClientHandle &handle
 
 int Renderer::createContext(RenderingThread *thread, const ClientHandle &handle, ClientHandle shareCtx, int version)
 {
-    android::Mutex::Autolock(this->m_mutex);
+    emugl::Mutex::AutoLock(this->m_mutex);
 
     assert(m_ctxs.find(handle) == m_ctxs.end());
     RendererContext *shared = NULL;
@@ -115,7 +115,7 @@ int Renderer::createContext(RenderingThread *thread, const ClientHandle &handle,
 
 int Renderer::destroyContext(RenderingThread *thread, const ClientHandle &handle)
 {
-    android::Mutex::Autolock(this->m_mutex);
+    emugl::Mutex::AutoLock(this->m_mutex);
 
     ContextMap::iterator i = m_ctxs.find(handle);
     if (i == m_ctxs.end()) {
@@ -133,7 +133,7 @@ int Renderer::makeCurrent(RenderingThread *thread,
                           const ClientHandle &readSurface,
                           const ClientHandle & ctx)
 {
-    android::Mutex::Autolock(this->m_mutex);
+    emugl::Mutex::AutoLock(this->m_mutex);
 
     RendererContext *currentContext = thread->currentContext();
 
@@ -172,7 +172,7 @@ int Renderer::makeCurrent(RenderingThread *thread,
 int Renderer::swapBuffers(RenderingThread *thread,
                           const ClientHandle &surface)
 {
-    android::Mutex::Autolock(this->m_mutex);
+    emugl::Mutex::AutoLock(this->m_mutex);
 
     SurfaceMap::iterator s = m_surfaces.find(surface);
     if (s == m_surfaces.end()) {

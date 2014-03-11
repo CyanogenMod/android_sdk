@@ -20,7 +20,7 @@
 #include "GLDispatch.h"
 #include "GLESpointer.h"
 #include "objectNameManager.h"
-#include <utils/threads.h>
+#include "emugl/common/mutex.h"
 #include <string>
 
 typedef std::map<GLenum,GLESpointer*>  ArraysMap;
@@ -187,7 +187,7 @@ protected:
     void initCapsLocked(const GLubyte * extensionString);
     virtual void initExtensionString() =0;
 
-    static android::Mutex s_lock;
+    static emugl::Mutex   s_lock;
     static GLDispatch     s_glDispatch;
     bool                  m_initialized;
     unsigned int          m_activeTexture;

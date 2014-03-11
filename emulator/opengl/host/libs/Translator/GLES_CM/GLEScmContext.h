@@ -23,7 +23,6 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <utils/threads.h>
 
 
 typedef std::map<GLfloat,std::vector<int> > PointSizeIndices;

@@ -67,7 +67,7 @@ static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
 
 /* initializing static GLDispatch members*/
 
-android::Mutex GLDispatch::s_lock;
+emugl::Mutex GLDispatch::s_lock;
 void (GLAPIENTRY *GLDispatch::glActiveTexture)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glBindBuffer)(GLenum,GLuint) = NULL;
 void (GLAPIENTRY *GLDispatch::glBindTexture)(GLenum, GLuint) = NULL;
@@ -298,7 +298,7 @@ GLDispatch::GLDispatch():m_isLoaded(false){};
 
 
 void GLDispatch::dispatchFuncs(GLESVersion version){
-    android::Mutex::Autolock mutex(s_lock);
+    emugl::Mutex::AutoLock mutex(s_lock);
     if(m_isLoaded)
         return;
 

@@ -23,7 +23,7 @@
 #include <GLES/glext.h>
 
 void GLEScmContext::init() {
-    android::Mutex::Autolock mutex(s_lock);
+    emugl::Mutex::AutoLock mutex(s_lock);
     if(!m_initialized) {
         s_glDispatch.dispatchFuncs(GLES_1_1);
         GLEScontext::init();
