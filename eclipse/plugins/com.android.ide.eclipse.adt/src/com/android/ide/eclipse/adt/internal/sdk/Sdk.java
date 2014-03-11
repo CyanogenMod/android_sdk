@@ -282,7 +282,7 @@ public final class Sdk  {
                     // create the AVD Manager
                     AvdManager avdManager = null;
                     try {
-                        avdManager = AvdManager.getInstance(manager, log);
+                        avdManager = AvdManager.getInstance(manager.getLocalSdk(), log);
                     } catch (AndroidLocationException e) {
                         log.error(e, "Error parsing the AVDs");
                     }
@@ -901,7 +901,7 @@ public final class Sdk  {
         mDocBaseUrl = getDocumentationBaseUrl(manager.getLocation() +
                 SdkConstants.OS_SDK_DOCS_FOLDER);
 
-        mDeviceManager = DeviceManager.createInstance(manager.getLocation(),
+        mDeviceManager = DeviceManager.createInstance(manager.getLocalSdk().getLocation(),
                                                       AdtPlugin.getDefault());
 
         // update whatever ProjectState is already present with new IAndroidTarget objects.
