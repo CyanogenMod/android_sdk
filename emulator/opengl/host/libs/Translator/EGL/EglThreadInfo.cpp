@@ -16,26 +16,33 @@
 #include "EglThreadInfo.h"
 #include "EglOsApi.h"
 
-EglThreadInfo::EglThreadInfo():m_err(EGL_SUCCESS),m_api(EGL_OPENGL_ES_API) {}
+#include "emugl/common/lazy_instance.h"
+#include "emugl/common/thread_store.h"
 
-#include <cutils/threads.h>
+namespace {
 
-static thread_store_t s_tls = THREAD_STORE_INITIALIZER;
-
-static void tlsDestruct(void *ptr)
-{
-    if (ptr) {
-        EglThreadInfo *ti = (EglThreadInfo *)ptr;
-        delete ti;
+class EglThreadInfoStore : public emugl::ThreadStore {
+public:
+    EglThreadInfoStore() : emugl::ThreadStore(&destructor) {}
+private:
+    static void destructor(void* value) {
+        delete static_cast<EglThreadInfo*>(value);
     }
-}
+};
+
+}  // namespace
+
+EglThreadInfo::EglThreadInfo() :
+        m_err(EGL_SUCCESS), m_api(EGL_OPENGL_ES_API) {}
+
+static emugl::LazyInstance<EglThreadInfoStore> s_tls = LAZY_INSTANCE_INIT;
 
 EglThreadInfo* EglThreadInfo::get(void)
 {
-    EglThreadInfo *ti = (EglThreadInfo *)thread_store_get(&s_tls);
+    EglThreadInfo *ti = static_cast<EglThreadInfo*>(s_tls->get());
     if (!ti) {
         ti = new EglThreadInfo();
-        thread_store_set(&s_tls, ti, tlsDestruct);
+        s_tls->set(ti);
     }
     return ti;
 }

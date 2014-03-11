@@ -14,15 +14,46 @@
 * limitations under the License.
 */
 
-#include <stdio.h>
 #include "ThreadInfo.h"
 
-//#define TRACE_THREADINFO
-#ifdef TRACE_THREADINFO
+#include "emugl/common/lazy_instance.h"
+#include "emugl/common/thread_store.h"
+
+#include <stdio.h>
+
+// Set TRACE_THREADINFO to 1 to debug creation/destruction of ThreadInfo
+// instances.
+#define TRACE_THREADINFO 0
+
+#if TRACE_THREADINFO
 #define LOG_THREADINFO(x...) fprintf(stderr, x)
 #else
 #define LOG_THREADINFO(x...)
 #endif
+
+namespace {
+
+class ThreadInfoStore : public ::emugl::ThreadStore {
+public:
+    ThreadInfoStore() : ::emugl::ThreadStore(&destructor) {}
+
+    size_t getInstanceCount() const { return mNumInstances; }
+
+private:
+    static void destructor(void* value) {
+        LOG_THREADINFO("%s: EFL %p (%d instances)\n", __FUNCTION__,
+                       value, mNumInstances);
+        delete static_cast<ThreadInfo*>(value);
+        mNumInstances--;
+    }
+
+    static size_t mNumInstances;
+};
+
+size_t ThreadInfoStore::mNumInstances = 0;
+
+}  // namespace
+
 
 void ThreadInfo::updateInfo(ContextPtr eglCtx,
                             EglDisplay* dpy,
@@ -37,27 +68,16 @@ void ThreadInfo::updateInfo(ContextPtr eglCtx,
     objManager  = manager;
 }
 
-#include <cutils/threads.h>
-static thread_store_t s_tls = THREAD_STORE_INITIALIZER;
-static int active_instance = 0;
-static void tlsDestruct(void *ptr)
-{
-    active_instance--;
-    LOG_THREADINFO("tlsDestruct EGL %lx %d\n", (long)ptr, active_instance);
-    if (ptr) {
-        ThreadInfo *ti = (ThreadInfo *)ptr;
-        delete ti;
-    }
-}
+static ::emugl::LazyInstance<ThreadInfoStore> s_tls = LAZY_INSTANCE_INIT;
 
 ThreadInfo *getThreadInfo()
 {
-    ThreadInfo *ti = (ThreadInfo *)thread_store_get(&s_tls);
+    ThreadInfo *ti = static_cast<ThreadInfo*>(s_tls->get());
     if (!ti) {
         ti = new ThreadInfo();
-        thread_store_set(&s_tls, ti, tlsDestruct);
-        active_instance++;
-        LOG_THREADINFO("getThreadInfo EGL %lx %d\n", (long)ti, active_instance);
+        s_tls->set(ti);
+        LOG_THREADINFO("%s: EGL %p (%d instances)\n", __FUNCTION__,
+                       ti, (int)ThreadInfoStore::getInstanceCount());
     }
     return ti;
 }
