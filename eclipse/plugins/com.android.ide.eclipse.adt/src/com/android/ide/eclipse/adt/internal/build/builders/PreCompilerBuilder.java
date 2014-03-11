@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.RenderScriptLauncher;
 import com.android.ide.eclipse.adt.internal.build.RsSourceChangeHandler;
 import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
+import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder.AbortBuildException;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -57,6 +58,7 @@ import com.android.sdklib.internal.build.SymbolLoader;
 import com.android.sdklib.internal.build.SymbolWriter;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.io.FileOp;
+import com.android.sdklib.repository.FullRevision;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.xml.AndroidManifest;
@@ -429,6 +431,17 @@ public class PreCompilerBuilder extends BaseBuilder {
                 AdtPlugin.printErrorToConsole(project, Messages.Xml_Error);
 
                 return result;
+            }
+
+            if (projectState.getRenderScriptSupportMode()) {
+                FullRevision minBuildToolsRev = new FullRevision(19,0,3);
+                if (mBuildToolInfo.getRevision().compareTo(minBuildToolsRev) == -1) {
+                    String msg = "RenderScript support mode requires Build-Tools 19.0.3 or later.";
+                    AdtPlugin.printErrorToConsole(project, msg);
+                    markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+
+                    return result;
+                }
             }
 
             // get the manifest file
