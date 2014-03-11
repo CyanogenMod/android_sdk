@@ -24,10 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-//#include "android/utils/path.h"
-//#include "android/utils/debug.h"
-//#include "android/utils/misc.h"
-//#include "android/utils/system.h"
 
 #define  D(...) ((void)0)
 

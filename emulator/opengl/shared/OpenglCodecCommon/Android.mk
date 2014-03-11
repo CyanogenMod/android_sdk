@@ -24,19 +24,21 @@ endif
 $(call emugl-begin-host-static-library,libOpenglCodecCommon)
 
 LOCAL_SRC_FILES := $(host_commonSources)
-
-$(call emugl-export,STATIC_LIBRARIES,libcutils)
-$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+$(call emugl-import, libemugl_common)
+$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include/libOpenglRender $(LOCAL_PATH))
+$(call emugl-export,LDLIBS,-lstdc++)
 $(call emugl-end-module)
 
 
 ### OpenglCodecCommon  host, 64-bit #########################################
-$(call emugl-begin-host-static-library,lib64OpenglCodecCommon)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-static-library,lib64OpenglCodecCommon)
 
-LOCAL_SRC_FILES := $(host_commonSources)
+    LOCAL_SRC_FILES := $(host_commonSources)
 
-$(call emugl-export,STATIC_LIBRARIES,lib64cutils)
-$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
-$(call emugl-export,CFLAGS,-m64)
-$(call emugl-end-module)
-
+    $(call emugl-import, lib64emugl_common)
+    $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include/libOpenglRender $(LOCAL_PATH))
+    $(call emugl-export,CFLAGS,-m64 -fPIC)
+    $(call emugl-export,LDLIBS,-lstdc++)
+    $(call emugl-end-module)
+endif

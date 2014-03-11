@@ -54,7 +54,7 @@ $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 # use Translator's egl/gles headers
 LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
 
-LOCAL_STATIC_LIBRARIES += libemugl_common libutils libcutils liblog
+LOCAL_STATIC_LIBRARIES += libemugl_common
 
 $(call emugl-export,CFLAGS,$(host_common_CFLAGS))
 
@@ -62,22 +62,24 @@ $(call emugl-end-module)
 
 
 ### host libOpenglRender, 64-bit #########################################
-$(call emugl-begin-host-shared-library,lib64OpenglRender)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-shared-library,lib64OpenglRender)
 
-$(call emugl-import,lib64GLESv1_dec lib64GLESv2_dec lib64_renderControl_dec lib64OpenglCodecCommon lib64OpenglOsUtils)
+    $(call emugl-import,lib64GLESv1_dec lib64GLESv2_dec lib64_renderControl_dec lib64OpenglCodecCommon lib64OpenglOsUtils)
 
-#LOCAL_LDFLAGS += -m64  # adding -m64 here doesn't work, because it somehow appear BEFORE -m32 in command-line.
-LOCAL_LDLIBS += $(host_common_LDLIBS) -m64  # Put -m64 it in LOCAL_LDLIBS instead.
+    #LOCAL_LDFLAGS += -m64  # adding -m64 here doesn't work, because it somehow appear BEFORE -m32 in command-line.
+    LOCAL_LDLIBS += $(host_common_LDLIBS) -m64  # Put -m64 it in LOCAL_LDLIBS instead.
 
-LOCAL_SRC_FILES := $(host_common_SRC_FILES)
-$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include)
-$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    LOCAL_SRC_FILES := $(host_common_SRC_FILES)
+    $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include)
+    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-# use Translator's egl/gles headers
-LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
+    # use Translator's egl/gles headers
+    LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
 
-LOCAL_STATIC_LIBRARIES += lib64emugl_common lib64utils lib64cutils lib64log
+    LOCAL_STATIC_LIBRARIES += lib64emugl_common
 
-$(call emugl-export,CFLAGS,$(host_common_CFLAGS) -m64)
+    $(call emugl-export,CFLAGS,$(host_common_CFLAGS) -m64)
 
-$(call emugl-end-module)
+    $(call emugl-end-module)
+endif

@@ -16,22 +16,12 @@
 #ifndef _ERROR_LOG_H_
 #define _ERROR_LOG_H_
 
-#ifdef __ANDROID__
-#    include <cutils/log.h>
-#    define ERR(...)    ALOGE(__VA_ARGS__)
-#    ifdef EMUGL_DEBUG
-#        define DBG(...)    ALOGD(__VA_ARGS__)
-#    else
-#        define DBG(...)    ((void)0)
-#    endif
+#include <stdio.h>
+#define ERR(...)    fprintf(stderr, __VA_ARGS__)
+#ifdef EMUGL_DEBUG
+#    define DBG(...)    fprintf(stderr, __VA_ARGS__)
 #else
-#     include <stdio.h>
-#    define ERR(...)    fprintf(stderr, __VA_ARGS__)
-#    ifdef EMUGL_DEBUG
-#        define DBG(...)    fprintf(stderr, __VA_ARGS__)
-#    else
-#        define DBG(...)    ((void)0)
-#    endif
+#    define DBG(...)    ((void)0)
 #endif
 
-#endif
+#endif  // _ERROR_LOG_H_
