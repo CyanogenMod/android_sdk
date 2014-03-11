@@ -18,6 +18,10 @@ EMUGL_PATH := $(call my-dir)
 #
 EMUGL_COMMON_INCLUDES := $(EMUGL_PATH)/host/include/libOpenglRender
 
+ifeq ($(BUILD_STANDALONE_EMULATOR),true)
+EMUGL_COMMON_INCLUDES := $(EMUGL_PATH)/host/libs/Translator/include
+endif
+
 # common cflags used by several modules
 # This is always set to a module's LOCAL_CFLAGS
 # See the definition of emugl-begin-module in common.mk
@@ -65,6 +69,9 @@ include $(EMUGL_PATH)/host/libs/Translator/GLcommon/Android.mk
 include $(EMUGL_PATH)/host/libs/Translator/GLES_CM/Android.mk
 include $(EMUGL_PATH)/host/libs/Translator/GLES_V2/Android.mk
 include $(EMUGL_PATH)/host/libs/Translator/EGL/Android.mk
+
+# Required to declare SDL-related flags for some host tests.
+include $(EMUGL_PATH)/sdl.mk
 
 # Host shared libraries
 include $(EMUGL_PATH)/host/libs/libOpenglRender/Android.mk
