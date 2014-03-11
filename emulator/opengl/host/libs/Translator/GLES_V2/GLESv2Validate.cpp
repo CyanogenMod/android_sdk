@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 #include "GLESv2Validate.h"
+#include <string.h>
 
 bool GLESv2Validate::blendEquationMode(GLenum mode){
     return mode == GL_FUNC_ADD             ||

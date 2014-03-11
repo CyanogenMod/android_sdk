@@ -16,13 +16,14 @@
 #ifndef EGL_GLOBAL_INFO
 #define EGL_GLOBAL_INFO
 
-#include <list>
-#include <EGL/egl.h>
-#include <utils/threads.h>
-#include <GLcommon/TranslatorIfaces.h>
 #include "EglDisplay.h"
 #include "EglConfig.h"
 #include "EglContext.h"
+
+#include <GLcommon/TranslatorIfaces.h>
+#include "emugl/common/mutex.h"
+#include <list>
+#include <EGL/egl.h>
 
 typedef std::map<EglDisplay*,EGLNativeDisplayType>DisplaysMap;
 
@@ -58,7 +59,7 @@ private:
     EGLNativeInternalDisplayType   m_default;
     GLESiface*                     m_gles_ifaces[MAX_GLES_VERSION];
     bool                           m_gles_extFuncs_inited[MAX_GLES_VERSION];
-    android::Mutex                 m_lock;
+    emugl::Mutex                   m_lock;
 };
 
 #endif

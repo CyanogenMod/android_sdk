@@ -393,7 +393,7 @@ FrameBuffer::~FrameBuffer()
 
 void FrameBuffer::setPostCallback(OnPostFn onPost, void* onPostContext)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     m_onPost = onPost;
     m_onPostContext = onPostContext;
     if (m_onPost && !m_fbImage) {
@@ -490,7 +490,7 @@ HandleType FrameBuffer::genHandle()
 HandleType FrameBuffer::createColorBuffer(int p_width, int p_height,
                                           GLenum p_internalFormat)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     HandleType ret = 0;
 
     ColorBufferPtr cb( ColorBuffer::create(p_width, p_height, p_internalFormat) );
@@ -505,7 +505,7 @@ HandleType FrameBuffer::createColorBuffer(int p_width, int p_height,
 HandleType FrameBuffer::createRenderContext(int p_config, HandleType p_share,
                                             bool p_isGL2)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     HandleType ret = 0;
 
     RenderContextPtr share(NULL);
@@ -527,7 +527,7 @@ HandleType FrameBuffer::createRenderContext(int p_config, HandleType p_share,
 
 HandleType FrameBuffer::createWindowSurface(int p_config, int p_width, int p_height)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     HandleType ret = 0;
     WindowSurfacePtr win( WindowSurface::create(p_config, p_width, p_height) );
@@ -541,19 +541,19 @@ HandleType FrameBuffer::createWindowSurface(int p_config, int p_width, int p_hei
 
 void FrameBuffer::DestroyRenderContext(HandleType p_context)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     m_contexts.erase(p_context);
 }
 
 void FrameBuffer::DestroyWindowSurface(HandleType p_surface)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     m_windows.erase(p_surface);
 }
 
 void FrameBuffer::openColorBuffer(HandleType p_colorbuffer)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     ColorBufferMap::iterator c(m_colorbuffers.find(p_colorbuffer));
     if (c == m_colorbuffers.end()) {
         // bad colorbuffer handle
@@ -564,7 +564,7 @@ void FrameBuffer::openColorBuffer(HandleType p_colorbuffer)
 
 void FrameBuffer::closeColorBuffer(HandleType p_colorbuffer)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     ColorBufferMap::iterator c(m_colorbuffers.find(p_colorbuffer));
     if (c == m_colorbuffers.end()) {
         // bad colorbuffer handle
@@ -577,7 +577,7 @@ void FrameBuffer::closeColorBuffer(HandleType p_colorbuffer)
 
 bool FrameBuffer::flushWindowSurfaceColorBuffer(HandleType p_surface)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     WindowSurfaceMap::iterator w( m_windows.find(p_surface) );
     if (w == m_windows.end()) {
@@ -591,7 +591,7 @@ bool FrameBuffer::flushWindowSurfaceColorBuffer(HandleType p_surface)
 bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
                                               HandleType p_colorbuffer)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     WindowSurfaceMap::iterator w( m_windows.find(p_surface) );
     if (w == m_windows.end()) {
@@ -614,7 +614,7 @@ bool FrameBuffer::updateColorBuffer(HandleType p_colorbuffer,
                                     int x, int y, int width, int height,
                                     GLenum format, GLenum type, void *pixels)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
     if (c == m_colorbuffers.end()) {
@@ -629,7 +629,7 @@ bool FrameBuffer::updateColorBuffer(HandleType p_colorbuffer,
 
 bool FrameBuffer::bindColorBufferToTexture(HandleType p_colorbuffer)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
     if (c == m_colorbuffers.end()) {
@@ -642,7 +642,7 @@ bool FrameBuffer::bindColorBufferToTexture(HandleType p_colorbuffer)
 
 bool FrameBuffer::bindColorBufferToRenderbuffer(HandleType p_colorbuffer)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
     if (c == m_colorbuffers.end()) {
@@ -657,7 +657,7 @@ bool FrameBuffer::bindContext(HandleType p_context,
                               HandleType p_drawSurface,
                               HandleType p_readSurface)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
 
     WindowSurfacePtr draw(NULL), read(NULL);
     RenderContextPtr ctx(NULL);
