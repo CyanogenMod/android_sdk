@@ -51,7 +51,7 @@ void EglGlobalInfo::delInstance() {
 
 EglDisplay* EglGlobalInfo::addDisplay(EGLNativeDisplayType dpy,EGLNativeInternalDisplayType idpy) {
     //search if it is not already exists
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     for(DisplaysMap::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
         if((*it).second == dpy) return (*it).first;
     }
@@ -68,7 +68,7 @@ EglDisplay* EglGlobalInfo::addDisplay(EGLNativeDisplayType dpy,EGLNativeInternal
 }
 
 bool  EglGlobalInfo::removeDisplay(EGLDisplay dpy) {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     for(DisplaysMap::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
         if(static_cast<EGLDisplay>((*it).first) == dpy) {
             delete (*it).first;
@@ -80,7 +80,7 @@ bool  EglGlobalInfo::removeDisplay(EGLDisplay dpy) {
 }
 
 EglDisplay* EglGlobalInfo::getDisplay(EGLNativeDisplayType dpy) {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     for(DisplaysMap::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
         if((*it).second == dpy) return (*it).first;
     }
@@ -88,7 +88,7 @@ EglDisplay* EglGlobalInfo::getDisplay(EGLNativeDisplayType dpy) {
 }
 
 EglDisplay* EglGlobalInfo::getDisplay(EGLDisplay dpy) {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     DisplaysMap::iterator it = m_displays.find(static_cast<EglDisplay*>(dpy));
     return (it != m_displays.end() ? (*it).first : NULL);
 }
@@ -99,7 +99,7 @@ EGLNativeInternalDisplayType EglGlobalInfo::generateInternalDisplay(EGLNativeDis
 
 void EglGlobalInfo::initClientExtFuncTable(GLESVersion ver)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     if (!m_gles_extFuncs_inited[ver]) {
         ClientAPIExts::initClientFuncs(m_gles_ifaces[ver], (int)ver - 1);
         m_gles_extFuncs_inited[ver] = true;

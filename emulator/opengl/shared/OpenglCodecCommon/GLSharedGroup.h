@@ -33,8 +33,8 @@
 #include <utils/KeyedVector.h>
 #include <utils/List.h>
 #include <utils/String8.h>
-#include <utils/threads.h>
 #include "FixedBuffer.h"
+#include "emugl/common/mutex.h"
 #include "emugl/common/smart_ptr.h"
 
 struct BufferData {
@@ -102,7 +102,7 @@ private:
     android::DefaultKeyedVector<GLuint, BufferData*> m_buffers;
     android::DefaultKeyedVector<GLuint, ProgramData*> m_programs;
     android::DefaultKeyedVector<GLuint, ShaderData*> m_shaders;
-    mutable android::Mutex m_lock;
+    mutable emugl::Mutex m_lock;
 
     void refShaderDataLocked(ssize_t shaderIdx);
     void unrefShaderDataLocked(ssize_t shaderIdx);

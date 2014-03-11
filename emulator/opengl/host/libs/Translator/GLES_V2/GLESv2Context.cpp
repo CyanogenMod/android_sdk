@@ -15,11 +15,10 @@
 */
 
 #include "GLESv2Context.h"
-
-
+#include <string.h>
 
 void GLESv2Context::init() {
-    android::Mutex::Autolock mutex(s_lock);
+    emugl::Mutex::AutoLock mutex(s_lock);
     if(!m_initialized) {
         s_glDispatch.dispatchFuncs(GLES_2_0);
         GLEScontext::init();
