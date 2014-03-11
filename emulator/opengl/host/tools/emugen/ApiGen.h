@@ -54,6 +54,8 @@ public:
         case WRAPPER_SIDE:
             retval = "wrapper";
             break;
+        default:
+            retval = "unknown";
         }
         return retval;
     }
