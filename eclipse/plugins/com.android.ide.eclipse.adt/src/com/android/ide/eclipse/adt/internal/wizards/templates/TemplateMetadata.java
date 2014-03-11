@@ -46,6 +46,7 @@ import com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizardStat
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.utils.Pair;
+import com.google.common.collect.Lists;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.graphics.Image;
@@ -63,8 +64,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import lombok.ast.libs.org.parboiled.google.collect.Lists;
 
 /** An ADT template along with metadata */
 class TemplateMetadata {

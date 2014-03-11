@@ -70,6 +70,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -99,6 +100,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -124,9 +126,10 @@ class TemplateHandler {
      *    proper Booleans. Templates which rely on this should specify format >= 2.
      * <li> 3: The wizard infrastructure passes the {@code isNewProject} boolean variable
      *    to indicate whether a wizard is created as part of a new blank project
+     * <li> 4: The templates now specify dependencies in the recipe file.
      * </ul>
      */
-    static final int CURRENT_FORMAT = 3;
+    static final int CURRENT_FORMAT = 4;
 
     /**
      * Special marker indicating that this path refers to the special shared
@@ -187,11 +190,18 @@ class TemplateHandler {
     static final String ATTR_SOURCE_TYPE = "source";     //$NON-NLS-1$
     static final String ATTR_CLIPART_NAME = "clipartName";//$NON-NLS-1$
     static final String ATTR_TEXT = "text";              //$NON-NLS-1$
+    static final String ATTR_SRC_DIR = "srcDir";         //$NON-NLS-1$
+    static final String ATTR_RES_DIR = "resDir";         //$NON-NLS-1$
+    static final String ATTR_MANIFEST_DIR = "manifestDir";//$NON-NLS-1$
+    static final String ATTR_MAVEN_URL = "mavenUrl";     //$NON-NLS-1$
 
     static final String CATEGORY_ACTIVITIES = "activities";//$NON-NLS-1$
     static final String CATEGORY_PROJECTS = "projects";    //$NON-NLS-1$
     static final String CATEGORY_OTHER = "other";          //$NON-NLS-1$
 
+    static final String MAVEN_SUPPORT_V4 = "support-v4";   //$NON-NLS-1$
+    static final String MAVEN_SUPPORT_V13 = "support-v13"; //$NON-NLS-1$
+    static final String MAVEN_APPCOMPAT = "appcompat-v7";  //$NON-NLS-1$
 
     /** Default padding to apply in wizards around the thumbnail preview images */
     static final int PREVIEW_PADDING = 10;
@@ -204,6 +214,11 @@ class TemplateHandler {
      * identified by {@link #TAG_OPEN} elements in the recipe file
      */
     private final List<String> mOpen = Lists.newArrayList();
+
+    /**
+     * List of actions to perform after the wizard has finished.
+     */
+    protected List<Runnable> mFinalizingActions = Lists.newArrayList();
 
     /** Path to the directory containing the templates */
     @NonNull
@@ -237,7 +252,7 @@ class TemplateHandler {
      */
     private TemplateMetadata mTemplate;
 
-    private TemplateManager mManager;
+    private final TemplateManager mManager;
 
     /** Creates a new {@link TemplateHandler} for the given root path */
     static TemplateHandler createFromPath(File rootPath) {
@@ -339,6 +354,17 @@ class TemplateHandler {
         return paramMap;
     }
 
+    static void addDirectoryParameters(Map<String, Object> parameters, IProject project) {
+        IPath srcDir = project.getFile(SdkConstants.SRC_FOLDER).getProjectRelativePath();
+        parameters.put(ATTR_SRC_DIR, srcDir.toString());
+
+        IPath resDir = project.getFile(SdkConstants.RES_FOLDER).getProjectRelativePath();
+        parameters.put(ATTR_RES_DIR, resDir.toString());
+
+        IPath manifestDir = project.getProjectRelativePath();
+        parameters.put(ATTR_MANIFEST_DIR, manifestDir.toString());
+    }
+
     @Nullable
     public TemplateMetadata getTemplate() {
         if (mTemplate == null) {
@@ -353,7 +379,7 @@ class TemplateHandler {
         return new File(mRootPath.getPath(), templateName).getPath();
     }
 
-     /**
+    /**
      * Load a text resource for the given relative path within the template
      *
      * @param relativePath relative path within the template
@@ -431,7 +457,7 @@ class TemplateHandler {
                 @Override
                 public void startElement(String uri, String localName, String name,
                         Attributes attributes)
-                        throws SAXException {
+                                throws SAXException {
                     if (TAG_PARAMETER.equals(name)) {
                         String id = attributes.getValue(ATTR_ID);
                         if (!paramMap.containsKey(id)) {
@@ -499,27 +525,27 @@ class TemplateHandler {
                         String.format(
                                 "%1$s already exists.\nWould you like to replace it?",
                                 file.getPath()),
-                        MessageDialog.QUESTION, new String[] {
-                                // Yes will be moved to the end because it's the default
-                                "Yes", "No", "Cancel", "Yes to All"
-                        }, 0);
+                                MessageDialog.QUESTION, new String[] {
+                    // Yes will be moved to the end because it's the default
+                    "Yes", "No", "Cancel", "Yes to All"
+                }, 0);
                 int result = dialog.open();
                 switch (result) {
-                    case 0:
-                        // Yes
-                        break;
-                    case 3:
-                        // Yes to all
-                        mYesToAll = true;
-                        break;
-                    case 1:
-                        // No
-                        return false;
-                    case SWT.DEFAULT:
-                    case 2:
-                        // Cancel
-                        mNoToAll = true;
-                        return false;
+                case 0:
+                    // Yes
+                    break;
+                case 3:
+                    // Yes to all
+                    mYesToAll = true;
+                    break;
+                case 1:
+                    // No
+                    return false;
+                case SWT.DEFAULT:
+                case 2:
+                    // Cancel
+                    mNoToAll = true;
+                    return false;
                 }
             }
 
@@ -556,7 +582,7 @@ class TemplateHandler {
                 @Override
                 public void startElement(String uri, String localName, String name,
                         Attributes attributes)
-                        throws SAXException {
+                                throws SAXException {
                     if (mNoToAll) {
                         return;
                     }
@@ -591,6 +617,36 @@ class TemplateHandler {
                             String relativePath = attributes.getValue(ATTR_FILE);
                             if (relativePath != null && !relativePath.isEmpty()) {
                                 mOpen.add(relativePath);
+                            }
+                        } else if (TAG_DEPENDENCY.equals(name)) {
+                            String dependencyUrl = attributes.getValue(ATTR_MAVEN_URL);
+                            File path;
+                            if (dependencyUrl.contains(MAVEN_SUPPORT_V4)) {
+                                // We assume the revision requirement has been satisfied
+                                // by the wizard
+                                path = AddSupportJarAction.getSupportJarFile();
+                            } else if (dependencyUrl.contains(MAVEN_SUPPORT_V13)) {
+                                path = AddSupportJarAction.getSupport13JarFile();
+                            } else if (dependencyUrl.contains(MAVEN_APPCOMPAT)) {
+                                path = null;
+                                mFinalizingActions.add(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        AddSupportJarAction.installAppCompatLibrary(mProject, true);
+                                    }
+                                });
+                            } else {
+                                path = null;
+                                System.err.println("WARNING: Unknown dependency type");
+                            }
+
+                            if (path != null) {
+                                IPath to = getTargetPath(FD_NATIVE_LIBS +'/' + path.getName());
+                                try {
+                                    copy(path, to);
+                                } catch (IOException ioe) {
+                                    AdtPlugin.log(ioe, null);
+                                }
                             }
                         } else if (!name.equals("recipe") && !name.equals(TAG_DEPENDENCY)) { //$NON-NLS-1$
                             System.err.println("WARNING: Unknown template directive " + name);
@@ -1002,6 +1058,16 @@ class TemplateHandler {
         return mOpen;
     }
 
+    /**
+     * Returns the list of actions to perform when the template has been created
+     *
+     * @return the list of actions to perform
+     */
+    @NonNull
+    public List<Runnable> getFinalizingActions() {
+        return mFinalizingActions;
+    }
+
     /** Copy a template resource */
     private final void copyTemplateResource(
             @NonNull String relativeFrom,
@@ -1034,7 +1100,7 @@ class TemplateHandler {
             IResource dest = mProject.getFile(path);
             if (dest.exists() && !(dest instanceof IFile)) {// Don't attempt to overwrite a folder
                 assert false : dest.getClass().getName();
-                return;
+            return;
             }
             IFile file = (IFile) dest;
             String targetName = path.lastSegment();
@@ -1134,9 +1200,9 @@ class TemplateHandler {
                     Constants.BUNDLE_VERSION);
             Version version = new Version(versionString);
             return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                String.format("This template requires a more recent version of the " +
-                        "Android Eclipse plugin. Please update from version %1$d.%2$d.%3$d.",
-                        version.getMajor(), version.getMinor(), version.getMicro()));
+                    String.format("This template requires a more recent version of the " +
+                            "Android Eclipse plugin. Please update from version %1$d.%2$d.%3$d.",
+                            version.getMajor(), version.getMinor(), version.getMicro()));
         }
         int templateMinSdk = template.getMinSdk();
         if (templateMinSdk > currentMinSdk && currentMinSdk >= 1) {

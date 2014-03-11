@@ -1097,11 +1097,13 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         EclipseJavaParser() {
             if (USE_ECLIPSE_PARSER) {
                 CompilerOptions options = new CompilerOptions();
-                // Read settings from project? Note that this doesn't really matter because
-                // we will only be parsing, not actually compiling.
-                options.complianceLevel = ClassFileConstants.JDK1_6;
-                options.sourceLevel = ClassFileConstants.JDK1_6;
-                options.targetJDK = ClassFileConstants.JDK1_6;
+                // Always using JDK 7 rather than basing it on project metadata since we
+                // don't do compilation error validation in lint (we leave that to the IDE's
+                // error parser or the command line build's compilation step); we want an
+                // AST that is as tolerant as possible.
+                options.complianceLevel = ClassFileConstants.JDK1_7;
+                options.sourceLevel = ClassFileConstants.JDK1_7;
+                options.targetJDK = ClassFileConstants.JDK1_7;
                 options.parseLiteralExpressionsAsConstants = true;
                 ProblemReporter problemReporter = new ProblemReporter(
                         DefaultErrorHandlingPolicies.exitOnFirstError(),
