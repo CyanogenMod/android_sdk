@@ -31,6 +31,7 @@ import static com.android.SdkConstants.VIEW_INCLUDE;
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.RenderSecurityManager;
+import com.android.ide.common.rendering.api.ActionBarCallback;
 import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.DataBindingItem;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
@@ -660,4 +661,8 @@ public final class ProjectCallback extends LegacyCallback {
         }
     }
 
+    @Override
+    public ActionBarCallback getActionBarCallback() {
+        return new ActionBarCallback();
+    }
 }
