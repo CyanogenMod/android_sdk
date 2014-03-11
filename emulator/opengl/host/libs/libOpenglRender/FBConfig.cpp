@@ -67,7 +67,6 @@ InitConfigStatus FBConfig::initConfigList(FrameBuffer *fb)
         return ret;
     }
 
-    const FrameBufferCaps &caps = fb->getCaps();
     EGLDisplay dpy = fb->getDisplay();
 
     if (dpy == EGL_NO_DISPLAY) {
