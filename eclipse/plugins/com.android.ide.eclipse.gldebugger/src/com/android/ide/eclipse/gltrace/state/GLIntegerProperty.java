@@ -18,8 +18,6 @@ package com.android.ide.eclipse.gltrace.state;
 
 /** Properties that hold an integer value. */
 public class GLIntegerProperty extends GLAbstractAtomicProperty {
-    public enum DisplayRadix { DECIMAL, HEX };
-
     private final Integer mDefaultValue;
     private Integer mCurrentValue;
     private final DisplayRadix mRadix;
@@ -37,7 +35,7 @@ public class GLIntegerProperty extends GLAbstractAtomicProperty {
 
     @Override
     public boolean isDefault() {
-        return mCurrentValue == mDefaultValue;
+        return mDefaultValue != null & mDefaultValue.equals(mCurrentValue);
     }
 
     public void setValue(Integer newValue) {
