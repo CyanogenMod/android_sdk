@@ -18,20 +18,24 @@ $(call emugl-gen-decoder,$(LOCAL_PATH),gl)
 LOCAL_SRC_FILES := GLDecoder.cpp
 
 $(call emugl-export,CFLAGS,$(host_common_debug_CFLAGS))
+$(call emugl-export,LDLIBS,-lstdc++)
 
 $(call emugl-end-module)
 
 
 ### host library, 64-bit ####################################
-$(call emugl-begin-host-static-library,lib64GLESv1_dec)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-static-library,lib64GLESv1_dec)
 
-$(call emugl-import, lib64OpenglCodecCommon lib64OpenglOsUtils)
-$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    $(call emugl-import, lib64OpenglCodecCommon lib64OpenglOsUtils)
+    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-$(call emugl-gen-decoder,$(LOCAL_PATH),gl)
+    $(call emugl-gen-decoder,$(LOCAL_PATH),gl)
 
-LOCAL_SRC_FILES := GLDecoder.cpp
+    LOCAL_SRC_FILES := GLDecoder.cpp
 
-$(call emugl-export,CFLAGS,$(host_common_debug_CFLAGS) -m64)
+    $(call emugl-export,CFLAGS,$(host_common_debug_CFLAGS) -m64)
+    $(call emugl-export,LDLIBS,-lstdc++)
 
-$(call emugl-end-module)
+    $(call emugl-end-module)
+endif

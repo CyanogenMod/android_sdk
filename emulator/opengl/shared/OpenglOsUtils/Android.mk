@@ -37,10 +37,11 @@ $(call emugl-begin-host-static-library,libOpenglOsUtils)
 $(call emugl-end-module)
 
 ### 64-bit host library ####
-$(call emugl-begin-host-static-library,lib64OpenglOsUtils)
-    $(call emugl-export,C_INCLUDES,$(host_common_INCLUDES))
-    LOCAL_SRC_FILES = $(host_common_SRC_FILES)
-    $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
-    $(call emugl-export,CFLAGS,-m64)
-    $(call emugl-import,lib64emugl_common)
-$(call emugl-end-module)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-static-library,lib64OpenglOsUtils)
+        $(call emugl-export,C_INCLUDES,$(host_common_INCLUDES))
+        LOCAL_SRC_FILES = $(host_common_SRC_FILES)
+        $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
+        $(call emugl-export,CFLAGS,-m64 -fPIC)
+    $(call emugl-end-module)
+endif

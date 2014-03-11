@@ -21,6 +21,10 @@
 #include "ApiGen.h"
 #include "TypeFactory.h"
 
+#ifdef _WIN32
+#include "getopt.h"
+#endif
+
 const std::string SPEC_EXTENSION = std::string(".in");
 const std::string ATTRIB_EXTENSION = std::string(".attrib");
 const std::string TYPES_EXTENTION = std::string(".types");

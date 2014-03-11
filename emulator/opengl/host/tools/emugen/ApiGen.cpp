@@ -420,8 +420,8 @@ static void writeVarEncodingExpression(Var& var, FILE* fp)
         if (!var.isVoid()) {
             fprintf(fp, "\t\tmemcpy(ptr, &%s, %u); ptr += %u;\n",
                     varname,
-                    (uint) var.type()->bytes(),
-                    (uint) var.type()->bytes());
+                    (unsigned) var.type()->bytes(),
+                    (unsigned) var.type()->bytes());
         }
     }
 }
@@ -645,7 +645,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
             fprintf(fp, "\t return NULL;\n");
         } else if (e->retval().type()->name() != "void") {
             fprintf(fp, "\n\t%s retval;\n", e->retval().type()->name().c_str());
-            fprintf(fp, "\tstream->readback(&retval, %u);\n",(uint) e->retval().type()->bytes());
+            fprintf(fp, "\tstream->readback(&retval, %u);\n",(unsigned) e->retval().type()->bytes());
             fprintf(fp, "\treturn retval;\n");
         }
         fprintf(fp, "}\n\n");
@@ -781,7 +781,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
 \t\tunsigned int packetLen = *(int *)(ptr + 4);\n\
 \t\tif (len - pos < packetLen)  return pos; \n\
 \t\tswitch(opcode) {\n",
-            (uint) m_maxEntryPointsParams);
+            (unsigned) m_maxEntryPointsParams);
 
     for (size_t f = 0; f < n; f++) {
         enum Pass_t { PASS_TmpBuffAlloc = 0, PASS_MemAlloc, PASS_DebugPrint, PASS_FunctionCall, PASS_Epilog, PASS_LAST };
@@ -845,9 +845,9 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                         if (v->pointerDir() == Var::POINTER_IN || v->pointerDir() == Var::POINTER_INOUT) {
                             if (pass == PASS_MemAlloc && v->pointerDir() == Var::POINTER_INOUT) {
                                 fprintf(fp, "\t\t\tsize_t tmpPtr%uSize = (size_t)*(unsigned int *)(ptr + %s);\n",
-                                        (uint) j, varoffset.c_str());
+                                        (unsigned) j, varoffset.c_str());
                                 fprintf(fp, "unsigned char *tmpPtr%u = (ptr + %s + 4);\n",
-                                        (uint) j, varoffset.c_str());
+                                        (unsigned) j, varoffset.c_str());
                             }
                             if (pass == PASS_FunctionCall) {
                                 if (v->nullAllowed()) {
@@ -866,30 +866,30 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                         } else { // out pointer;
                             if (pass == PASS_TmpBuffAlloc) {
                                 fprintf(fp, "\t\t\tsize_t tmpPtr%uSize = (size_t)*(unsigned int *)(ptr + %s);\n",
-                                        (uint) j, varoffset.c_str());
+                                        (unsigned) j, varoffset.c_str());
                                 if (!totalTmpBuffExist) {
-                                    fprintf(fp, "\t\t\tsize_t totalTmpSize = tmpPtr%uSize;\n", (uint)j);
+                                    fprintf(fp, "\t\t\tsize_t totalTmpSize = tmpPtr%uSize;\n", (unsigned)j);
                                 } else {
-                                    fprintf(fp, "\t\t\ttotalTmpSize += tmpPtr%uSize;\n", (uint)j);
+                                    fprintf(fp, "\t\t\ttotalTmpSize += tmpPtr%uSize;\n", (unsigned)j);
                                 }
                                 tmpBufOffset[j] = totalTmpBuffOffset;
                                 char tmpPtrName[16];
-                                sprintf(tmpPtrName," + tmpPtr%uSize", (uint)j);
+                                sprintf(tmpPtrName," + tmpPtr%uSize", (unsigned)j);
                                 totalTmpBuffOffset += std::string(tmpPtrName);
                                 totalTmpBuffExist = true;
                             } else if (pass == PASS_MemAlloc) {
                                 fprintf(fp, "\t\t\tunsigned char *tmpPtr%u = &tmpBuf[%s];\n",
-                                        (uint)j, tmpBufOffset[j].c_str());
+                                        (unsigned)j, tmpBufOffset[j].c_str());
                             } else if (pass == PASS_FunctionCall) {
                                 if (v->nullAllowed()) {
                                     fprintf(fp, "tmpPtr%uSize == 0 ? NULL : (%s)(tmpPtr%u)",
-                                            (uint) j, v->type()->name().c_str(), (uint) j);
+                                            (unsigned) j, v->type()->name().c_str(), (unsigned) j);
                                 } else {
-                                    fprintf(fp, "(%s)(tmpPtr%u)", v->type()->name().c_str(), (uint) j);
+                                    fprintf(fp, "(%s)(tmpPtr%u)", v->type()->name().c_str(), (unsigned) j);
                                 }
                             } else if (pass == PASS_DebugPrint) {
                                 fprintf(fp, "(%s)(tmpPtr%u), *(unsigned int *)(ptr + %s)",
-                                        v->type()->name().c_str(), (uint) j,
+                                        v->type()->name().c_str(), (unsigned) j,
                                         varoffset.c_str());
                             }
                             varoffset += " + 4";
@@ -1036,7 +1036,7 @@ int ApiGen::setGlobalAttribute(const std::string & line, size_t lc)
     if (token == "base_opcode") {
         std::string str = getNextToken(line, pos, &last, WHITESPACE);
         if (str.size() == 0) {
-            fprintf(stderr, "line %u: missing value for base_opcode\n", (uint) lc);
+            fprintf(stderr, "line %u: missing value for base_opcode\n", (unsigned) lc);
         } else {
             setBaseOpcode(atoi(str.c_str()));
         }

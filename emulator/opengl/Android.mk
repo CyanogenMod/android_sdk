@@ -24,6 +24,12 @@ ifeq ($(BUILD_STANDALONE_EMULATOR),true)
 EMUGL_COMMON_INCLUDES := $(EMUGL_PATH)/host/libs/Translator/include
 endif
 
+ifeq ($(BUILD_STANDALONE_EMULATOR),true)
+EMUGL_BUILD_64BITS := $(strip $(EMULATOR_BUILD_64BITS))
+else
+EMUGL_BUILD_64BITS := true
+endif
+
 # common cflags used by several modules
 # This is always set to a module's LOCAL_CFLAGS
 # See the definition of emugl-begin-module in common.mk
