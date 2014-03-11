@@ -31,5 +31,5 @@ PRODUCT_PACKAGES += \
 	annotations \
 	mksdcard \
 	fastboot \
-	emugen
-
+	emugen \
+	sqlite3 \
