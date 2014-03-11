@@ -15,6 +15,8 @@
 */
 #include "osThread.h"
 
+#include "emugl/common/thread_store.h"
+
 namespace osUtils {
 
 Thread::Thread() :
@@ -95,6 +97,7 @@ Thread::thread_main(void *p_arg)
     Thread *self = (Thread *)p_arg;
     int ret = self->Main();
     self->m_isRunning = false;
+    ::emugl::ThreadStore::OnThreadExit();
     return ret;
 }
 
