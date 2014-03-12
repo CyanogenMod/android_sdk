@@ -15,6 +15,7 @@
 */
 
 #include "ShaderParser.h"
+#include <stdlib.h>
 #include <string.h>
 
 ShaderParser::ShaderParser():ObjectData(SHADER_DATA),

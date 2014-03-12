@@ -50,11 +50,11 @@ GLEScontext* getGLESContext();
 #define tls_thread  EglThreadInfo::get()
 
 EglGlobalInfo* g_eglInfo = NULL;
-android::Mutex  s_eglLock;
+emugl::Mutex  s_eglLock;
 
 void initGlobalInfo()
 {
-    android::Mutex::Autolock mutex(s_eglLock);
+    emugl::Mutex::AutoLock mutex(s_eglLock);
     if (!g_eglInfo) {
         g_eglInfo = EglGlobalInfo::getInstance();
     } 

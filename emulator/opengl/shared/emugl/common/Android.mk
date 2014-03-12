@@ -19,11 +19,11 @@ LOCAL_SRC_FILES := $(host_commonSources)
 $(call emugl-export,CFLAGS,-m64)
 $(call emugl-end-module)
 
-
 ### emugl_common_unittests ##############################################
 
 host_commonSources := \
-    smart_ptr_unittest.cpp
+    mutex_unittest.cpp \
+    smart_ptr_unittest.cpp \
 
 $(call emugl-begin-host-executable,emugl_common_host_unittests)
 LOCAL_SRC_FILES := $(host_commonSources)

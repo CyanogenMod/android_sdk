@@ -16,8 +16,8 @@
 #ifndef _OBJECT_NAME_MANAGER_H
 #define _OBJECT_NAME_MANAGER_H
 
-#include <cutils/threads.h>
 #include <map>
+#include "emugl/common/mutex.h"
 #include "emugl/common/smart_ptr.h"
 
 enum NamedObjectType {
@@ -129,7 +129,7 @@ public:
     void deleteName(NamedObjectType p_type, unsigned int p_name);
 
 private:
-    mutex_t m_lock;
+    emugl::Mutex m_lock;
 };
 
 //
@@ -204,7 +204,7 @@ private:
     ~ShareGroup();
 
 private:
-    mutex_t m_lock;
+    emugl::Mutex m_lock;
     NameSpace *m_nameSpace[NUM_OBJECT_TYPES];
     void *m_objectsData;
 };
@@ -262,7 +262,7 @@ public:
 
 private:
     ShareGroupsMap m_groups;
-    mutex_t m_lock;
+    emugl::Mutex m_lock;
     GlobalNameSpace *m_globalNameSpace;
 };
 

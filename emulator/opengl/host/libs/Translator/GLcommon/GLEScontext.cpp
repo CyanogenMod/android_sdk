@@ -23,6 +23,7 @@
 #include <GLcommon/TextureUtils.h>
 #include <GLcommon/FramebufferData.h>
 #include <strings.h>
+#include <string.h>
 
 //decleration
 static void convertFixedDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
@@ -84,7 +85,7 @@ void GLESConversionArrays::operator++(){
 }
 
 GLDispatch     GLEScontext::s_glDispatch;
-android::Mutex GLEScontext::s_lock;
+emugl::Mutex   GLEScontext::s_lock;
 std::string*   GLEScontext::s_glExtensions= NULL;
 std::string    GLEScontext::s_glVendor;
 std::string    GLEScontext::s_glRenderer;
