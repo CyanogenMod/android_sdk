@@ -14,7 +14,6 @@
 * limitations under the License.
 */
 #include "SocketStream.h"
-#include <cutils/sockets.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,6 +52,7 @@ SocketStream::~SocketStream()
 #else
         ::close(m_sock);
 #endif
+        m_sock = -1;
     }
     if (m_buf != NULL) {
         free(m_buf);
@@ -140,7 +140,7 @@ const unsigned char *SocketStream::read( void *buf, size_t *inout_len)
 
     int n;
     do {
-        n = recv(buf, *inout_len);
+        n = this->recv(buf, *inout_len);
     } while( n < 0 && errno == EINTR );
 
     if (n > 0) {

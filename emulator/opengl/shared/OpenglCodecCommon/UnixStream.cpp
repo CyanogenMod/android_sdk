@@ -14,7 +14,9 @@
 * limitations under the License.
 */
 #include "UnixStream.h"
-#include <cutils/sockets.h>
+
+#include "emugl/common/sockets.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,7 +94,7 @@ int UnixStream::listen(char addrstr[MAX_ADDRSTR_LEN])
         return -1;
     }
 
-    m_sock = socket_local_server(addrstr, ANDROID_SOCKET_NAMESPACE_FILESYSTEM, SOCK_STREAM);
+    m_sock = emugl::socketLocalServer(addrstr, SOCK_STREAM);
     if (!valid()) return int(ERR_INVALID_SOCKET);
 
     return 0;
@@ -123,7 +125,7 @@ SocketStream * UnixStream::accept()
 
 int UnixStream::connect(const char* addr)
 {
-    m_sock = socket_local_client(addr, ANDROID_SOCKET_NAMESPACE_FILESYSTEM, SOCK_STREAM);
+    m_sock = emugl::socketLocalClient(addr, SOCK_STREAM);
     if (!valid()) return -1;
 
     return 0;

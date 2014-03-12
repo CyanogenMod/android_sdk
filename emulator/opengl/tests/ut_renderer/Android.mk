@@ -3,7 +3,7 @@ LOCAL_PATH:=$(call my-dir)
 ifeq ($(HOST_OS), linux)
 
 $(call emugl-begin-host-executable,ut_renderer)
-$(call emugl-import,libut_rendercontrol_dec libGLESv1_dec libGLESv2_dec libEGL_host_wrapper)
+$(call emugl-import,libut_rendercontrol_dec libGLESv1_dec libGLESv2_dec libEGL_host_wrapper libOpenglRender)
 
 LOCAL_SRC_FILES := ut_renderer.cpp \
         RenderingThread.cpp \
