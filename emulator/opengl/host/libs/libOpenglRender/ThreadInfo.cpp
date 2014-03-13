@@ -15,17 +15,28 @@
 */
 
 #include "ThreadInfo.h"
-#include <cutils/threads.h>
+#include "emugl/common/lazy_instance.h"
+#include "emugl/common/thread_store.h"
 
-static thread_store_t s_tls = THREAD_STORE_INITIALIZER;
+namespace {
+
+class ThreadInfoStore : public ::emugl::ThreadStore {
+public:
+    ThreadInfoStore() : ::emugl::ThreadStore(NULL) {}
+};
+
+}  // namespace
+
+static ::emugl::LazyInstance<ThreadInfoStore> s_tls = LAZY_INSTANCE_INIT;
 
 RenderThreadInfo::RenderThreadInfo() {
-    thread_store_set(&s_tls, this, NULL);
+    s_tls->set(this);
 }
 
 RenderThreadInfo::~RenderThreadInfo() {
+    s_tls->set(NULL);
 }
 
 RenderThreadInfo* RenderThreadInfo::get() {
-    return (RenderThreadInfo*)thread_store_get(&s_tls);
+    return static_cast<RenderThreadInfo*>(s_tls->get());
 }

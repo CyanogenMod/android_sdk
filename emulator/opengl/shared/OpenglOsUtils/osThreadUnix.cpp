@@ -15,6 +15,8 @@
 */
 #include "osThread.h"
 
+#include "emugl/common/thread_store.h"
+
 #include <stdint.h>
 
 namespace osUtils {
@@ -88,6 +90,7 @@ Thread::thread_main(void *p_arg)
     self->m_exitStatus = ret;
     pthread_mutex_unlock(&self->m_lock);
 
+    ::emugl::ThreadStore::OnThreadExit();
     return (void*)(uintptr_t)ret;
 }
 
