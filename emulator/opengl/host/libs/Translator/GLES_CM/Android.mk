@@ -18,11 +18,14 @@ $(call emugl-end-module)
 
 
 ### GLES_CM host implementation, 64-bit ########################
-$(call emugl-begin-host-shared-library,lib64GLES_CM_translator)
+ifdef EMUGL_BUILD_64BITS
+    $(call emugl-begin-host-shared-library,lib64GLES_CM_translator)
 
-$(call emugl-import,lib64GLcommon)
+    $(call emugl-import,lib64GLcommon)
 
-LOCAL_LDLIBS += -m64
-LOCAL_SRC_FILES := $(host_common_SRC_FILES)
+    LOCAL_CFLAGS += -fPIC
+    LOCAL_LDLIBS += -m64
+    LOCAL_SRC_FILES := $(host_common_SRC_FILES)
 
-$(call emugl-end-module)
+    $(call emugl-end-module)
+endif

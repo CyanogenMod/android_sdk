@@ -7,9 +7,9 @@ LOCAL_SRC_FILES:= \
         triangleV2.cpp
 
 LOCAL_CFLAGS += $(EMUGL_SDL_CFLAGS) -g -O0
-LOCAL_LDLIBS += $(EMUGL_SDL_LDLIBS)
+LOCAL_LDLIBS += $(EMUGL_SDL_LDLIBS) -lstdc++
 
-LOCAL_STATIC_LIBRARIES += libSDL libSDLmain
+LOCAL_STATIC_LIBRARIES += $(EMUGL_SDL_STATIC_LIBRARIES)
 
 ifeq ($(HOST_OS),darwin)
   # SDK 10.6+ deprecates __dyld_func_lookup required by dlcompat_init_func
@@ -23,4 +23,3 @@ ifeq ($(HOST_OS),darwin)
 endif
 
 $(call emugl-end-module)
-
