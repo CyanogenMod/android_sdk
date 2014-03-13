@@ -51,7 +51,7 @@ GLDispatch::GLDispatch():m_isLoaded(false){};
 
 
 void GLDispatch::dispatchFuncs() {
-    android::Mutex::Autolock mutex(m_lock);
+    emugl::Mutex::AutoLock mutex(m_lock);
     if(m_isLoaded)
         return;
     LOAD_GL_FUNC(glActiveTexture);

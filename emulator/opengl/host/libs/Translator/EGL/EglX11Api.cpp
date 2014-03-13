@@ -14,10 +14,11 @@
 * limitations under the License.
 */
 #include "EglOsApi.h"
+#include "emugl/common/mutex.h"
+
 #include <string.h>
 #include <X11/Xlib.h>
 #include <GL/glx.h>
-#include <utils/threads.h>
 
 
 class ErrorHandler{
@@ -29,7 +30,7 @@ int getLastError(){ return s_lastErrorCode;};
 private:
 static int s_lastErrorCode;
 int (*m_oldErrorHandler) (Display *, XErrorEvent *);
-static android::Mutex s_lock;
+static emugl::Mutex s_lock;
 static int errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event);
 
 };
@@ -50,17 +51,17 @@ private:
 };
 
 int ErrorHandler::s_lastErrorCode = 0;
-android::Mutex ErrorHandler::s_lock;
+emugl::Mutex ErrorHandler::s_lock;
 
 ErrorHandler::ErrorHandler(EGLNativeDisplayType dpy){
-   android::Mutex::Autolock mutex(s_lock);
+   emugl::Mutex::AutoLock mutex(s_lock);
    XSync(dpy,False);
    s_lastErrorCode = 0;
    m_oldErrorHandler = XSetErrorHandler(errorHandlerProc);
 }
 
 ErrorHandler::~ErrorHandler(){
-   android::Mutex::Autolock mutex(s_lock);
+   emugl::Mutex::AutoLock mutex(s_lock);
    XSetErrorHandler(m_oldErrorHandler);
    s_lastErrorCode = 0;
 }
