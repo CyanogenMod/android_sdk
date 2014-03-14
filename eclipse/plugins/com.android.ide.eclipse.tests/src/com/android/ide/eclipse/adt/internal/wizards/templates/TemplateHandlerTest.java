@@ -40,10 +40,10 @@ import com.android.tools.lint.checks.ManifestDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
-import com.android.tools.lint.client.api.IDomParser;
-import com.android.tools.lint.client.api.IJavaParser;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -831,15 +831,13 @@ public class TemplateHandlerTest extends SdkLoadingTestCase {
 
             @Override
             @Nullable
-            public IJavaParser getJavaParser() {
-                return new EclipseLintClient(null, null, null, false).getJavaParser();
+            public JavaParser getJavaParser(@Nullable Project project) {
+                return new EclipseLintClient(null, null, null, false).getJavaParser(project);
             }
 
             @Override
-            @Nullable
-            public IDomParser getDomParser() {
-                //return new LintCliXmlParser();
-                return new EclipseLintClient(null, null, null, false).getDomParser();
+            public XmlParser getXmlParser() {
+                return new EclipseLintClient(null, null, null, false).getXmlParser();
             }
         });
         File projectDir = AdtUtils.getAbsolutePath(project).toFile();
