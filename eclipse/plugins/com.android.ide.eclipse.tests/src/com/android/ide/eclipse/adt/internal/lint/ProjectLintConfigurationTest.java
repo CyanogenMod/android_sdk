@@ -21,9 +21,9 @@ import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjec
 import com.android.tools.lint.checks.DuplicateIdDetector;
 import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.JavaParser;
+import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
@@ -200,7 +200,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
         }
 
         @Override
-        public XmlParser getXmlParser() {
+        public IDomParser getDomParser() {
             return null;
         }
 
@@ -210,7 +210,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
         }
 
         @Override
-        public JavaParser getJavaParser(@Nullable Project project) {
+        public IJavaParser getJavaParser() {
             return null;
         }
     }
