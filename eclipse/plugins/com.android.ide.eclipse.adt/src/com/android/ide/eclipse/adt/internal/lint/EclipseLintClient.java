@@ -33,10 +33,10 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.IDomParser;
-import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
@@ -105,7 +105,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import lombok.ast.TypeReference;
 import lombok.ast.ecj.EcjTreeConverter;
 import lombok.ast.grammar.ParseProblem;
 import lombok.ast.grammar.Source;
@@ -114,7 +113,7 @@ import lombok.ast.grammar.Source;
  * Eclipse implementation for running lint on workspace files and projects.
  */
 @SuppressWarnings("restriction") // DOM model
-public class EclipseLintClient extends LintClient implements IDomParser {
+public class EclipseLintClient extends LintClient {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
     private static final String MODEL_PROPERTY = "model";       //$NON-NLS-1$
     private final List<? extends IResource> mResources;
@@ -206,51 +205,103 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
-    public IDomParser getDomParser() {
-        return this;
+    public XmlParser getXmlParser() {
+        return new XmlParser() {
+            @Override
+            public Document parseXml(@NonNull XmlContext context) {
+                // Map File to IFile
+                IFile file = AdtUtils.fileToIFile(context.file);
+                if (file == null || !file.exists()) {
+                    String path = context.file.getPath();
+                    AdtPlugin.log(IStatus.ERROR, "Can't find file %1$s in workspace", path);
+                    return null;
+                }
+
+                IStructuredModel model = null;
+                try {
+                    IModelManager modelManager = StructuredModelManager.getModelManager();
+                    if (modelManager == null) {
+                        // This can happen if incremental lint is running right as Eclipse is
+                        // shutting down
+                        return null;
+                    }
+                    model = modelManager.getModelForRead(file);
+                    if (model instanceof IDOMModel) {
+                        context.setProperty(MODEL_PROPERTY, model);
+                        IDOMModel domModel = (IDOMModel) model;
+                        return domModel.getDocument();
+                    }
+                } catch (IOException e) {
+                    AdtPlugin.log(e, "Cannot read XML file");
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+
+                return null;
+            }
+
+            @Override
+            public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
+                IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+                return new LazyLocation(context.file, model.getStructuredDocument(),
+                        (IndexedRegion) node);
+            }
+
+            @Override
+            public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node,
+                    int start, int end) {
+                IndexedRegion region = (IndexedRegion) node;
+                int nodeStart = region.getStartOffset();
+
+                IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+                // Get line number
+                LazyLocation location = new LazyLocation(context.file,
+                        model.getStructuredDocument(), region);
+                int line = location.getStart().getLine();
+
+                Position startPos = new DefaultPosition(line, -1, nodeStart + start);
+                Position endPos = new DefaultPosition(line, -1, nodeStart + end);
+                return Location.create(context.file, startPos, endPos);
+            }
+
+            @Override
+            public int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node) {
+                IndexedRegion region = (IndexedRegion) node;
+                return region.getStartOffset();
+            }
+
+            @Override
+            public int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node) {
+                IndexedRegion region = (IndexedRegion) node;
+                return region.getEndOffset();
+            }
+
+            @Override
+            public @NonNull Handle createLocationHandle(final @NonNull XmlContext context,
+                    final @NonNull Node node) {
+                IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+                return new LazyLocation(context.file, model.getStructuredDocument(),
+                        (IndexedRegion) node);
+            }
+
+            @Override
+            public void dispose(@NonNull XmlContext context, @NonNull Document document) {
+                IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
+                assert model != null : context.file;
+                if (model != null) {
+                    model.releaseFromRead();
+                }
+            }
+        };
     }
 
     @Override
-    public IJavaParser getJavaParser() {
+    public JavaParser getJavaParser(@Nullable Project project) {
         if (mJavaParser == null) {
             mJavaParser = new EclipseJavaParser();
         }
 
         return mJavaParser;
-    }
-
-    // ----- Implements IDomParser -----
-
-    @Override
-    public Document parseXml(@NonNull XmlContext context) {
-        // Map File to IFile
-        IFile file = AdtUtils.fileToIFile(context.file);
-        if (file == null || !file.exists()) {
-            String path = context.file.getPath();
-            AdtPlugin.log(IStatus.ERROR, "Can't find file %1$s in workspace", path);
-            return null;
-        }
-
-        IStructuredModel model = null;
-        try {
-            IModelManager modelManager = StructuredModelManager.getModelManager();
-            if (modelManager == null) {
-                // This can happen if incremental lint is running right as Eclipse is shutting down
-                return null;
-            }
-            model = modelManager.getModelForRead(file);
-            if (model instanceof IDOMModel) {
-                context.setProperty(MODEL_PROPERTY, model);
-                IDOMModel domModel = (IDOMModel) model;
-                return domModel.getDocument();
-            }
-        } catch (IOException e) {
-            AdtPlugin.log(e, "Cannot read XML file");
-        } catch (CoreException e) {
-            AdtPlugin.log(e, null);
-        }
-
-        return null;
     }
 
     // Cache for {@link getProject}
@@ -735,48 +786,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
     }
 
-    @Override
-    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node) {
-        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
-        return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
-    }
-
-    @Override
-    public @NonNull Location getLocation(@NonNull XmlContext context, @NonNull Node node,
-            int start, int end) {
-        IndexedRegion region = (IndexedRegion) node;
-        int nodeStart = region.getStartOffset();
-
-        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
-        // Get line number
-        LazyLocation location = new LazyLocation(context.file, model.getStructuredDocument(),
-                region);
-        int line = location.getStart().getLine();
-
-        Position startPos = new DefaultPosition(line, -1, nodeStart + start);
-        Position endPos = new DefaultPosition(line, -1, nodeStart + end);
-        return Location.create(context.file, startPos, endPos);
-    }
-
-    @Override
-    public int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node) {
-        IndexedRegion region = (IndexedRegion) node;
-        return region.getStartOffset();
-    }
-
-    @Override
-    public int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node) {
-        IndexedRegion region = (IndexedRegion) node;
-        return region.getEndOffset();
-    }
-
-    @Override
-    public @NonNull Handle createLocationHandle(final @NonNull XmlContext context,
-            final @NonNull Node node) {
-        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
-        return new LazyLocation(context.file, model.getStructuredDocument(), (IndexedRegion) node);
-    }
-
     private Map<Project, ClassPathInfo> mProjectInfo;
 
     @Override
@@ -899,15 +908,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     public @NonNull Class<? extends Detector> replaceDetector(
             @NonNull Class<? extends Detector> detectorClass) {
         return detectorClass;
-    }
-
-    @Override
-    public void dispose(@NonNull XmlContext context, @NonNull Document document) {
-        IStructuredModel model = (IStructuredModel) context.getProperty(MODEL_PROPERTY);
-        assert model != null : context.file;
-        if (model != null) {
-            model.releaseFromRead();
-        }
     }
 
     @Override
@@ -1102,7 +1102,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
     }
 
-    private static class EclipseJavaParser implements IJavaParser {
+    private static class EclipseJavaParser extends JavaParser {
         private static final boolean USE_ECLIPSE_PARSER = true;
         private final Parser mParser;
 
@@ -1126,6 +1126,11 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             } else {
                 mParser = null;
             }
+        }
+
+        @Override
+        public void prepareJavaParse(@NonNull List<JavaContext> contexts) {
+            // TODO: Use batch compiler from lint-cli.jar
         }
 
         @Override
@@ -1230,14 +1235,15 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
         @Override
         @Nullable
-        public lombok.ast.Node resolve(@NonNull JavaContext context,
+        public ResolvedNode resolve(@NonNull JavaContext context,
                 @NonNull lombok.ast.Node node) {
             return null;
         }
 
         @Override
         @Nullable
-        public TypeReference getType(@NonNull JavaContext context, @NonNull lombok.ast.Node node) {
+        public TypeDescriptor getType(@NonNull JavaContext context,
+                @NonNull lombok.ast.Node node) {
             return null;
         }
 
