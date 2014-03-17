@@ -233,7 +233,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         // displayed to ensure we have the latest one (dialog is reused but SDK could have
         // been changed in between.
         mPreferredAvdSelector = new AvdSelector(avdOffsetComp,
-                Sdk.getCurrent().getSdkLocation(),
+                Sdk.getCurrent().getSdkOsLocation(),
                 null /* avd manager */,
                 DisplayMode.SIMPLE_CHECK,
                 new AdtConsoleSdkLog());

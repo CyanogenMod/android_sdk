@@ -172,7 +172,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
             return null;
         }
 
-        String sdkLocation = sdk.getSdkLocation();
+        String sdkLocation = sdk.getSdkOsLocation();
         if (minimumRevision > 0) {
             File path = getSupportJarFile();
             if (path != null) {
@@ -229,7 +229,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
     public static int getInstalledRevision() {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
-            String sdkLocation = sdk.getSdkLocation();
+            String sdkLocation = sdk.getSdkOsLocation();
             SdkManager manager = SdkManager.createManager(sdkLocation, NullLogger.getLogger());
             Map<String, Integer> versions = manager.getExtrasVersions();
             Integer version = versions.get(VENDOR_ID + '/' + SUPPORT_ID);
@@ -362,7 +362,7 @@ public class AddSupportJarAction implements IObjectActionDelegate {
     private static File getSupportPackageDir() {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
-            String sdkLocation = sdk.getSdkLocation();
+            String sdkLocation = sdk.getSdkOsLocation();
             SdkManager manager = SdkManager.createManager(sdkLocation, NullLogger.getLogger());
             Map<String, Integer> versions = manager.getExtrasVersions();
             Integer version = versions.get(VENDOR_ID + '/' + SUPPORT_ID);
