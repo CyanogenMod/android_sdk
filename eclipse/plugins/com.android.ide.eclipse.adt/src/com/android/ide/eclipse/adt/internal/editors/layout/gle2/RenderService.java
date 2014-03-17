@@ -168,7 +168,7 @@ public class RenderService {
         if (RenderSecurityManager.RESTRICT_READS) {
             projectPath = AdtUtils.getAbsolutePath(mProject).toFile().getPath();
             Sdk sdk = Sdk.getCurrent();
-            sdkPath = sdk != null ? sdk.getSdkLocation() : null;
+            sdkPath = sdk != null ? sdk.getSdkOsLocation() : null;
         }
         RenderSecurityManager securityManager = new RenderSecurityManager(sdkPath, projectPath);
         securityManager.setLogger(AdtPlugin.getDefault());
