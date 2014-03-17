@@ -289,10 +289,15 @@ public final class ProjectCallback extends LegacyCallback {
     @Override
     public String getNamespace() {
         if (mNamespace == null) {
-            ManifestData manifestData = AndroidManifestHelper.parseForData(mProject);
-            if (manifestData != null) {
-                String javaPackage = manifestData.getPackage();
-                mNamespace = String.format(AdtConstants.NS_CUSTOM_RESOURCES, javaPackage);
+            boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
+            try {
+                ManifestData manifestData = AndroidManifestHelper.parseForData(mProject);
+                if (manifestData != null) {
+                    String javaPackage = manifestData.getPackage();
+                    mNamespace = String.format(AdtConstants.NS_CUSTOM_RESOURCES, javaPackage);
+                }
+            } finally {
+                RenderSecurityManager.exitSafeRegion(token);
             }
         }
 
@@ -440,23 +445,33 @@ public final class ProjectCallback extends LegacyCallback {
 
     @Override
     public ILayoutPullParser getParser(String layoutName) {
-        // Try to compute the ResourceValue for this layout since layoutlib
-        // must be an older version which doesn't pass the value:
-        if (mResourceResolver != null) {
-            ResourceValue value = mResourceResolver.getProjectResource(ResourceType.LAYOUT,
-                    layoutName);
-            if (value != null) {
-                return getParser(value);
+        boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
+        try {
+            // Try to compute the ResourceValue for this layout since layoutlib
+            // must be an older version which doesn't pass the value:
+            if (mResourceResolver != null) {
+                ResourceValue value = mResourceResolver.getProjectResource(ResourceType.LAYOUT,
+                        layoutName);
+                if (value != null) {
+                    return getParser(value);
+                }
             }
-        }
 
-        return getParser(layoutName, null);
+            return getParser(layoutName, null);
+        } finally {
+            RenderSecurityManager.exitSafeRegion(token);
+        }
     }
 
     @Override
     public ILayoutPullParser getParser(ResourceValue layoutResource) {
-        return getParser(layoutResource.getName(),
-                new File(layoutResource.getValue()));
+        boolean token = RenderSecurityManager.enterSafeRegion(mCredential);
+        try {
+            return getParser(layoutResource.getName(),
+                    new File(layoutResource.getValue()));
+        } finally {
+            RenderSecurityManager.exitSafeRegion(token);
+        }
     }
 
     private ILayoutPullParser getParser(String layoutName, File xml) {
