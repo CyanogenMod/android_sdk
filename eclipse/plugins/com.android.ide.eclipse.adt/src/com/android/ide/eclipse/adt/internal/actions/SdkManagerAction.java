@@ -147,7 +147,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                     // Get the SDK locatiom from the current SDK or as fallback
                     // directly from the ADT preferences.
                     Sdk sdk = Sdk.getCurrent();
-                    String osSdkLocation = sdk == null ? null : sdk.getSdkLocation();
+                    String osSdkLocation = sdk == null ? null : sdk.getSdkOsLocation();
                     if (osSdkLocation == null || !new File(osSdkLocation).isDirectory()) {
                         osSdkLocation = AdtPrefs.getPrefs().getOsSdkFolder();
                     }
@@ -272,7 +272,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                         // Do not show non-error/warning log in Eclipse.
                     };
                 },
-                sdk.getSdkLocation(),
+                sdk.getSdkOsLocation(),
                 SdkInvocationContext.IDE);
 
         ISdkChangeListener listener = new ISdkChangeListener() {

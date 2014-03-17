@@ -326,7 +326,7 @@ public class LibraryClasspathContainerInitializer extends BaseClasspathContainer
 
             // annotations support for older version of android
             if (state.getTarget() != null && state.getTarget().getVersion().getApiLevel() <= 15) {
-                File annotationsJar = new File(Sdk.getCurrent().getSdkLocation(),
+                File annotationsJar = new File(Sdk.getCurrent().getSdkOsLocation(),
                         SdkConstants.FD_TOOLS + File.separator + SdkConstants.FD_SUPPORT +
                         File.separator + SdkConstants.FN_ANNOTATIONS_JAR);
 
