@@ -110,7 +110,7 @@ public class BuildFileCreator {
             @NonNull Shell shell,
             @NonNull IProgressMonitor pm) {
 
-        File gradleLocation = new File(Sdk.getCurrent().getSdkLocation(), GRADLE_WRAPPER_LOCATION);
+        File gradleLocation = new File(Sdk.getCurrent().getSdkOsLocation(), GRADLE_WRAPPER_LOCATION);
         SubMonitor localmonitor = null;
 
         try {

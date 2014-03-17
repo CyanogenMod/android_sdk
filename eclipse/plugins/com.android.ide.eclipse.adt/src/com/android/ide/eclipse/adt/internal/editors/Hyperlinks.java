@@ -445,7 +445,7 @@ public class Hyperlinks {
      */
     private static URL getDocUrl(String relative) {
         // First try to find locally installed documentation
-        File sdkLocation = new File(Sdk.getCurrent().getSdkLocation());
+        File sdkLocation = new File(Sdk.getCurrent().getSdkOsLocation());
         File docs = new File(sdkLocation, FD_DOCS + File.separator + FD_DOCS_REFERENCE);
         try {
             if (docs.exists()) {

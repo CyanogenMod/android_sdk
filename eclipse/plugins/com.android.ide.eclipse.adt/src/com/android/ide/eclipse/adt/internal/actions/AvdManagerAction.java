@@ -57,7 +57,7 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
             AvdManagerWindow window = new AvdManagerWindow(
                     AdtPlugin.getShell(),
                     new AdtConsoleSdkLog(),
-                    sdk.getSdkLocation(),
+                    sdk.getSdkOsLocation(),
                     AvdInvocationContext.IDE);
             window.open();
         } else {
