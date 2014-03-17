@@ -581,9 +581,9 @@ public class BuildHelper {
         String[] envp = null;
         Map<String, String> envMap = new TreeMap<String, String>(System.getenv());
         if (!envMap.containsKey("PROGUARD_HOME")) {                                    //$NON-NLS-1$
-            envMap.put("PROGUARD_HOME",    Sdk.getCurrent().getSdkLocation() +         //$NON-NLS-1$
-                                            SdkConstants.FD_TOOLS + File.separator +
-                                            SdkConstants.FD_PROGUARD);
+            envMap.put("PROGUARD_HOME", Sdk.getCurrent().getSdkOsLocation() +          //$NON-NLS-1$
+                                        SdkConstants.FD_TOOLS + File.separator +
+                                        SdkConstants.FD_PROGUARD);
             envp = new String[envMap.size()];
             int i = 0;
             for (Map.Entry<String, String> entry : envMap.entrySet()) {
