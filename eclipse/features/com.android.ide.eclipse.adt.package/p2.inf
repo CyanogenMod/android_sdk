@@ -6,4 +6,4 @@ requires.1.name=org.eclipse.platform.ide
 requires.1.greedy=true
 
 instructions.configure=\
-org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(location:https${#58}//dl-ssl.google.com/android/eclipse/,type:0,name:Android Developer Tools Update Site,enabled:true);
+org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(location:https${#58}//dl.google.com/android/eclipse/,type:0,name:Android Developer Tools Update Site,enabled:true);
