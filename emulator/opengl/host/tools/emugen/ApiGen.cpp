@@ -776,12 +776,10 @@ int ApiGen::genDecoderImpl(const std::string &filename)
 \tchar lastCall[256] = {0}; \n\
 #endif \n\
 \twhile ((len - pos >= 8) && !unknownOpcode) {   \n\
-\t\tvoid *params[%u]; \n\
 \t\tint opcode = *(int *)ptr;   \n\
 \t\tunsigned int packetLen = *(int *)(ptr + 4);\n\
 \t\tif (len - pos < packetLen)  return pos; \n\
-\t\tswitch(opcode) {\n",
-            (unsigned) m_maxEntryPointsParams);
+\t\tswitch(opcode) {\n");
 
     for (size_t f = 0; f < n; f++) {
         enum Pass_t { PASS_TmpBuffAlloc = 0, PASS_MemAlloc, PASS_DebugPrint, PASS_FunctionCall, PASS_Epilog, PASS_LAST };

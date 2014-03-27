@@ -699,8 +699,6 @@ GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
         return;
     }
 
-    GLint i;
-
     switch(pname)
     {
     case GL_FRAMEBUFFER_BINDING_OES:
@@ -745,7 +743,6 @@ GL_API void GL_APIENTRY  glGetBufferParameteriv( GLenum target, GLenum pname, GL
     GET_CTX()
     SET_ERROR_IF(!(GLEScmValidate::bufferTarget(target) && GLEScmValidate::bufferParam(pname)),GL_INVALID_ENUM);
     SET_ERROR_IF(!ctx->isBindedBuffer(target),GL_INVALID_OPERATION);
-    bool ret = true;
     switch(pname) {
     case GL_BUFFER_SIZE:
         ctx->getBufferSize(target,params);
@@ -787,7 +784,6 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
 
     size_t nParams = glParamSize(pname);
     GLfloat fParams[16];
-    GLint i;
 
     switch(pname)
     {

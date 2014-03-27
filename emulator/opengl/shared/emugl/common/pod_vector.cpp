@@ -90,7 +90,6 @@ void PodVectorBase::resize(size_t newSize, size_t itemSize) {
 }
 
 void PodVectorBase::reserve(size_t newSize, size_t itemSize) {
-    const size_t kMaxSize = maxItemCapacity(itemSize);
     if (newSize == 0) {
         ::free(mBegin);
         mBegin = NULL;

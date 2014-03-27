@@ -148,9 +148,6 @@ int main(int argc, char **argv)
     bool useCopy          = false;
     bool useSubCopy       = false;
 
-    int c;
-    extern char *optarg;
-
     #ifdef _WIN32
         HWND   windowId = NULL;
     #elif __linux__
