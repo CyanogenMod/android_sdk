@@ -416,10 +416,10 @@ void queryConfigs(EGLNativeInternalDisplayType display,int renderableType,Config
     initPixelFormat(dpy);
 
     //quering num of formats
-    int nFormats = DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+    int maxFormat = DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 
     //inserting rest of formats
-    for(iPixelFormat;iPixelFormat < nFormats; iPixelFormat++) {
+    for(;iPixelFormat <= maxFormat; iPixelFormat++) {
          DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
          EglConfig* pConfig = pixelFormatToConfig(display,renderableType,&pfd,iPixelFormat);
          if(pConfig) listOut.push_back(pConfig);
