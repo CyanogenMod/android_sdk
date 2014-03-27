@@ -858,7 +858,9 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetCurrentDisplay(void) {
 EGLAPI EGLBoolean EGLAPIENTRY eglWaitGL(void) {
     EGLenum api = eglQueryAPI();
     eglBindAPI(EGL_OPENGL_ES_API);
-    return eglWaitClient();
+    EGLBoolean ret = eglWaitClient();
+    eglBindAPI(api);
+    return ret;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY eglWaitNative(EGLint engine) {
