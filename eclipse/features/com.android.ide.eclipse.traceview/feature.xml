@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.traceview"
       label="Android Traceview"
-      version="22.6.1.qualifier"
+      version="22.6.2.qualifier"
       provider-name="The Android Open Source Project"
       plugin="com.android.ide.eclipse.traceview">
 
