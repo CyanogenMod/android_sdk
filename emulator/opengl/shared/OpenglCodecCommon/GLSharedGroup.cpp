@@ -258,7 +258,7 @@ GLenum GLSharedGroup::subUpdateBufferData(GLuint bufferId, GLintptr offset, GLsi
 void GLSharedGroup::deleteBufferData(GLuint bufferId)
 {
     emugl::Mutex::AutoLock _lock(m_lock);
-    ssize_t idx = m_buffers.remove(bufferId);
+    (void) m_buffers.remove(bufferId);
 }
 
 void GLSharedGroup::addProgramData(GLuint program)

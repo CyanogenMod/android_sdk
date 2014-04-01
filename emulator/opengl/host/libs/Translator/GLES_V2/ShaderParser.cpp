@@ -224,8 +224,7 @@ void ShaderParser::parseOmitPrecision(){
         SEMICOLON
     } statementState = PRECISION;
     const char *precision = NULL;
-    const char *delimiter = NULL;
-    
+
     enum {
         PARSE_NONE,
         PARSE_IN_C_COMMENT,
