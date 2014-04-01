@@ -112,7 +112,6 @@ int SocketStream::writeFully(const void* buffer, size_t size)
 
 const unsigned char *SocketStream::readFully(void *buf, size_t len)
 {
-    const unsigned char* ret = NULL;
     if (!valid()) return NULL;
     if (!buf) {
       return NULL;  // do not allow NULL buf in that implementation
