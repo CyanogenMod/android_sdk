@@ -73,12 +73,10 @@ protected:
     const void* end() const { return mEnd; }
 
     void* itemAt(size_t pos, size_t itemSize) {
-        const size_t kMaxCapacity = SIZE_MAX / itemSize;
         return mBegin + pos * itemSize;
     }
 
     const void* itemAt(size_t pos, size_t itemSize) const {
-        const size_t kMaxCapacity = SIZE_MAX / itemSize;
         return mBegin + pos * itemSize;
     }
 
