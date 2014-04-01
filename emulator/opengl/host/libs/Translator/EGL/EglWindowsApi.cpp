@@ -193,7 +193,8 @@ HWND createDummyWindow(){
     wcx.lpszClassName = "DummyWin";                 // name of window class
     wcx.hIconSm = (HICON) NULL;                     // small class icon
 
-    ATOM winClass = RegisterClassEx(&wcx);
+    RegisterClassEx(&wcx);
+
     HWND hwnd = CreateWindowEx(WS_EX_CLIENTEDGE,
                                "DummyWin",
                                "Dummy",
@@ -340,7 +341,7 @@ EglConfig* pixelFormatToConfig(EGLNativeInternalDisplayType display,int renderab
     EGLint  transparentType,samples;
     EGLint  tRed,tGreen,tBlue;
     EGLint  pMaxWidth,pMaxHeight,pMaxPixels;
-    EGLint  configId,level;
+    EGLint  level;
     EGLint  window,bitmap,pbuffer,transparent;
     HDC dpy = getDummyDC(display,WinDisplay::DEFAULT_DISPLAY);
 
@@ -416,10 +417,10 @@ void queryConfigs(EGLNativeInternalDisplayType display,int renderableType,Config
     initPixelFormat(dpy);
 
     //quering num of formats
-    int nFormats = DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+    int maxFormat = DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 
     //inserting rest of formats
-    for(iPixelFormat;iPixelFormat < nFormats; iPixelFormat++) {
+    for(;iPixelFormat <= maxFormat; iPixelFormat++) {
          DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
          EglConfig* pConfig = pixelFormatToConfig(display,renderableType,&pfd,iPixelFormat);
          if(pConfig) listOut.push_back(pConfig);
@@ -497,7 +498,7 @@ EGLNativeSurfaceType createPbufferSurface(EGLNativeInternalDisplayType display,E
     if(!s_wglExtProcs->wglCreatePbufferARB) return NULL;
     EGLNativePbufferType pb = s_wglExtProcs->wglCreatePbufferARB(dpy,cfg->nativeId(),width,height,pbAttribs);
     if(!pb) {
-        DWORD err = GetLastError();
+        GetLastError();
         return NULL;
     }
     return new SrfcInfo(pb);
@@ -507,7 +508,7 @@ bool releasePbuffer(EGLNativeInternalDisplayType display,EGLNativeSurfaceType pb
     if (!pb) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB || !s_wglExtProcs->wglDestroyPbufferARB) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB(pb->getPbuffer(),pb->getDC()) || !s_wglExtProcs->wglDestroyPbufferARB(pb->getPbuffer())){
-        DWORD err = GetLastError();
+        GetLastError();
         return false;
     }
     return true;
@@ -539,7 +540,7 @@ EGLNativeContextType createContext(EGLNativeInternalDisplayType display,EglConfi
 
 bool destroyContext(EGLNativeInternalDisplayType dpy,EGLNativeContextType ctx) {
     if(!wglDeleteContext(ctx)) {
-        DWORD err = GetLastError();
+        GetLastError();
         return false;
     }
     return true;
@@ -566,7 +567,7 @@ bool makeCurrent(EGLNativeInternalDisplayType display,EglSurface* read,EglSurfac
 
 void swapBuffers(EGLNativeInternalDisplayType display,EGLNativeSurfaceType srfc){
     if(srfc && !SwapBuffers(srfc->getDC())) {
-        DWORD err = GetLastError();
+        GetLastError();
     }
 }
 

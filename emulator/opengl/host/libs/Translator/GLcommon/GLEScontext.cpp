@@ -330,10 +330,8 @@ void GLEScontext::convertDirectVBO(GLESConversionArrays& cArrs,GLint first,GLsiz
     RangeList ranges;
     RangeList conversions;
     GLushort* indices = NULL;
-    GLenum type    = p->getType();
     int attribSize = p->getSize();
     int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
-    unsigned int size = p->getStride()?p->getStride()*count:attribSize*count*sizeof(GLfixed);
     char* data = (char*)p->getBufferData() + (first*stride);
 
     if(p->bufferNeedConversion()) {
@@ -389,7 +387,6 @@ void GLEScontext::convertIndirectVBO(GLESConversionArrays& cArrs,GLsizei count,G
     RangeList ranges;
     RangeList conversions;
     GLushort* conversionIndices = NULL;
-    GLenum type    = p->getType();
     int attribSize = p->getSize();
     int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
     char* data = static_cast<char*>(p->getBufferData());

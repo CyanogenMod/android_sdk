@@ -867,7 +867,6 @@ GL_APICALL void  GL_APIENTRY glGetBufferParameteriv(GLenum target, GLenum pname,
     GET_CTX();
     SET_ERROR_IF(!(GLESv2Validate::bufferTarget(target) && GLESv2Validate::bufferParam(pname)),GL_INVALID_ENUM);
     SET_ERROR_IF(!ctx->isBindedBuffer(target),GL_INVALID_OPERATION);
-    bool ret = true;
     switch(pname) {
     case GL_BUFFER_SIZE:
         ctx->getBufferSize(target,params);

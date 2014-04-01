@@ -193,8 +193,6 @@ int Win32PipeStream::commitBuffer(size_t size)
 
 const unsigned char *Win32PipeStream::readFully(void *buf, size_t len)
 {
-    const unsigned char* ret = NULL;
-
     if (m_pipe == INVALID_HANDLE_VALUE)
         return NULL;
 

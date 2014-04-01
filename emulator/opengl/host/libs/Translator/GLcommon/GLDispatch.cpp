@@ -49,19 +49,19 @@ static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
                                 if(name == NULL){                                           \
                                     funcAddrs = (void *)getGLFuncAddress(#name);            \
                                     if(funcAddrs){                                          \
-                                        *(void**)(&name) = funcAddrs;                       \
+                                        *(void**)(void*)(&name) = funcAddrs;                \
                                     } else {                                                \
                                         fprintf(stderr,"could not load func %s\n",#name);   \
-                                        *(void**)(&name) = (void *)dummy_##name;            \
+                                        *(void**)(void*)(&name) = (void *)dummy_##name;     \
                                     }                                                       \
                                 }                                                           \
                            }
 
-#define LOAD_GLEXT_FUNC(name)  {   void * funcAddrs = NULL;                                \
+#define LOAD_GLEXT_FUNC(name)  {   void * funcAddrs = NULL;                             \
                                 if(name == NULL){                                       \
                                 funcAddrs = (void *)getGLFuncAddress(#name);            \
                                 if(funcAddrs)                                           \
-                                    *(void**)(&name) = funcAddrs;                       \
+                                    *(void**)(void*)(&name) = funcAddrs;                \
                                 }                                                       \
                            }
 
