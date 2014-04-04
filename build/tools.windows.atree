@@ -89,9 +89,6 @@ prebuilts/devtools/tools/traceview.bat            tools/traceview.bat
 rm tools/uiautomatorviewer
 prebuilts/devtools/tools/uiautomatorviewer.bat    tools/uiautomatorviewer.bat
 
-rm tools/zipalign
-bin/zipalign.exe                            strip tools/zipalign.exe
-
 # RCP Monitor. Remove linux stuff and replace by Windows files.
 # Temporarily disabled: See b/8992787
 #rm tools/monitor

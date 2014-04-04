@@ -52,7 +52,6 @@ bin/dmtracedump                               strip tools/dmtracedump
 bin/etc1tool                                  strip tools/etc1tool
 bin/hprof-conv                                strip tools/hprof-conv
 bin/mksdcard                                  strip tools/mksdcard
-bin/zipalign                                  strip tools/zipalign
 
 # emulator
 bin/emulator                                  strip tools/emulator
