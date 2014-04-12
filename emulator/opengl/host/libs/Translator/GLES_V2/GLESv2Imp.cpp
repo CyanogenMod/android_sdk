@@ -940,11 +940,19 @@ GL_APICALL void  GL_APIENTRY glGetFloatv(GLenum pname, GLfloat* params){
 }
 
 GL_APICALL void  GL_APIENTRY glGetIntegerv(GLenum pname, GLint* params){
+    int destroyCtx = 0;
     GET_CTX();
 
+    if (!ctx) {
+        ctx = createGLESContext();
+        if (ctx)
+            destroyCtx = 1;
+    }
     if (ctx->glGetIntegerv(pname,params))
     {
-        return;
+        if (destroyCtx)
+            deleteGLESContext(ctx);
+            return;
     }
   
     bool es2 = ctx->getCaps()->GL_ARB_ES2_COMPATIBILITY;
@@ -1030,6 +1038,8 @@ GL_APICALL void  GL_APIENTRY glGetIntegerv(GLenum pname, GLint* params){
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
     }
+    if (destroyCtx)
+            deleteGLESContext(ctx);
 }
 
 GL_APICALL void  GL_APIENTRY glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params){
