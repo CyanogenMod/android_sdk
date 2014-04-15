@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="com.android.ide.eclipse.ddms.feature"
+      id="com.android.ide.eclipse.ddms"
       label="Android DDMS"
       version="22.6.2.qualifier"
       provider-name="The Android Open Source Project"
