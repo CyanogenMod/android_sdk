@@ -5,7 +5,6 @@ Bundle-SymbolicName: com.android.ide.eclipse.adt.package;singleton:=true
 Bundle-Version: 22.6.2.qualifier
 Bundle-Vendor: The Android Open Source Project
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Eclipse-BundleShape: dir
 Require-Bundle: org.eclipse.platform,
  org.eclipse.equinox.app,
  org.eclipse.ui.intro,

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="com.android.ide.eclipse.adt.package.feature"
+      id="com.android.ide.eclipse.adt.package"
       label="ADT Package"
       version="22.6.2.qualifier"
       provider-name="The Android Open Source Project"
@@ -23,20 +23,69 @@
    </url>
 
    <requires>
+      <import feature="org.eclipse.platform"/>
+      <import plugin="org.eclipse.equinox.app"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.debug.core"/>
+      <import plugin="org.eclipse.debug.ui"/>
+      <import feature="org.eclipse.jdt" version="3.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ant.core"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.jdt.ui"/>
+      <import plugin="org.eclipse.jdt.launching"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.eclipse.ui.editors"/>
+      <import plugin="org.eclipse.ui.workbench.texteditor"/>
+      <import plugin="org.eclipse.ui.console"/>
+      <import plugin="org.eclipse.core.filesystem"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.eclipse.ui.forms"/>
+      <import plugin="org.eclipse.ui.browser"/>
+      <import plugin="org.eclipse.ui.views"/>
+      <import plugin="org.eclipse.ui.views.log"/>
+      <import plugin="org.eclipse.wst.sse.core"/>
+      <import plugin="org.eclipse.wst.sse.ui"/>
+      <import plugin="org.eclipse.wst.xml.core"/>
+      <import plugin="org.eclipse.wst.xml.ui"/>
+      <import plugin="org.eclipse.jdt.junit"/>
+      <import plugin="org.eclipse.jdt.junit.runtime"/>
+      <import plugin="org.eclipse.ltk.core.refactoring"/>
+      <import plugin="org.eclipse.ltk.ui.refactoring"/>
+      <import plugin="org.eclipse.core.expressions"/>
       <import feature="org.eclipse.equinox.p2.user.ui"/>
       <import feature="org.eclipse.help"/>
-      <import feature="org.eclipse.jdt"/>
-      <import feature="org.eclipse.cdt"/>
-      <import feature="org.eclipse.platform"/>
-      <import feature="org.eclipse.rcp"/>
-      <import feature="org.eclipse.egit"/>
-      <import feature="org.eclipse.egit.import"/>
+      <import feature="org.eclipse.rcp" version="3.7.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.wst.common_core.feature"/>
+      <import feature="org.eclipse.wst.common_ui.feature"/>
+      <import feature="org.eclipse.wst.xml_core.feature"/>
+      <import feature="org.eclipse.wst.xml_ui.feature"/>
+      <import plugin="org.eclipse.core.variables"/>
+      <import plugin="org.eclipse.cdt.core"/>
+      <import plugin="org.eclipse.cdt.ui"/>
+      <import plugin="org.eclipse.cdt.managedbuilder.core"/>
+      <import plugin="org.eclipse.cdt.managedbuilder.ui"/>
+      <import plugin="org.eclipse.cdt.debug.core"/>
+      <import plugin="org.eclipse.cdt.debug.ui"/>
+      <import plugin="org.eclipse.cdt.dsf"/>
+      <import plugin="org.eclipse.cdt.dsf.gdb"/>
+      <import plugin="org.eclipse.cdt.dsf.gdb.ui"/>
+      <import plugin="org.eclipse.cdt.launch"/>
+      <import feature="org.eclipse.egit" />
+      <import feature="com.android.ide.eclipse.ddms"            version="22.6.2" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.adt"             version="22.6.2" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.gldebugger"      version="22.6.2" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.hierarchyviewer" version="22.6.2" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.ndk"             version="22.6.2" match="greaterOrEqual" />
+      <import feature="com.android.ide.eclipse.traceview"       version="22.6.2" match="greaterOrEqual" />
+      <!-- 
+           The build scripts will pull in the translation plugin if its plugin repository is accessible.
+           The following line should remain without any modifications as the build script looks for
+           exactly this pattern and removes the comment tags.
+           See sdk.git/adtproductbuild/build.xml.
+      -->
+      <!--import feature="com.google.i18n.inkstone.eclipse.localization" -->
    </requires>
-
-   <plugin
-         id="com.android.ide.eclipse.adt.package"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
 
 </feature>
