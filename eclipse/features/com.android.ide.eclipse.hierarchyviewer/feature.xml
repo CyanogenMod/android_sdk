@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="com.android.ide.eclipse.hierarchyviewer.feature"
+      id="com.android.ide.eclipse.hierarchyviewer"
       label="Android Hierarchy Viewer"
       version="22.6.2.qualifier"
       provider-name="The Android Open Source Project"
