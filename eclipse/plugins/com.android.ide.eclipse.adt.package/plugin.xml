@@ -2,7 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         id="adtproduct"
+         id="product"
          point="org.eclipse.core.runtime.products">
       <product
             application="org.eclipse.ui.ide.workbench"
@@ -57,7 +57,7 @@
          point="org.eclipse.ui.intro">
       <introProductBinding
             introId="com.android.ide.eclipse.adt.intro"
-            productId="adtproduct">
+            productId="com.android.ide.eclipse.adt.package.product">
       </introProductBinding>
    </extension>
 </plugin>
