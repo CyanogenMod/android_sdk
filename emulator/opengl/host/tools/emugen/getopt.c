@@ -8,7 +8,7 @@
 int opterr = 1;
 int optind = 1;
 int optopt = 0;
-const char* optarg;
+char* optarg;
 
 int getopt(int argc, char* const argv[], const char* ostr) {
     static const char kEmpty[] = "";
@@ -57,9 +57,9 @@ int getopt(int argc, char* const argv[], const char* ostr) {
     // This option needs an argument. Either after the option character,
     // or the argument that follows.
     if (*place) {
-        optarg = place;
+        optarg = (char *)place;
     } else if (argc > ++optind) {
-        optarg = argv[optind];
+        optarg = (char *)argv[optind];
     } else if (oindex[2] == ':') {
         // Optional argument is missing.
         place = kEmpty;
