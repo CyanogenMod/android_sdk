@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 extern int optind;
-extern const char* optarg;
+extern char* optarg;
 extern int optopt;
 
 int getopt(int argc, char* const argv[], const char* ostr);
