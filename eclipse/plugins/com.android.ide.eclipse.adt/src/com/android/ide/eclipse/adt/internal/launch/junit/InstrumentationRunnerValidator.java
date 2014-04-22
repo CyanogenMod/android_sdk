@@ -134,13 +134,15 @@ class InstrumentationRunnerValidator {
         }
         // check if this instrumentation is the standard test runner
         if (!instrumentation.equals(SdkConstants.CLASS_INSTRUMENTATION_RUNNER)) {
-            // check if it extends the standard test runner
+            // Ideally, we'd check if the class extends instrumentation test runner.
+            // However, the Google Instrumentation Test Runner extends Google Instrumentation, and not a test runner,
+            // so we just check that the super class is Instrumentation.
             String result = BaseProjectHelper.testClassForManifest(mJavaProject,
-                    instrumentation, SdkConstants.CLASS_INSTRUMENTATION_RUNNER, true);
+                    instrumentation, SdkConstants.CLASS_INSTRUMENTATION, true);
              if (result != BaseProjectHelper.TEST_CLASS_OK) {
                 return String.format(
                         LaunchMessages.InstrValidator_WrongRunnerTypeMsg_s,
-                        SdkConstants.CLASS_INSTRUMENTATION_RUNNER);
+                        SdkConstants.CLASS_INSTRUMENTATION);
              }
         }
         return INSTRUMENTATION_OK;
