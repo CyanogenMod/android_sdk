@@ -45,25 +45,26 @@ static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
     return ret;
 }
 
-#define LOAD_GL_FUNC(name)  {   void * funcAddrs = NULL;                                    \
-                                if(name == NULL){                                           \
-                                    funcAddrs = (void *)getGLFuncAddress(#name);            \
-                                    if(funcAddrs){                                          \
-                                        *(void**)(void*)(&name) = funcAddrs;                \
-                                    } else {                                                \
-                                        fprintf(stderr,"could not load func %s\n",#name);   \
-                                        *(void**)(void*)(&name) = (void *)dummy_##name;     \
-                                    }                                                       \
-                                }                                                           \
-                           }
+#define LOAD_GL_FUNC(name)  do { \
+        if (!name) { \
+            void* funcAddress = (void *)getGLFuncAddress(#name); \
+            if (funcAddress) { \
+                name = (__typeof__(name))(funcAddress); \
+            } else { \
+                fprintf(stderr, "Could not load func %s\n", #name); \
+                name = (__typeof__(name))(dummy_##name); \
+            } \
+        } \
+    } while (0)
 
-#define LOAD_GLEXT_FUNC(name)  {   void * funcAddrs = NULL;                             \
-                                if(name == NULL){                                       \
-                                funcAddrs = (void *)getGLFuncAddress(#name);            \
-                                if(funcAddrs)                                           \
-                                    *(void**)(void*)(&name) = funcAddrs;                \
-                                }                                                       \
-                           }
+#define LOAD_GLEXT_FUNC(name) do { \
+        if (!name) { \
+            void* funcAddress = (void *)getGLFuncAddress(#name); \
+            if (funcAddress) { \
+                name = (__typeof__(name))(funcAddress); \
+            } \
+        } \
+    } while (0)
 
 /* initializing static GLDispatch members*/
 

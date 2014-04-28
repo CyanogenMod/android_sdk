@@ -2230,10 +2230,12 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
     GLint viewport[4];
     z = (z>1 ? 1 : (z<0 ?  0 : z));
 
-    T     vertices[4*3] = {x , y, z,
-                             x , y+height, z,
-                             x+width, y+height, z,
-                             x+width, y, z};
+    T vertices[4*3] = {
+        x , y, z,
+        x , static_cast<T>(y+height), z,
+        static_cast<T>(x+width), static_cast<T>(y+height), z,
+        static_cast<T>(x+width), y, z
+    };
     GLfloat texels[ctx->getMaxTexUnits()][4*2];
     memset((void*)texels, 0, ctx->getMaxTexUnits()*4*2*sizeof(GLfloat));
 

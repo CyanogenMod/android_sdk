@@ -20,8 +20,7 @@
 #include <stdio.h>
 
 #define IS_TRUE(a) \
-        if(a != true) return false;
-
+        if(a != true) return NULL;
 
 struct DisplayInfo{
     DisplayInfo():dc(NULL),hwnd(NULL),isPixelFormatSet(false){};
@@ -48,9 +47,7 @@ static TlsData *getTLS() {
 
 class WinDisplay{
 public:
-     typedef enum {
-                      DEFAULT_DISPLAY = 0
-                  };
+     enum { DEFAULT_DISPLAY = 0 };
      WinDisplay(){};
      DisplayInfo& getInfo(int configurationIndex){ return getTLS()->m_map[configurationIndex];}
      HDC  getDC(int configId){return getTLS()->m_map[configId].dc;}
