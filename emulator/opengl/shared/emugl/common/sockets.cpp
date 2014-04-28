@@ -27,6 +27,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -36,7 +37,7 @@ namespace {
 
 static void socketSetReuseAddress(int s) {
 #ifdef _WIN32
-    // The default behaviour on WIndows is equivalent to SO_REUSEADDR
+    // The default behaviour on Windows is equivalent to SO_REUSEADDR
     // so we don't need to set this option. Moreover, one should never
     // set this option with WinSock because it's badly implemented and
     // generates a huge security issue. See:
