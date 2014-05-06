@@ -54,27 +54,28 @@ bin/hprof-conv                                strip tools/hprof-conv
 bin/mksdcard                                  strip tools/mksdcard
 
 # emulator
-bin/emulator                                  strip tools/emulator
-bin/emulator-x86                              strip tools/emulator-x86
-bin/emulator-arm                              strip tools/emulator-arm
-bin/emulator-mips                             strip tools/emulator-mips
-bin/emulator64-x86                            strip tools/emulator64-x86
-bin/emulator64-arm                            strip tools/emulator64-arm
-bin/emulator64-mips                           strip tools/emulator64-mips
-sdk/emulator/snapshot/snapshots.img                 tools/lib/emulator/snapshots.img
-usr/share/pc-bios/bios.bin                          tools/lib/pc-bios/bios.bin
-usr/share/pc-bios/vgabios-cirrus.bin                tools/lib/pc-bios/vgabios-cirrus.bin
-sdk/emulator/skins/dynamic                          tools/lib/emulator/skins/dynamic
-
-# OpenGLES emulation libraries
-lib/libOpenglRender${DLL_EXTENSION}           strip tools/lib/libOpenglRender${DLL_EXTENSION}
-lib/libGLES_CM_translator${DLL_EXTENSION}     strip tools/lib/libGLES_CM_translator${DLL_EXTENSION}
-lib/libGLES_V2_translator${DLL_EXTENSION}     strip tools/lib/libGLES_V2_translator${DLL_EXTENSION}
-lib/libEGL_translator${DLL_EXTENSION}         strip tools/lib/libEGL_translator${DLL_EXTENSION}
-lib/lib64OpenglRender${DLL_EXTENSION}         strip tools/lib/lib64OpenglRender${DLL_EXTENSION}
-lib/lib64GLES_CM_translator${DLL_EXTENSION}   strip tools/lib/lib64GLES_CM_translator${DLL_EXTENSION}
-lib/lib64GLES_V2_translator${DLL_EXTENSION}   strip tools/lib/lib64GLES_V2_translator${DLL_EXTENSION}
-lib/lib64EGL_translator${DLL_EXTENSION}       strip tools/lib/lib64EGL_translator${DLL_EXTENSION}
+###RM(2014-05-05) temporarily do not include emulator in sdk
+###bin/emulator                                  strip tools/emulator
+###bin/emulator-x86                              strip tools/emulator-x86
+###bin/emulator-arm                              strip tools/emulator-arm
+###bin/emulator-mips                             strip tools/emulator-mips
+###bin/emulator64-x86                            strip tools/emulator64-x86
+###bin/emulator64-arm                            strip tools/emulator64-arm
+###bin/emulator64-mips                           strip tools/emulator64-mips
+###sdk/emulator/snapshot/snapshots.img                 tools/lib/emulator/snapshots.img
+###usr/share/pc-bios/bios.bin                          tools/lib/pc-bios/bios.bin
+###usr/share/pc-bios/vgabios-cirrus.bin                tools/lib/pc-bios/vgabios-cirrus.bin
+###sdk/emulator/skins/dynamic                          tools/lib/emulator/skins/dynamic
+###
+#### OpenGLES emulation libraries
+###lib/libOpenglRender${DLL_EXTENSION}           strip tools/lib/libOpenglRender${DLL_EXTENSION}
+###lib/libGLES_CM_translator${DLL_EXTENSION}     strip tools/lib/libGLES_CM_translator${DLL_EXTENSION}
+###lib/libGLES_V2_translator${DLL_EXTENSION}     strip tools/lib/libGLES_V2_translator${DLL_EXTENSION}
+###lib/libEGL_translator${DLL_EXTENSION}         strip tools/lib/libEGL_translator${DLL_EXTENSION}
+###lib/lib64OpenglRender${DLL_EXTENSION}         strip tools/lib/lib64OpenglRender${DLL_EXTENSION}
+###lib/lib64GLES_CM_translator${DLL_EXTENSION}   strip tools/lib/lib64GLES_CM_translator${DLL_EXTENSION}
+###lib/lib64GLES_V2_translator${DLL_EXTENSION}   strip tools/lib/lib64GLES_V2_translator${DLL_EXTENSION}
+###lib/lib64EGL_translator${DLL_EXTENSION}       strip tools/lib/lib64EGL_translator${DLL_EXTENSION}
 
 
 # sdk.git Ant and gradle templates for project build files
