@@ -27,27 +27,27 @@
 
 subdirs += \
 	external/openssl \
-	external/qemu \
-	prebuilts/tools \
-	sdk/avdlauncher \
-	sdk/emulator/mksdcard \
-	sdk/emulator/opengl \
-	sdk/find_java \
-	sdk/find_lock \
-	sdk/sdklauncher
+#	external/qemu \
+#	prebuilts/tools \
+#	sdk/avdlauncher \
+#	sdk/emulator/mksdcard \
+#	sdk/emulator/opengl \
+#	sdk/find_java \
+#	sdk/find_lock \
+#	sdk/sdklauncher
 
 # -----
 # Whitelist of SDK specific projects that DO require Java
 
 ifneq (,$(shell which javac 2>/dev/null))
 subdirs += \
-	external/ant-glob \
-	external/eclipse-windowbuilder/propertysheet \
-	external/hamcrest \
-	external/junit \
-	sdk/apkbuilder \
-	sdk/eclipse/scripts/rcp \
-	sdk/testutils
+#	external/ant-glob \
+#	external/eclipse-windowbuilder/propertysheet \
+#	external/hamcrest \
+#	external/junit \
+#	sdk/apkbuilder \
+#	sdk/eclipse/scripts/rcp \
+#	sdk/testutils
 
 else
 $(warning SDK_ONLY: javac not available.)
