@@ -1,0 +1,41 @@
+apply plugin: 'sdk-files'
+
+sdk {
+    common {
+        path('files/tools_source.properties') { name 'source.properties' }
+        path('files/plugin.prop') { into 'lib' }
+
+        path('emulator/snapshot/snapshots.img') { into 'lib/emulator' }
+        path('emulator/skins/dynamic') { into 'lib/emulator/skins/dynamic' }
+
+        path('templates/build.template') { into 'lib' }
+        path('templates/uibuild.template') { into 'lib' }
+        path('templates/build_gradle.template') { into 'lib' }
+
+        path('files/ant') { into 'ant' }
+        path('files/sdk_files_NOTICE.txt') {
+            into 'ant'
+            name 'NOTICE.txt'
+        }
+
+        path('files/devices.xml') { into 'lib' }
+        path('files/android.el') { into 'lib' }
+
+        path('apps/SdkController') { into 'apps/SdkController' }
+
+        path('files/typos') { into 'support' }
+    }
+
+    linux {
+
+    }
+
+    mac {
+
+    }
+
+    windows {
+
+    }
+
+}
