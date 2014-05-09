@@ -23,12 +23,11 @@
 set -e # any error stops the build
 
 # Verbose by default. Use -q to make more silent.
-V=""
 if [[ "$1" == "-q" ]]; then
   shift
 else
   echo "Win SDK: $0 $*"
-  set -x # show bash commands; no need for V=-v
+  set -x # show bash commands
 fi
 
 TEMP_SDK_DIR=$1
@@ -36,9 +35,10 @@ WIN_OUT_DIR=$2
 TOPDIR=${TOPDIR:-$3}
 
 # Invoke atree to copy the files
-# TODO: pass down OUT_HOST_EXECUTABLE to get the right bin/atree directory
-${TOPDIR}out/host/linux-x86/bin/atree -f ${TOPDIR}sdk/build/tools.windows.atree \
-      -I $WIN_OUT_DIR/host/windows-x86 \
-      -I ${TOPDIR:-.} \
-      -o $TEMP_SDK_DIR
+if [[ -f ${TOPDIR}sdk/build/tools.windows.atree ]]; then
+  ${TOPDIR}out/host/linux-x86/bin/atree -f ${TOPDIR}sdk/build/tools.windows.atree \
+        -I $WIN_OUT_DIR/host/windows-x86 \
+        -I ${TOPDIR:-.} \
+        -o $TEMP_SDK_DIR
+fi
 
