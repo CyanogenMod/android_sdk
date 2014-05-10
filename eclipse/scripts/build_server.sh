@@ -16,6 +16,14 @@
 # Note: currently wrap around existing shell script, reuse most of it,
 # eventually both might merge as needed.
 
+
+###################
+# temporary disable to deal with build server issues
+# see b/14685861
+exit 0
+###################
+
+
 set -e  # Fail this script as soon as a command fails -- fail early, fail fast
 
 PROG_DIR=$(dirname "$0")
