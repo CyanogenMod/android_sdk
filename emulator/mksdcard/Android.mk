@@ -5,7 +5,7 @@ LOCAL_PATH:= $(call my-dir)
 # host executable
 #
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES:= mksdcard.c
+LOCAL_SRC_FILES:= src/source/mksdcard.c
 LOCAL_MODULE = mksdcard
 include $(BUILD_HOST_EXECUTABLE)
 
