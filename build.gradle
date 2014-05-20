@@ -2,31 +2,69 @@ apply plugin: 'sdk-files'
 
 sdk {
     common {
-        item('files/tools_source.properties') { name 'source.properties' }
-        item('files/plugin.prop') { into 'lib' }
-
-        item('emulator/snapshot/snapshots.img') { into 'lib/emulator' }
-        item('emulator/skins/dynamic') { into 'lib/emulator/skins/dynamic' }
-
-        item('templates/build.template') { into 'lib' }
-        item('templates/uibuild.template') { into 'lib' }
-        item('templates/build_gradle.template') { into 'lib' }
-
-        item('files/ant') { into 'ant' }
-        item('files/sdk_files_NOTICE.txt') {
-            into 'ant'
-            name 'NOTICE.txt'
+        item('files/tools_source.properties') {
+            name 'source.properties'
+            notice null
+        }
+        item('files/plugin.prop') {
+            into 'lib'
+            notice null
         }
 
-        item('files/devices.xml') { into 'lib' }
-        item('files/android.el') { into 'lib' }
+        item('emulator/snapshot/snapshots.img') {
+            into 'lib/emulator'
+            notice 'emulator/NOTICE'
+        }
+        item('emulator/skins/dynamic') {
+            into 'lib/emulator/skins/dynamic'
+            notice 'emulator/NOTICE'
+        }
 
-        item('apps/SdkController') { into 'apps/SdkController' }
+        item('templates/build.template') {
+            into 'lib'
+            notice 'templates/NOTICE'
+        }
+        item('templates/uibuild.template') {
+            into 'lib'
+            notice 'templates/NOTICE'
+        }
+        item('templates/build_gradle.template') {
+            into 'lib'
+            notice 'templates/NOTICE'
+        }
 
-        item('files/typos') { into 'support' }
+        item('files/ant') {
+            into 'ant'
+            notice 'files/ant/NOTICE'
+        }
 
-        item("$rootProject.projectDir.parentFile/prebuilts/qemu-kernel/x86/pc-bios/bios.bin") { into 'lib/pc-bios' }
-        item("$rootProject.projectDir.parentFile/prebuilts/qemu-kernel/x86/pc-bios/vgabios-cirrus.bin") { into 'lib/pc-bios' }
+        item('files/devices.xml') {
+            into 'lib'
+            notice 'files/NOTICE'
+        }
+        item('files/android.el') {
+            into 'lib'
+            notice 'files/NOTICE'
+        }
+
+        item('apps/SdkController') {
+            into 'apps/SdkController'
+            notice 'apps/SdkController/NOTICE'
+        }
+
+        item('files/typos') {
+            into 'support'
+            notice 'files/NOTICE'
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/qemu-kernel/x86/pc-bios/bios.bin") {
+            into 'lib/pc-bios'
+            notice null
+        }
+        item("$rootProject.projectDir.parentFile/prebuilts/qemu-kernel/x86/pc-bios/vgabios-cirrus.bin") {
+            into 'lib/pc-bios'
+            notice null
+        }
     }
 
     linux {
