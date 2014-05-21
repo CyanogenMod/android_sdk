@@ -341,7 +341,7 @@ _adb_util_list_files() {
 
 _adb_util_complete_local_file()
 {
-    local file xspec i j
+    local file xspec i j IFS=$'\n'
     local -a dirs files
 
     file=$1
