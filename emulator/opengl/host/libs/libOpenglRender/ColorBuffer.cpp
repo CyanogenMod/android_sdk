@@ -204,7 +204,7 @@ bool ColorBuffer::blitFromCurrentReadBuffer()
             // save current viewport and match it to the current
             // colorbuffer size
             //
-            GLint vport[4];
+            GLint vport[4] = {};
             s_gl.glGetIntegerv(GL_VIEWPORT, vport);
             s_gl.glViewport(0, 0, m_width, m_height);
 

@@ -2227,7 +2227,7 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
 
     int numClipPlanes;
 
-    GLint viewport[4];
+    GLint viewport[4] = {};
     z = (z>1 ? 1 : (z<0 ?  0 : z));
 
     T vertices[4*3] = {
