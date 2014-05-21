@@ -821,7 +821,8 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                 }
             } else if (pass == PASS_DebugPrint) {
                 fprintf(fp, "#ifdef DEBUG_PRINTOUT\n");
-                fprintf(fp, "\t\t\tfprintf(stderr,\"%s: %s(%s)\\n\"", m_basename.c_str(), e->name().c_str(), printString.c_str());
+                fprintf(fp, "\t\t\tfprintf(stderr,\"%s(%%p): %s(%s)\\n\", stream",
+                        m_basename.c_str(), e->name().c_str(), printString.c_str());
                 if (e->vars().size() > 0 && !e->vars()[0].isVoid()) fprintf(fp, ",");
             }
 
@@ -878,6 +879,9 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                             } else if (pass == PASS_MemAlloc) {
                                 fprintf(fp, "\t\t\tunsigned char *tmpPtr%u = &tmpBuf[%s];\n",
                                         (unsigned)j, tmpBufOffset[j].c_str());
+                                fprintf(fp, "\t\t\tmemset(tmpPtr%u, 0, %s);\n",
+                                        (unsigned)j,
+                                        toString(v->type()->bytes()).c_str());
                             } else if (pass == PASS_FunctionCall) {
                                 if (v->nullAllowed()) {
                                     fprintf(fp, "tmpPtr%uSize == 0 ? NULL : (%s)(tmpPtr%u)",
@@ -937,7 +941,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
     fprintf(fp, "\t\t} //switch\n");
     if (strstr(m_basename.c_str(), "gl")) {
         fprintf(fp, "#ifdef CHECK_GL_ERROR\n");
-        fprintf(fp, "\tint err = this->glGetError();\n");
+        fprintf(fp, "\tint err = lastCall[0] ? this->glGetError() : GL_NO_ERROR;\n");
         fprintf(fp, "\tif (err) fprintf(stderr, \"%s Error: 0x%%X in %%s\\n\", err, lastCall);\n", m_basename.c_str());
         fprintf(fp, "#endif\n");
     }
