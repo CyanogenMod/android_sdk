@@ -72,28 +72,28 @@
             <configuration>
               <artifacts>
                 <!-- tools/base dependencies -->
-                <artifact> <id>com.android.tools.build:manifest-merger:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools.ddms:ddmlib:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools.layoutlib:layoutlib-api:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools.lint:lint-api:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools.lint:lint-checks:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:asset-studio:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:common:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:dvlib:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:ninepatch:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:rule-api:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:sdk-common:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:sdklib:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:testutils:22.9.0-SNAPSHOT</id> </artifact>
+                <artifact> <id>com.android.tools.build:manifest-merger:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools.ddms:ddmlib:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools.layoutlib:layoutlib-api:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools.lint:lint-api:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools.lint:lint-checks:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:asset-studio:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:common:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:dvlib:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:ninepatch:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:rule-api:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:sdk-common:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:sdklib:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:testutils:22.9.0</id> </artifact>
 
                 <!-- tools/swt dependencies -->
-                <artifact> <id>com.android.tools.ddms:ddmuilib:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:hierarchyviewer2lib:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:sdkstats:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:sdkuilib:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:swtmenubar:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:traceview:22.9.0-SNAPSHOT</id> </artifact>
-                <artifact> <id>com.android.tools:uiautomatorviewer:22.9.0-SNAPSHOT</id> </artifact>
+                <artifact> <id>com.android.tools.ddms:ddmuilib:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:hierarchyviewer2lib:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:sdkstats:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:sdkuilib:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:swtmenubar:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:traceview:22.9.0</id> </artifact>
+                <artifact> <id>com.android.tools:uiautomatorviewer:22.9.0</id> </artifact>
 
                 <!-- prebuilts -->
                 <artifact> <id>com.android.tools.external.lombok:lombok-ast:0.2.2</id> </artifact>
