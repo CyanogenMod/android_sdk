@@ -551,15 +551,17 @@ void FrameBuffer::DestroyWindowSurface(HandleType p_surface)
     m_windows.erase(p_surface);
 }
 
-void FrameBuffer::openColorBuffer(HandleType p_colorbuffer)
+int FrameBuffer::openColorBuffer(HandleType p_colorbuffer)
 {
     emugl::Mutex::AutoLock mutex(m_lock);
     ColorBufferMap::iterator c(m_colorbuffers.find(p_colorbuffer));
     if (c == m_colorbuffers.end()) {
         // bad colorbuffer handle
-        return;
+        ERR("FB: openColorBuffer cb handle %#x not found\n", p_colorbuffer);
+        return -1;
     }
     (*c).second.refcount++;
+    return 0;
 }
 
 void FrameBuffer::closeColorBuffer(HandleType p_colorbuffer)
@@ -567,6 +569,7 @@ void FrameBuffer::closeColorBuffer(HandleType p_colorbuffer)
     emugl::Mutex::AutoLock mutex(m_lock);
     ColorBufferMap::iterator c(m_colorbuffers.find(p_colorbuffer));
     if (c == m_colorbuffers.end()) {
+        ERR("FB: closeColorBuffer cb handle %#x not found\n", p_colorbuffer);
         // bad colorbuffer handle
         return;
     }
@@ -581,6 +584,7 @@ bool FrameBuffer::flushWindowSurfaceColorBuffer(HandleType p_surface)
 
     WindowSurfaceMap::iterator w( m_windows.find(p_surface) );
     if (w == m_windows.end()) {
+        ERR("FB::flushWindowSurfaceColorBuffer: window handle %#x not found\n", p_surface);
         // bad surface handle
         return false;
     }
@@ -596,11 +600,13 @@ bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
     WindowSurfaceMap::iterator w( m_windows.find(p_surface) );
     if (w == m_windows.end()) {
         // bad surface handle
+        ERR("%s: bad window surface handle %#x\n", __FUNCTION__, p_surface);
         return false;
     }
 
     ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
     if (c == m_colorbuffers.end()) {
+        ERR("%s: bad color buffer handle %#x\n", __FUNCTION__, p_colorbuffer);
         // bad colorbuffer handle
         return false;
     }
