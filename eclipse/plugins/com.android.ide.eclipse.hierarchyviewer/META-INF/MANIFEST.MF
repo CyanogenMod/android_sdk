@@ -11,8 +11,10 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.console,
  com.android.ide.eclipse.ddms,
- com.android.ide.eclipse.base
-Bundle-ClassPath: .,
- libs/hierarchyviewer2lib.jar
+ com.android.ide.eclipse.base,
+ com.android.tools.hierarchyviewer2lib;bundle-version="22.9.0",
+ com.android.tools.ddms.ddmlib;bundle-version="22.9.0",
+ com.android.tools.ddms.ddmuilib;bundle-version="22.9.0"
+Bundle-ClassPath: .
 Export-Package: com.android.ide.eclipse.hierarchyviewer
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
