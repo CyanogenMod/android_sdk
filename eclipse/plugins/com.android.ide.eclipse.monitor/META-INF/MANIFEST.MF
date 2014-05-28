@@ -8,10 +8,15 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  com.android.ide.eclipse.ddms,
  com.android.ide.eclipse.traceview,
- com.android.ide.eclipse.base
+ com.android.ide.eclipse.base,
+ com.android.tools.sdkuilib;bundle-version="22.9.0",
+ com.android.tools.sdklib;bundle-version="22.9.0",
+ com.android.tools.sdkstats;bundle-version="22.9.0",
+ com.android.tools.common;bundle-version="22.9.0",
+ com.android.tools.ddms.ddmlib;bundle-version="22.9.0",
+ com.android.tools.ddms.ddmuilib;bundle-version="22.9.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %Bundle-Vendor
-Bundle-ClassPath: .,
- libs/sdkuilib.jar
+Bundle-ClassPath: .
 Bundle-Localization: plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
