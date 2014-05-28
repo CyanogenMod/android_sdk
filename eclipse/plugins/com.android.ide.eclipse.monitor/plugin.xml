@@ -117,4 +117,16 @@
             </action>
       </actionSet>
    </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="com.android.ide.eclipse.monitor.Application"
+            name="monitor">
+         <property
+               name="appName"
+               value="monitor">
+         </property>
+      </product>
+   </extension>
 </plugin>
