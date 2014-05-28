@@ -215,13 +215,20 @@ static uint32_t rcCreateColorBuffer(uint32_t width,
     return fb->createColorBuffer(width, height, internalFormat);
 }
 
-static void rcOpenColorBuffer(uint32_t colorbuffer)
+static int rcOpenColorBuffer2(uint32_t colorbuffer)
 {
     FrameBuffer *fb = FrameBuffer::getFB();
     if (!fb) {
-        return;
+        return -1;
     }
-    fb->openColorBuffer( colorbuffer );
+    return fb->openColorBuffer( colorbuffer );
+}
+
+// Deprecated, kept for compatibility with old system images only.
+// Use rcOpenColorBuffer2 instead.
+static void rcOpenColorBuffer(uint32_t colorbuffer)
+{
+    (void) rcOpenColorBuffer2(colorbuffer);
 }
 
 static void rcCloseColorBuffer(uint32_t colorbuffer)
@@ -359,4 +366,5 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcColorBufferCacheFlush(rcColorBufferCacheFlush);
     dec->set_rcReadColorBuffer(rcReadColorBuffer);
     dec->set_rcUpdateColorBuffer(rcUpdateColorBuffer);
+    dec->set_rcOpenColorBuffer2(rcOpenColorBuffer2);
 }

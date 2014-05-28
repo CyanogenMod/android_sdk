@@ -12,17 +12,12 @@ if [ -z "$ANDROID_BUILD_TOP" ]; then
 fi
 cd "$ANDROID_BUILD_TOP" >/dev/null
 SRCDIR="sdk/emulator/opengl/host/libs"
-DSTDIR="development/tools/emulator/opengl/system"
+DSTDIR="device/generic/goldfish/opengl/system"
+EMUGEN="external/qemu/objs/emugen"
 if [ ! -d "$SRCDIR" -o ! -d "$DSTDIR" ]; then
     echo error: can\'t find source and/or destination directory
     exit 1
 fi
-
-if [ -z "$ANDROID_HOST_OUT" ]; then
-    echo error: ANDROID_HOST_OUT not set
-    exit 1
-fi
-EMUGEN="$ANDROID_HOST_OUT/bin/emugen"
 if [ ! -x "$EMUGEN" ]; then
     echo error: emugen not available, did you forget to build?
     exit 1
