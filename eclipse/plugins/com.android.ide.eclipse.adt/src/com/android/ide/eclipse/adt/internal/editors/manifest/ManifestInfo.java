@@ -931,11 +931,19 @@ public class ManifestInfo {
                     }
                 }
 
-                Integer i = AndroidManifest.getTargetSdkVersion(manifestFile);
-                if (i == null) {
+                value = AndroidManifest.getTargetSdkVersion(manifestFile);
+                if (value == null) {
                     mTargetSdkVersion = mMinSdkVersion;
-                } else {
-                    mTargetSdkVersion = i.intValue();
+                } else if (value instanceof String) {
+                    // handle codename, only if we can resolve it.
+                    if (Sdk.getCurrent() != null) {
+                        IAndroidTarget target = Sdk.getCurrent().getTargetFromHashString(
+                                "android-" + value); //$NON-NLS-1$
+                        if (target != null) {
+                            // codename future API level is current api + 1
+                        	mTargetSdkVersion = target.getVersion().getApiLevel() + 1;
+                        }
+                    }
                 }
             } catch (XPathExpressionException e) {
                 // do nothing we'll use 1 below.
