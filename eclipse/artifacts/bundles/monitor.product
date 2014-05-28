@@ -35,6 +35,9 @@
       <feature id="com.android.ide.eclipse.traceview.feature"/>
       <feature id="com.android.ide.eclipse.monitor.feature"/>
       <feature id="org.eclipse.rcp"/>
+      <feature id="org.eclipse.emf.ecore"/>
+      <feature id="org.eclipse.e4.rcp"/>
+      <feature id="org.eclipse.emf.common"/>
       <feature id="org.eclipse.platform"/>
       <feature id="org.eclipse.equinox.p2.core.feature"/>
       <feature id="org.eclipse.help"/>
