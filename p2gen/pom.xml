@@ -113,7 +113,15 @@
                 <artifact> <id>org.apache.httpcomponents:httpclient:4.1.1</id> </artifact>
                 <artifact> <id>org.apache.httpcomponents:httpcore:4.1</id> </artifact>
                 <artifact> <id>org.apache.httpcomponents:httpmime:4.1</id> </artifact>
-                <artifact> <id>org.freemarker:freemarker:2.3.20</id> </artifact>
+                <artifact>
+                  <id>org.freemarker:freemarker:2.3.20</id>
+                  <!--
+                   freemarker 2.3.20 bundles an OSGI manifest..except that manifest is
+                   incorrect. http://sourceforge.net/p/freemarker/bugs/411/
+                   This rule rewrites the OSGI manifest.
+                   -->
+                  <override>true</override>
+                </artifact>
                 <artifact> <id>org.ow2.asm:asm-analysis:4.0</id> </artifact>
                 <artifact> <id>org.ow2.asm:asm-tree:4.0</id> </artifact>
                 <artifact> <id>org.ow2.asm:asm:4.0</id> </artifact>
