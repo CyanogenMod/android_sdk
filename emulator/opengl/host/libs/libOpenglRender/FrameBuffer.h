@@ -73,7 +73,7 @@ public:
     HandleType createColorBuffer(int p_width, int p_height, GLenum p_internalFormat);
     void DestroyRenderContext(HandleType p_context);
     void DestroyWindowSurface(HandleType p_surface);
-    void openColorBuffer(HandleType p_colorbuffer);
+    int openColorBuffer(HandleType p_colorbuffer);
     void closeColorBuffer(HandleType p_colorbuffer);
 
     bool  bindContext(HandleType p_context, HandleType p_drawSurface, HandleType p_readSurface);
