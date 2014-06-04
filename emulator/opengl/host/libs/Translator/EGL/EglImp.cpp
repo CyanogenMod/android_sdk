@@ -1022,7 +1022,7 @@ void detachEGLImage(unsigned int imageId)
 }
 
 
-EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+EGLAPI EGLImageKHR EGLAPIENTRY eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
 {
     VALIDATE_DISPLAY(display);
     VALIDATE_CONTEXT(context);
@@ -1059,7 +1059,7 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum ta
 }
 
 
-EGLBoolean eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image)
+EGLAPI EGLBoolean EGLAPIENTRY eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image)
 {
     VALIDATE_DISPLAY(display);
     return dpy->destroyImageKHR(image) ? EGL_TRUE:EGL_FALSE;
