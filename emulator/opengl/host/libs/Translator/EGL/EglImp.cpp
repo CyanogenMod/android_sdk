@@ -72,8 +72,8 @@ static EGLiface            s_eglIface = {
 #define EGL_EXTENTIONS 2
 
 //decleration
-EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
-EGLBoolean eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image);
+EGLAPI EGLImageKHR EGLAPIENTRY eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
+EGLAPI EGLBoolean EGLAPIENTRY eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image);
 
 // extentions descriptors
 static ExtentionDescriptor s_eglExtentions[] = {
