@@ -76,7 +76,8 @@ public final class DexWrapper {
             }
             URL url = f.toURI().toURL();
 
-            URLClassLoader loader = new URLClassLoader(new URL[] { url },
+            @SuppressWarnings("resource")
+			URLClassLoader loader = new URLClassLoader(new URL[] { url },
                     DexWrapper.class.getClassLoader());
 
             // get the classes.

@@ -23,11 +23,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.cdt.launch,
  com.android.ide.eclipse.adt,
  com.android.ide.eclipse.base,
- com.android.ide.eclipse.ddms,
- com.android.tools.sdk-common;bundle-version="22.9.0",
- com.android.tools.common;bundle-version="22.9.0",
- com.android.tools.ddms.ddmlib;bundle-version="22.9.0",
- com.android.tools.sdklib;bundle-version="22.9.0",
- com.google.guava;bundle-version="15.0.0"
+ com.android.ide.eclipse.ddms
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
