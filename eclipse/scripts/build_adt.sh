@@ -36,28 +36,11 @@ echo Running gradle to build tools libraries...
 cd "$ANDROID_SRC"/tools
 ./gradlew --no-daemon publishLocal
 
-# The following step temporarily disabled: we are running maven in online mode, but it
-# actually picks up everything it needs from within the prebuilts or the out folder. The
-# current issue is just in creating a local repository that looks as if it has been
-# initialized by downloading from a remote repository.
+# 2. Copy dependent jars into the libs folder of each plugin
+cd "$ANDROID_SRC"/sdk/eclipse
+../../tools/gradlew --no-daemon copydeps
 
-# 2. Create a combined m2 repository that has the tools generated in step 1 and other prebuilts
-# This is required so that maven can be run in offline mode in the next step.
-# echo Creating a combined tools + prebuilts maven repo...
-# COMBINED_M2_REPO="$ANDROID_SRC"/out/host/maven/toolsRepo
-# mkdir -p "$COMBINED_M2_REPO"
-# cp -r "$ANDROID_SRC"/out/repo "$COMBINED_M2_REPO"
-# cp -r "$ANDROID_SRC"/prebuilts/tools/common/m2/repository/* "$COMBINED_M2_REPO"
-
-# 3. Convert the generated Maven repository into a p2 repository
-echo Converting maven repo to p2 repo...
-cd "$ANDROID_SRC"/sdk/p2gen
-"$MAVEN" --no-snapshot-updates \
-      -P online \
-      -Dmaven.repo.local=../../out/host/maven/toolsRepo \
-      p2:site
-
-# 4. Launch Tycho build
+# 3. Launch Tycho build
 echo Launching Tycho to build ADT plugins and bundle
 cd "$ANDROID_SRC"/sdk/eclipse
 make -f maven.mk
