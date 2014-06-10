@@ -87,11 +87,6 @@
                     <url>${target-platform.base.url}/egit</url>
                     <layout>p2</layout>
                 </repository>
-                <repository>
-                    <id>toolsDependencies</id>
-                    <url>file://${ANDROID_OUT}/host/maven/p2gen/repository</url>
-                    <layout>p2</layout>
-                </repository>
             </repositories>
         </profile>
         <profile>
