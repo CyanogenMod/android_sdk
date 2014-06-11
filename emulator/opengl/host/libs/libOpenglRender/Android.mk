@@ -63,7 +63,7 @@ $(call emugl-end-module)
 
 ### host libOpenglRender, 64-bit #########################################
 ifdef EMUGL_BUILD_64BITS
-    $(call emugl-begin-host-shared-library,lib64OpenglRender)
+    $(call emugl-begin-host64-shared-library,lib64OpenglRender)
 
     $(call emugl-import,lib64GLESv1_dec lib64GLESv2_dec lib64_renderControl_dec lib64OpenglCodecCommon lib64OpenglOsUtils)
 

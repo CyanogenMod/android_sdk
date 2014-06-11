@@ -24,20 +24,16 @@ emugl-begin-host-static-library = $(call emugl-begin-module,$1,HOST_STATIC_LIBRA
 emugl-begin-host-shared-library = $(call emugl-begin-module,$1,HOST_SHARED_LIBRARY,HOST)
 emugl-begin-host-executable = $(call emugl-begin-module,$1,HOST_EXECUTABLE,HOST)
 
+emugl-begin-host64-static-library = $(call emugl-begin-module64,$1,HOST_STATIC_LIBRARY,HOST)
+emugl-begin-host64-shared-library = $(call emugl-begin-module64,$1,HOST_SHARED_LIBRARY,HOST)
+emugl-begin-host64-executable = $(call emugl-begin-module64,$1,HOST_EXECUTABLE,HOST)
+
 # Internal list of all declared modules (used for sanity checking)
 _emugl_modules :=
 _emugl_HOST_modules :=
 
 ifeq ($(BUILD_STANDALONE_EMULATOR),true)
-define EMUGL_LOCAL_EXTRAS
-LOCAL_CC := $$(call my-host-tool,CC)
-LOCAL_CXX := $$(call my-host-tool,CXX)
-LOCAL_LD := $$(call my-host-tool,LD)
-LOCAL_AR := $$(call my-host-tool,AR)
-LOCAL_CFLAGS := $$(call my-host-tool,CFLAGS) $$(LOCAL_CFLAGS)
-LOCAL_LDFLAGS := $$(call my-host-tool,LDFLAGS) $$(LOCAL_LDFLAGS)
-LOCAL_LDLIBS := $$(LOCAL_LDLIBS) $$(call my-host-tool,LDLIBS)
-endef
+EMUGL_LOCAL_EXTRAS = $(end-emulator-module-ev)
 else  # BUILD_STANDALONE_EMULATOR != true
 EMUGL_LOCAL_EXTRAS =
 endif  # BUILD_STANDALONE_EMULATOR != true
@@ -54,7 +50,12 @@ emugl-begin-module = \
     $(eval LOCAL_LDLIBS += -lstdc++) \
     $(eval LOCAL_PRELINK_MODULE := false)\
     $(eval _EMUGL_INCLUDE_TYPE := $(BUILD_$2)) \
+    $(eval LOCAL_MODULE_BITS := 32) \
     $(call _emugl-init-module,$1,$2,$3)
+
+emugl-begin-module64 = \
+    $(call emugl-begin-module,$1,$2,$3) \
+    $(eval LOCAL_MODULE_BITS := 64) \
 
 # Used to end a module definition, see function definitions above
 emugl-end-module = \
@@ -103,6 +104,7 @@ emugl-end-module = \
 # This is the list of recognized export types we support for now.
 EMUGL_EXPORT_TYPES := \
     CFLAGS \
+    CXXFLAGS \
     LDLIBS \
     LDFLAGS \
     C_INCLUDES \
