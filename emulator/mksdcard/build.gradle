@@ -26,6 +26,25 @@ model {
             architecture "i386"
             operatingSystem "osx"
         }
+        windows {
+            architecture "i386"
+            operatingSystem "windows"
+        }
+    }
+
+    toolChains {
+        host(Clang)
+        mingw(Gcc) {
+//            path "$project.rootDir/../prebuilts/gcc/linux-x86/host/i586-mingw32msvc-4.8/bin"
+
+            addPlatformConfiguration(new MingwOnLinuxConfiguration(project))
+
+            getCCompiler().executable =         'i586-mingw32msvc-gcc'
+            getCppCompiler().executable =       'i586-mingw32msvc-g++'
+            getLinker().executable =            'i586-mingw32msvc-gcc'
+            getAssembler().executable =         'i586-mingw32msvc-as'
+            getStaticLibArchiver().executable = 'i586-mingw32msvc-ar'
+        }
     }
 }
 
@@ -42,6 +61,12 @@ sdk {
             builtBy 'linuxMksdcardExecutable'
         }
     }
+    windows {
+        item( { getExeName("windows") } ) {
+            name 'mksdcard.exe'
+            builtBy 'windowsMksdcardExecutable'
+        }
+    }
 }
 
 def getExeName(String platform) {
@@ -51,3 +76,42 @@ def getExeName(String platform) {
     return binaries.executableFile.get(0)
 }
 
+class MingwOnLinuxConfiguration implements TargetPlatformConfiguration {
+
+    Project project
+
+    MingwOnLinuxConfiguration(Project project) {
+        this.project = project
+    }
+    boolean supportsPlatform(Platform element) {
+        return element.getOperatingSystem().name == "windows"
+    }
+
+    List<String> getCppCompilerArgs() {
+        []
+    }
+
+    List<String> getCCompilerArgs() {
+        ['-DUSE_MINGW', '-D__STDC_FORMAT_MACROS', '-D__STDC_CONSTANT_MACROS', '-D__USE_MINGW_ANSI_STDIO']
+    }
+
+    List<String> getObjectiveCCompilerArgs() {
+        []
+    }
+
+    List<String> getObjectiveCppCompilerArgs() {
+        []
+    }
+
+    List<String> getAssemblerArgs() {
+        []
+    }
+
+    List<String> getLinkerArgs() {
+        ['-enable-stdcall-fixup']
+    }
+
+    List<String> getStaticLibraryArchiverArgs() {
+        []
+    }
+}
