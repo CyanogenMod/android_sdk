@@ -25,7 +25,7 @@ $(call emugl-end-module)
 
 ### host library, 64-bit ####################################
 ifdef EMUGL_BUILD_64BITS
-    $(call emugl-begin-host-static-library,lib64GLESv1_dec)
+    $(call emugl-begin-host64-static-library,lib64GLESv1_dec)
 
     $(call emugl-import, lib64OpenglCodecCommon lib64OpenglOsUtils)
     $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))

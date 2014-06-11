@@ -48,7 +48,7 @@ $(call emugl-end-module)
 
 ### EGL host implementation, 64-bit ################
 ifdef EMUGL_BUILD_64BITS
-    $(call emugl-begin-host-static-library,lib64GLcommon)
+    $(call emugl-begin-host64-static-library,lib64GLcommon)
 
     $(call emugl-import,lib64OpenglOsUtils)
     translator_path := $(LOCAL_PATH)/..
