@@ -18,7 +18,6 @@ package com.android.ide.eclipse.ddms.preferences;
 
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmuilib.PortFieldEditor;
 import com.android.ide.eclipse.base.InstallDetails;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.i18n.Messages;
@@ -55,8 +54,9 @@ public class PreferencePage extends FieldEditorPreferencePage implements
     public void createFieldEditors() {
         IntegerFieldEditor ife;
 
-        ife = new PortFieldEditor(PreferenceInitializer.ATTR_DEBUG_PORT_BASE,
+        ife = new IntegerFieldEditor(PreferenceInitializer.ATTR_DEBUG_PORT_BASE,
                 Messages.PreferencePage_Base_Local_Debugger_Port, getFieldEditorParent());
+        ife.setValidRange(1024, 32767);
         addField(ife);
 
         BooleanFieldEditor bfe;
@@ -141,6 +141,7 @@ public class PreferencePage extends FieldEditorPreferencePage implements
         } else if (event.getSource().equals(mProfilerBufsize)) {
             DdmPreferences.setProfilerBufferSizeMb(mProfilerBufsize.getIntValue());
         }
+        super.propertyChange(event);
     }
 
     @Override
