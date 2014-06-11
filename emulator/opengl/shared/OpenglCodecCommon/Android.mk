@@ -32,7 +32,7 @@ $(call emugl-end-module)
 
 ### OpenglCodecCommon  host, 64-bit #########################################
 ifdef EMUGL_BUILD_64BITS
-    $(call emugl-begin-host-static-library,lib64OpenglCodecCommon)
+    $(call emugl-begin-host64-static-library,lib64OpenglCodecCommon)
 
     LOCAL_SRC_FILES := $(host_commonSources)
 
