@@ -129,7 +129,7 @@ _adb_cmd_install() {
 
     cur="${COMP_WORDS[COMP_CWORD]}"
     if [[ $where == OPTIONS ]]; then
-        COMPREPLY=( $(compgen -W "-l -r -s" -- "${cur}") )
+        COMPREPLY=( $(compgen -W "-d -l -r -s" -- "${cur}") )
         return
     fi
 
