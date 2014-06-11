@@ -36,6 +36,6 @@ public class MonitorWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
         IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
         configurer.setShowStatusLine(true);
         configurer.setShowPerspectiveBar(true);
-        configurer.setTitle("Android Debug Monitor");
+        configurer.setTitle("Android Device Monitor");
     }
 }
