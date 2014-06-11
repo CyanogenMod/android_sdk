@@ -19,7 +19,7 @@ $(call emugl-end-module)
 
 ### GLES_CM host implementation, 64-bit ########################
 ifdef EMUGL_BUILD_64BITS
-    $(call emugl-begin-host-shared-library,lib64GLES_CM_translator)
+    $(call emugl-begin-host64-shared-library,lib64GLES_CM_translator)
 
     $(call emugl-import,lib64GLcommon)
 

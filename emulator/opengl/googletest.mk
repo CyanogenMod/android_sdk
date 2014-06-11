@@ -31,7 +31,7 @@ $(call emugl-export,LDLIBS,$(common_LDLIBS))
 $(call emugl-end-module)
 
 ifdef EMUGL_BUILD_64BITS
-    $(call emugl-begin-host-static-library,lib64emugl_gtest)
+    $(call emugl-begin-host64-static-library,lib64emugl_gtest)
     LOCAL_SRC_FILES := $(common_SRC_FILES)
     LOCAL_CFLAGS += $(common_CFLAGS)
     LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
