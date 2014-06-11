@@ -5,9 +5,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="output" path="bin"/>
-    <classpathentry kind="lib" path="kxml2-2.3.0.jar"/>
-    <classpathentry kind="lib" path="easymock.jar"/>
-    <classpathentry kind="lib" path="testutils.jar"/>
+    <classpathentry kind="lib" path="libs/kxml2-2.3.0.jar"/>
+    <classpathentry kind="lib" path="libs/easymock.jar"/>
+    <classpathentry kind="lib" path="libs/testutils.jar"/>
     <classpathentry kind="lib" path="/plugin-adt/libs/ninepatch.jar" sourcepath="/ninepatch"/>
     <classpathentry kind="lib" path="/plugin-base/libs/sdklib.jar" sourcepath="/SdkLib"/>
     <classpathentry kind="lib" path="/plugin-adt/libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
