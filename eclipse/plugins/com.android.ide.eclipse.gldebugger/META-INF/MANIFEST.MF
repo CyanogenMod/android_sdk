@@ -11,16 +11,10 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.filesystem,
  org.eclipse.ui.console,
  com.android.ide.eclipse.ddms,
- com.android.ide.eclipse.base,
- com.android.tools.ddms.ddmlib;bundle-version="22.9.0",
- com.google.guava;bundle-version="15.0.0",
- com.android.tools.external.libprotobuf-java-lite;bundle-version="2.3.0",
- com.android.tools.external.liblzf;bundle-version="1.0.0",
- com.android.tools.ddms.ddmuilib;bundle-version="22.9.0",
- com.android.tools.common;bundle-version="22.9.0"
+ com.android.ide.eclipse.base
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: libs/host-libprotobuf-java-2.3.0-lite.jar,
- libs/liblzf.jar,
+ libs/liblzf-1.0.jar,
  .
 Bundle-Vendor: The Android Open Source Project
 Export-Package: com.android.ide.eclipse.gltrace;x-friends:="com.android.ide.eclipse.gldebugger.tests",
