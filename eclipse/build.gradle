@@ -1,71 +1,87 @@
-// Build script used to copy non OSGI dependencies into each ADT plugin's libs folder
+// Script used to build ADT plugins, IDE and monitor
+// There are 2 major tasks done by this plugin:
+//    copydeps: copies tools/base, tools/swt and prebuilt jars into plugins' libs folder
+//    buildEclipse: builds Eclipse by running Tycho from the commandline
 //
-// Usage: $ gradle -q copydeps
+// Usage: $ ANDROID_SRC/tools/gradlew -i -b /path/to/this/build.gradle copydeps|buildEclipse
+
+// get tools/base version
+apply from: "../../tools/buildSrc/base/version.gradle"
 
 repositories {
     maven { url '../../prebuilts/tools/common/m2/repository' }
     maven { url '../../out/repo' }
 }
 
-configurations {
-    compile
-}
-
 ext {
-    // the current version of tools/base and tools/swt
-    toolsVersion = "22.9.1"
-
     // list of plugins whose manifest should be examined to identify dependencies
-    adtPlugins = new File('plugins').listFiles().findAll { it.name.startsWith("com.android") }
+    adtPlugins = new File(projectDir, 'plugins').listFiles().findAll { it.name.startsWith("com.android") }
+
+    //
+    def eclipseBuildDeps = new File(projectDir, "../../prebuilts/eclipse-build-deps").getCanonicalFile()
+    targetComponents = [
+            "platform": new File(eclipseBuildDeps, "platform/org.eclipse.platform-4.2.2.zip"),
+            "cdt"     : new File(eclipseBuildDeps, "cdt/cdt-master-8.0.2.zip"),
+            "emf"     : new File(eclipseBuildDeps, "emf/emf-xsd-Update-2.9.1.zip"),
+            "jdt"     : new File(eclipseBuildDeps, "jdt/org.eclipse.jdt.source-4.2.2.zip"),
+            "wtp"     : new File(eclipseBuildDeps, "wtp/wtp-repo-R-3.3.2-20120210195245.zip"),
+            "gef"     : new File(eclipseBuildDeps, "gef/GEF-Update-3.9.1.zip"),
+            "pde"     : new File(eclipseBuildDeps, "pde/org.eclipse.pde-3.8.zip"),
+            "egit"    : new File(eclipseBuildDeps, "egit/org.eclipse.egit.repository-2.2.0.201212191850-r.zip"),
+    ]
 }
 
 // a mapping from the library names as used inside the plugin's MANIFEST.MF to the Maven artifact id
 def artifacts = [
         // tools/base and tools/swt dependencies
-        'manifest-merger'     : "com.android.tools.build:manifest-merger:$ext.toolsVersion",
-        'ddmlib'              : "com.android.tools.ddms:ddmlib:$ext.toolsVersion",
-        'ddmuilib'            : "com.android.tools.ddms:ddmuilib:$ext.toolsVersion",
-        'layoutlib-api'       : "com.android.tools.layoutlib:layoutlib-api:$ext.toolsVersion",
-        'lint-api'            : "com.android.tools.lint:lint-api:$ext.toolsVersion",
-        'lint-checks'         : "com.android.tools.lint:lint-checks:$ext.toolsVersion",
-        'asset-studio'        : "com.android.tools:asset-studio:$ext.toolsVersion",
-        'common'              : "com.android.tools:common:$ext.toolsVersion",
-        'dvlib'               : "com.android.tools:dvlib:$ext.toolsVersion",
-        'hierarchyviewer2lib' : "com.android.tools:hierarchyviewer2lib:$ext.toolsVersion",
-        'ninepatch'           : "com.android.tools:ninepatch:$ext.toolsVersion",
-        'rule-api'            : "com.android.tools:rule-api:$ext.toolsVersion",
-        'sdk-common'          : "com.android.tools:sdk-common:$ext.toolsVersion",
-        'sdklib'              : "com.android.tools:sdklib:$ext.toolsVersion",
-        'sdkstats'            : "com.android.tools:sdkstats:$ext.toolsVersion",
-        'sdkuilib'            : "com.android.tools:sdkuilib:$ext.toolsVersion",
-        'swtmenubar'          : "com.android.tools:swtmenubar:$ext.toolsVersion",
-        'testutils'           : "com.android.tools:testutils:$ext.toolsVersion",
-        'traceview'           : "com.android.tools:traceview:$ext.toolsVersion",
-        'uiautomatorviewer'   : "com.android.tools:uiautomatorviewer:$ext.toolsVersion",
+        'manifest-merger'     : "com.android.tools.build:manifest-merger:$ext.baseVersion",
+        'ddmlib'              : "com.android.tools.ddms:ddmlib:$ext.baseVersion",
+        'ddmuilib'            : "com.android.tools.ddms:ddmuilib:$ext.baseVersion",
+        'layoutlib-api'       : "com.android.tools.layoutlib:layoutlib-api:$ext.baseVersion",
+        'lint-api'            : "com.android.tools.lint:lint-api:$ext.baseVersion",
+        'lint-checks'         : "com.android.tools.lint:lint-checks:$ext.baseVersion",
+        'asset-studio'        : "com.android.tools:asset-studio:$ext.baseVersion",
+        'common'              : "com.android.tools:common:$ext.baseVersion",
+        'dvlib'               : "com.android.tools:dvlib:$ext.baseVersion",
+        'hierarchyviewer2lib' : "com.android.tools:hierarchyviewer2lib:$ext.baseVersion",
+        'ninepatch'           : "com.android.tools:ninepatch:$ext.baseVersion",
+        'rule-api'            : "com.android.tools:rule-api:$ext.baseVersion",
+        'sdk-common'          : "com.android.tools:sdk-common:$ext.baseVersion",
+        'sdklib'              : "com.android.tools:sdklib:$ext.baseVersion",
+        'sdkstats'            : "com.android.tools:sdkstats:$ext.baseVersion",
+        'sdkuilib'            : "com.android.tools:sdkuilib:$ext.baseVersion",
+        'swtmenubar'          : "com.android.tools:swtmenubar:$ext.baseVersion",
+        'testutils'           : "com.android.tools:testutils:$ext.baseVersion",
+        'traceview'           : "com.android.tools:traceview:$ext.baseVersion",
+        'uiautomatorviewer'   : "com.android.tools:uiautomatorviewer:$ext.baseVersion",
 
         // prebuilts
-        'lombok-ast-0.2.2'                 : 'com.android.tools.external.lombok:lombok-ast:0.2.2',
         'ant-glob'                         : 'com.android.tools.external:ant-glob:1.0',
-        'liblzf-1.0'                       : 'com.android.tools.external:liblzf:1.0',
-        'host-libprotobuf-java-2.3.0-lite' : 'com.android.tools.external:libprotobuf-java-lite:2.3.0',
-        'propertysheet'                    : 'com.android.tools.external:propertysheet:1.0',
-        'guava-15.0'                       : 'com.google.guava:guava:15.0',
+        'asm-4.0'                          : 'org.ow2.asm:asm:4.0',
+        'asm-analysis-4.0'                 : 'org.ow2.asm:asm-analysis:4.0',
+        'asm-tree-4.0'                     : 'org.ow2.asm:asm-tree:4.0',
         'commons-codec-1.4'                : 'commons-codec:commons-codec:1.4',
-        'commons-logging-1.1.1'            : 'commons-logging:commons-logging:1.1.1',
-        'jcommon-1.0.12'                   : 'jfree:jcommon:1.0.12',
-        'jfreechart-swt-1.0.9'             : 'jfree:jfreechart-swt:1.0.9',
-        'jfreechart-1.0.9'                 : 'jfree:jfreechart:1.0.9',
-        'kxml2-2.3.0'                      : 'net.sf.kxml:kxml2:2.3.0',
         'commons-compress-1.0'             : 'org.apache.commons:commons-compress:1.8.1',
+        'commons-logging-1.1.1'            : 'commons-logging:commons-logging:1.1.1',
+        'easymock'                         : 'org.easymock:easymock:2.4',
+        'freemarker-2.3.20'                : 'org.freemarker:freemarker:2.3.20',
+        'guava-15.0'                       : 'com.google.guava:guava:15.0',
+        'host-libprotobuf-java-2.3.0-lite' : 'com.android.tools.external:libprotobuf-java-lite:2.3.0',
         'httpclient-4.1.1'                 : 'org.apache.httpcomponents:httpclient:4.1.1',
         'httpcore-4.1'                     : 'org.apache.httpcomponents:httpcore:4.1',
         'httpmime-4.1'                     : 'org.apache.httpcomponents:httpmime:4.1',
-        'freemarker-2.3.20'                : 'org.freemarker:freemarker:2.3.20',
-        'asm-analysis-4.0'                 : 'org.ow2.asm:asm-analysis:4.0',
-        'asm-tree-4.0'                     : 'org.ow2.asm:asm-tree:4.0',
-        'asm-4.0'                          : 'org.ow2.asm:asm:4.0',
-        'easymock'                         : 'org.easymock:easymock:2.4',
+        'jcommon-1.0.12'                   : 'jfree:jcommon:1.0.12',
+        'jfreechart-1.0.9'                 : 'jfree:jfreechart:1.0.9',
+        'jfreechart-swt-1.0.9'             : 'jfree:jfreechart-swt:1.0.9',
+        'kxml2-2.3.0'                      : 'net.sf.kxml:kxml2:2.3.0',
+        'liblzf-1.0'                       : 'com.android.tools.external:liblzf:1.0',
+        'lombok-ast-0.2.2'                 : 'com.android.tools.external.lombok:lombok-ast:0.2.2',
+        'propertysheet'                    : 'com.android.tools.external:propertysheet:1.0',
 ]
+
+configurations {
+    compile
+}
 
 dependencies {
     compile artifacts.values()
@@ -75,8 +91,8 @@ task copydeps << {
     // get the resolved dependencies from the compile configuration
     def resolvedDependencies = configurations.compile.resolvedConfiguration.firstLevelModuleDependencies
 
+    // generate a map from "xy.jar" -> "/path/to/xy-1.0.jar"
     def artifactMap = [:]
-
     resolvedDependencies.each { dependency ->
         def dependencyId = dependency.getName()
         def artifactName = artifacts.find{ it.value == dependencyId}?.key
@@ -102,10 +118,30 @@ task copydeps << {
             }
 
             String destName = artifactMap.get(it)
-            logger.info("Copying " + destName + " to " + dest)
+            logger.info("\tCopying " + destName + " to " + dest)
             ant.copy(file: destName, tofile: new File(dest, it))
         }
     }
+}
+
+// unzip eclipse prebuilts into the out folder to create a target platform for the build
+task unzipTargetPlatform << {
+    File targetDir = new File(projectDir, "../../out/host/maven/target").getCanonicalFile()
+    targetDir.mkdirs()
+
+    project.targetComponents.each { String k, File v ->
+        File d = new File(targetDir, k)
+        logger.info("Unzipping " + v.getPath() + " into: " + d.getPath())
+        ant.unzip(src: v, dest: d)
+    }
+}
+
+task buildEclipse(type: Exec, dependsOn: unzipTargetPlatform) {
+    def maven = new File(projectDir, "../../prebuilts/eclipse/maven/apache-maven-3.2.1/bin/mvn").getCanonicalFile()
+    def androidOut = new File(projectDir, "../../out").getCanonicalPath()
+    environment("M2_HOME", maven.getParentFile().getParentFile().getCanonicalPath())
+    workingDir projectDir
+    commandLine maven.getCanonicalPath(), "-s", "settings.xml", "-DforceContextQualifier=M01", "-DANDROID_OUT=$androidOut", "package"
 }
 
 private File getArtifact(ResolvedDependency dependency) {
