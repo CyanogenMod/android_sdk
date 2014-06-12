@@ -35,15 +35,15 @@ model {
     toolChains {
         host(Clang)
         mingw(Gcc) {
-//            path "$project.rootDir/../prebuilts/gcc/linux-x86/host/i586-mingw32msvc-4.8/bin"
+            path "$project.rootDir/../prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/bin"
 
-            addPlatformConfiguration(new MingwOnLinuxConfiguration(project))
+            addPlatformConfiguration(new MingwOnLinuxConfiguration())
 
-            getCCompiler().executable =         'i586-mingw32msvc-gcc'
-            getCppCompiler().executable =       'i586-mingw32msvc-g++'
-            getLinker().executable =            'i586-mingw32msvc-gcc'
-            getAssembler().executable =         'i586-mingw32msvc-as'
-            getStaticLibArchiver().executable = 'i586-mingw32msvc-ar'
+            getCCompiler().executable =         'x86_64-w64-mingw32-gcc'
+            getCppCompiler().executable =       'x86_64-w64-mingw32-g++'
+            getLinker().executable =            'x86_64-w64-mingw32-gcc'
+            getAssembler().executable =         'x86_64-w64-mingw32-as'
+            getStaticLibArchiver().executable = 'x86_64-w64-mingw32-ar'
         }
     }
 }
@@ -78,11 +78,6 @@ def getExeName(String platform) {
 
 class MingwOnLinuxConfiguration implements TargetPlatformConfiguration {
 
-    Project project
-
-    MingwOnLinuxConfiguration(Project project) {
-        this.project = project
-    }
     boolean supportsPlatform(Platform element) {
         return element.getOperatingSystem().name == "windows"
     }
@@ -92,7 +87,7 @@ class MingwOnLinuxConfiguration implements TargetPlatformConfiguration {
     }
 
     List<String> getCCompilerArgs() {
-        ['-DUSE_MINGW', '-D__STDC_FORMAT_MACROS', '-D__STDC_CONSTANT_MACROS', '-D__USE_MINGW_ANSI_STDIO']
+        ['-DUSE_MINGW', '-D__STDC_FORMAT_MACROS', '-D__STDC_CONSTANT_MACROS', '-D__USE_MINGW_ANSI_STDIO', '-m32']
     }
 
     List<String> getObjectiveCCompilerArgs() {
@@ -108,7 +103,7 @@ class MingwOnLinuxConfiguration implements TargetPlatformConfiguration {
     }
 
     List<String> getLinkerArgs() {
-        ['-enable-stdcall-fixup']
+        ['-m32']
     }
 
     List<String> getStaticLibraryArchiverArgs() {
