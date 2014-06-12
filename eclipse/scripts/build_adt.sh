@@ -37,15 +37,15 @@ cd "$ANDROID_SRC"/tools
 ./gradlew --no-daemon publishLocal
 
 # 2. Copy dependent jars into the libs folder of each plugin
-cd "$ANDROID_SRC"/sdk/eclipse
-../../tools/gradlew --no-daemon copydeps
+echo Copying jars to be embedded inside the ADT plugins
+cd "$ANDROID_SRC"
+./tools/gradlew -i -b sdk/eclipse/build.gradle --no-daemon copydeps
 
 # 3. Launch Tycho build
 echo Launching Tycho to build ADT plugins and bundle
-cd "$ANDROID_SRC"/sdk/eclipse
-make -f maven.mk
+./tools/gradlew -i -b sdk/eclipse/build.gradle --no-daemon buildEclipse
 
-echo "## Copying ADT plugins and bundle into destination folder"
+echo Copying ADT plugins and bundle into destination folder
 cd "$ANDROID_SRC"
 cp -rv out/host/maven/bundles-*/products/*.gz "$DIST"/
 cp -rv out/host/maven/bundles-*/products/*.zip "$DIST"/
