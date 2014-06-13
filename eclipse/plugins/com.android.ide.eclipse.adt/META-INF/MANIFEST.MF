@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Android Development Toolkit
 Bundle-SymbolicName: com.android.ide.eclipse.adt;singleton:=true
-Bundle-Version: 22.6.2.qualifier
+Bundle-Version: 22.10.0.qualifier
 Bundle-ClassPath: .,
  libs/sdkuilib.jar,
  libs/ninepatch.jar,
