@@ -43,7 +43,7 @@ cd "$ANDROID_SRC"
 
 # 3. Launch Tycho build
 echo Launching Tycho to build ADT plugins and bundle
-./tools/gradlew -i -b sdk/eclipse/build.gradle --no-daemon buildEclipse
+( set -x ; BUILD_NUMBER="$BNUM" ./tools/gradlew -i -b sdk/eclipse/build.gradle --no-daemon buildEclipse)
 
 echo Copying ADT plugins and bundle into destination folder
 cd "$ANDROID_SRC"

@@ -29,6 +29,11 @@ ext {
             "pde"     : new File(eclipseBuildDeps, "pde/org.eclipse.pde-3.8.zip"),
             "egit"    : new File(eclipseBuildDeps, "egit/org.eclipse.egit.repository-2.2.0.201212191850-r.zip"),
     ]
+
+    buildNumber = System.getenv("BUILD_NUMBER")
+    if (buildNumber == null) {
+        buildNumber = "SNAPSHOT"
+    }
 }
 
 // a mapping from the library names as used inside the plugin's MANIFEST.MF to the Maven artifact id
@@ -141,7 +146,7 @@ task buildEclipse(type: Exec, dependsOn: unzipTargetPlatform) {
     def androidOut = new File(projectDir, "../../out").getCanonicalPath()
     environment("M2_HOME", maven.getParentFile().getParentFile().getCanonicalPath())
     workingDir projectDir
-    commandLine maven.getCanonicalPath(), "-s", "settings.xml", "-DforceContextQualifier=M01", "-DANDROID_OUT=$androidOut", "package"
+    commandLine maven.getCanonicalPath(), "-s", "settings.xml", "-DforceContextQualifier=$project.buildNumber", "-DANDROID_OUT=$androidOut", "package"
 }
 
 private File getArtifact(ResolvedDependency dependency) {
