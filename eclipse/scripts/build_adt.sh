@@ -47,6 +47,5 @@ echo Launching Tycho to build ADT plugins and bundle
 
 echo Copying ADT plugins and bundle into destination folder
 cd "$ANDROID_SRC"
-cp -rv out/host/maven/bundles-*/products/*.gz "$DIST"/
 cp -rv out/host/maven/bundles-*/products/*.zip "$DIST"/
 cp -rv out/host/maven/p2repo-*/p2repo-*.zip "$DIST"/p2repo-$BNUM.zip
