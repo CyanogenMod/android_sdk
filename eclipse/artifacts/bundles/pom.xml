@@ -41,8 +41,8 @@
                 <configuration>
                     <formats>
                         <win32>zip</win32>
-                        <linux>tar.gz</linux>
-                        <macosx>tar.gz</macosx>
+                        <linux>zip</linux>
+                        <macosx>zip</macosx>
                     </formats>
                     <products>
                         <product>
