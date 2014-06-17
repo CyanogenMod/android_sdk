@@ -46,7 +46,7 @@
                     </formats>
                     <products>
                         <product>
-                            <id>com.android.ide.eclipse.monitor.product</id>
+                            <id>monitorproduct</id>
                             <attachId>com.android.ide.eclipse.monitor.product</attachId>
                             <rootFolder>monitor</rootFolder>
                         </product>
