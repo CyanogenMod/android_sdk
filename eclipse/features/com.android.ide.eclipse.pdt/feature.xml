@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.pdt"
       label="Android Platform Development Tools"
-      version="22.6.2.qualifier"
+      version="22.10.0.qualifier"
       provider-name="The Android Open Source Project">
 
    <description>

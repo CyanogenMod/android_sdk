@@ -9,7 +9,7 @@ if [ -z "$OLD" ] || [ -z "$NEW" ]; then
 Usage: $0 <old> <new>
 Changes the ADT plugin revision number.
 Example:
-  cd tools/eclipse
+  cd sdk/eclipse
   scripts/update_version.sh 0.1.2 0.2.3
 EOF
     exit 1
@@ -17,7 +17,7 @@ fi
 
 # sanity check on current dir
 if [ `basename "$PWD"` != "eclipse" ]; then
-    echo "Please run this from tools/eclipse."
+    echo "Please run this from sdk/eclipse."
     exit 1
 fi
 
@@ -46,7 +46,7 @@ function replace() {
 SED_OLD="${OLD//./\.}\.qualifier"
 SED_NEW="${NEW//./\.}\.qualifier"
 
-for i in $(grep -rl "$OLD" * | grep -E "\.xml$|\.MF$"); do
+for i in $(grep -rl "$OLD" * | grep -E "\.xml$|\.MF$|\.product$"); do
   if [[ -f "$i" && $(basename "$i") != "build.xml" ]]; then
     replace "$i"
   fi
@@ -55,9 +55,12 @@ done
 # ---2--- Change unqualified version numbers in specific files
 SED_OLD="${OLD//./\.}"
 SED_NEW="${NEW//./\.}"
-for i in plugins/com.android.ide.eclipse.adt.package/ide.product   \
+for i in artifacts/*/pom.xml \
+         plugins/com.android.ide.eclipse.adt.package/ide.product   \
          plugins/com.android.ide.eclipse.monitor/monitor.product   \
          plugins/com.android.ide.eclipse.monitor/plugin.properties \
+         plugins/com.android.ide.eclipse.*/pom.xml \
+         features/com.android.ide.eclipse.*/pom.xml \
          features/com.android.ide.eclipse.adt.package/feature.xml ; do
   if grep -qs "$OLD" "$i"; then
     replace "$i"
