@@ -2,7 +2,7 @@
 <feature
       id="com.android.ide.eclipse.ndk.feature"
       label="Android Native Development Tools"
-      version="22.10.0.qualifier"
+      version="23.0.0.qualifier"
       provider-name="The Android Open Source Project">
 
    <description>
