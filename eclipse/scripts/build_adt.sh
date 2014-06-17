@@ -19,8 +19,6 @@ PROG_DIR=$(dirname "$0")
 cd "$PROG_DIR"/../../..
 ANDROID_SRC="$PWD"
 
-MAVEN="$ANDROID_SRC"/prebuilts/eclipse/maven/apache-maven-3.2.1/bin/mvn
-
 OUT="$1"
 DIST="$2"
 BNUM="$3"

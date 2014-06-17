@@ -1,0 +1,80 @@
+apply plugin: 'sdk-files'
+
+// See $ANDROID_SRC/tools/buildSrc/base/version.gradle for definition of baseVersion
+// However, if Eclipse bundles don't get the same version as tools baseVersion, then this
+// will have to be hard coded and fixed by sdk/eclipse/scripts/update_version.sh
+def basePath = "../../out/host/maven/bundles-${rootProject.ext.baseVersion}-SNAPSHOT/products/"
+
+sdk {
+    linux {
+        item('monitor') {
+            notice null
+            executable true
+        }
+        item(basePath + 'lin64/monitor') {
+            into 'lib/monitor-x86_64'
+            notice null
+            builtBy 'unzipLinux64'
+        }
+        item(basePath + 'lin/monitor') {
+            into 'lib/monitor-x86'
+            notice null
+            builtBy 'unzipLinux'
+        }
+    }
+
+    mac {
+        item('monitor') {
+            notice null
+            executable true
+        }
+        item(basePath + 'mac64/monitor') {
+            into 'lib/monitor-x86_64'
+            notice null
+            builtBy 'unzipMac64'
+        }
+    }
+
+
+    windows {
+        item('monitor.bat') {
+            notice null
+            executable true
+        }
+        item(basePath + 'win64/monitor') {
+            into 'lib/monitor-x86_64'
+            notice null
+            builtBy 'unzipWin64'
+        }
+        item(basePath + 'win/monitor') {
+            into 'lib/monitor-x86'
+            notice null
+            builtBy 'unzipWin'
+        }
+    }
+}
+
+task unzipLinux64(type: Copy) {
+    from zipTree(file(basePath + 'monitorproduct-linux.gtk.x86_64.zip'))
+    into file(basePath + 'lin64/')
+}
+
+task unzipLinux(type: Copy) {
+    from zipTree(file(basePath + 'monitorproduct-linux.gtk.x86.zip'))
+    into file(basePath + 'lin/')
+}
+
+task unzipMac64(type: Copy) {
+    from zipTree(file(basePath + 'monitorproduct-macosx.cocoa.x86_64.zip'))
+    into file(basePath + 'mac64/')
+}
+
+task unzipWin64(type: Copy) {
+    from zipTree(file(basePath + 'monitorproduct-win32.win32.x86_64.zip'))
+    into file(basePath + 'win64/')
+}
+
+task unzipWin(type: Copy) {
+    from zipTree(file(basePath + 'monitorproduct-win32.win32.x86.zip'))
+    into file(basePath + 'win/')
+}
