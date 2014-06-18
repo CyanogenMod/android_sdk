@@ -21,7 +21,7 @@ sdk {
     windows {
         item( { getExeName("windows") } ) {
             into 'lib'
-            name 'SDK Launcher.exe'
+            name 'SDK Manager.exe'
             builtBy 'sdkLauncherExecutable'
         }
     }
