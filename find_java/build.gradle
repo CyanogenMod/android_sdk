@@ -20,8 +20,14 @@ sources {
 sdk {
     windows {
         item( { getExeName("windows") } ) {
+            into 'lib'
             name 'find_java.exe'
             builtBy 'findJavaExecutable'
+            notice 'NOTICE'
+        }
+        item('find_java.bat') {
+            into 'lib'
+            notice 'NOTICE'
         }
     }
 }
