@@ -17,6 +17,10 @@ sources {
     }
 }
 
+binaries.all {
+    cCompiler.args "-D_FILE_OFFSET_BITS=64"
+}
+
 sdk {
     mac {
         item( { getExeName("darwin") } ) {
