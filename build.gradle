@@ -37,6 +37,10 @@ sdk {
             into 'ant'
             notice 'files/ant/NOTICE'
         }
+        item('files/proguard-project.txt') {
+            into 'lib'
+            notice null
+        }
 
         item('files/devices.xml') {
             into 'lib'
