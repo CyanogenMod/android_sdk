@@ -157,7 +157,6 @@
     <condition property="exe" value=".exe" else=""><os family="windows" /></condition>
     <condition property="bat" value=".bat" else=""><os family="windows" /></condition>
     <property name="adb" location="${android.platform.tools.dir}/adb${exe}" />
-    <property name="zipalign" location="${android.tools.dir}/zipalign${exe}" />
     <property name="lint" location="${android.tools.dir}/lint${bat}" />
 
     <!-- Intermediate files -->
@@ -485,6 +484,7 @@
         <property name="aidl" location="${android.build.tools.dir}/aidl${exe}" />
         <property name="aapt" location="${android.build.tools.dir}/aapt${exe}" />
         <property name="dx" location="${android.build.tools.dir}/dx${bat}" />
+        <property name="zipalign" location="${android.build.tools.dir}/zipalign${exe}" />
 
         <!-- read the previous build mode -->
         <property file="${out.build.prop.file}" />
