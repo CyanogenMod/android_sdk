@@ -16,7 +16,7 @@ include $(CLEAR_VARS)
 ifeq ($(HOST_OS),windows)
 
 LOCAL_SRC_FILES := \
-	sdklauncher.c
+	src/source/sdklauncher.c
 
 LOCAL_CFLAGS += -Wall -Wno-unused-parameter
 LOCAL_CFLAGS += -D_XOPEN_SOURCE -D_GNU_SOURCE -DSH_HISTORY
