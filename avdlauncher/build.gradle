@@ -21,7 +21,7 @@ sdk {
     windows {
         item( { getExeName("windows") } ) {
             into 'lib'
-            name 'AVD Launcher.exe'
+            name 'AVD Manager.exe'
             builtBy 'avdLauncherExecutable'
         }
     }
