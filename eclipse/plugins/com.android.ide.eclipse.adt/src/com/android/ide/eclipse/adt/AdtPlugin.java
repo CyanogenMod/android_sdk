@@ -378,11 +378,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         return SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER + SdkConstants.FN_ADB;
     }
 
-    /** Returns the zipalign path relative to the sdk folder */
-    public static String getOsRelativeZipAlign() {
-        return SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_ZIPALIGN;
-    }
-
     /** Returns the emulator path relative to the sdk folder */
     public static String getOsRelativeEmulator() {
         return SdkConstants.OS_SDK_TOOLS_FOLDER + SdkConstants.FN_EMULATOR;
@@ -398,11 +393,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         return getOsSdkFolder() + getOsRelativeAdb();
     }
 
-    /** Returns the absolute zipalign path */
-    public static String getOsAbsoluteZipAlign() {
-        return getOsSdkFolder() + getOsRelativeZipAlign();
-    }
-
     /** Returns the absolute traceview path */
     public static String getOsAbsoluteTraceview() {
         return getOsSdkFolder() + SdkConstants.OS_SDK_TOOLS_FOLDER +
@@ -415,7 +405,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     public static String getOsAbsoluteHprofConv() {
-        return getOsSdkFolder() + SdkConstants.OS_SDK_TOOLS_FOLDER +
+        return getOsSdkFolder() + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER +
                 AdtConstants.FN_HPROF_CONV;
     }
 

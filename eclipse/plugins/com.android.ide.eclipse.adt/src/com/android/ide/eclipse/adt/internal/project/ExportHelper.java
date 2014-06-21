@@ -133,15 +133,7 @@ public final class ExportHelper {
             String dexMergerStr = projectState.getProperty(AdtConstants.DEX_OPTIONS_DISABLE_MERGER);
             Boolean dexMerger = Boolean.valueOf(dexMergerStr);
 
-            BuildToolInfo buildToolInfo = projectState.getBuildToolInfo();
-            if (buildToolInfo == null) {
-                buildToolInfo = Sdk.getCurrent().getLatestBuildTool();
-            }
-
-            if (buildToolInfo == null) {
-                throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
-                        "No Build Tools installed in the SDK."));
-            }
+            BuildToolInfo buildToolInfo = getBuildTools(projectState);
 
             BuildHelper helper = new BuildHelper(
                     projectState,
@@ -337,6 +329,20 @@ public final class ExportHelper {
             ProjectHelper.buildWithDeps(project, IncrementalProjectBuilder.FULL_BUILD, monitor);
             project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
         }
+    }
+
+    public static BuildToolInfo getBuildTools(ProjectState projectState)
+            throws CoreException {
+        BuildToolInfo buildToolInfo = projectState.getBuildToolInfo();
+        if (buildToolInfo == null) {
+            buildToolInfo = Sdk.getCurrent().getLatestBuildTool();
+        }
+
+        if (buildToolInfo == null) {
+            throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                    "No Build Tools installed in the SDK."));
+        }
+        return buildToolInfo;
     }
 
     /**
