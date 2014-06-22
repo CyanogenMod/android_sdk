@@ -18,9 +18,6 @@
    <feature url="features/com.android.ide.eclipse.adt_23.0.0.qualifier.jar" id="com.android.ide.eclipse.adt.feature" version="23.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.adt.package_23.0.0.qualifier.jar" id="com.android.ide.eclipse.adt.package.feature" version="23.0.0.qualifier">
-      <category name="developer"/>
-   </feature>
    <feature url="features/com.android.ide.eclipse.ndk_23.0.0.qualifier.jar" id="com.android.ide.eclipse.ndk.feature" version="23.0.0.qualifier">
       <category name="developer"/>
    </feature>
