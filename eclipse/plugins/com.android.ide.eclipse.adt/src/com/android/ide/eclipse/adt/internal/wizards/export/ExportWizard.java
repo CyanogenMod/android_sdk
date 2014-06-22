@@ -18,10 +18,14 @@ package com.android.ide.eclipse.adt.internal.wizards.export;
 
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.utils.FingerprintUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ExportHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.sdklib.BuildToolInfo;
+import com.android.sdklib.BuildToolInfo.PathId;
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.KeystoreHelper;
 import com.android.utils.GrabProcessOutput;
@@ -290,10 +294,14 @@ public final class ExportWizard extends Wizard implements IExportWizard {
 
             // check the private key/certificate again since it may have been created just above.
             if (mPrivateKey != null && mCertificate != null) {
+                // check whether we can run zipalign.
                 boolean runZipAlign = false;
-                String path = AdtPlugin.getOsAbsoluteZipAlign();
-                File zipalign = new File(path);
-                runZipAlign = zipalign.isFile();
+
+                ProjectState projectState = Sdk.getProjectState(mProject);
+                BuildToolInfo buildToolInfo = ExportHelper.getBuildTools(projectState);
+
+                String zipAlignPath = buildToolInfo.getPath(PathId.ZIP_ALIGN);
+                runZipAlign = zipAlignPath != null && new File(zipAlignPath).isFile();
 
                 File apkExportFile = mDestinationFile;
                 if (runZipAlign) {
@@ -307,7 +315,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
 
                 // align if we can
                 if (runZipAlign) {
-                    String message = zipAlign(path, apkExportFile, mDestinationFile);
+                    String message = zipAlign(zipAlignPath, apkExportFile, mDestinationFile);
                     if (message != null) {
                         displayError(message);
                         return false;
