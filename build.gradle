@@ -41,6 +41,14 @@ sdk {
             into 'lib'
             notice null
         }
+        item('files/proguard-project.txt') {
+            into 'proguard'
+            notice null
+        }
+        item('files/proguard-android-optimize.txt') {
+            into 'proguard'
+            notice null
+        }
 
         item('files/devices.xml') {
             into 'lib'
@@ -67,6 +75,51 @@ sdk {
         }
         item("$rootProject.projectDir.parentFile/prebuilts/qemu-kernel/x86/pc-bios/vgabios-cirrus.bin") {
             into 'lib/pc-bios'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/license.html") {
+            into 'proguard'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/README") {
+            into 'proguard'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/docs") {
+            into 'proguard/docs'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/examples") {
+            into 'proguard/examples'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/lib") {
+            into 'proguard/lib'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/proguard.sh") {
+            into 'proguard/bin'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/proguardgui.sh") {
+            into 'proguard/bin'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/retrace.sh") {
+            into 'proguard/bin'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties") {
+            into 'proguard/ant'
             notice null
         }
     }
