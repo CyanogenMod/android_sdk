@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="monitor" uid="monitorproduct" id="com.android.ide.eclipse.monitor.product" application="com.android.ide.eclipse.monitor.Application" version="23.0.0.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="monitor" uid="monitorproduct" id="com.android.ide.eclipse.monitor.product" application="com.android.ide.eclipse.monitor.Application" version="23.0.1.qualifier" useFeatures="true" includeLaunchers="true">
 
 
    <configIni use="default">
