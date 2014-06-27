@@ -61,7 +61,7 @@ public class SdkToolsLocator {
     }
 
     public String getHprofConvLocation() {
-        return new File(getSdkToolsFolder(), FN_HPROF_CONV).getAbsolutePath();
+        return new File(getSdkPlatformToolsFolder(), FN_HPROF_CONV).getAbsolutePath();
     }
 
     private String getSdkToolsFolder() {
