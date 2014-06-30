@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
@@ -39,9 +40,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Handles locating templates and providing template metadata */
 public class TemplateManager {
+	private static final Set<String> EXCLUDED_CATEGORIES = Sets.newHashSet("Folder", "Google");
+	private static final Set<String> EXCLUDED_FORMFACTORS = Sets.newHashSet("Wear", "TV");
+	
     TemplateManager() {
     }
 
@@ -239,6 +244,10 @@ public class TemplateManager {
                 Document doc = DomUtilities.parseDocument(xml, true);
                 if (doc != null && doc.getDocumentElement() != null) {
                     TemplateMetadata metadata = new TemplateMetadata(doc);
+                    if (EXCLUDED_CATEGORIES.contains(metadata.getCategory()) ||
+                    	EXCLUDED_FORMFACTORS.contains(metadata.getFormFactor())) {
+                    	return null;
+                    }
                     mTemplateMap.put(templateDir, metadata);
                     return metadata;
                 }

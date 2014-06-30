@@ -21,6 +21,7 @@ import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.NewTemplatePage.WIZARD_PAGE_WIDTH;
 
 import com.android.annotations.Nullable;
+import com.android.ide.common.sdk.SdkVersionInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -550,7 +551,9 @@ public class NewProjectPage extends WizardPage
                 try {
                     minSdk = Integer.parseInt(mValues.minSdk);
                 } catch (NumberFormatException nufe) {
-                    minSdk = 1;
+                	// If not a number, then the string is a codename, so treat it
+                	// as a preview version.
+                    minSdk = SdkVersionInfo.HIGHEST_KNOWN_API + 1;
                 }
             }
             mValues.iconState.minSdk = minSdk.intValue();
