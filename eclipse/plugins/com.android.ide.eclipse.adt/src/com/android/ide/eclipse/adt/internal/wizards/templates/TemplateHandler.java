@@ -168,6 +168,8 @@ class TemplateHandler {
     static final String TAG_THUMBS = "thumbs";           //$NON-NLS-1$
     static final String TAG_DEPENDENCY = "dependency";   //$NON-NLS-1$
     static final String TAG_ICONS = "icons";             //$NON-NLS-1$
+    static final String TAG_FORMFACTOR = "formfactor";   //$NON-NLS-1$
+    static final String TAG_CATEGORY = "category";       //$NON-NLS-1$
     static final String ATTR_FORMAT = "format";          //$NON-NLS-1$
     static final String ATTR_REVISION = "revision";      //$NON-NLS-1$
     static final String ATTR_VALUE = "value";            //$NON-NLS-1$
@@ -191,9 +193,16 @@ class TemplateHandler {
     static final String ATTR_CLIPART_NAME = "clipartName";//$NON-NLS-1$
     static final String ATTR_TEXT = "text";              //$NON-NLS-1$
     static final String ATTR_SRC_DIR = "srcDir";         //$NON-NLS-1$
+    static final String ATTR_SRC_OUT = "srcOut";         //$NON-NLS-1$
     static final String ATTR_RES_DIR = "resDir";         //$NON-NLS-1$
+    static final String ATTR_RES_OUT = "resOut";         //$NON-NLS-1$
     static final String ATTR_MANIFEST_DIR = "manifestDir";//$NON-NLS-1$
+    static final String ATTR_MANIFEST_OUT = "manifestOut";//$NON-NLS-1$
+    static final String ATTR_PROJECT_DIR = "projectDir"; //$NON-NLS-1$
+    static final String ATTR_PROJECT_OUT = "projectOut"; //$NON-NLS-1$
     static final String ATTR_MAVEN_URL = "mavenUrl";     //$NON-NLS-1$
+    static final String ATTR_DEBUG_KEYSTORE_SHA1 = 
+    		"debugKeystoreSha1";                         //$NON-NLS-1$
 
     static final String CATEGORY_ACTIVITIES = "activities";//$NON-NLS-1$
     static final String CATEGORY_PROJECTS = "projects";    //$NON-NLS-1$
@@ -363,6 +372,12 @@ class TemplateHandler {
 
         IPath manifestDir = project.getProjectRelativePath();
         parameters.put(ATTR_MANIFEST_DIR, manifestDir.toString());
+        parameters.put(ATTR_MANIFEST_OUT, manifestDir.toString());
+        
+        parameters.put(ATTR_PROJECT_DIR, manifestDir.toString());
+        parameters.put(ATTR_PROJECT_OUT, manifestDir.toString());
+        
+        parameters.put(ATTR_DEBUG_KEYSTORE_SHA1, "");
     }
 
     @Nullable
@@ -474,8 +489,7 @@ class TemplateHandler {
                     } else if (TAG_GLOBAL.equals(name)) {
                         String id = attributes.getValue(ATTR_ID);
                         if (!paramMap.containsKey(id)) {
-                            String value = attributes.getValue(ATTR_VALUE);
-                            paramMap.put(id, value);
+                        	paramMap.put(id, TypedVariable.parseGlobal(attributes));
                         }
                     } else if (TAG_GLOBALS.equals(name)) {
                         // Handle evaluation of variables
@@ -503,9 +517,10 @@ class TemplateHandler {
                                 }
                             }
                         }
-                    } else if (!name.equals("template") && !name.equals("category")
-                            && !name.equals("option") && !name.equals(TAG_THUMBS) &&
-                            !name.equals(TAG_THUMB) && !name.equals(TAG_ICONS)) {
+                    } else if (!name.equals("template") && !name.equals(TAG_CATEGORY) &&
+                    		!name.equals(TAG_FORMFACTOR) && !name.equals("option") &&
+                    		!name.equals(TAG_THUMBS) && !name.equals(TAG_THUMB) &&
+                    		!name.equals(TAG_ICONS)) {
                         System.err.println("WARNING: Unknown template directive " + name);
                     }
                 }

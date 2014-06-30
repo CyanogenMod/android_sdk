@@ -342,9 +342,15 @@ public class AddSupportJarAction implements IObjectActionDelegate {
                 assert path.equals(libraryPath) : path;
             }
 
-            // Create workspace copy of the project and add library dependency
-            IProject libraryProject = createLibraryProject(libraryPath, project,
-                    APP_COMPAT_LIB_NAME, waitForFinish);
+            // Check to see if there's already a version of the library available
+            IWorkspace workspace = ResourcesPlugin.getWorkspace();
+            IWorkspaceRoot root = workspace.getRoot();
+            IProject libraryProject = root.getProject(APP_COMPAT_LIB_NAME);
+            if (!libraryProject.exists()) {
+            	// Create workspace copy of the project and add library dependency
+            	libraryProject = createLibraryProject(libraryPath, project,
+            			APP_COMPAT_LIB_NAME, waitForFinish);
+            }
             if (libraryProject != null) {
                 return addLibraryDependency(libraryProject, project, waitForFinish);
             }
