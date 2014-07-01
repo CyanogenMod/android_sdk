@@ -7,12 +7,4 @@ Bundle-Vendor: The Android Open Source Project
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-BundleShape: dir
 Require-Bundle: org.eclipse.platform,
- org.eclipse.equinox.app,
- org.eclipse.ui.intro,
- org.eclipse.ui.workbench,
- org.eclipse.swt,
- org.eclipse.core.runtime,
- org.eclipse.core.commands,
- org.eclipse.ui.forms,
- org.eclipse.jface,
- com.android.ide.eclipse.adt
+ org.eclipse.equinox.app
