@@ -11,26 +11,27 @@
    </description>
 
    <copyright>
-      Copyright (C) 2007-2012 The Android Open Source Project
+      Copyright (C) 2007-2014 The Android Open Source Project
    </copyright>
 
    <license url="http://www.eclipse.org/org/documents/epl-v10.php">
       Note:  kxml2-2.3.0.jar is under the BSD license rather ...
    </license>
 
-   <url>
-      <update label="Android Update Site" url="https://dl-ssl.google.com/android/eclipse/"/>
-   </url>
-
    <requires>
+      <import plugin="com.android.ide.eclipse.adt" version="22.3.0" match="greaterOrEqual"/>
+      <import plugin="com.android.ide.eclipse.base" version="22.3.0" match="greaterOrEqual"/>
+      <import plugin="com.android.ide.eclipse.ddms" version="22.3.0" match="greaterOrEqual"/>
+      <import plugin="com.android.ide.eclipse.gldebugger" version="22.3.0" match="greaterOrEqual"/>
+      <import plugin="com.android.ide.eclipse.hierarchyviewer" version="22.3.0" match="greaterOrEqual"/>
+      <import plugin="com.android.ide.eclipse.traceview" version="22.3.0" match="greaterOrEqual"/>
+      <import plugin="overlay.com.android.ide.eclipse.adt.overlay"/>
       <import feature="org.eclipse.equinox.p2.user.ui"/>
-      <import feature="org.eclipse.help"/>
-      <import feature="org.eclipse.jdt"/>
-      <import feature="org.eclipse.cdt"/>
       <import feature="org.eclipse.platform"/>
       <import feature="org.eclipse.rcp"/>
       <import feature="org.eclipse.egit"/>
       <import feature="org.eclipse.egit.import"/>
+      <import feature="org.eclipse.cdt"/>
    </requires>
 
    <plugin

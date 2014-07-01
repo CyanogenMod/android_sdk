@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="eclipse" uid="adtproduct" id="adtproduct" application="org.eclipse.ui.ide.workbench" version="23.0.1.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="Eclipse IDE for Android Developers" uid="adtproduct" id="com.android.ide.eclipse.adt.package.adtproduct" application="org.eclipse.ui.ide.workbench" version="23.0.1.qualifier" useFeatures="true" includeLaunchers="true">
+
+   <aboutInfo>
+      <image path="/plugin-adt-package/adt-about.png"/>
+      <text>
+         Specified in the plugin.xml of the branding plugin.
+      </text>
+   </aboutInfo>
 
    <configIni use="default">
    </configIni>
 
    <launcherArgs>
-      <programArgs>-product adtproduct</programArgs>
-      <programArgsWin>--launcher.XXMaxPermSize 256M</programArgsWin>
-      <vmArgs>-Dosgi.requiredJavaVersion=1.6 -Xms40m -Xmx768m</vmArgs>
-      <vmArgsLin>-XX:MaxPermSize=256m</vmArgsLin>
+      <programArgs>-product com.android.ide.eclipse.adt.package.adtproduct</programArgs>
+      <vmArgs>-Dosgi.requiredJavaVersion=1.6
+-XX:MaxPermSize=256m
+-Xms512m
+-Xmx1024m</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages/>
+   <windowImages i16="/plugin-adt-package/icons/adt16.png" i32="/plugin-adt-package/icons/adt32.png" i48="/plugin-adt-package/icons/adt48.png"/>
 
    <splash
       location="com.android.ide.eclipse.adt.package" />
@@ -24,6 +32,7 @@
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
       <linux include="false">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6</linux>
@@ -36,17 +45,13 @@
 
    <features>
       <feature id="com.android.ide.eclipse.adt.package.feature" version="23.0.1.qualifier"/>
-      <feature id="com.android.ide.eclipse.adt.feature" version="23.0.1.qualifier"/>
-      <feature id="com.android.ide.eclipse.ddms.feature" version="23.0.1.qualifier"/>
-      <feature id="com.android.ide.eclipse.gldebugger.feature" version="23.0.1.qualifier"/>
-      <feature id="com.android.ide.eclipse.hierarchyviewer.feature" version="23.0.1.qualifier"/>
-      <feature id="com.android.ide.eclipse.ndk.feature" version="23.0.1.qualifier"/>
-      <feature id="com.android.ide.eclipse.traceview.feature" version="23.0.1.qualifier"/>
    </features>
 
    <configurations>
-      <property name="eclipse.buildId" value="${unqualifiedVersion}.${buildQualifier}" />
-      <property name="eclipse.product" value="adtproduct" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="0" />
+      <property name="eclipse.product" value="com.android.ide.eclipse.adt.package.adtproduct" />
       <property name="org.eclipse.update.reconcile" value="false" />
       <property name="osgi.bundles.defaultStartLevel" value="4" />
       <property name="osgi.splashPath" value="platform\:/base/plugins/com.android.ide.eclipse.adt.package" />
