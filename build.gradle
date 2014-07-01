@@ -45,6 +45,10 @@ sdk {
             into 'proguard'
             notice null
         }
+        item('files/proguard-android.txt') {
+            into 'proguard'
+            notice null
+        }
         item('files/proguard-android-optimize.txt') {
             into 'proguard'
             notice null
@@ -103,6 +107,13 @@ sdk {
             notice null
         }
 
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties") {
+            into 'proguard/ant'
+            notice null
+        }
+    }
+
+    common(mac, linux) {
         item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/proguard.sh") {
             into 'proguard/bin'
             notice null
@@ -117,23 +128,23 @@ sdk {
             into 'proguard/bin'
             notice null
         }
-
-        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties") {
-            into 'proguard/ant'
-            notice null
-        }
-    }
-
-    linux {
-
-    }
-
-    mac {
-
     }
 
     windows {
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/proguard.bat") {
+            into 'proguard/bin'
+            notice null
+        }
 
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/proguardgui.bat") {
+            into 'proguard/bin'
+            notice null
+        }
+
+        item("$rootProject.projectDir.parentFile/prebuilts/tools/common/proguard/proguard4.7/bin/retrace.bat") {
+            into 'proguard/bin'
+            notice null
+        }
     }
 
 }
